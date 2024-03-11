@@ -21,7 +21,7 @@ N.B. Here we use single quotes around double quotes:
 Optionally, add a link "Metrics" at the top of the webclient to
 open the index page of this app:
 
-    $ omero config append omero.web.ui.top_links '["Metrics", "omero_metrics_index", {"title": "Open OMERO metrics in new tab", "target": "_blank"}]'
+    $ omero config append omero.web.ui.top_links '["Metrics", "metrics_index", {"title": "Open OMERO metrics in new tab", "target": "_blank"}]'
 
 
 Now restart your `omero-web` server and go to
