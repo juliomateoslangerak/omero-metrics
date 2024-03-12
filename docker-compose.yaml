@@ -41,6 +41,7 @@ services:
     depends_on:
       - omeroserver
     image: ghcr.io/manics/omero-web-docker:ubuntu
+    #    platform: linux/amd64
     environment:
       OMEROHOST: omeroserver
     volumes:
