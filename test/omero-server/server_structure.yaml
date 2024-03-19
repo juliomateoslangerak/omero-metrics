@@ -1,0 +1,58 @@
+users:
+  core_facility_manager:
+    login: cfm
+    password: cfm
+    first_name: Abraracurcix
+    last_name: CoreFacilityManager
+  core_facility_staff_1:
+    login: cfs1
+    password: cfs1
+    first_name: Asterix
+    last_name: CoreFacilityStaff
+  core_facility_staff_2:
+    login: cfs2
+    password: cfs2
+    first_name: Obelix
+    last_name: CoreFacilityStaff
+
+microscopes:
+  microscope_1:
+    name: microscope_1
+    description: Microscope 1
+    projects:
+      field_illumination:
+        nr_datasets: 12
+        name_dataset: FI
+        generator: field_illumination_generator
+        nr_images:
+          min: 3
+          max: 3
+        channel_names: [["DAPI"], ["FITC"], ["TRITC"]]
+        y_image_shape:
+          min: 1024
+          max: 1024
+        x_image_shape:
+          min: 1024
+          max: 1024
+        c_image_shape:
+          min: 1
+          max: 1
+        bit_depth: 16
+        signal:
+          min: 100
+          max: 1000
+        target_min_intensity:
+          min: 0.3
+          max: 0.45
+        target_max_intensity:
+          min: 0.8
+          max: 0.9
+        center_y_relative:
+          min: -0.2
+          max: 0.2
+        center_x_relative:
+          min: -0.2
+          max: 0.2
+        dispersion:
+          min: 0.8
+          max: 0.9
