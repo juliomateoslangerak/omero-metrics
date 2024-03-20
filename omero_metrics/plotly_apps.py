@@ -39,7 +39,7 @@ from dash.exceptions import PreventUpdate
 from django_plotly_dash import DjangoDash
 from django_plotly_dash.consumers import send_to_pipe_channel
 import plotly.express as px
-
+import dash_mantine_components as dmc
 
 df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/gapminderDataFiveYear.csv')
 #print(df)
@@ -59,7 +59,7 @@ app.layout =  html.Div([
         value=df['year'].min(),
         marks={str(year): str(year) for year in df['year'].unique()},
         id='year-slider'
-    )
+    ),
 ])
 
 
