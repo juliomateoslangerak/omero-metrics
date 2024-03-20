@@ -8,41 +8,49 @@
    {% bootstrap_javascript jquery="full"%}
    {% block extra_header%}{% endblock%}
    {% block app_header_css%}
-   <link rel="stylesheet" type="text/css" href="{%static "demo/demo.css"%}"></link>
+   <link rel="stylesheet" type="text/css" href="{%static "css/style.css"%}"></link>
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bxslider/jquery.bxslider.css">
+    <script src="{%static "js/main.js"%}"></script>
+
+
    {% endblock%}
    {% plotly_header%}
-   <title>Django Plotly Dash Examples - {% block title%}{% endblock%}</title>
+   <title>Dashboards {% block title%}{% endblock%}</title>
  </head>
- <body>
-   <header>
-     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-       <div class="navbar-nav">
-         <a class="navbar-brand" href="#">
-           <img class="dpd-logo" src="{%static "demo/logo.svg"%}" alt="Logo"/>
-         </a>
-         {% block demo_items %}
-         <a class="nav-item nav-link btn btn-lg" href="{%url "metrics_index"%}">Contents</a>
-         {% block demo_menu_items %}
-         {% if 0 %}
-         <a class="nav-item nav-link btn btn-lg" href="{%url "demo-one"%}">One - Simple Use</a>
-         {% endif %}
-         {% endblock %}
-         <a class="nav-item nav-link btn btn-lg"
-            target="_blank"
-            href="https://django-plotly-dash.readthedocs.io/en/latest/">Online Documentation</a>
-         {% endblock %}
-       </div>
-     </nav>
-   </header>
-   <main>
-     {% block main_top%}{% endblock%}
-     <div class="container">
-       {% block content%}{% endblock%}
-     </div>
-   </main>
+  <body id="body-pd">
+    <header class="header" id="header">
+        <div class="header_toggle"> <i class='bx bx-menu' id="header-toggle"></i> </div>
+        <div class="header_img"> <img src="{%static "images/photo.jpeg"%}"alt=""> </div>
+    </header>
+    <div class="l-navbar" id="nav-bar">
+        <nav class="nav">
+            <div> <a href="#" class="nav_logo"> <img src="{%static "images/logo.png"%}" alt="", width="100"></a>
+                <div class="nav_list"> 
+                  <a href="#" class="nav_link"> <i class='bx bx-grid-alt nav_icon'></i> <span class="nav_name">Dashboard</span> </a> 
+                  <a href="{%url "foi_key_measurement"%}" class="nav_link"> <i class='bx bx-user nav_icon'></i> <span class="nav_name">Key Measurements</span> </a> 
+                  <a href="#" class="nav_link"> <i class='bx bx-message-square-detail nav_icon'></i> <span class="nav_name">Unnamed</span> </a>
+                   <a href="#" class="nav_link"> <i class='bx bx-bookmark nav_icon'></i> <span class="nav_name">Unnamed</span> </a>
+                    <a href="#" class="nav_link"> <i class='bx bx-folder nav_icon'></i> <span class="nav_name">Unnamed</span> </a> 
+                    <a href="#" class="nav_link"> <i class='bx bx-bar-chart-alt-2 nav_icon'></i> <span class="nav_name">Stats</span>
+                     </a> </div>
+            </div> <a href="#" class="nav_link"> <i class='bx bx-log-out nav_icon'></i> <span class="nav_name">SignOut</span> </a>
+        </nav>
+    </div>
+    <!--Container Main start-->
+    <div class="height-100 bg-light">
+      {% block main_top%}{% endblock%}
+      <div class="container">
+        {% block content%}{% endblock%}
+      </div>
+    </div>
+    <!--Container Main end-->
+
    {% block footer%}
    {% endblock%}
  </body>
  {% block post_body%}{% endblock%}
  {% plotly_footer%}
 </html>
+
+

@@ -23,3 +23,4 @@ config append omero.web.middleware '{"index": 7, "class": "django_plotly_dash.mi
 config append omero.web.middleware '{"index": 0.5, "class": "whitenoise.middleware.WhiteNoiseMiddleware"}'
 config append omero.web.middleware '{"index": 8, "class": "django_plotly_dash.middleware.BaseMiddleware"}'
 config append omero.web.middleware '{"index":0.1, "class": "omero_metrics.middleware.OmeroAuth"}'
+
