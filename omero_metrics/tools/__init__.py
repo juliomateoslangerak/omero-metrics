@@ -13,9 +13,11 @@ from .tools import *
 from microscopemetrics_omero.dump import *
 import omero
 
+
 def info_row(obj):
     row = [obj.getId(), obj.OMERO_CLASS, obj.getName(), obj.getOwnerOmeName()]
     return row
+
 
 def get_info_dash(conn):
     my_exp_id = conn.getUser().getId()
@@ -36,7 +38,6 @@ def get_info_dash(conn):
     return df_project, df_dataset, df_image
 
 
-
 def get_intensity_map_data(var: FieldIlluminationDataset.output) -> None:
     # TZYXC
     list_ima = var.intensity_map.data
@@ -50,12 +51,12 @@ def get_intensity_map_data(var: FieldIlluminationDataset.output) -> None:
     return ima
 
 
-
 def data_loader(conn, number, new_project_name):
     @given(dataset=st_mm.st_field_illumination_dataset())
     @settings(max_examples=number, suppress_health_check=[HealthCheck.too_slow], deadline=10000)
     def getDataset(dataset, list_data):
         list_data.append(dataset)
+
     list_data = []
     getDataset(list_data)
     [_["unprocessed_analysis"].run() for _ in list_data]
@@ -74,9 +75,9 @@ def data_loader(conn, number, new_project_name):
         link.setParent(omero.model.ProjectI(new_project.id, False))
         conn.getUpdateService().saveObject(link, conn.SERVICE_OPTS)
         image_wrapper = dump_image(conn, var.intensity_map, new_dataset)
-        image_wrapper = conn.getObject("Image", image_wrapper.id,opts={"datasets": [new_dataset.id]})
+        image_wrapper = conn.getObject("Image", image_wrapper.id, opts={"datasets": [new_dataset.id]})
         dump_key_value(conn, var.key_values, image_wrapper)
-        r=var.roi_profiles
+        r = var.roi_profiles
         r_c = var.roi_corners
         r_w = var.roi_centroids_weighted
         dump_roi(conn, r, image_wrapper)
@@ -84,4 +85,3 @@ def data_loader(conn, number, new_project_name):
         dump_roi(conn, r_w, image_wrapper)
         dump_table(conn, var.intensity_profiles, image_wrapper)
     return True
-    
