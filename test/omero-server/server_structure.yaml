@@ -21,19 +21,22 @@ microscopes:
     description: Microscope 1
     projects:
       field_illumination:
+        name_project: Field Illumination 60x
+        description_project: Field Illumination taken with 60x objective
+        analysis_class: FieldIlluminationDataset
         nr_datasets: 12
+        start_date: 2021-01-01
+        month_frequency: 1
+        nr_months: 12
         name_dataset: FI
-        generator: field_illumination_generator
-        nr_images:
-          min: 3
-          max: 3
+        description_dataset: Field Illumination dataset
         channel_names: [["DAPI"], ["FITC"], ["TRITC"]]
         y_image_shape:
-          min: 1024
-          max: 1024
+          min: 512
+          max: 512
         x_image_shape:
-          min: 1024
-          max: 1024
+          min: 512
+          max: 512
         c_image_shape:
           min: 1
           max: 1
