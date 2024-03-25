@@ -50,7 +50,7 @@ def dump_project(
     _append_reference(project, omero_tools.get_ref_from_object(omero_project))
 
     for dataset in project.datasets:
-         dump_dataset(
+        dump_dataset(
             conn=conn,
             dataset=dataset,
             target_project=omero_project,
