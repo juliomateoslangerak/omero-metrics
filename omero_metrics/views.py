@@ -80,12 +80,12 @@ def session_state_view(request, template_name, **kwargs):
 
 
 
-@login_required()
-def data_view(request, conn=None, **kwargs):
-    g = conn.listGroups()
-    for i in g:
-        group_id=i.getId()
-    conn.SERVICE_OPTS.setOmeroGroup(group_id)
-    data_loader(conn, 10, 'Fake data')
-    return render(request, template_name='metrics/add_data.html', context={})
+# @login_required()
+# def data_view(request, conn=None, **kwargs):
+#     g = conn.listGroups()
+#     for i in g:
+#         group_id=i.getId()
+#     conn.SERVICE_OPTS.setOmeroGroup(group_id)
+#     data_loader(conn, 10, 'Fake data')
+#     return render(request, template_name='metrics/add_data.html', context={})
     
