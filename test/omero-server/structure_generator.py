@@ -8,7 +8,11 @@ from hypothesis import strategies as st
 import numpy as np
 import random
 
-from microscopemetrics.strategies.strategies import _gen_field_illumination_image
+from omero.gateway import BlitzGateway
+
+from omero_metrics.tools import dump
+
+from microscopemetrics.strategies.strategies import _gen_field_illumination_image, _gen_psf_beads_image
 from microscopemetrics.samples import numpy_to_mm_image
 from microscopemetrics_schema import datamodel as mm_schema
 
@@ -23,10 +27,10 @@ BIT_DEPTH_TO_DTYPE = {
 
 from datetime import datetime, timedelta
 
-def generate_monthly_dates(start_date, nr_months, month_frequency=1):
+def generate_monthly_dates(start_date, nr_dates, month_frequency=1):
     dates = []
     current_date = start_date
-    for _ in range(nr_months):
+    for _ in range(nr_dates):
         month = current_date.month - 1 + 1
         year = current_date.year + month // 12
         month = month % 12 + month_frequency
@@ -80,8 +84,58 @@ def field_illumination_generator(args, microscope_name):
     return datasets
 
 
+def psf_beads_generator(args, microscope_name):
+    datasets = []
+    dates = generate_monthly_dates(args["start_date"], args["nr_datasets"], args["month_frequency"])
+
+    for dataset_id in range(args["nr_datasets"]):
+        print(f"Generating dataset {dataset_id} for {args['name_dataset']}")
+        datasets.append(
+            mm_schema.PSFBeadsDataset(
+                name=f"{args['name_dataset']}_{dates[dataset_id]}",
+                description=args["description_dataset"],
+                acquisition_datetime=dates[dataset_id],
+                microscope=mm_schema.Microscope(name=microscope_name),
+                input=mm_schema.PSFBeadsInput(
+                    psf_beads_images=[
+                        numpy_to_mm_image(
+                            array=_gen_psf_beads_image(
+                                z_image_shape=random.randint(args["z_image_shape"]["min"], args["z_image_shape"]["max"]),
+                                y_image_shape=random.randint(args["y_image_shape"]["min"], args["y_image_shape"]["max"]),
+                                x_image_shape=random.randint(args["x_image_shape"]["min"], args["x_image_shape"]["max"]),
+                                c_image_shape=len(channel_names),
+                                nr_valid_beads=random.randint(args["nr_valid_beads"]["min"], args["nr_valid_beads"]["max"]),
+                                nr_edge_beads=random.randint(args["nr_edge_beads"]["min"], args["nr_edge_beads"]["max"]),
+                                nr_out_of_focus_beads=random.randint(args["nr_out_of_focus_beads"]["min"], args["nr_out_of_focus_beads"]["max"]),
+                                nr_clustering_beads=random.randint(args["nr_clustering_beads"]["min"], args["nr_clustering_beads"]["max"]),
+                                min_distance_z=args["min_distance_z"],
+                                min_distance_y=args["min_distance_y"],
+                                min_distance_x=args["min_distance_x"],
+                                sigma_z=random.uniform(args["sigma_z"]["min"], args["sigma_z"]["max"]),
+                                sigma_y=random.uniform(args["sigma_y"]["min"], args["sigma_y"]["max"]),
+                                sigma_x=random.uniform(args["sigma_x"]["min"], args["sigma_x"]["max"]),
+                                target_min_intensity=random.uniform(args["target_min_intensity"]["min"], args["target_min_intensity"]["max"]),
+                                target_max_intensity=random.uniform(args["target_max_intensity"]["min"], args["target_max_intensity"]["max"]),
+                                do_noise=True,
+                                signal=random.randint(args["signal"]["min"], args["signal"]["max"]),
+                                dtype=BIT_DEPTH_TO_DTYPE[args["bit_depth"]],
+                            )[0],
+                            name=f"{args['name_dataset']}_{dates[dataset_id]}",
+                            description=f"An image taken on the {microscope_name} microscope on the {dates[dataset_id]} for QC",
+                            channel_names=args["channel_names"][image_id],
+                        )
+                        for image_id, channel_names in enumerate(args["channel_names"])
+                    ]
+                )
+            )
+        )
+
+    return datasets
+
+
 GENERATOR_MAPPER = {
     "FieldIlluminationDataset": field_illumination_generator,
+    "PSFBeadsDataset": psf_beads_generator,
 }
 
 if __name__ == "__main__":
@@ -91,12 +145,30 @@ if __name__ == "__main__":
     projects = []
     for microscope in server_structure["microscopes"].values():
         for project in microscope["projects"].values():
-            projects[] = mm_schema.HarmonizedMetricsDatasetCollection(
+            projects.append(mm_schema.HarmonizedMetricsDatasetCollection(
                 name=project["name_project"],
                 description=project["description_project"],
                 datasets=GENERATOR_MAPPER[project["analysis_class"]](project, microscope["name"]),
                 dataset_class=project["analysis_class"],
             )
+        )
 
+    # host = input("OMERO host: ")
+    # port = int(input("OMERO port: ") or 4064)
+    # username = input("OMERO username: ")
+    # password = input("OMERO password: ")
+
+    # conn = BlitzGateway(username, password, host=host, port=port, secure=True)
+    conn = BlitzGateway("root", "omero", host="localhost", port=6064, secure=True)
+
+    try:
+        conn.connect()
+
+        omero_project_ids = []
+        for project in projects:
+            omero_project_ids.append(dump.dump_project(conn, project).getId())
+
+    finally:
+        conn.close()
     pass
 

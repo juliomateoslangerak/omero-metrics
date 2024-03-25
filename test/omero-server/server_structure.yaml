@@ -19,27 +19,27 @@ microscopes:
   microscope_1:
     name: microscope_1
     description: Microscope 1
+    users:
+      - core_facility_manager
+      - core_facility_staff_1
+      - core_facility_staff_2
     projects:
-      field_illumination:
+      field_illumination_1:
         name_project: Field Illumination 60x
         description_project: Field Illumination taken with 60x objective
         analysis_class: FieldIlluminationDataset
-        nr_datasets: 12
+        nr_datasets: 2
         start_date: 2021-01-01
         month_frequency: 1
-        nr_months: 12
-        name_dataset: FI
+        name_dataset: FI_60x
         description_dataset: Field Illumination dataset
-        channel_names: [["DAPI"], ["FITC"], ["TRITC"]]
+        channel_names: [["DAPI"], ["FITC"], ["TRITC", "CY5"]]
         y_image_shape:
           min: 512
           max: 512
         x_image_shape:
           min: 512
           max: 512
-        c_image_shape:
-          min: 1
-          max: 1
         bit_depth: 16
         signal:
           min: 100
@@ -59,3 +59,93 @@ microscopes:
         dispersion:
           min: 0.8
           max: 0.9
+      field_illumination_2:
+        name_project: Field Illumination 10x
+        description_project: Field Illumination taken with 10x objective
+        analysis_class: FieldIlluminationDataset
+        nr_datasets: 4
+        start_date: 2021-01-04
+        month_frequency: 2
+        name_dataset: FI_10x
+        description_dataset: Field Illumination dataset
+        channel_names: [["DAPI"], ["FITC"], ["TRITC", "CY5"]]
+        y_image_shape:
+          min: 512
+          max: 512
+        x_image_shape:
+          min: 812
+          max: 812
+        bit_depth: 16
+        signal:
+          min: 1
+          max: 2
+        target_min_intensity:
+          min: 0.3
+          max: 0.45
+        target_max_intensity:
+          min: 0.6
+          max: 0.7
+        center_y_relative:
+          min: -0.4
+          max: 0.4
+        center_x_relative:
+          min: -0.4
+          max: 0.5
+        dispersion:
+          min: 0.6
+          max: 0.7
+      psf_beads_1:
+        name_project: PSF beads 60x
+        description_project: PSF beads taken with the 60x objective
+        analysis_class: PSFBeadsDataset
+        nr_datasets: 2
+        start_date: 2021-01-01
+        month_frequency: 1
+        name_dataset: PSF-beads_60x
+        description_dataset: PSF beads dataset
+        channel_names: [ [ "DAPI", "FITC", "TRITC", "CY5" ] ]
+        z_image_shape:
+          min: 61
+          max: 61
+        y_image_shape:
+          min: 512
+          max: 512
+        x_image_shape:
+          min: 512
+          max: 512
+        nr_valid_beads:
+          min: 5
+          max: 10
+        nr_edge_beads:
+          min: 1
+          max: 2
+        nr_out_of_focus_beads:
+          min: 1
+          max: 2
+        nr_clustering_beads:
+          min: 1
+          max: 2
+        min_distance_z: 6
+        min_distance_y: 25
+        min_distance_x: 25
+        sigma_z:
+          min: 1.0
+          max: 1.2
+        sigma_y:
+          min: 1.0
+          max: 1.2
+        sigma_x:
+          min: 1.0
+          max: 1.2
+        target_min_intensity:
+          min: 0.3
+          max: 0.45
+        target_max_intensity:
+          min: 0.8
+          max: 0.9
+        signal:
+          min: 100
+          max: 1000
+        bit_depth: 16
+
+
