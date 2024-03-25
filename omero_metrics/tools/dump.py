@@ -6,7 +6,7 @@ from typing import Union
 from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
 from omero.gateway import BlitzGateway, DatasetWrapper, ImageWrapper, ProjectWrapper
 
-import omero_tools
+from omero_metrics.tools import omero_tools
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ SHAPE_TYPE_TO_FUNCTION = {
 }
 
 
-def _append_reference(obj, ref):
+def _append_reference(obj:mm_schema.MetricsObject, ref):
     obj.data_uri = ref["data_uri"]
     obj.omero_host = ref["omero_host"],
     obj.omero_port = ref["omero_port"],
@@ -82,6 +82,7 @@ def dump_dataset(
                 }
             )
         except AttributeError:
+            # TODO: Dump dataset as orphan dataset
             logger.error(
                 f"Dataset {dataset.name} must be linked to a project/microscope. No project provided."
             )
@@ -105,7 +106,7 @@ def dump_dataset(
                 append_to_existing=append_to_existing,
                 as_table=as_table,
             )
-        elif all(isinstance(i_e, mm_schema.Image) for i_e in input_element):
+        elif isinstance(input_element, list) and all(isinstance(i_e, mm_schema.Image) for i_e in input_element):
             for image in input_element:
                 dump_image(
                     conn=conn,
@@ -153,7 +154,7 @@ def dump_image(
 
     omero_image = omero_tools.create_image_from_numpy_array(
         conn=conn,
-        data=image.array_data,
+        data=image.array_data.transpose((1, 4, 0, 2, 3)),  # microscope-metrics order TZYXC -> OMERO order zctyx
         image_name=image.name,
         image_description=image.description,
         channel_labels=[ch.name for ch in image.channel_series.channels],
@@ -256,7 +257,7 @@ def _eval(s):
         return ev
 
 
-def _eval_types(table: mm_schema.TableAsDict):
+def _eval_types(table: mm_schema.Table):
     for column in table.columns.values():
         breakpoint()
         column.values = [_eval(v) for v in column.values]
