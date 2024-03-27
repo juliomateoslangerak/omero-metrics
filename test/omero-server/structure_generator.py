@@ -251,7 +251,7 @@ if __name__ == "__main__":
                     dataset_class=project["analysis_class"],
                 )
                 temp_conn = conn.suConn(project["owner"], microscope_name)
-                omero_project = dump.dump_project(temp_conn, mm_project)
+                omero_project = dump.dump_project(temp_conn, mm_project, dump_output=False)
                 omero_project_ids.append(omero_project.getId())
 
     finally:

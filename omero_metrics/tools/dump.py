@@ -40,7 +40,7 @@ def _append_reference(obj:mm_schema.MetricsObject, ref):
 def dump_project(
     conn: BlitzGateway,
     project: mm_schema.MetricsDatasetCollection,
-    demo_mode: bool = True,
+    dump_output: bool = True,
 ) -> ProjectWrapper:
     omero_project = omero_tools.create_project(
         conn=conn,
@@ -54,7 +54,7 @@ def dump_project(
             conn=conn,
             dataset=dataset,
             target_project=omero_project,
-            demo_mode=demo_mode
+            dump_output=dump_output
         )
 
     return omero_project
@@ -66,7 +66,7 @@ def dump_dataset(
     target_project: ProjectWrapper = None,
     append_to_existing: bool = False,
     as_table: bool = False,
-    demo_mode: bool = True,
+    dump_output: bool = True,
 ) -> DatasetWrapper:
     if append_to_existing or as_table:
         logger.error(
@@ -118,9 +118,7 @@ def dump_dataset(
         else:
             continue
 
-    if demo_mode:
-        # This mode is meant to load into OMERO only the input images
-        # If this is the purpose, we can stop here
+    if not dump_output:
         return omero_dataset
 
     else:
