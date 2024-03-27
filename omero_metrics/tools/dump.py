@@ -116,10 +116,13 @@ def dump_dataset(
                     as_table=as_table,
                 )
         else:
+            # TODO: Implement dumping of other input types
             continue
 
     if not dump_output:
         return omero_dataset
+
+    # TODO: Implement dumping of other output types
 
     else:
         raise NotImplementedError("The function is not yet implemented for the full dataset dump")
