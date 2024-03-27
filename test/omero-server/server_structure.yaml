@@ -1,151 +1,291 @@
 users:
-  core_facility_manager:
-    login: cfm
-    password: cfm
+  Abraracurcix:
+    password: abc123
     first_name: Abraracurcix
     last_name: CoreFacilityManager
-  core_facility_staff_1:
-    login: cfs1
-    password: cfs1
+  Asterix:
+    password: abc123
     first_name: Asterix
     last_name: CoreFacilityStaff
-  core_facility_staff_2:
-    login: cfs2
-    password: cfs2
+  Obelix:
+    password: abc123
     first_name: Obelix
+    last_name: CoreFacilityStaff
+  Panoramix:
+    password: abc123
+    first_name: Panoramix
     last_name: CoreFacilityStaff
 
 microscopes:
   microscope_1:
-    name: microscope_1
     description: Microscope 1
-    users:
-      - core_facility_manager
-      - core_facility_staff_1
-      - core_facility_staff_2
-    projects:
-      field_illumination_1:
-        name_project: Field Illumination 60x
-        description_project: Field Illumination taken with 60x objective
-        analysis_class: FieldIlluminationDataset
-        nr_datasets: 2
-        start_date: 2021-01-01
-        month_frequency: 1
-        name_dataset: FI_60x
-        description_dataset: Field Illumination dataset
-        channel_names: [["DAPI"], ["FITC"], ["TRITC", "CY5"]]
-        y_image_shape:
-          min: 512
-          max: 512
-        x_image_shape:
-          min: 512
-          max: 512
-        bit_depth: 16
-        signal:
-          min: 100
-          max: 1000
-        target_min_intensity:
-          min: 0.3
-          max: 0.45
-        target_max_intensity:
-          min: 0.8
-          max: 0.9
-        center_y_relative:
-          min: -0.2
-          max: 0.2
-        center_x_relative:
-          min: -0.2
-          max: 0.2
-        dispersion:
-          min: 0.8
-          max: 0.9
-      field_illumination_2:
-        name_project: Field Illumination 10x
-        description_project: Field Illumination taken with 10x objective
-        analysis_class: FieldIlluminationDataset
-        nr_datasets: 4
-        start_date: 2021-01-04
-        month_frequency: 2
-        name_dataset: FI_10x
-        description_dataset: Field Illumination dataset
-        channel_names: [["DAPI"], ["FITC"], ["TRITC", "CY5"]]
-        y_image_shape:
-          min: 512
-          max: 512
-        x_image_shape:
-          min: 812
-          max: 812
-        bit_depth: 16
-        signal:
-          min: 1
-          max: 2
-        target_min_intensity:
-          min: 0.3
-          max: 0.45
-        target_max_intensity:
-          min: 0.6
-          max: 0.7
-        center_y_relative:
-          min: -0.4
-          max: 0.4
-        center_x_relative:
-          min: -0.4
-          max: 0.5
-        dispersion:
-          min: 0.6
-          max: 0.7
-      psf_beads_1:
-        name_project: PSF beads 60x
-        description_project: PSF beads taken with the 60x objective
-        analysis_class: PSFBeadsDataset
-        nr_datasets: 2
-        start_date: 2021-01-01
-        month_frequency: 1
-        name_dataset: PSF-beads_60x
-        description_dataset: PSF beads dataset
-        channel_names: [ [ "DAPI", "FITC", "TRITC", "CY5" ] ]
-        z_image_shape:
-          min: 61
-          max: 61
-        y_image_shape:
-          min: 512
-          max: 512
-        x_image_shape:
-          min: 512
-          max: 512
-        nr_valid_beads:
-          min: 5
-          max: 10
-        nr_edge_beads:
-          min: 1
-          max: 2
-        nr_out_of_focus_beads:
-          min: 1
-          max: 2
-        nr_clustering_beads:
-          min: 1
-          max: 2
-        min_distance_z: 6
-        min_distance_y: 25
-        min_distance_x: 25
-        sigma_z:
-          min: 1.0
-          max: 1.2
-        sigma_y:
-          min: 1.0
-          max: 1.2
-        sigma_x:
-          min: 1.0
-          max: 1.2
-        target_min_intensity:
-          min: 0.3
-          max: 0.45
-        target_max_intensity:
-          min: 0.8
-          max: 0.9
-        signal:
-          min: 100
-          max: 1000
-        bit_depth: 16
+    owners:
+      - Asterix
+      - Obelix
+    members:
+      - Abraracurcix
+      - Panoramix
+  microscope_2:
+    description: Microscope 2
+    owners:
+      - Asterix
+      - Panoramix
+    members:
+      - Abraracurcix
+      - Obelix
 
-
+projects:
+  microscope_1:
+    field_illumination_1:
+      owner: Asterix
+      name_project: Field Illumination 60x
+      description_project: Field Illumination taken with 60x objective
+      analysis_class: FieldIlluminationDataset
+      nr_datasets: 2
+      start_date: 2021-01-01
+      month_frequency: 1
+      name_dataset: FI_60x
+      description_dataset: Field Illumination dataset
+      channel_names: [["DAPI"], ["FITC"], ["TRITC", "CY5"]]
+      y_image_shape:
+        min: 512
+        max: 512
+      x_image_shape:
+        min: 512
+        max: 512
+      bit_depth: 16
+      signal:
+        min: 100
+        max: 1000
+      target_min_intensity:
+        min: 0.3
+        max: 0.45
+      target_max_intensity:
+        min: 0.8
+        max: 0.9
+      center_y_relative:
+        min: -0.2
+        max: 0.2
+      center_x_relative:
+        min: -0.2
+        max: 0.2
+      dispersion:
+        min: 0.8
+        max: 0.9
+    field_illumination_2:
+      owner: Asterix
+      name_project: Field Illumination 10x
+      description_project: Field Illumination taken with 10x objective
+      analysis_class: FieldIlluminationDataset
+      nr_datasets: 4
+      start_date: 2021-01-04
+      month_frequency: 2
+      name_dataset: FI_10x
+      description_dataset: Field Illumination dataset
+      channel_names: [["DAPI"], ["FITC"], ["TRITC", "CY5"]]
+      y_image_shape:
+        min: 512
+        max: 512
+      x_image_shape:
+        min: 812
+        max: 812
+      bit_depth: 16
+      signal:
+        min: 1
+        max: 2
+      target_min_intensity:
+        min: 0.3
+        max: 0.45
+      target_max_intensity:
+        min: 0.6
+        max: 0.7
+      center_y_relative:
+        min: -0.4
+        max: 0.4
+      center_x_relative:
+        min: -0.4
+        max: 0.5
+      dispersion:
+        min: 0.6
+        max: 0.7
+    psf_beads_1:
+      owner: Obelix
+      name_project: PSF beads 60x
+      description_project: PSF beads taken with the 60x objective
+      analysis_class: PSFBeadsDataset
+      nr_datasets: 2
+      start_date: 2021-01-01
+      month_frequency: 1
+      name_dataset: PSF-beads_60x
+      description_dataset: PSF beads dataset
+      channel_names: [ [ "DAPI", "FITC", "TRITC", "CY5" ] ]
+      z_image_shape:
+        min: 61
+        max: 61
+      y_image_shape:
+        min: 512
+        max: 512
+      x_image_shape:
+        min: 512
+        max: 512
+      nr_valid_beads:
+        min: 5
+        max: 10
+      nr_edge_beads:
+        min: 1
+        max: 2
+      nr_out_of_focus_beads:
+        min: 1
+        max: 2
+      nr_clustering_beads:
+        min: 1
+        max: 2
+      min_distance_z: 6
+      min_distance_y: 25
+      min_distance_x: 25
+      sigma_z:
+        min: 1.0
+        max: 1.2
+      sigma_y:
+        min: 1.0
+        max: 1.2
+      sigma_x:
+        min: 1.0
+        max: 1.2
+      target_min_intensity:
+        min: 0.3
+        max: 0.45
+      target_max_intensity:
+        min: 0.8
+        max: 0.9
+      signal:
+        min: 100
+        max: 1000
+      bit_depth: 16
+  microscope_2:
+    field_illumination_1:
+      owner: Asterix
+      name_project: Field Illumination 40x
+      description_project: Field Illumination taken with 40x objective
+      analysis_class: FieldIlluminationDataset
+      nr_datasets: 2
+      start_date: 2021-01-01
+      month_frequency: 1
+      name_dataset: FI_60x
+      description_dataset: Field Illumination dataset
+      channel_names: [["DAPI"], ["FITC"], ["TRITC", "CY5"]]
+      y_image_shape:
+        min: 512
+        max: 512
+      x_image_shape:
+        min: 512
+        max: 512
+      bit_depth: 16
+      signal:
+        min: 100
+        max: 1000
+      target_min_intensity:
+        min: 0.3
+        max: 0.45
+      target_max_intensity:
+        min: 0.8
+        max: 0.9
+      center_y_relative:
+        min: -0.2
+        max: 0.2
+      center_x_relative:
+        min: -0.2
+        max: 0.2
+      dispersion:
+        min: 0.8
+        max: 0.9
+    field_illumination_2:
+      owner: Asterix
+      name_project: Field Illumination 20x
+      description_project: Field Illumination taken with 20x objective
+      analysis_class: FieldIlluminationDataset
+      nr_datasets: 4
+      start_date: 2021-01-04
+      month_frequency: 2
+      name_dataset: FI_10x
+      description_dataset: Field Illumination dataset
+      channel_names: [["DAPI"], ["FITC"], ["TRITC", "CY5"]]
+      y_image_shape:
+        min: 512
+        max: 512
+      x_image_shape:
+        min: 812
+        max: 812
+      bit_depth: 16
+      signal:
+        min: 1
+        max: 2
+      target_min_intensity:
+        min: 0.3
+        max: 0.45
+      target_max_intensity:
+        min: 0.6
+        max: 0.7
+      center_y_relative:
+        min: -0.4
+        max: 0.4
+      center_x_relative:
+        min: -0.4
+        max: 0.5
+      dispersion:
+        min: 0.6
+        max: 0.7
+    psf_beads_1:
+      owner: Panoramix
+      name_project: PSF beads 40x
+      description_project: PSF beads taken with the 40x objective
+      analysis_class: PSFBeadsDataset
+      nr_datasets: 2
+      start_date: 2021-01-01
+      month_frequency: 1
+      name_dataset: PSF-beads_60x
+      description_dataset: PSF beads dataset
+      channel_names: [ [ "DAPI", "FITC", "TRITC", "CY5" ] ]
+      z_image_shape:
+        min: 61
+        max: 61
+      y_image_shape:
+        min: 512
+        max: 512
+      x_image_shape:
+        min: 512
+        max: 512
+      nr_valid_beads:
+        min: 5
+        max: 10
+      nr_edge_beads:
+        min: 1
+        max: 2
+      nr_out_of_focus_beads:
+        min: 1
+        max: 2
+      nr_clustering_beads:
+        min: 1
+        max: 2
+      min_distance_z: 6
+      min_distance_y: 25
+      min_distance_x: 25
+      sigma_z:
+        min: 1.0
+        max: 1.2
+      sigma_y:
+        min: 1.0
+        max: 1.2
+      sigma_x:
+        min: 1.0
+        max: 1.2
+      target_min_intensity:
+        min: 0.3
+        max: 0.45
+      target_max_intensity:
+        min: 0.8
+        max: 0.9
+      signal:
+        min: 100
+        max: 1000
+      bit_depth: 16

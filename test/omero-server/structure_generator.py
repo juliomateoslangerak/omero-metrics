@@ -3,12 +3,15 @@
 
 import logging
 import yaml
-from hypothesis import given, settings, HealthCheck
-from hypothesis import strategies as st
 import numpy as np
 import random
+from datetime import datetime, timedelta
 
 from omero.gateway import BlitzGateway
+from omero.cli import CLI
+from omero.plugins.group import GroupControl
+from omero.plugins.sessions import SessionsControl
+from omero.plugins.user import UserControl
 
 from omero_metrics.tools import dump
 
@@ -24,8 +27,6 @@ BIT_DEPTH_TO_DTYPE = {
     32: np.float32,
 }
 
-
-from datetime import datetime, timedelta
 
 def generate_monthly_dates(start_date, nr_dates, month_frequency=1):
     dates = []
@@ -138,37 +139,123 @@ GENERATOR_MAPPER = {
     "PSFBeadsDataset": psf_beads_generator,
 }
 
+def generate_users_groups(conn, users: dict, groups: dict):
+    session_uuid = conn.getSession().getUuid().val
+    host = conn.c.host
+    port = conn.c.port
+    cli = CLI()
+    cli.register("sessions", SessionsControl, "test")
+    cli.register("user", UserControl, "test")
+    cli.register("group", GroupControl, "test")
+
+    for group_name, group in groups.items():
+        cli.invoke(
+            [
+                "group",
+                "add",
+                "--name",
+                group_name,
+                "--type",
+                "read-only",
+                "-k",
+                session_uuid,
+                "-s",
+                host,
+                "-p",
+                str(port),
+            ]
+        )
+        # TODO: update group description: https://forum.image.sc/t/omero-cli-changing-group-description/51418
+
+    for user_name, user in users.items():
+        cli.invoke(
+            [
+                "user",
+                "add",
+                user_name,
+                user["first_name"],
+                user["last_name"],
+                "-w",
+                user["password"],
+                "-k",
+                session_uuid,
+                "-s",
+                host,
+                "-p",
+                str(port),
+            ]
+        )
+
+    for group_name, group in groups.items():
+        for owner in group["owners"]:
+            cli.invoke(
+                [
+                    "group",
+                    "adduser",
+                    "--user-name",
+                    owner,
+                    "--name",
+                    group_name,
+                    "--as-owner",
+                    "-k",
+                    session_uuid,
+                    "-s",
+                    host,
+                    "-p",
+                    str(port),
+                ]
+            )
+
+        for member in group["members"]:
+            cli.invoke(
+                [
+                    "group",
+                    "adduser",
+                    "--user-name",
+                    member,
+                    "--name",
+                    group_name,
+                    "-k",
+                    session_uuid,
+                    "-s",
+                    host,
+                    "-p",
+                    str(port),
+                ]
+            )
+
+
 if __name__ == "__main__":
     with open("server_structure.yaml", "r") as f:
         server_structure = yaml.load(f, Loader=yaml.SafeLoader)
-
-    projects = []
-    for microscope in server_structure["microscopes"].values():
-        for project in microscope["projects"].values():
-            projects.append(mm_schema.HarmonizedMetricsDatasetCollection(
-                name=project["name_project"],
-                description=project["description_project"],
-                datasets=GENERATOR_MAPPER[project["analysis_class"]](project, microscope["name"]),
-                dataset_class=project["analysis_class"],
-            )
-        )
 
     # host = input("OMERO host: ")
     # port = int(input("OMERO port: ") or 4064)
     # username = input("OMERO username: ")
     # password = input("OMERO password: ")
 
-    # conn = BlitzGateway(username, password, host=host, port=port, secure=True)
-    conn = BlitzGateway("root", "omero", host="localhost", port=6064, secure=True)
-
     try:
+        # conn = BlitzGateway(username, password, host=host, port=port, secure=True)
+        conn = BlitzGateway("root", "omero", host="localhost", port=6064, secure=True)
         conn.connect()
 
+        generate_users_groups(conn, server_structure["users"], server_structure["microscopes"])
+
         omero_project_ids = []
-        for project in projects:
-            omero_project_ids.append(dump.dump_project(conn, project).getId())
+        for microscope_name, microscope_projects in server_structure["projects"].items():
+            for project in microscope_projects.values():
+                mm_project = mm_schema.HarmonizedMetricsDatasetCollection(
+                    name=project["name_project"],
+                    description=project["description_project"],
+                    datasets=GENERATOR_MAPPER[project["analysis_class"]](project, microscope_name["name"]),
+                    dataset_class=project["analysis_class"],
+                )
+                temp_conn = conn.suConn(project["owner"], microscope_name)
+                omero_project = dump.dump_project(temp_conn, mm_project)
+                omero_project_ids.append(omero_project.getId())
 
     finally:
         conn.close()
+        temp_conn.close()
     pass
 
