@@ -12,6 +12,7 @@ from omero.cli import CLI
 from omero.plugins.group import GroupControl
 from omero.plugins.sessions import SessionsControl
 from omero.plugins.user import UserControl
+from omero.plugins.obj import ObjControl
 
 from omero_metrics.tools import dump
 
@@ -141,20 +142,19 @@ GENERATOR_MAPPER = {
 
 def generate_users_groups(conn, users: dict, groups: dict):
     session_uuid = conn.getSession().getUuid().val
-    host = conn.c.host
-    port = conn.c.port
+    host = conn.host
+    port = conn.port
     cli = CLI()
     cli.register("sessions", SessionsControl, "test")
     cli.register("user", UserControl, "test")
     cli.register("group", GroupControl, "test")
+    cli.register("obj", ObjControl, "test")
 
     for group_name, group in groups.items():
         cli.invoke(
             [
                 "group",
                 "add",
-                "--name",
-                group_name,
                 "--type",
                 "read-only",
                 "-k",
@@ -163,19 +163,31 @@ def generate_users_groups(conn, users: dict, groups: dict):
                 host,
                 "-p",
                 str(port),
+                group_name,
             ]
         )
-        # TODO: update group description: https://forum.image.sc/t/omero-cli-changing-group-description/51418
+        group_id = conn.c.sf.getAdminService().lookupGroup(group_name).id.val
+
+        cli.invoke(
+            ["obj",
+            "update",
+            f"ExperimenterGroup:{group_id}",
+            f"description={group['description']}",
+            "-k",
+            session_uuid,
+            "-s",
+            host,
+            "-p",
+            str(port),
+            ]
+        )
 
     for user_name, user in users.items():
         cli.invoke(
             [
                 "user",
                 "add",
-                user_name,
-                user["first_name"],
-                user["last_name"],
-                "-w",
+                "-P",
                 user["password"],
                 "-k",
                 session_uuid,
@@ -183,6 +195,11 @@ def generate_users_groups(conn, users: dict, groups: dict):
                 host,
                 "-p",
                 str(port),
+                user_name,
+                user["first_name"],
+                user["last_name"],
+                "--group-name",
+                user["default_group"]
             ]
         )
 
@@ -247,12 +264,13 @@ if __name__ == "__main__":
                 mm_project = mm_schema.HarmonizedMetricsDatasetCollection(
                     name=project["name_project"],
                     description=project["description_project"],
-                    datasets=GENERATOR_MAPPER[project["analysis_class"]](project, microscope_name["name"]),
+                    datasets=GENERATOR_MAPPER[project["analysis_class"]](project, microscope_name),
                     dataset_class=project["analysis_class"],
                 )
                 temp_conn = conn.suConn(project["owner"], microscope_name)
                 omero_project = dump.dump_project(temp_conn, mm_project, dump_output=False)
                 omero_project_ids.append(omero_project.getId())
+                temp_conn.close()
 
     finally:
         conn.close()
