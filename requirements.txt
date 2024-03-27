@@ -1,63 +1,16 @@
-annotated-types==0.6.0
-appdirs==1.4.4
-attrs==23.2.0
-certifi==2024.2.2
-charset-normalizer==3.3.2
-click==8.1.7
-contourpy==1.2.0
-curies==0.7.8
-cycler==0.12.1
-Deprecated==1.2.14
-fonttools==4.50.0
-future==1.0.0
-hbreader==0.9.1
-hypothesis==6.99.9
-hypothesis-jsonschema==0.23.1
-idna==3.6
-imageio==2.34.0
-iniconfig==2.0.0
-isodate==0.6.1
-json-flattener==0.1.9
-jsonasobj2==1.0.4
-jsonschema==4.21.1
-jsonschema-specifications==2023.12.1
-kiwisolver==1.4.5
-lazy_loader==0.3
-linkml-runtime==1.7.3
-matplotlib==3.8.3
+# django stuff
+bootstrap4
+django-plotly-dash
+dpd_static_support
+dash-bootstrap-components
+django-bootstrap4
+dash_mantine_components
+hypothesis
+dash-iconify
+
+# omero stuff
 microscopemetrics @ git+https://github.com/juliomateoslangerak/microscope-metrics.git@dev
 microscopemetrics_schema @ git+https://github.com/juliomateoslangerak/microscopemetrics-schema.git@dev
-networkx==3.2.1
-numpy==1.26.4
 # zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-macos-universal2/releases/download/20240131/zeroc_ice-3.6.5-cp311-cp311-macosx_11_0_universal2.whl
 zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-linux-x86_64/releases/download/20240202/zeroc_ice-3.6.5-cp311-cp311-manylinux_2_28_x86_64.whl
 omero-py==5.19.0
-packaging==24.0
-pandas==1.5.3
-pillow==10.2.0
-pluggy==1.4.0
-portalocker==2.8.2
-prefixcommons==0.1.12
-prefixmaps==0.2.2
-pydantic==2.6.4
-pydantic_core==2.16.3
-pyparsing==3.1.2
-pytest==8.1.1
-pytest-logging==2015.11.4
-python-dateutil==2.9.0.post0
-PyTrie==0.4.0
-pytz==2024.1
-PyWavelets==1.5.0
-PyYAML==6.0.1
-rdflib==7.0.0
-referencing==0.34.0
-requests==2.31.0
-rpds-py==0.18.0
-scikit-image==0.21.0
-scipy==1.12.0
-six==1.16.0
-sortedcontainers==2.4.0
-tifffile==2024.2.12
-typing_extensions==4.10.0
-urllib3==1.26.18
-wrapt==1.16.0
