@@ -1,5 +1,6 @@
 import json
 import logging
+import mimetypes
 from itertools import product
 from random import choice
 from string import ascii_letters
@@ -873,6 +874,25 @@ def create_comment(
     _link_annotation(omero_object, comment_ann)
 
     return comment_ann
+
+
+def create_file(
+    conn: BlitzGateway,
+    file_path: str,
+    omero_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
+    file_description: str,
+    namespace: str,
+):
+    if not isinstance(file_path, str):
+        raise TypeError(f'file_path {file_path} must be a string')
+
+    mimetype, _ = mimetypes.guess_type(file_path)
+    file_ann = conn.createFileAnnfromLocalFile(
+        file_path, mimetype=mimetype, ns=namespace, desc=file_description)
+    _link_annotation(omero_object, file_ann)
+
+    return file_ann
+
 
 
 def _link_annotation(
