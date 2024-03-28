@@ -53,6 +53,7 @@ projects:
       name_project: Field Illumination 60x
       description_project: Field Illumination taken with 60x objective
       analysis_class: FieldIlluminationDataset
+      attachments_dir: field_illumination
       nr_datasets: 2
       start_date: 2021-01-01
       month_frequency: 1
@@ -89,6 +90,7 @@ projects:
       name_project: Field Illumination 10x
       description_project: Field Illumination taken with 10x objective
       analysis_class: FieldIlluminationDataset
+      attachments_dir: field_illumination
       nr_datasets: 4
       start_date: 2021-01-04
       month_frequency: 2
@@ -125,6 +127,7 @@ projects:
       name_project: PSF beads 60x
       description_project: PSF beads taken with the 60x objective
       analysis_class: PSFBeadsDataset
+      attachments_dir: psf_beads
       nr_datasets: 2
       start_date: 2021-01-01
       month_frequency: 1
@@ -180,6 +183,7 @@ projects:
       name_project: Field Illumination 40x
       description_project: Field Illumination taken with 40x objective
       analysis_class: FieldIlluminationDataset
+      attachments_dir: field_illumination
       nr_datasets: 2
       start_date: 2021-01-01
       month_frequency: 1
@@ -216,6 +220,7 @@ projects:
       name_project: Field Illumination 20x
       description_project: Field Illumination taken with 20x objective
       analysis_class: FieldIlluminationDataset
+      attachments_dir: field_illumination
       nr_datasets: 4
       start_date: 2021-01-04
       month_frequency: 2
@@ -252,6 +257,7 @@ projects:
       name_project: PSF beads 40x
       description_project: PSF beads taken with the 40x objective
       analysis_class: PSFBeadsDataset
+      attachments_dir: psf_beads
       nr_datasets: 2
       start_date: 2021-01-01
       month_frequency: 1

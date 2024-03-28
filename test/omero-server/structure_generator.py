@@ -2,10 +2,13 @@
 # on the OMERO server. This structure is used to test the omero-metrics package.
 
 import logging
+import mimetypes
+
 import yaml
 import numpy as np
 import random
 from datetime import datetime, timedelta
+from os import path
 
 from omero.gateway import BlitzGateway
 from omero.cli import CLI
@@ -140,6 +143,13 @@ GENERATOR_MAPPER = {
     "PSFBeadsDataset": psf_beads_generator,
 }
 
+def _attach_config(conn, project, file_path):
+    mimetype, _ = mimetypes.guess_type(file_path)
+    file_ann = conn.createFileAnnfromLocalFile(
+        file_path, mimetype=mimetype, desc="configuration file")
+    project.linkAnnotation(file_ann)
+
+
 def generate_users_groups(conn, users: dict, groups: dict):
     session_uuid = conn.getSession().getUuid().val
     host = conn.host
@@ -258,7 +268,6 @@ if __name__ == "__main__":
 
         generate_users_groups(conn, server_structure["users"], server_structure["microscopes"])
 
-        omero_project_ids = []
         for microscope_name, microscope_projects in server_structure["projects"].items():
             for project in microscope_projects.values():
                 mm_project = mm_schema.HarmonizedMetricsDatasetCollection(
@@ -269,7 +278,14 @@ if __name__ == "__main__":
                 )
                 temp_conn = conn.suConn(project["owner"], microscope_name)
                 omero_project = dump.dump_project(temp_conn, mm_project, dump_output=False)
-                omero_project_ids.append(omero_project.getId())
+                config_file_path = path.join(
+                    path.dirname(__file__),
+                    "config_files",
+                    project["config_file"],
+                    "study_config.yaml"
+                )
+                _attach_config(temp_conn, omero_project, config_file_path)
+
                 temp_conn.close()
 
     finally:
