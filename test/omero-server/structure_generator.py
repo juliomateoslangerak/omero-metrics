@@ -277,7 +277,13 @@ if __name__ == "__main__":
                     dataset_class=project["analysis_class"],
                 )
                 temp_conn = conn.suConn(project["owner"], microscope_name)
-                omero_project = dump.dump_project(temp_conn, mm_project, dump_output=False)
+                omero_project = dump.dump_project(
+                    temp_conn,
+                    mm_project,
+                    dump_input_images=True,
+                    dump_input=False,
+                    dump_output=False,
+                )
                 config_file_path = path.join(
                     path.dirname(__file__),
                     "config_files",
