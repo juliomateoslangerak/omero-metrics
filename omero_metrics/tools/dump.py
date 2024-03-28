@@ -351,24 +351,15 @@ def dump_table(
     append_to_existing: bool = False,
     as_table: bool = False,
 ):
-    if isinstance(table, mm_schema.TableAsDict):
     # TODO: get object from reference
+    if isinstance(table, mm_schema.Table):
         # linkML if casting everything as a string and we have to evaluate it back
         columns = {c.name: [_eval(v) for v in c.values] for c in table.columns.values()}
         return omero_tools.create_table(
             conn=conn,
             table=columns,
             table_name=table.name,
-            omero_object=omero_object,
-            table_description=table.description,
-            namespace=table.class_model_uri,
-        )
-    elif isinstance(table, mm_schema.TableAsPandasDF):
-        return omero_tools.create_table(
-            conn=conn,
-            table=table.df,
-            table_name=table.name,
-            omero_object=omero_object,
+            omero_object=target_object,
             table_description=table.description,
             namespace=table.class_model_uri,
         )
