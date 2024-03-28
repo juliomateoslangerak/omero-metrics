@@ -247,7 +247,7 @@ def dump_image(
 def dump_roi(
     conn: BlitzGateway,
     roi: mm_schema.Roi,
-    target_image: ImageWrapper,
+    target_image: ImageWrapper = None,
     append_to_existing: bool = False,
     as_table: bool = False,
 ):
@@ -255,6 +255,7 @@ def dump_roi(
         logger.error(
             f"ROI {roi.class_name} cannot be appended to existing or dumped as table. Skipping dump."
         )
+    # TODO: get image from reference
     if not isinstance(target_image, ImageWrapper):
         logger.error(
             f"ROI {roi.label} must be linked to an image. {target_image} object provided is not an image."
@@ -279,7 +280,7 @@ def dump_roi(
 def dump_tag(
     conn: BlitzGateway,
     tag: mm_schema.Tag,
-    target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
+    target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper] = None,
     append_to_existing: bool = False,
     as_table: bool = False,
 ):
@@ -287,6 +288,7 @@ def dump_tag(
         logger.error(
             f"Tag {tag.class_name} cannot be appended to existing or dumped as table. Skipping dump."
         )
+    # TODO: get object from reference
 
     omero_tag = omero_tools.create_tag(
         conn=conn,
@@ -302,7 +304,7 @@ def dump_tag(
 def dump_key_value(
     conn: BlitzGateway,
     key_values: mm_schema.KeyValues,
-    target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
+    target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper] = None,
     append_to_existing: bool = False,
     as_table: bool = False,
 ):
@@ -310,6 +312,8 @@ def dump_key_value(
         logger.error(
             f"KeyValues {key_values.class_name} cannot yet be appended to existing or dumped as table. Skipping dump."
         )
+
+    # TODO: get object from reference
     omero_key_value = omero_tools.create_key_value(
         conn=conn,
         annotation=key_values._as_dict,
@@ -343,11 +347,12 @@ def _eval_types(table: mm_schema.Table):
 def dump_table(
     conn: BlitzGateway,
     table: mm_schema.Table,
-    omero_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
+    target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper] = None,
     append_to_existing: bool = False,
     as_table: bool = False,
 ):
     if isinstance(table, mm_schema.TableAsDict):
+    # TODO: get object from reference
         # linkML if casting everything as a string and we have to evaluate it back
         columns = {c.name: [_eval(v) for v in c.values] for c in table.columns.values()}
         return omero_tools.create_table(
