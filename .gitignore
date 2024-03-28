@@ -9,3 +9,8 @@ react-webapp/react_webapp/templates/
 
 # PyCharm files
 .idea
+
+# Credentials
+credentials.json
+
+
