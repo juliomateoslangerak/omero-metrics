@@ -247,7 +247,7 @@ def dump_image(
 def dump_roi(
     conn: BlitzGateway,
     roi: mm_schema.Roi,
-    target_image: ImageWrapper = None,
+    target_images: Union[ImageWrapper, list[ImageWrapper]] = None,
     append_to_existing: bool = False,
     as_table: bool = False,
 ):
@@ -255,10 +255,22 @@ def dump_roi(
         logger.error(
             f"ROI {roi.class_name} cannot be appended to existing or dumped as table. Skipping dump."
         )
+
+    if target_images is None:
+        try:
+            target_images = omero_tools.get_omero_obj_from_ref(
+                conn=conn,
+                ref=roi.linked_objects
+            )
+        except AttributeError:
+            logger.error(
+                f"ROI {roi.name} must be linked to an image. No image provided."
+            )
+            return None
     # TODO: get image from reference
-    if not isinstance(target_image, ImageWrapper):
+    if not isinstance(target_images, ImageWrapper):
         logger.error(
-            f"ROI {roi.label} must be linked to an image. {target_image} object provided is not an image."
+            f"ROI {roi.name} must be linked to an image. {target_images} object provided is not an image."
         )
         return None
     shapes = []
@@ -269,12 +281,14 @@ def dump_roi(
 
     omero_roi = omero_tools.create_roi(
         conn=conn,
-        image=target_image,
+        image=target_images,
         shapes=shapes,
-        name=roi.label,
+        name=roi.name,
         description=roi.description,
     )
     _append_reference(roi, omero_tools.get_ref_from_object(omero_roi))
+
+    return omero_roi
 
 
 def dump_tag(
