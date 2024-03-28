@@ -8,7 +8,7 @@ import yaml
 import numpy as np
 import random
 from datetime import datetime, timedelta
-from os import path
+import os
 
 from omero.gateway import BlitzGateway
 from omero.cli import CLI
@@ -284,13 +284,14 @@ if __name__ == "__main__":
                     dump_input=False,
                     dump_output=False,
                 )
-                config_file_path = path.join(
-                    path.dirname(__file__),
+                dir_attachments = os.path.join(
+                    os.path.dirname(__file__),
                     "config_files",
-                    project["config_file"],
-                    "study_config.yaml"
+                    project["attachments_dir"]
                 )
-                _attach_config(temp_conn, omero_project, config_file_path)
+                attachment_files = [os.path.join(dir_path, f) for (dir_path, dir_names, filenames) in os.walk(dir_attachments) for f in filenames]
+                for file_path in attachment_files:
+                    _attach_config(temp_conn, omero_project, file_path)
 
                 temp_conn.close()
 
