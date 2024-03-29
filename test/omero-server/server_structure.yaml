@@ -56,11 +56,12 @@ projects:
       owner: Asterix
       name_project: Field Illumination 60x
       description_project: Field Illumination taken with 60x objective
-      analysis_class: FieldIlluminationDataset
+      dataset_class: FieldIlluminationDataset
       attachments_dir: field_illumination
       nr_datasets: 2
       start_date: 2021-01-01
       month_frequency: 1
+      process: true
       name_dataset: FI_60x
       description_dataset: Field Illumination dataset
       channel_names: [["DAPI"], ["FITC"], ["TRITC", "CY5"]]
@@ -93,11 +94,12 @@ projects:
       owner: Asterix
       name_project: Field Illumination 10x
       description_project: Field Illumination taken with 10x objective
-      analysis_class: FieldIlluminationDataset
+      dataset_class: FieldIlluminationDataset
       attachments_dir: field_illumination
       nr_datasets: 4
       start_date: 2021-01-04
       month_frequency: 2
+      process: false
       name_dataset: FI_10x
       description_dataset: Field Illumination dataset
       channel_names: [["DAPI"], ["FITC"], ["TRITC", "CY5"]]
@@ -130,11 +132,12 @@ projects:
       owner: Obelix
       name_project: PSF beads 60x
       description_project: PSF beads taken with the 60x objective
-      analysis_class: PSFBeadsDataset
+      dataset_class: PSFBeadsDataset
       attachments_dir: psf_beads
       nr_datasets: 2
       start_date: 2021-01-01
       month_frequency: 1
+      process: false
       name_dataset: PSF-beads_60x
       description_dataset: PSF beads dataset
       channel_names: [ [ "DAPI", "FITC", "TRITC", "CY5" ] ]
@@ -186,11 +189,12 @@ projects:
       owner: Asterix
       name_project: Field Illumination 40x
       description_project: Field Illumination taken with 40x objective
-      analysis_class: FieldIlluminationDataset
+      dataset_class: FieldIlluminationDataset
       attachments_dir: field_illumination
       nr_datasets: 2
       start_date: 2021-01-01
       month_frequency: 1
+      process: false
       name_dataset: FI_60x
       description_dataset: Field Illumination dataset
       channel_names: [["DAPI"], ["FITC"], ["TRITC", "CY5"]]
@@ -223,11 +227,12 @@ projects:
       owner: Asterix
       name_project: Field Illumination 20x
       description_project: Field Illumination taken with 20x objective
-      analysis_class: FieldIlluminationDataset
+      dataset_class: FieldIlluminationDataset
       attachments_dir: field_illumination
       nr_datasets: 4
       start_date: 2021-01-04
       month_frequency: 2
+      process: false
       name_dataset: FI_10x
       description_dataset: Field Illumination dataset
       channel_names: [["DAPI"], ["FITC"], ["TRITC", "CY5"]]
@@ -260,11 +265,12 @@ projects:
       owner: Panoramix
       name_project: PSF beads 40x
       description_project: PSF beads taken with the 40x objective
-      analysis_class: PSFBeadsDataset
+      dataset_class: PSFBeadsDataset
       attachments_dir: psf_beads
       nr_datasets: 2
       start_date: 2021-01-01
       month_frequency: 1
+      process: false
       name_dataset: PSF-beads_60x
       description_dataset: PSF beads dataset
       channel_names: [ [ "DAPI", "FITC", "TRITC", "CY5" ] ]

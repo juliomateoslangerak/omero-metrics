@@ -101,20 +101,21 @@ def get_object_ids_from_url(url: str) -> List[Tuple[str, int]]:
     
 
 def get_omero_obj_from_ref(conn: BlitzGateway, ref: Dict) -> Union[ImageWrapper, DatasetWrapper, ProjectWrapper]:
-    return conn.getObject(ref["omero_object_type"], ref["omero_object_id"])
+    return conn.getObject(str(ref.omero_object_type.code.text), ref.omero_object_id)
 
 
 def get_ref_from_object(obj: Union[ImageWrapper, DatasetWrapper, ProjectWrapper]) -> dict:
     """Get the reference information from an OMERO object"""
     logger.debug(f"get_ref_from_object: object type is {type(obj)}")
 
-    return {
+    ref = {
         "data_uri": f"https://{obj._conn.host}/webclient/?show={obj.OMERO_CLASS}-{obj.getId()}",
-        "omero_host": obj._conn.host,
-        "omero_port": obj._conn.port,
+        "omero_host": str(obj._conn.host),
+        "omero_port": int(obj._conn.port),
         "omero_object_type": obj.OMERO_CLASS,
         "omero_object_id": obj.getId()
     }
+    return ref
 
 
 def _label_channels(image: ImageWrapper, labels: List):

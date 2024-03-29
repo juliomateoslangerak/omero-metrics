@@ -178,7 +178,7 @@ def _dump_dataset_output(
                 dump_key_value(
                     conn=conn,
                     key_values=output_element,
-                    # target_object=target_dataset,
+                    target_object=target_dataset,
                     # append_to_existing=append_to_existing,
                     # as_table=as_table,
                 )
@@ -186,7 +186,7 @@ def _dump_dataset_output(
                 dump_table(
                     conn=conn,
                     table=output_element,
-                    # target_object=target_dataset,
+                    target_object=target_dataset,
                     # append_to_existing=append_to_existing,
                     # as_table=as_table,
                 )
@@ -194,12 +194,12 @@ def _dump_dataset_output(
                 dump_comment(
                     conn=conn,
                     comment=output_element,
-                    omero_object=target_dataset,
+                    target_object=target_dataset,
                     # append_to_existing=append_to_existing,
                     # as_table=as_table,
                 )
             case _:
-                logger.error(f"{output_element.class_name} output could not be dumped to OMERO")
+                logger.error(f"{output_field.name} output could not be dumped to OMERO")
                 continue
 
 
@@ -258,16 +258,19 @@ def dump_roi(
 
     if target_images is None:
         try:
-            target_images = omero_tools.get_omero_obj_from_ref(
-                conn=conn,
-                ref=roi.linked_objects
-            )
+            target_images = [
+                omero_tools.get_omero_obj_from_ref(
+                    conn=conn,
+                    ref=ref
+                )
+                for ref in roi.linked_objects
+            ]
         except AttributeError:
             logger.error(
                 f"ROI {roi.name} must be linked to an image. No image provided."
             )
             return None
-    # TODO: get image from reference
+
     if not isinstance(target_images, ImageWrapper):
         logger.error(
             f"ROI {roi.name} must be linked to an image. {target_images} object provided is not an image."
@@ -302,7 +305,17 @@ def dump_tag(
         logger.error(
             f"Tag {tag.class_name} cannot be appended to existing or dumped as table. Skipping dump."
         )
-    # TODO: get object from reference
+    if target_object is None:
+        try:
+            target_object = omero_tools.get_omero_obj_from_ref(
+                conn=conn,
+                ref=tag.linked_objects
+            )
+        except AttributeError:
+            logger.error(
+                f"ROI {tag.name} must be linked to an image. No image provided."
+            )
+            return None
 
     omero_tag = omero_tools.create_tag(
         conn=conn,
@@ -327,7 +340,18 @@ def dump_key_value(
             f"KeyValues {key_values.class_name} cannot yet be appended to existing or dumped as table. Skipping dump."
         )
 
-    # TODO: get object from reference
+    if target_object is None:
+        try:
+            target_object = omero_tools.get_omero_obj_from_ref(
+                conn=conn,
+                ref=key_values.linked_objects
+            )
+        except AttributeError:
+            logger.error(
+                f"ROI {key_values.name} must be linked to an image. No image provided."
+            )
+            return None
+
     omero_key_value = omero_tools.create_key_value(
         conn=conn,
         annotation=key_values._as_dict,
@@ -365,7 +389,18 @@ def dump_table(
     append_to_existing: bool = False,
     as_table: bool = False,
 ):
-    # TODO: get object from reference
+    if target_object is None:
+        try:
+            target_object = omero_tools.get_omero_obj_from_ref(
+                conn=conn,
+                ref=table.linked_objects
+            )
+        except AttributeError:
+            logger.error(
+                f"ROI {table.name} must be linked to an image. No image provided."
+            )
+            return None
+
     if isinstance(table, mm_schema.Table):
         # linkML if casting everything as a string and we have to evaluate it back
         columns = {c.name: [_eval(v) for v in c.values] for c in table.columns.values()}
@@ -385,11 +420,21 @@ def dump_table(
 def dump_comment(
     conn: BlitzGateway,
     comment: mm_schema.Comment,
-    omero_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
+    target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
     append_to_existing: bool = False,
     as_table: bool = False,
 ):
-    # TODO: we should dump details on the comments. Like authors, date, etc.
+    if target_object is None:
+        try:
+            target_object = omero_tools.get_omero_obj_from_ref(
+                conn=conn,
+                ref=comment.linked_objects
+            )
+        except AttributeError:
+            logger.error(
+                f"ROI {comment.name} must be linked to an image. No image provided."
+            )
+            return None
     if append_to_existing or as_table:
         logger.error(
             f"Comment {comment.class_name} cannot be appended to existing or dumped as table. Skipping dump."
@@ -397,6 +442,6 @@ def dump_comment(
     return omero_tools.create_comment(
         conn=conn,
         comment_text=comment.text,
-        omero_object=omero_object,
+        omero_object=target_object,
         namespace=comment.class_model_uri,
     )
