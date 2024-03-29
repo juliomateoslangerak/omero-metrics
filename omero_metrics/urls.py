@@ -3,8 +3,8 @@ from django.views.generic import TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
 # Load demo plotlyapps - this triggers their registration
-import omero_metrics.plotly_apps 
-import omero_metrics.dash_apps
+import omero_metrics.dash_apps.plotly_apps
+import omero_metrics.dash_apps.dash_apps
 # pylint: disable=unused-import
 from django_plotly_dash.views import add_to_session
 from .views import dash_example_1_view, session_state_view  #,data_view
