@@ -4,21 +4,25 @@ users:
     first_name: Abraracurcix
     last_name: CoreFacilityManager
     default_group: core_facility_staff
+    avatar: Abraracurcix.png
   Asterix:
     password: abc123
     first_name: Asterix
     last_name: CoreFacilityStaff
     default_group: core_facility_staff
+    avatar: Asterix.png
   Obelix:
     password: abc123
     first_name: Obelix
     last_name: CoreFacilityStaff
     default_group: core_facility_staff
+    avatar: Obelix.png
   Panoramix:
     password: abc123
     first_name: Panoramix
     last_name: CoreFacilityStaff
     default_group: core_facility_staff
+    avatar: Panoramix.png
 
 microscopes:
   core_facility_staff:
