@@ -270,7 +270,7 @@ projects:
       nr_datasets: 2
       start_date: 2021-01-01
       month_frequency: 1
-      process: false
+      process: true
       name_dataset: PSF-beads_60x
       description_dataset: PSF beads dataset
       channel_names: [ [ "DAPI", "FITC", "TRITC", "CY5" ] ]
