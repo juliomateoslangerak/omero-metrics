@@ -305,11 +305,11 @@ def dump_roi(
     if target_images is None:
         try:
             target_images = [
-                omero_tools.get_omero_obj_from_ref(
+                omero_tools.get_omero_obj_from_mm_obj(
                     conn=conn,
-                    ref=ref
+                    mm_obj=ref
                 )
-                for ref in roi.linked_objects
+                for ref in roi.linked_objects if isinstance(ref, mm_schema.DataReference)
             ]
         except AttributeError:
             logger.error(
@@ -353,9 +353,9 @@ def dump_tag(
         )
     if target_object is None:
         try:
-            target_object = omero_tools.get_omero_obj_from_ref(
+            target_object = omero_tools.get_omero_obj_from_mm_obj(
                 conn=conn,
-                ref=tag.linked_objects
+                mm_obj=tag.linked_objects
             )
         except AttributeError:
             logger.error(
@@ -388,9 +388,9 @@ def dump_key_value(
 
     if target_object is None:
         try:
-            target_object = omero_tools.get_omero_obj_from_ref(
+            target_object = omero_tools.get_omero_obj_from_mm_obj(
                 conn=conn,
-                ref=key_values.linked_objects
+                mm_obj=key_values.linked_objects
             )
         except AttributeError:
             logger.error(
@@ -437,9 +437,9 @@ def dump_table(
 ):
     if target_object is None:
         try:
-            target_object = omero_tools.get_omero_obj_from_ref(
+            target_object = omero_tools.get_omero_obj_from_mm_obj(
                 conn=conn,
-                ref=table.linked_objects
+                mm_obj=table.linked_objects
             )
         except AttributeError:
             logger.error(
@@ -472,9 +472,9 @@ def dump_comment(
 ):
     if target_object is None:
         try:
-            target_object = omero_tools.get_omero_obj_from_ref(
+            target_object = omero_tools.get_omero_obj_from_mm_obj(
                 conn=conn,
-                ref=comment.linked_objects
+                mm_obj=comment.linked_objects
             )
         except AttributeError:
             logger.error(

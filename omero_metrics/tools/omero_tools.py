@@ -100,8 +100,11 @@ def get_object_ids_from_url(url: str) -> List[Tuple[str, int]]:
         return [(tail.split("-")[0], int(tail.split("-")[-1]))]
     
 
-def get_omero_obj_from_ref(conn: BlitzGateway, ref: Dict) -> Union[ImageWrapper, DatasetWrapper, ProjectWrapper]:
-    return conn.getObject(str(ref.omero_object_type.code.text), ref.omero_object_id)
+def get_omero_obj_from_mm_obj(conn: BlitzGateway, mm_obj: Dict) -> Union[ImageWrapper, DatasetWrapper, ProjectWrapper]:
+    if not isinstance(mm_obj.omero_object_type, tuple):
+        return conn.getObject(str(mm_obj.omero_object_type.code.text), mm_obj.omero_object_id)
+    else:
+        return conn.getObject(mm_obj.omero_object_type[0], mm_obj.omero_object_id)
 
 
 def get_ref_from_object(obj: Union[ImageWrapper, DatasetWrapper, ProjectWrapper]) -> dict:
