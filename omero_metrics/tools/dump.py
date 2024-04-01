@@ -98,30 +98,38 @@ def dump_dataset(
         logger.error(
             f"Dataset {dataset.class_name} cannot be appended to existing or dumped as table. Skipping dump."
         )
-    # TODO: We need to get the project from the dataset's parent project
-    if target_project is None:
+
+    if dataset.omero_object_id is not None:
         try:
-            target_project = omero_tools.get_omero_obj_from_ref(
+            omero_dataset = omero_tools.get_omero_obj_from_mm_obj(
                 conn=conn,
-                ref={
-                    "omero_object_type": dataset.microscope.omero_object_type,
-                    "omero_object_id": dataset.microscope.omero_object_id,
-                }
+                mm_obj=dataset
             )
-        except AttributeError:
-            # TODO: Dump dataset as orphan dataset
+            logger.info(f"Retrieving dataset {dataset.name} from OMERO")
+        except Exception as e:
+            logger.error(f"Dataset {dataset.name} could not be retrieved from OMERO: {e}")
+            raise e
+    else:
+        if target_project is None:
+            logger.warning(
+                f"Creating new dataset {dataset.name} in OMERO"
+                f"Do target project was provided and an orphan dataset will be created."
+            )
+        elif not isinstance(target_project, ProjectWrapper):
             logger.error(
-                f"Dataset {dataset.name} must be linked to a project/microscope. No project provided."
+                f"Dataset {dataset.name} must be linked to a project. {target_project} object provided is not a project."
             )
             return None
+        else:
+            logger.info(f"Creating new dataset {dataset.name} in OMERO")
 
-    omero_dataset = omero_tools.create_dataset(
-        conn=conn,
-        dataset_name=dataset.name,
-        description=dataset.description,
-        project=target_project,
-    )
-    _append_reference(dataset, omero_tools.get_ref_from_object(omero_dataset))
+        omero_dataset = omero_tools.create_dataset(
+            conn=conn,
+            dataset_name=dataset.name,
+            description=dataset.description,
+            project=target_project,
+        )
+        _append_reference(dataset, omero_tools.get_ref_from_object(omero_dataset))
 
     input_params = {}
     for input_field in fields(dataset.input):
