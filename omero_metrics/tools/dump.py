@@ -98,6 +98,7 @@ def dump_dataset(
         logger.error(
             f"Dataset {dataset.class_name} cannot be appended to existing or dumped as table. Skipping dump."
         )
+    # TODO: We need to get the project from the dataset's parent project
     if target_project is None:
         try:
             target_project = omero_tools.get_omero_obj_from_ref(
