@@ -40,16 +40,36 @@ def _append_reference(obj:mm_schema.MetricsObject, ref):
 def dump_project(
     conn: BlitzGateway,
     project: mm_schema.MetricsDatasetCollection,
+    target_project: ProjectWrapper = None,
     dump_input_images: bool = False,
     dump_input: bool = True,
     dump_output: bool = True,
 ) -> ProjectWrapper:
-    omero_project = omero_tools.create_project(
-        conn=conn,
-        name=project.name,
-        description=project.description
-    )
-    _append_reference(project, omero_tools.get_ref_from_object(omero_project))
+    if target_project is None:
+        if project.omero_object_id is not None:
+            omero_project = omero_tools.get_omero_obj_from_mm_obj(
+                conn=conn,
+                mm_obj=project
+            )
+        else:
+            omero_project = omero_tools.create_project(
+                conn=conn,
+                name=project.name,
+                description=project.description
+            )
+            _append_reference(project, omero_tools.get_ref_from_object(omero_project))
+    else:
+        if not isinstance(target_project, ProjectWrapper):
+            logger.error(
+                f"Project {project.name} must be linked to a project. {target_project} object provided is not a project."
+            )
+            return None
+        if project.omero_object_id != target_project.getId():
+            logger.warning(
+                f"Project {project.name} is going to be linked to a different OMERO project."
+            )
+        omero_project = target_project
+        _append_reference(project, omero_tools.get_ref_from_object(omero_project))
 
     for dataset in project.datasets:
         dump_dataset(
