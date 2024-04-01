@@ -557,13 +557,13 @@ def _rgba_to_int(rgba_color: mm_schema.Color):
 
 def _set_shape_properties(
     shape,
-    label: str = None,
+    name: str = None,
     fill_color: mm_schema.Color = None,
     stroke_color: mm_schema.Color = None,
     stroke_width: int = None,
 ):
-    if label is not None:
-        shape.setTextValue(rstring(label))
+    if name is not None:
+        shape.setTextValue(rstring(name))
     if fill_color is not None:
         shape.setFillColor(rint(_rgba_to_int(fill_color)))
     if stroke_color is not None:
@@ -584,7 +584,7 @@ def create_shape_point(mm_point: mm_schema.Point):
         point.theT = rint(mm_point.t)
     _set_shape_properties(
         shape=point,
-        label=mm_point.label,
+        name=mm_point.name,
         stroke_color=mm_point.stroke_color,
         stroke_width=mm_point.stroke_width,
         fill_color=mm_point.fill_color,
@@ -604,7 +604,7 @@ def create_shape_line(mm_line: mm_schema.Line):
         line.theC = rint(mm_line.c)
     _set_shape_properties(
         shape=line,
-        label=mm_line.label,
+        name=mm_line.name,
         stroke_color=mm_line.stroke_color,
         stroke_width=mm_line.stroke_width,
     )
@@ -621,7 +621,7 @@ def create_shape_rectangle(mm_rectangle: mm_schema.Rectangle):
     rect.theT = rint(mm_rectangle.t)
     _set_shape_properties(
         shape=rect,
-        label=mm_rectangle.label,
+        name=mm_rectangle.name,
         fill_color=mm_rectangle.fill_color,
         stroke_color=mm_rectangle.stroke_color,
         stroke_width=mm_rectangle.stroke_width,
@@ -639,7 +639,7 @@ def create_shape_ellipse(mm_ellipse: mm_schema.Ellipse):
     ellipse.theT = rint(mm_ellipse.t)
     _set_shape_properties(
         ellipse,
-        label=mm_ellipse.label,
+        name=mm_ellipse.name,
         fill_color=mm_ellipse.fill_color,
         stroke_color=mm_ellipse.stroke_color,
         stroke_width=mm_ellipse.stroke_width,
@@ -657,7 +657,7 @@ def create_shape_polygon(mm_polygon: mm_schema.Polygon):
     polygon.theT = rint(mm_polygon.t)
     _set_shape_properties(
         polygon,
-        label=mm_polygon.label,
+        name=mm_polygon.name,
         fill_color=mm_polygon.fill_color,
         stroke_color=mm_polygon.stroke_color,
         stroke_width=mm_polygon.stroke_width,
@@ -677,7 +677,7 @@ def create_shape_mask(mm_mask: mm_schema.Mask):
     mask.setBytes(mask_packed.tobytes())  # TODO: review how to setBytes when not a np.array
     _set_shape_properties(
         mask,
-        label=mm_mask.label,
+        name=mm_mask.name,
         fill_color=mm_mask.fill_color,
     )
     return mask
