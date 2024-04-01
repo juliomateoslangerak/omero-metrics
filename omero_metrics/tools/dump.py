@@ -318,7 +318,7 @@ def dump_roi(
             )
             return None
 
-    if not isinstance(target_images, ImageWrapper):
+    if len(target_images) == 0:
         logger.error(
             f"ROI {roi.name} must be linked to an image. {target_images} object provided is not an image."
         )
@@ -329,14 +329,17 @@ def dump_roi(
             shapes += [SHAPE_TYPE_TO_FUNCTION[shape_field.name](shape)
                        for shape in getattr(roi, shape_field.name)]
 
-    omero_roi = omero_tools.create_roi(
-        conn=conn,
-        image=target_images,
-        shapes=shapes,
-        name=roi.name,
-        description=roi.description,
-    )
-    _append_reference(roi, omero_tools.get_ref_from_object(omero_roi))
+    omero_rois = []
+    for target_image in target_images:
+        omero_roi = omero_tools.create_roi(
+            conn=conn,
+            image=target_image,
+            shapes=shapes,
+            name=roi.name,
+            description=roi.description,
+        )
+        omero_rois.append(omero_roi)
+        _append_reference(roi, omero_tools.get_ref_from_object(omero_roi))
 
     return omero_roi
 
