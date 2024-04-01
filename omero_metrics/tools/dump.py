@@ -20,8 +20,8 @@ SHAPE_TO_FUNCTION = {
 }
 
 SHAPE_TYPE_TO_FUNCTION = {
-    "point": omero_tools.create_shape_point,
-    "line": omero_tools.create_shape_line,
+    "points": omero_tools.create_shape_point,
+    "lines": omero_tools.create_shape_line,
     "rectangles": omero_tools.create_shape_rectangle,
     "ellipses": omero_tools.create_shape_ellipse,
     "polygons": omero_tools.create_shape_polygon,
