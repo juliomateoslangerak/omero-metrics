@@ -176,52 +176,78 @@ def _dump_dataset_output(
 
     for output_field in fields(dataset_output):
         output_element = getattr(dataset_output, output_field.name)
-
-        match output_element:
-            case mm_schema.Image():
-                dump_image(
+        if isinstance(output_element, list):
+            for element in output_element:
+                _dump_output_element(
                     conn=conn,
-                    image=output_element,
+                    output_element=element,
                     target_dataset=target_dataset,
-                )
-            case mm_schema.Roi():
-                dump_roi(
-                    conn=conn,
-                    roi=output_element,
-                )
-            case mm_schema.Tag():
-                dump_tag(
-                    conn=conn,
-                    tag=output_element,
-                )
-            case mm_schema.KeyValues():
-                dump_key_value(
-                    conn=conn,
-                    key_values=output_element,
-                    target_object=target_dataset,
                     # append_to_existing=append_to_existing,
                     # as_table=as_table,
                 )
-            case mm_schema.Table():
-                dump_table(
-                    conn=conn,
-                    table=output_element,
-                    target_object=target_dataset,
-                    # append_to_existing=append_to_existing,
-                    # as_table=as_table,
-                )
-            case mm_schema.Comment():
-                dump_comment(
-                    conn=conn,
-                    comment=output_element,
-                    target_object=target_dataset,
-                    # append_to_existing=append_to_existing,
-                    # as_table=as_table,
-                )
-            case _:
-                logger.error(f"{output_field.name} output could not be dumped to OMERO")
-                continue
+        else:
+            _dump_output_element(
+                conn=conn,
+                output_element=output_element,
+                target_dataset=target_dataset,
+                # append_to_existing=append_to_existing,
+                # as_table=as_table,
+            )
 
+
+def _dump_output_element(
+    conn: BlitzGateway,
+    output_element,
+    target_dataset: DatasetWrapper,
+    # append_to_existing: bool = False,
+    # as_table: bool = False,
+):
+    match output_element:
+        case mm_schema.Image():
+            dump_image(
+                conn=conn,
+                image=output_element,
+                target_dataset=target_dataset,
+            )
+        case mm_schema.Roi():
+            dump_roi(
+                conn=conn,
+                roi=output_element,
+            )
+        case mm_schema.Tag():
+            dump_tag(
+                conn=conn,
+                tag=output_element,
+            )
+        case mm_schema.KeyValues():
+            dump_key_value(
+                conn=conn,
+                key_values=output_element,
+                target_object=target_dataset,
+                # append_to_existing=append_to_existing,
+                # as_table=as_table,
+            )
+        # case mm_schema.Table():
+        #     dump_table(
+        #         conn=conn,
+        #         table=output_element,
+        #         target_object=target_dataset,
+        #         # append_to_existing=append_to_existing,
+        #         # as_table=as_table,
+        #     )
+        # case mm_schema.Comment():
+        #     dump_comment(
+        #         conn=conn,
+        #         comment=output_element,
+        #         target_object=target_dataset,
+        #         # append_to_existing=append_to_existing,
+        #         # as_table=as_table,
+        #     )
+        case _:
+            try:
+                logger.error(f"{output_element.name} output could not be dumped to OMERO")
+            except AttributeError:
+                logger.error(f"{output_element} output could not be dumped to OMERO")
 
 def dump_image(
     conn: BlitzGateway,
