@@ -100,25 +100,32 @@ def get_object_ids_from_url(url: str) -> List[Tuple[str, int]]:
         return [(tail.split("-")[0], int(tail.split("-")[-1]))]
     
 
-def get_omero_obj_from_mm_obj(conn: BlitzGateway, mm_obj: Dict) -> Union[ImageWrapper, DatasetWrapper, ProjectWrapper]:
-    if not isinstance(mm_obj.omero_object_type, tuple):
-        return conn.getObject(str(mm_obj.omero_object_type.code.text), mm_obj.omero_object_id)
+def get_omero_obj_from_mm_obj(conn: BlitzGateway, mm_obj: mm_schema.MetricsObject) -> Union[ImageWrapper, DatasetWrapper, ProjectWrapper]:
+    # if not isinstance(mm_obj.omero_object_type, tuple):
+    #     return conn.getObject(str(mm_obj.omero_object_type.code.text), mm_obj.omero_object_id)
+    # else:
+    #     return conn.getObject(mm_obj.omero_object_type[0], mm_obj.omero_object_id)
+    if isinstance(mm_obj, mm_schema.DataReference):
+        return conn.getObject(mm_obj.omero_object_type, mm_obj.omero_object_id)
+    elif isinstance(mm_obj, mm_schema.MetricsObject):
+        return conn.getObject(mm_obj.data_reference.omero_object_type.code.text, mm_obj.data_reference.omero_object_id)
+    elif isinstance(mm_obj, list):
+        return [get_omero_obj_from_mm_obj(conn, obj) for obj in mm_obj]
     else:
-        return conn.getObject(mm_obj.omero_object_type[0], mm_obj.omero_object_id)
+        raise ValueError("Input should be a metrics object or a list of metrics objects")
 
 
-def get_ref_from_object(obj: Union[ImageWrapper, DatasetWrapper, ProjectWrapper]) -> dict:
+def get_ref_from_object(obj: Union[ImageWrapper, DatasetWrapper, ProjectWrapper]) -> mm_schema.DataReference:
     """Get the reference information from an OMERO object"""
     logger.debug(f"get_ref_from_object: object type is {type(obj)}")
 
-    ref = {
-        "data_uri": f"https://{obj._conn.host}/webclient/?show={obj.OMERO_CLASS}-{obj.getId()}",
-        "omero_host": str(obj._conn.host),
-        "omero_port": int(obj._conn.port),
-        "omero_object_type": obj.OMERO_CLASS,
-        "omero_object_id": obj.getId()
-    }
-    return ref
+    return mm_schema.DataReference(
+        data_uri=f"https://{obj._conn.host}/webclient/?show={obj.OMERO_CLASS}-{obj.getId()}",
+        omero_host=obj._conn.host,
+        omero_port=obj._conn.port,
+        omero_object_type=obj.OMERO_CLASS.upper(),
+        omero_object_id=obj.getId()
+    )
 
 
 def _label_channels(image: ImageWrapper, labels: List):
@@ -687,14 +694,15 @@ def create_tag(
     conn: BlitzGateway,
     tag_name: str,
     tag_description: str,
-    omero_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
+    omero_objects: list[Union[ImageWrapper, DatasetWrapper, ProjectWrapper]],
 ):
     tag_ann = TagAnnotationWrapper(conn)
     tag_ann.setValue(tag_name)
     tag_ann.setDescription(tag_description)
     tag_ann.save()
 
-    _link_annotation(omero_object, tag_ann)
+    for obj in omero_objects:
+        _link_annotation(obj, tag_ann)
 
     return tag_ann
 
