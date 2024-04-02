@@ -37,24 +37,7 @@ app.layout = dmc.Container([
      
                dmc.Grid(
             [
-                dmc.Col(
-                    dmc.Stack(
-                        [
-                            dmc.Text("Microscope", size="sm", weight=700),
-                            dcc.Dropdown(["Microscope L", "Microscope B", "Microscope G"]),
-                            dmc.Text("Type of Analysis", size="sm", weight=700),
-                            dcc.Dropdown(["Field Of Illumination"]),
-                            dmc.Text("Analysis", size="sm", weight=700),
-                            dcc.Dropdown(["L", "B", "G"]),
-                        ]
-                    ),
-                    span=2,
-                    style={
-                        "background-color": c2,
-                        "margin-right": "10px",
-                        "border-radius": "0.5rem",
-                    },
-                ),
+               
                 dmc.Col(
                     [
                         dmc.Stack(

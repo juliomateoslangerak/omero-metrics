@@ -135,5 +135,23 @@ def image_rois(request, image_id, conn=None,**kwargs):
 def center_viewer(request,dataset_id,conn=None,**kwargs):
 
     template = kwargs.get('template',
-                          'metrics/demo/center_wawa.html')
+                          'metrics/demo/center_view_dataset.html')
     return render(request, template,{'dataset_id': dataset_id})
+
+
+@login_required()
+def center_viewer_images(request,image_id,conn=None,**kwargs):
+
+    template = kwargs.get('template',
+                          'metrics/demo/center_view_image.html')
+    return render(request, template,{'image_id': image_id})
+
+
+
+@login_required()
+def center_viewer_project(request,image_id,conn=None,**kwargs):
+
+    template = kwargs.get('template',
+                          'metrics/demo/center_view_image.html')
+    
+    return render(request, template,{'image_id': image_id})
