@@ -13,4 +13,4 @@ react-webapp/react_webapp/templates/
 # Credentials
 credentials.json
 
-
+.venv

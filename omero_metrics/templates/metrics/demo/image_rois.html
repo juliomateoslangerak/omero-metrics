@@ -1,0 +1,17 @@
+{% extends "webgateway/core_html.html" %}
+
+{% block title %}Wawa{% endblock %}
+
+{% block link %}
+{% endblock %}
+
+{% block body %}
+
+{% if roiIds %}
+    <h1>ROI IDs</h1>
+    <h3>{{roiIds}}</h3>
+{% else %}
+    <h1>Nothing to see here wawa!</h1>
+{% endif %}
+
+{% endblock %}

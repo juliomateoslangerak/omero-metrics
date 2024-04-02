@@ -3,7 +3,7 @@ LABEL authors="Julio Mateos Langerak"
 
 
 RUN mkdir $OMERODIR/lib/scripts/omero/microscope_metrics
-COPY metrics_scripts/* $OMERODIR/lib/scripts/omero/microscope_metrics/
+COPY scripts/microscope_metrics/* $OMERODIR/lib/scripts/omero/microscope_metrics/
 USER root
 RUN apt-get update
 RUN apt-get install -y git

@@ -49,6 +49,12 @@ df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/gapmi
 app = DjangoDash('SimpleExample')
 
 app.layout =  html.Div([
+     dmc.Text(
+                "Field Of Illumination Dashboard",
+                color="#189A35",
+                mb=30,
+                style={"margin-top": "20px", "fontSize": 40},
+            ),
     dcc.Graph(id='graph-with-slider', figure=px.scatter(df, x="gdpPercap", y="lifeExp",
                      size="pop", color="continent", hover_name="country",
                      log_x=True, size_max=55)),

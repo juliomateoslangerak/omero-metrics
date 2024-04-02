@@ -14,12 +14,26 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
-from .tools import get_info_dash
-from omeroweb.decorators import login_required
+from django.views import generic
+from django.urls import reverse
+
+from omeroweb.webgateway import views as webgateway_views
+
+from omeroweb.webclient.decorators import login_required, render_response
+
+from io import BytesIO
+
+import logging
+import omero
+from omero.rtypes import rstring
+import omero.gateway
+import random
+
+#from .tools import get_info_dash
 from microscopemetrics_omero.load import load_image
-from .tools import data_loader
+#from .tools import data_loader
 
 # login_required: if not logged-in, will redirect to webclient
 # login page. Then back to here, passing in the 'conn' connection
@@ -89,3 +103,37 @@ def session_state_view(request, template_name, **kwargs):
 #     data_loader(conn, 10, 'Fake data')
 #     return render(request, template_name='metrics/add_data.html', context={})
     
+
+
+
+
+def webgateway_templates(request, base_template):
+    """ Simply return the named template. Similar functionality to
+    django.views.generic.simple.direct_to_template """
+    template_name = 'metrics/webgateway/%s.html' % base_template
+    return render(request, template_name, {})
+
+
+@login_required()
+@render_response()
+def webclient_templates(request, base_template, **kwargs):
+    """ Simply return the named template. Similar functionality to
+    django.views.generic.simple.direct_to_template """
+    template_name = 'metrics/webgateway/%s.html' % base_template
+    return {'template': template_name}
+
+
+
+@login_required()
+def image_rois(request, image_id, conn=None,**kwargs):
+    """ Simply shows a page of ROI thumbnails for the specified image """
+    roi_ids = image_id
+    return render(request, 'metrics/demo/image_rois.html',
+                  {'roiIds': roi_ids})
+    
+@login_required()
+def center_viewer(request,dataset_id,conn=None,**kwargs):
+
+    template = kwargs.get('template',
+                          'metrics/demo/center_wawa.html')
+    return render(request, template,{'dataset_id': dataset_id})
