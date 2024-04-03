@@ -32,7 +32,7 @@ import omero.gateway
 import random
 
 #from .tools import get_info_dash
-from microscopemetrics_omero.load import load_image
+#from microscopemetrics_omero.load import load_image
 #from .tools import data_loader
 
 # login_required: if not logged-in, will redirect to webclient
