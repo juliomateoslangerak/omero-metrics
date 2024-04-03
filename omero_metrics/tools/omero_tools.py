@@ -149,7 +149,7 @@ def get_ref_from_object(obj: ImageWrapper) -> mm_schema.DataReference:
             logger.error(f"Object type {type(obj)} is not supported")
 
     return mm_schema.DataReference(
-        data_uri=f"https://{obj._conn.host}/webclient/?show={obj.OMERO_CLASS}-{obj.getId()}",
+        data_uri=f"https://{obj._conn.host}:{obj._conn.port}/webclient/?show={obj_type.lower()}-{obj.getId()}",
         omero_host=obj._conn.host,
         omero_port=obj._conn.port,
         omero_object_type=obj_type,
