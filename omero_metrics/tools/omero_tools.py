@@ -13,17 +13,18 @@ from omero import grid
 from omero.constants import metadata
 from omero.gateway import (
     BlitzGateway,
-    CommentAnnotationWrapper,
-    DatasetWrapper,
     ExperimenterGroupWrapper,
     ExperimenterWrapper,
-    FileAnnotationWrapper,
-    ImageWrapper,
     ProjectWrapper,
+    DatasetWrapper,
+    ImageWrapper,
+    FileAnnotationWrapper,
+    MapAnnotationWrapper,
     RoiWrapper,
     TagAnnotationWrapper,
-    MapAnnotationWrapper,
+    CommentAnnotationWrapper,
 )
+
 from omero.model import (
     DatasetI,
     DatasetImageLinkI,
@@ -121,33 +122,34 @@ def get_ref_from_object(obj) -> mm_schema.DataReference:
     """Get the reference information from an OMERO object"""
     logger.debug(f"get_ref_from_object: object type is {type(obj)}")
 
+    obj_type = None
+
     match obj:
-        case ImageWrapper():
-            obj_type = "IMAGE"
-        case DatasetWrapper():
-            obj_type = "DATASET"
-        case ProjectWrapper():
-            obj_type = "PROJECT"
         case ExperimenterGroupWrapper():
             obj_type = "GROUP"
+        case ExperimenterWrapper():
+            obj_type = "EXPERIMENTER"
+        case ProjectWrapper():
+            obj_type = "PROJECT"
+        case DatasetWrapper():
+            obj_type = "DATASET"
+        case ImageWrapper():
+            obj_type = "IMAGE"
+        case FileAnnotationWrapper():
+            obj_type = "FILE"
         case MapAnnotationWrapper():
             obj_type = "KEY_VALUES"
         case TagAnnotationWrapper():
             obj_type = "TAG"
-        case ExperimenterWrapper():
-            obj_type = "EXPERIMENTER"
-        case RoiWrapper():
-            obj_type = "ROI"
-        case FileAnnotationWrapper():
-            obj_type = "FILE"
         case CommentAnnotationWrapper():
             obj_type = "COMMENT"
+        case RoiWrapper():
+            obj_type = "ROI"
         case _:
-            logger.warning(f"Object type not recognized: {type(obj)}")
-            obj_type = None
+            logger.error(f"Object type {type(obj)} is not supported")
 
     return mm_schema.DataReference(
-        data_uri=f"https://{obj._conn.host}/webclient/?show={obj.OMERO_CLASS}-{obj.getId()}",
+        data_uri=f"https://{obj._conn.host}:{obj._conn.port}/webclient/?show={obj_type.lower()}-{obj.getId()}",
         omero_host=obj._conn.host,
         omero_port=obj._conn.port,
         omero_object_type=obj_type,

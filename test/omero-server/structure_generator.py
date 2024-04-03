@@ -282,7 +282,7 @@ if __name__ == "__main__":
                     datasets=GENERATOR_MAPPER[project["dataset_class"]](project, microscope_name),
                     dataset_class=project["dataset_class"],
                 )
-                temp_conn = conn.suConn(project["owner"], microscope_name)
+                temp_conn = conn.suConn(project["owner"], microscope_name, ttl=300000)
 
                 # We first have to dump the input images so they are annotated with the omero references
                 omero_project = dump.dump_project(
