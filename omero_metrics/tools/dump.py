@@ -313,7 +313,7 @@ def dump_roi(
                     conn=conn,
                     mm_obj=ref
                 )
-                for ref in roi.linked_objects if isinstance(ref, mm_schema.DataReference)
+                for ref in roi.linked_references if isinstance(ref, mm_schema.DataReference)
             ]
         except AttributeError:
             logger.error(
@@ -364,7 +364,7 @@ def dump_tag(
         try:
             target_objects = omero_tools.get_omero_obj_from_mm_obj(
                 conn=conn,
-                mm_obj=tag.linked_objects
+                mm_obj=tag.linked_references
             )
         except AttributeError:
             logger.error(
@@ -410,7 +410,7 @@ def dump_key_value(
         try:
             target_object = omero_tools.get_omero_obj_from_mm_obj(
                 conn=conn,
-                mm_obj=key_values.linked_objects
+                mm_obj=key_values.linked_references
             )
         except AttributeError:
             logger.error(
@@ -459,7 +459,7 @@ def dump_table(
         try:
             target_object = omero_tools.get_omero_obj_from_mm_obj(
                 conn=conn,
-                mm_obj=table.linked_objects
+                mm_obj=table.linked_references
             )
         except AttributeError:
             logger.error(
@@ -494,7 +494,7 @@ def dump_comment(
         try:
             target_object = omero_tools.get_omero_obj_from_mm_obj(
                 conn=conn,
-                mm_obj=comment.linked_objects
+                mm_obj=comment.linked_references
             )
         except AttributeError:
             logger.error(
