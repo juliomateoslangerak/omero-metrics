@@ -132,7 +132,7 @@ def image_rois(request, image_id, conn=None,**kwargs):
                   {'roiIds': roi_ids})
     
 @login_required()
-def center_viewer(request,dataset_id,conn=None,**kwargs):
+def center_viewer_dataset(request,dataset_id,conn=None,**kwargs):
 
     template = kwargs.get('template',
                           'metrics/omero_views/center_view_dataset.html')
@@ -140,7 +140,7 @@ def center_viewer(request,dataset_id,conn=None,**kwargs):
 
 
 @login_required()
-def center_viewer_images(request,image_id,conn=None,**kwargs):
+def center_viewer_image(request,image_id,conn=None,**kwargs):
 
     template = kwargs.get('template',
                           'metrics/omero_views/center_view_image.html')
@@ -149,9 +149,9 @@ def center_viewer_images(request,image_id,conn=None,**kwargs):
 
 
 @login_required()
-def center_viewer_project(request,image_id,conn=None,**kwargs):
+def center_viewer_project(request,project_id,conn=None,**kwargs):
 
     template = kwargs.get('template',
                           'metrics/omero_views/center_view_image.html')
     
-    return render(request, template,{'image_id': image_id})
+    return render(request, template,{'project_id': project_id})
