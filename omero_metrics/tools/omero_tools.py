@@ -15,12 +15,14 @@ from omero.gateway import (
     BlitzGateway,
     CommentAnnotationWrapper,
     DatasetWrapper,
+    ExperimenterGroupWrapper,
+    ExperimenterWrapper,
     FileAnnotationWrapper,
     ImageWrapper,
-    MapAnnotationWrapper,
     ProjectWrapper,
     RoiWrapper,
     TagAnnotationWrapper,
+    MapAnnotationWrapper,
 )
 from omero.model import (
     DatasetI,
