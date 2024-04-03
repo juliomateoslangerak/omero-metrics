@@ -13,15 +13,18 @@ from omero import grid
 from omero.constants import metadata
 from omero.gateway import (
     BlitzGateway,
-    CommentAnnotationWrapper,
-    DatasetWrapper,
-    FileAnnotationWrapper,
-    ImageWrapper,
-    MapAnnotationWrapper,
+    ExperimenterGroupWrapper,
+    ExperimenterWrapper,
     ProjectWrapper,
+    DatasetWrapper,
+    ImageWrapper,
+    FileAnnotationWrapper,
+    MapAnnotationWrapper,
     RoiWrapper,
     TagAnnotationWrapper,
+    CommentAnnotationWrapper,
 )
+
 from omero.model import (
     DatasetI,
     DatasetImageLinkI,
@@ -106,7 +109,7 @@ def get_omero_obj_from_mm_obj(conn: BlitzGateway, mm_obj: mm_schema.MetricsObjec
     # else:
     #     return conn.getObject(mm_obj.omero_object_type[0], mm_obj.omero_object_id)
     if isinstance(mm_obj, mm_schema.DataReference):
-        return conn.getObject(mm_obj.omero_object_type, mm_obj.omero_object_id)
+        return conn.getObject(mm_obj.omero_object_type.code.text, mm_obj.omero_object_id)
     elif isinstance(mm_obj, mm_schema.MetricsObject):
         return conn.getObject(mm_obj.data_reference.omero_object_type.code.text, mm_obj.data_reference.omero_object_id)
     elif isinstance(mm_obj, list):
@@ -115,15 +118,41 @@ def get_omero_obj_from_mm_obj(conn: BlitzGateway, mm_obj: mm_schema.MetricsObjec
         raise ValueError("Input should be a metrics object or a list of metrics objects")
 
 
-def get_ref_from_object(obj: Union[ImageWrapper, DatasetWrapper, ProjectWrapper]) -> mm_schema.DataReference:
+def get_ref_from_object(obj: ImageWrapper) -> mm_schema.DataReference:
     """Get the reference information from an OMERO object"""
     logger.debug(f"get_ref_from_object: object type is {type(obj)}")
+
+    obj_type = None
+
+    match obj:
+        case ExperimenterGroupWrapper():
+            obj_type = "GROUP"
+        case ExperimenterWrapper():
+            obj_type = "EXPERIMENTER"
+        case ProjectWrapper():
+            obj_type = "PROJECT"
+        case DatasetWrapper():
+            obj_type = "DATASET"
+        case ImageWrapper():
+            obj_type = "IMAGE"
+        case FileAnnotationWrapper():
+            obj_type = "FILE"
+        case MapAnnotationWrapper():
+            obj_type = "KEY_VALUES"
+        case TagAnnotationWrapper():
+            obj_type = "TAG"
+        case CommentAnnotationWrapper():
+            obj_type = "COMMENT"
+        case RoiWrapper():
+            obj_type = "ROI"
+        case _:
+            logger.error(f"Object type {type(obj)} is not supported")
 
     return mm_schema.DataReference(
         data_uri=f"https://{obj._conn.host}/webclient/?show={obj.OMERO_CLASS}-{obj.getId()}",
         omero_host=obj._conn.host,
         omero_port=obj._conn.port,
-        omero_object_type=obj.OMERO_CLASS.upper(),
+        omero_object_type=obj_type,
         omero_object_id=obj.getId()
     )
 
