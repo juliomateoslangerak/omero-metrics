@@ -38,7 +38,7 @@ def dump_project(
     dump_output: bool = True,
 ) -> ProjectWrapper:
     if target_project is None:
-        if project.data_reference is not None:
+        if project.data_reference:
             omero_project = omero_tools.get_omero_obj_from_mm_obj(
                 conn=conn,
                 mm_obj=project
@@ -91,7 +91,7 @@ def dump_dataset(
             f"Dataset {dataset.class_name} cannot be appended to existing or dumped as table. Skipping dump."
         )
 
-    if dataset.data_reference is not None:
+    if dataset.data_reference:
         try:
             omero_dataset = omero_tools.get_omero_obj_from_mm_obj(
                 conn=conn,
