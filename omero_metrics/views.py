@@ -80,15 +80,15 @@ def session_state_view(request, template_name, **kwargs):
 
     session = request.session
 
-    demo_count = session.get('django_plotly_dash', {})
+    omero_views_count = session.get('django_plotly_dash', {})
 
-    ind_use = demo_count.get('ind_use', 0)
+    ind_use = omero_views_count.get('ind_use', 0)
     ind_use += 1
-    demo_count['ind_use'] = ind_use
+    omero_views_count['ind_use'] = ind_use
 
     context = {'ind_use' : ind_use}
 
-    session['django_plotly_dash'] = demo_count
+    session['django_plotly_dash'] = omero_views_count
 
     return render(request, template_name=template_name, context=context)
 
@@ -128,14 +128,14 @@ def webclient_templates(request, base_template, **kwargs):
 def image_rois(request, image_id, conn=None,**kwargs):
     """ Simply shows a page of ROI thumbnails for the specified image """
     roi_ids = image_id
-    return render(request, 'metrics/demo/image_rois.html',
+    return render(request, 'metrics/omero_views/image_rois.html',
                   {'roiIds': roi_ids})
     
 @login_required()
 def center_viewer(request,dataset_id,conn=None,**kwargs):
 
     template = kwargs.get('template',
-                          'metrics/demo/center_view_dataset.html')
+                          'metrics/omero_views/center_view_dataset.html')
     return render(request, template,{'dataset_id': dataset_id})
 
 
@@ -143,7 +143,7 @@ def center_viewer(request,dataset_id,conn=None,**kwargs):
 def center_viewer_images(request,image_id,conn=None,**kwargs):
 
     template = kwargs.get('template',
-                          'metrics/demo/center_view_image.html')
+                          'metrics/omero_views/center_view_image.html')
     return render(request, template,{'image_id': image_id})
 
 
@@ -152,6 +152,6 @@ def center_viewer_images(request,image_id,conn=None,**kwargs):
 def center_viewer_project(request,image_id,conn=None,**kwargs):
 
     template = kwargs.get('template',
-                          'metrics/demo/center_view_image.html')
+                          'metrics/omero_views/center_view_image.html')
     
     return render(request, template,{'image_id': image_id})
