@@ -20,8 +20,8 @@ SHAPE_TO_FUNCTION = {
 }
 
 SHAPE_TYPE_TO_FUNCTION = {
-    "point": omero_tools.create_shape_point,
-    "line": omero_tools.create_shape_line,
+    "points": omero_tools.create_shape_point,
+    "lines": omero_tools.create_shape_line,
     "rectangles": omero_tools.create_shape_rectangle,
     "ellipses": omero_tools.create_shape_ellipse,
     "polygons": omero_tools.create_shape_polygon,
@@ -29,27 +29,39 @@ SHAPE_TYPE_TO_FUNCTION = {
 }
 
 
-def _append_reference(obj:mm_schema.MetricsObject, ref):
-    obj.data_uri = ref["data_uri"]
-    obj.omero_host = ref["omero_host"],
-    obj.omero_port = ref["omero_port"],
-    obj.omero_object_type = ref["omero_object_type"],
-    obj.omero_object_id = ref["omero_object_id"]
-
-
 def dump_project(
     conn: BlitzGateway,
     project: mm_schema.MetricsDatasetCollection,
+    target_project: ProjectWrapper = None,
     dump_input_images: bool = False,
     dump_input: bool = True,
     dump_output: bool = True,
 ) -> ProjectWrapper:
-    omero_project = omero_tools.create_project(
-        conn=conn,
-        name=project.name,
-        description=project.description
-    )
-    _append_reference(project, omero_tools.get_ref_from_object(omero_project))
+    if target_project is None:
+        if project.data_reference is not None:
+            omero_project = omero_tools.get_omero_obj_from_mm_obj(
+                conn=conn,
+                mm_obj=project
+            )
+        else:
+            omero_project = omero_tools.create_project(
+                conn=conn,
+                name=project.name,
+                description=project.description
+            )
+            project.data_reference = omero_tools.get_ref_from_object(omero_project)
+    else:
+        if not isinstance(target_project, ProjectWrapper):
+            logger.error(
+                f"Project {project.name} must be linked to a project. {target_project} object provided is not a project."
+            )
+            return None
+        if project.omero_object_id != target_project.getId():
+            logger.warning(
+                f"Project {project.name} is going to be linked to a different OMERO project."
+            )
+        omero_project = target_project
+        project.data_reference = omero_tools.get_ref_from_object(omero_project)
 
     for dataset in project.datasets:
         dump_dataset(
@@ -78,29 +90,38 @@ def dump_dataset(
         logger.error(
             f"Dataset {dataset.class_name} cannot be appended to existing or dumped as table. Skipping dump."
         )
-    if target_project is None:
+
+    if dataset.data_reference is not None:
         try:
-            target_project = omero_tools.get_omero_obj_from_ref(
+            omero_dataset = omero_tools.get_omero_obj_from_mm_obj(
                 conn=conn,
-                ref={
-                    "omero_object_type": dataset.microscope.omero_object_type,
-                    "omero_object_id": dataset.microscope.omero_object_id,
-                }
+                mm_obj=dataset
             )
-        except AttributeError:
-            # TODO: Dump dataset as orphan dataset
+            logger.info(f"Retrieving dataset {dataset.name} from OMERO")
+        except Exception as e:
+            logger.error(f"Dataset {dataset.name} could not be retrieved from OMERO: {e}")
+            raise e
+    else:
+        if target_project is None:
+            logger.warning(
+                f"Creating new dataset {dataset.name} in OMERO"
+                f"Do target project was provided and an orphan dataset will be created."
+            )
+        elif not isinstance(target_project, ProjectWrapper):
             logger.error(
-                f"Dataset {dataset.name} must be linked to a project/microscope. No project provided."
+                f"Dataset {dataset.name} must be linked to a project. {target_project} object provided is not a project."
             )
             return None
+        else:
+            logger.info(f"Creating new dataset {dataset.name} in OMERO")
 
-    omero_dataset = omero_tools.create_dataset(
-        conn=conn,
-        dataset_name=dataset.name,
-        description=dataset.description,
-        project=target_project,
-    )
-    _append_reference(dataset, omero_tools.get_ref_from_object(omero_dataset))
+        omero_dataset = omero_tools.create_dataset(
+            conn=conn,
+            dataset_name=dataset.name,
+            description=dataset.description,
+            project=target_project,
+        )
+        dataset.data_reference = omero_tools.get_ref_from_object(omero_dataset)
 
     input_params = {}
     for input_field in fields(dataset.input):
@@ -156,52 +177,78 @@ def _dump_dataset_output(
 
     for output_field in fields(dataset_output):
         output_element = getattr(dataset_output, output_field.name)
-
-        match output_element:
-            case mm_schema.Image():
-                dump_image(
+        if isinstance(output_element, list):
+            for element in output_element:
+                _dump_output_element(
                     conn=conn,
-                    image=output_element,
+                    output_element=element,
                     target_dataset=target_dataset,
-                )
-            case mm_schema.Roi():
-                dump_roi(
-                    conn=conn,
-                    roi=output_element,
-                )
-            case mm_schema.Tag():
-                dump_tag(
-                    conn=conn,
-                    tag=output_element,
-                )
-            case mm_schema.KeyValues():
-                dump_key_value(
-                    conn=conn,
-                    key_values=output_element,
-                    # target_object=target_dataset,
                     # append_to_existing=append_to_existing,
                     # as_table=as_table,
                 )
-            case mm_schema.Table():
-                dump_table(
-                    conn=conn,
-                    table=output_element,
-                    # target_object=target_dataset,
-                    # append_to_existing=append_to_existing,
-                    # as_table=as_table,
-                )
-            case mm_schema.Comment():
-                dump_comment(
-                    conn=conn,
-                    comment=output_element,
-                    omero_object=target_dataset,
-                    # append_to_existing=append_to_existing,
-                    # as_table=as_table,
-                )
-            case _:
-                logger.error(f"{output_element.class_name} output could not be dumped to OMERO")
-                continue
+        else:
+            _dump_output_element(
+                conn=conn,
+                output_element=output_element,
+                target_dataset=target_dataset,
+                # append_to_existing=append_to_existing,
+                # as_table=as_table,
+            )
 
+
+def _dump_output_element(
+    conn: BlitzGateway,
+    output_element,
+    target_dataset: DatasetWrapper,
+    # append_to_existing: bool = False,
+    # as_table: bool = False,
+):
+    match output_element:
+        case mm_schema.Image():
+            dump_image(
+                conn=conn,
+                image=output_element,
+                target_dataset=target_dataset,
+            )
+        case mm_schema.Roi():
+            dump_roi(
+                conn=conn,
+                roi=output_element,
+            )
+        case mm_schema.Tag():
+            dump_tag(
+                conn=conn,
+                tag=output_element,
+            )
+        case mm_schema.KeyValues():
+            dump_key_value(
+                conn=conn,
+                key_values=output_element,
+                target_object=target_dataset,
+                # append_to_existing=append_to_existing,
+                # as_table=as_table,
+            )
+        # case mm_schema.Table():
+        #     dump_table(
+        #         conn=conn,
+        #         table=output_element,
+        #         target_object=target_dataset,
+        #         # append_to_existing=append_to_existing,
+        #         # as_table=as_table,
+        #     )
+        # case mm_schema.Comment():
+        #     dump_comment(
+        #         conn=conn,
+        #         comment=output_element,
+        #         target_object=target_dataset,
+        #         # append_to_existing=append_to_existing,
+        #         # as_table=as_table,
+        #     )
+        case _:
+            try:
+                logger.error(f"{output_element.name} output could not be dumped to OMERO")
+            except AttributeError:
+                logger.error(f"{output_element} output could not be dumped to OMERO")
 
 def dump_image(
     conn: BlitzGateway,
@@ -222,10 +269,13 @@ def dump_image(
     if not isinstance(image, mm_schema.Image):
         logger.error(f"Invalid image object provided for {image}. Skipping dump.")
         return None
+
     source_image_id = None
     try:
-        source_image_id = image.source_images.omero_object_id
-    except AttributeError:
+        # source_images is a list of DataReference objects.
+        # For the purpose of adding to OMERO we only use the first image
+        source_image_id = image.source_images[0].omero_object_id
+    except IndexError:
         logger.info(f"No source image id provided for {image.name}")
 
     omero_image = omero_tools.create_image_from_numpy_array(
@@ -239,7 +289,7 @@ def dump_image(
         channels_list=None,
         force_whole_planes=False,
     )
-    _append_reference(image, omero_tools.get_ref_from_object(omero_image))
+    image.data_reference = omero_tools.get_ref_from_object(omero_image)
 
     return omero_image
 
@@ -258,17 +308,20 @@ def dump_roi(
 
     if target_images is None:
         try:
-            target_images = omero_tools.get_omero_obj_from_ref(
-                conn=conn,
-                ref=roi.linked_objects
-            )
+            target_images = [
+                omero_tools.get_omero_obj_from_mm_obj(
+                    conn=conn,
+                    mm_obj=ref
+                )
+                for ref in roi.linked_objects if isinstance(ref, mm_schema.DataReference)
+            ]
         except AttributeError:
             logger.error(
                 f"ROI {roi.name} must be linked to an image. No image provided."
             )
             return None
-    # TODO: get image from reference
-    if not isinstance(target_images, ImageWrapper):
+
+    if len(target_images) == 0:
         logger.error(
             f"ROI {roi.name} must be linked to an image. {target_images} object provided is not an image."
         )
@@ -279,22 +332,26 @@ def dump_roi(
             shapes += [SHAPE_TYPE_TO_FUNCTION[shape_field.name](shape)
                        for shape in getattr(roi, shape_field.name)]
 
-    omero_roi = omero_tools.create_roi(
-        conn=conn,
-        image=target_images,
-        shapes=shapes,
-        name=roi.name,
-        description=roi.description,
-    )
-    _append_reference(roi, omero_tools.get_ref_from_object(omero_roi))
+    omero_rois = []
+    for target_image in target_images:
+        omero_roi = omero_tools.create_roi(
+            conn=conn,
+            image=target_image,
+            shapes=shapes,
+            name=roi.name,
+            description=roi.description,
+        )
+        omero_rois.append(omero_roi)
 
-    return omero_roi
+    roi.linked_references = [omero_tools.get_ref_from_object(r) for r in omero_rois]
+
+    return omero_rois
 
 
 def dump_tag(
     conn: BlitzGateway,
     tag: mm_schema.Tag,
-    target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper] = None,
+    target_objects: list[Union[ImageWrapper, DatasetWrapper, ProjectWrapper]] = None,
     append_to_existing: bool = False,
     as_table: bool = False,
 ):
@@ -302,15 +359,37 @@ def dump_tag(
         logger.error(
             f"Tag {tag.class_name} cannot be appended to existing or dumped as table. Skipping dump."
         )
-    # TODO: get object from reference
 
-    omero_tag = omero_tools.create_tag(
-        conn=conn,
-        tag_name=tag.name,
-        tag_description=tag.description,
-        omero_object=target_object,
-    )
-    _append_reference(tag, omero_tools.get_ref_from_object(omero_tag))
+    if target_objects is None:
+        try:
+            target_objects = omero_tools.get_omero_obj_from_mm_obj(
+                conn=conn,
+                mm_obj=tag.linked_objects
+            )
+        except AttributeError:
+            logger.error(
+                f"ROI {tag.name} must be linked to at least one image. No image provided."
+            )
+            return None
+
+    if tag.data_reference is not None:
+        logger.info(f"Tag {tag.name} already exists in OMERO.")
+        omero_tag = omero_tools.get_omero_obj_from_mm_obj(
+            conn=conn,
+            mm_obj=tag
+        )
+        # TODO: link to objects here
+    else:
+        logger.info(f"Creating new tag {tag.name} in OMERO.")
+        omero_tag = omero_tools.create_tag(
+            conn=conn,
+            tag_name=tag.name,
+            tag_description=tag.description,
+            omero_objects=target_objects,
+        )
+        tag.data_reference = omero_tools.get_ref_from_object(omero_tag)
+
+    tag.linked_references = [omero_tools.get_ref_from_object(target_objects)]
 
     return omero_tag
 
@@ -327,7 +406,18 @@ def dump_key_value(
             f"KeyValues {key_values.class_name} cannot yet be appended to existing or dumped as table. Skipping dump."
         )
 
-    # TODO: get object from reference
+    if target_object is None:
+        try:
+            target_object = omero_tools.get_omero_obj_from_mm_obj(
+                conn=conn,
+                mm_obj=key_values.linked_objects
+            )
+        except AttributeError:
+            logger.error(
+                f"ROI {key_values.name} must be linked to an image. No image provided."
+            )
+            return None
+
     omero_key_value = omero_tools.create_key_value(
         conn=conn,
         annotation=key_values._as_dict,
@@ -336,9 +426,9 @@ def dump_key_value(
         annotation_description=key_values.description,
         namespace=key_values.class_model_uri,
     )
-    _append_reference(key_values, omero_tools.get_ref_from_object(omero_key_value))
+    key_values.data_reference = omero_tools.get_ref_from_object(omero_key_value)
 
-    return key_values
+    return omero_key_value
 
 
 def _eval(s):
@@ -365,7 +455,18 @@ def dump_table(
     append_to_existing: bool = False,
     as_table: bool = False,
 ):
-    # TODO: get object from reference
+    if target_object is None:
+        try:
+            target_object = omero_tools.get_omero_obj_from_mm_obj(
+                conn=conn,
+                mm_obj=table.linked_objects
+            )
+        except AttributeError:
+            logger.error(
+                f"ROI {table.name} must be linked to an image. No image provided."
+            )
+            return None
+
     if isinstance(table, mm_schema.Table):
         # linkML if casting everything as a string and we have to evaluate it back
         columns = {c.name: [_eval(v) for v in c.values] for c in table.columns.values()}
@@ -385,11 +486,21 @@ def dump_table(
 def dump_comment(
     conn: BlitzGateway,
     comment: mm_schema.Comment,
-    omero_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
+    target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
     append_to_existing: bool = False,
     as_table: bool = False,
 ):
-    # TODO: we should dump details on the comments. Like authors, date, etc.
+    if target_object is None:
+        try:
+            target_object = omero_tools.get_omero_obj_from_mm_obj(
+                conn=conn,
+                mm_obj=comment.linked_objects
+            )
+        except AttributeError:
+            logger.error(
+                f"ROI {comment.name} must be linked to an image. No image provided."
+            )
+            return None
     if append_to_existing or as_table:
         logger.error(
             f"Comment {comment.class_name} cannot be appended to existing or dumped as table. Skipping dump."
@@ -397,6 +508,6 @@ def dump_comment(
     return omero_tools.create_comment(
         conn=conn,
         comment_text=comment.text,
-        omero_object=omero_object,
+        omero_object=target_object,
         namespace=comment.class_model_uri,
     )

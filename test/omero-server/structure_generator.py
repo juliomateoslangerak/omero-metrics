@@ -21,6 +21,7 @@ from omero_metrics.tools import dump
 
 from microscopemetrics.strategies.strategies import _gen_field_illumination_image, _gen_psf_beads_image
 from microscopemetrics.samples import numpy_to_mm_image
+from microscopemetrics.samples import field_illumination, psf_beads
 from microscopemetrics_schema import datamodel as mm_schema
 
 logger = logging.getLogger(__name__)
@@ -29,6 +30,11 @@ BIT_DEPTH_TO_DTYPE = {
     8: np.uint8,
     16: np.uint16,
     32: np.float32,
+}
+
+DATASET_TO_ANALYSIS = {
+    "FieldIlluminationDataset": field_illumination.analise_field_illumination,
+    "PSFBeadsDataset": psf_beads.analyse_psf_beads,
 }
 
 
@@ -273,14 +279,16 @@ if __name__ == "__main__":
                 mm_project = mm_schema.HarmonizedMetricsDatasetCollection(
                     name=project["name_project"],
                     description=project["description_project"],
-                    datasets=GENERATOR_MAPPER[project["analysis_class"]](project, microscope_name),
-                    dataset_class=project["analysis_class"],
+                    datasets=GENERATOR_MAPPER[project["dataset_class"]](project, microscope_name),
+                    dataset_class=project["dataset_class"],
                 )
                 temp_conn = conn.suConn(project["owner"], microscope_name)
+
+                # We first have to dump the input images so they are annotated with the omero references
                 omero_project = dump.dump_project(
                     temp_conn,
                     mm_project,
-                    dump_input_images=True,
+                    dump_input_images=True,  # We anyway want to dump test input images
                     dump_input=False,
                     dump_output=False,
                 )
@@ -293,6 +301,17 @@ if __name__ == "__main__":
                 for file_path in attachment_files:
                     _attach_config(temp_conn, omero_project, file_path)
 
+                if project["process"]:
+                    for dataset in mm_project.datasets:
+                        DATASET_TO_ANALYSIS[project["dataset_class"]](dataset)
+
+                    omero_project = dump.dump_project(
+                        temp_conn,
+                        mm_project,
+                        dump_input_images=False,  # We anyway want to dump test input images
+                        dump_input=True,
+                        dump_output=True,
+                    )
                 temp_conn.close()
 
     finally:

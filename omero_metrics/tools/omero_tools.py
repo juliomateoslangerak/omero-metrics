@@ -100,21 +100,32 @@ def get_object_ids_from_url(url: str) -> List[Tuple[str, int]]:
         return [(tail.split("-")[0], int(tail.split("-")[-1]))]
     
 
-def get_omero_obj_from_ref(conn: BlitzGateway, ref: Dict) -> Union[ImageWrapper, DatasetWrapper, ProjectWrapper]:
-    return conn.getObject(ref["omero_object_type"], ref["omero_object_id"])
+def get_omero_obj_from_mm_obj(conn: BlitzGateway, mm_obj: mm_schema.MetricsObject) -> Union[ImageWrapper, DatasetWrapper, ProjectWrapper]:
+    # if not isinstance(mm_obj.omero_object_type, tuple):
+    #     return conn.getObject(str(mm_obj.omero_object_type.code.text), mm_obj.omero_object_id)
+    # else:
+    #     return conn.getObject(mm_obj.omero_object_type[0], mm_obj.omero_object_id)
+    if isinstance(mm_obj, mm_schema.DataReference):
+        return conn.getObject(mm_obj.omero_object_type, mm_obj.omero_object_id)
+    elif isinstance(mm_obj, mm_schema.MetricsObject):
+        return conn.getObject(mm_obj.data_reference.omero_object_type.code.text, mm_obj.data_reference.omero_object_id)
+    elif isinstance(mm_obj, list):
+        return [get_omero_obj_from_mm_obj(conn, obj) for obj in mm_obj]
+    else:
+        raise ValueError("Input should be a metrics object or a list of metrics objects")
 
 
-def get_ref_from_object(obj: Union[ImageWrapper, DatasetWrapper, ProjectWrapper]) -> dict:
+def get_ref_from_object(obj: Union[ImageWrapper, DatasetWrapper, ProjectWrapper]) -> mm_schema.DataReference:
     """Get the reference information from an OMERO object"""
     logger.debug(f"get_ref_from_object: object type is {type(obj)}")
 
-    return {
-        "data_uri": f"https://{obj._conn.host}/webclient/?show={obj.OMERO_CLASS}-{obj.getId()}",
-        "omero_host": obj._conn.host,
-        "omero_port": obj._conn.port,
-        "omero_object_type": obj.OMERO_CLASS,
-        "omero_object_id": obj.getId()
-    }
+    return mm_schema.DataReference(
+        data_uri=f"https://{obj._conn.host}/webclient/?show={obj.OMERO_CLASS}-{obj.getId()}",
+        omero_host=obj._conn.host,
+        omero_port=obj._conn.port,
+        omero_object_type=obj.OMERO_CLASS.upper(),
+        omero_object_id=obj.getId()
+    )
 
 
 def _label_channels(image: ImageWrapper, labels: List):
@@ -553,13 +564,13 @@ def _rgba_to_int(rgba_color: mm_schema.Color):
 
 def _set_shape_properties(
     shape,
-    label: str = None,
+    name: str = None,
     fill_color: mm_schema.Color = None,
     stroke_color: mm_schema.Color = None,
     stroke_width: int = None,
 ):
-    if label is not None:
-        shape.setTextValue(rstring(label))
+    if name is not None:
+        shape.setTextValue(rstring(name))
     if fill_color is not None:
         shape.setFillColor(rint(_rgba_to_int(fill_color)))
     if stroke_color is not None:
@@ -580,7 +591,7 @@ def create_shape_point(mm_point: mm_schema.Point):
         point.theT = rint(mm_point.t)
     _set_shape_properties(
         shape=point,
-        label=mm_point.label,
+        name=mm_point.name,
         stroke_color=mm_point.stroke_color,
         stroke_width=mm_point.stroke_width,
         fill_color=mm_point.fill_color,
@@ -600,7 +611,7 @@ def create_shape_line(mm_line: mm_schema.Line):
         line.theC = rint(mm_line.c)
     _set_shape_properties(
         shape=line,
-        label=mm_line.label,
+        name=mm_line.name,
         stroke_color=mm_line.stroke_color,
         stroke_width=mm_line.stroke_width,
     )
@@ -617,7 +628,7 @@ def create_shape_rectangle(mm_rectangle: mm_schema.Rectangle):
     rect.theT = rint(mm_rectangle.t)
     _set_shape_properties(
         shape=rect,
-        label=mm_rectangle.label,
+        name=mm_rectangle.name,
         fill_color=mm_rectangle.fill_color,
         stroke_color=mm_rectangle.stroke_color,
         stroke_width=mm_rectangle.stroke_width,
@@ -635,7 +646,7 @@ def create_shape_ellipse(mm_ellipse: mm_schema.Ellipse):
     ellipse.theT = rint(mm_ellipse.t)
     _set_shape_properties(
         ellipse,
-        label=mm_ellipse.label,
+        name=mm_ellipse.name,
         fill_color=mm_ellipse.fill_color,
         stroke_color=mm_ellipse.stroke_color,
         stroke_width=mm_ellipse.stroke_width,
@@ -653,7 +664,7 @@ def create_shape_polygon(mm_polygon: mm_schema.Polygon):
     polygon.theT = rint(mm_polygon.t)
     _set_shape_properties(
         polygon,
-        label=mm_polygon.label,
+        name=mm_polygon.name,
         fill_color=mm_polygon.fill_color,
         stroke_color=mm_polygon.stroke_color,
         stroke_width=mm_polygon.stroke_width,
@@ -673,7 +684,7 @@ def create_shape_mask(mm_mask: mm_schema.Mask):
     mask.setBytes(mask_packed.tobytes())  # TODO: review how to setBytes when not a np.array
     _set_shape_properties(
         mask,
-        label=mm_mask.label,
+        name=mm_mask.name,
         fill_color=mm_mask.fill_color,
     )
     return mask
@@ -683,14 +694,15 @@ def create_tag(
     conn: BlitzGateway,
     tag_name: str,
     tag_description: str,
-    omero_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
+    omero_objects: list[Union[ImageWrapper, DatasetWrapper, ProjectWrapper]],
 ):
     tag_ann = TagAnnotationWrapper(conn)
     tag_ann.setValue(tag_name)
     tag_ann.setDescription(tag_description)
     tag_ann.save()
 
-    _link_annotation(omero_object, tag_ann)
+    for obj in omero_objects:
+        _link_annotation(obj, tag_ann)
 
     return tag_ann
 
