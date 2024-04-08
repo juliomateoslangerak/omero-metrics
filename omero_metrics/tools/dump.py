@@ -228,14 +228,14 @@ def _dump_output_element(
                 # append_to_existing=append_to_existing,
                 # as_table=as_table,
             )
-        # case mm_schema.Table():
-        #     dump_table(
-        #         conn=conn,
-        #         table=output_element,
-        #         target_object=target_dataset,
-        #         # append_to_existing=append_to_existing,
-        #         # as_table=as_table,
-        #     )
+        case mm_schema.Table():
+            dump_table(
+                conn=conn,
+                table=output_element,
+                target_object=target_dataset,
+                # append_to_existing=append_to_existing,
+                # as_table=as_table,
+            )
         # case mm_schema.Comment():
         #     dump_comment(
         #         conn=conn,
@@ -455,6 +455,10 @@ def dump_table(
     append_to_existing: bool = False,
     as_table: bool = False,
 ):
+    if not isinstance(table, mm_schema.Table):
+        logger.error(f"Unsupported table type for {table.name}: {table.class_name}")
+        return None
+
     if target_object is None:
         try:
             target_object = omero_tools.get_omero_obj_from_mm_obj(
@@ -467,20 +471,14 @@ def dump_table(
             )
             return None
 
-    if isinstance(table, mm_schema.Table):
-        # linkML if casting everything as a string and we have to evaluate it back
-        columns = {c.name: [_eval(v) for v in c.values] for c in table.columns.values()}
-        return omero_tools.create_table(
-            conn=conn,
-            table=columns,
-            table_name=table.name,
-            omero_object=target_object,
-            table_description=table.description,
-            namespace=table.class_model_uri,
-        )
-    else:
-        logger.error(f"Unsupported table type for {table.name}: {table.class_name}")
-        return None
+    return omero_tools.create_table(
+        conn=conn,
+        table=table.table_data,
+        table_name=table.name,
+        omero_object=target_object,
+        table_description=table.description,
+        namespace=table.class_model_uri,
+    )
 
 
 def dump_comment(
