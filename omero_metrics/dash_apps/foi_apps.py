@@ -18,10 +18,9 @@ import dash_mantine_components as dmc
 
 c1 = "#d8f3dc"
 c2 = "#eceff1"
-c3 = "#189A35"
+c3 = "#5f7f53"
 
 
-df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/gapminderDataFiveYear.csv')
 
 app = DjangoDash('FOI_Demo')
 
@@ -29,7 +28,7 @@ app.layout = dmc.Container([
       dmc.Center(
             dmc.Text(
                 "Field Of Illumination Dashboard",
-                color="#189A35",
+                color="#5f7f53",
                 mb=30,
                 style={"margin-top": "20px", "fontSize": 40},
             )
@@ -68,11 +67,10 @@ app.layout = dmc.Container([
                                     ],
                                 ),
                                 dmc.Title(
-                                    "Key Measurments for FOI", color="#189A35", size="h3", mb=10
+                                    "Key Measurments for FOI", color="#5f7f53", size="h3", mb=10
                                 ),
                                 dash_table.DataTable(
                                     id="table",
-                                    data=df.to_dict("records"),
                                     page_size=10,
                                     sort_action="native",
                                     sort_mode="multi",
@@ -85,7 +83,7 @@ app.layout = dmc.Container([
                                         "font-family": "sans-serif",
                                     },
                                     style_header={
-                                        "backgroundColor": "#189A35",
+                                        "backgroundColor": "#5f7f53",
                                         "fontWeight": "bold",
                                         "fontSize": 15,
                                     },
@@ -119,3 +117,10 @@ app.layout = dmc.Container([
       
       
 ])
+
+@app.expanded_callback(
+    dash.dependencies.Output('table', 'data'),
+    [dash.dependencies.Input('key_dpd', 'value'),])
+def keyvalue_callback(*args, **kwargs):
+    data = kwargs['session_state']['data']
+    return data.to_dict('records')

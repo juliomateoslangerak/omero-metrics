@@ -26,12 +26,13 @@
             plugin_index: {{ forloop.counter }},        // since we're in a Django template loop
             load_plugin_content: function(selected, dtype, oid){
                 var url ;
-
+                var dataset_id = null;
                  if (dtype=="image") {
                     url = '{% url 'metrics_index' %}image/'+oid +'/';
                 }
                 else if (dtype=="dataset") {
                     url = '{% url 'metrics_index' %}dataset/'+oid +'/'
+                    dataset_id = oid;
                 }
                 else if (dtype=="project") {
                     url = '{% url 'metrics_index' %}project/'+oid +'/'

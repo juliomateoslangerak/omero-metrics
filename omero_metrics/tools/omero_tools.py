@@ -962,3 +962,5 @@ def _link_image_to_dataset(conn: BlitzGateway, image: ImageWrapper, dataset: Dat
     link.setParent(DatasetI(dataset.getId(), False))
     link.setChild(ImageI(image.getId(), False))
     conn.getUpdateService().saveObject(link)
+
+

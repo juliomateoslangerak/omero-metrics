@@ -7,7 +7,7 @@ from omero_metrics.dash_apps import *
 from omero_metrics.dash_apps import foi_apps
 from omero_metrics.dash_apps import plotly_apps
 from omero_metrics.dash_apps import dash_apps
-
+from omero_metrics.dash_apps import dash_image
 # pylint: disable=unused-import
 from django_plotly_dash.views import add_to_session
 from .views import *

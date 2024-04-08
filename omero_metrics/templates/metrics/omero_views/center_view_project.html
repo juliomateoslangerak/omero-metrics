@@ -1,23 +1,26 @@
 {% extends "webgateway/base/base_main.html" %}
-{%load plotly_dash%}
+{% load plotly_dash %}
 {% block title %}Split View Figure{% endblock %}
-
 
 {% block link %}
 {% endblock %}
-
 
 {% block script %}
 {% endblock %}
 
 {% block body %}
-<p>Dashboards for  </p>
-<h1>Project IDs</h1>
-<h3>{{image_id}}</h3>
-
-
-<div class="{%plotly_class name="FOI_Demo"%}">
-    {%plotly_app name="FOI_Demo" ratio=0.7%}
-</div>
-
+<h1>Processed Datasets</h1>
+{% for p in processed_datasets %}
+<ul>
+    <li>{{ p }}</li>
+</ul>
+{% endfor %}
+<h1>Unprocessed Datasets</h1>
+{% for p in unprocessed_datasets %}
+<ul>
+    <li class="datasetThumb ui-selectee">
+        <a  href="{% url 'metrics_index' %}dataset/{{ p }}">{{ p }}</a>
+    </li>
+</ul>
+{% endfor %}
 {% endblock %}

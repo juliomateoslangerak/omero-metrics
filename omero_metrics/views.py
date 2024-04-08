@@ -24,7 +24,8 @@ from omeroweb.webgateway import views as webgateway_views
 from omeroweb.webclient.decorators import login_required, render_response
 
 from io import BytesIO
-
+from .tools.data_preperation import *
+from .tools.load import *
 import logging
 import omero
 from omero.rtypes import rstring
@@ -133,25 +134,29 @@ def image_rois(request, image_id, conn=None,**kwargs):
     
 @login_required()
 def center_viewer_dataset(request,dataset_id,conn=None,**kwargs):
-
-    template = kwargs.get('template',
-                          'metrics/omero_views/center_view_dataset.html')
-    return render(request, template,{'dataset_id': dataset_id})
+    data = get_dataset_mapAnnotation(conn, dataset_id)
+    print(data)
+    dash_context = request.session.get("django_plotly_dash", dict())
+    dash_context['data'] = data
+    request.session['django_plotly_dash'] = dash_context
+    return render(request,'metrics/omero_views/center_view_dataset.html',{'dataset_id': dataset_id})
 
 
 @login_required()
-def center_viewer_image(request,image_id,conn=None,**kwargs):
-
-    template = kwargs.get('template',
-                          'metrics/omero_views/center_view_image.html')
-    return render(request, template,{'image_id': image_id})
+def center_viewer_image(request, image_id,conn=None,**kwargs):
+    image = conn.getObject("Image", image_id)
+    image_loaded = load_image(image)
+    dash_context = request.session.get("django_plotly_dash", dict())
+    dash_context['django_to_dash_context'] = "I am Dash receiving context from Django"
+    dash_context['ima'] = image_loaded
+    request.session['django_plotly_dash'] = dash_context
+    return render(request, 'metrics/omero_views/center_view_image.html',{'image_id': image_id})
 
 
 
 @login_required()
 def center_viewer_project(request,project_id,conn=None,**kwargs):
+    processed_datasets ,unprocessed_datasets  = get_dataset_ids_lists(conn, project_id)
+    context = {'processed_datasets': processed_datasets, 'unprocessed_datasets': unprocessed_datasets}
+    return render(request,'metrics/omero_views/center_view_project.html',context)
 
-    template = kwargs.get('template',
-                          'metrics/omero_views/center_view_image.html')
-    
-    return render(request, template,{'project_id': project_id})
