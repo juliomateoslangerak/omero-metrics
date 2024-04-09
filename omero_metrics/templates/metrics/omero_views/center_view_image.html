@@ -11,10 +11,6 @@
 {% endblock %}
 
 {% block body %}
-<p>Dashboards for  </p>
-<h1>Image IDs</h1>
-<h3>{{image_id}}</h3>
-
 
 <div class="{%plotly_class name="omero_image_dash"%}">
     {%plotly_app name="omero_image_dash" ratio=0.7%}

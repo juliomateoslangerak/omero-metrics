@@ -18,7 +18,7 @@ import dash_mantine_components as dmc
 
 c1 = "#d8f3dc"
 c2 = "#eceff1"
-c3 = "#5f7f53"
+c3 = "#63aa47"
 
 
 
@@ -28,7 +28,7 @@ app.layout = dmc.Container([
       dmc.Center(
             dmc.Text(
                 "Field Of Illumination Dashboard",
-                color="#5f7f53",
+                color="#63aa47",
                 mb=30,
                 style={"margin-top": "20px", "fontSize": 40},
             )
@@ -67,7 +67,7 @@ app.layout = dmc.Container([
                                     ],
                                 ),
                                 dmc.Title(
-                                    "Key Measurments for FOI", color="#5f7f53", size="h3", mb=10
+                                    "Key Measurments for FOI", color="#63aa47", size="h3", mb=10
                                 ),
                                 dash_table.DataTable(
                                     id="table",
@@ -100,7 +100,7 @@ app.layout = dmc.Container([
                 ),
                 dmc.Col(
                     [
-                        dmc.Title("Plot Over Time", color="#189A35", size="h3", mb=10),
+                        dmc.Title("Plot Over Time", color="#63aa47", size="h3", mb=10),
                         dcc.Graph(id="graph_line", figure={}),
                     ],
                     span="auto",

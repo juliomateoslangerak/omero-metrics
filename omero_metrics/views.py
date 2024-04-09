@@ -146,9 +146,17 @@ def center_viewer_dataset(request,dataset_id,conn=None,**kwargs):
 def center_viewer_image(request, image_id,conn=None,**kwargs):
     image = conn.getObject("Image", image_id)
     image_loaded = load_image(image)
+    roi_service = conn.getRoiService()
+    result = roi_service.findByImage(int(image_id), None, conn.SERVICE_OPTS)
+    shapes_rectangle, shapes_line = get_rois_omero(result)
+    df_lines_omero = get_info_roi_lines(shapes_line)
+    df_rects_omero = get_info_roi_rectangles(shapes_rectangle)
     dash_context = request.session.get("django_plotly_dash", dict())
     dash_context['django_to_dash_context'] = "I am Dash receiving context from Django"
     dash_context['ima'] = image_loaded
+    dash_context['df_lines'] = df_lines_omero
+    dash_context['df_rects'] = df_rects_omero
+    dash_context['df_intensity_profiles'] = get_intensity_profile(image_loaded)
     request.session['django_plotly_dash'] = dash_context
     return render(request, 'metrics/omero_views/center_view_image.html',{'image_id': image_id})
 

@@ -13,14 +13,35 @@
 {% for p in processed_datasets %}
 <ul>
     <li>{{ p }}</li>
+
+    <button class="loadContentButton" data-oid="{{ p }}">Load Content</button>
 </ul>
 {% endfor %}
 <h1>Unprocessed Datasets</h1>
 {% for p in unprocessed_datasets %}
 <ul>
     <li class="datasetThumb ui-selectee">
-        <a  href="{% url 'metrics_index' %}dataset/{{ p }}">{{ p }}</a>
+        <a href="{% url 'metrics_index' %}dataset/{{ p }}">{{ p }}</a>
     </li>
+    <button class="loadContentButton" data-oid="{{ p }}">Load Content</button>
 </ul>
 {% endfor %}
+
+<script>
+    $(document).ready(function(){
+        $(".loadContentButton").click(function(){
+            var oid = $(this).data('oid');
+            var inst = $.jstree.reference('#dataTree');
+            inst.deselect_all(true);
+            var selectedNode = inst.locate_node("dataset-" + oid);
+            inst.select_node(selectedNode);
+            
+            // we also focus the node, so that hotkey events come from the node
+            if (selectedNode) {
+                $("#" + selectedNode.id).children('.jstree-anchor').trigger('focus');
+            }
+        });
+    });
+</script>
+
 {% endblock %}

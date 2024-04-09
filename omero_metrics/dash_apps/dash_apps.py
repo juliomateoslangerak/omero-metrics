@@ -1,30 +1,13 @@
-'''Dash demonstration application
-
-TODO attribution here
-'''
-
-# The linter doesn't like the members of the html and dcc imports (as they are dynamic?)
-#pylint: disable=no-member
-
 import dash
 from dash import dcc, html
 import plotly.graph_objs as go
-#import dpd_components as dpd
 import numpy as np
 from django_plotly_dash import DjangoDash
-
-#from .urls import app_name
-# app_name = "DPD demo application"
 
 dashboard_name1 = 'dash_example_1'
 dash_example1 = DjangoDash(name=dashboard_name1,
                            serve_locally=True,
-                           # app_name=app_name
                           )
-
-# Below is a random Dash app.
-# I encountered no major problems in using Dash this way. I did encounter problems but it was because
-# I was using e.g. Bootstrap inconsistenyly across the dash layout. Staying consistent worked fine for me.
 dash_example1.layout = html.Div(id='main',
                                 children=[
                                     html.Div([dcc.Dropdown(id='my-dropdown1',
@@ -52,12 +35,12 @@ dash_example1.layout = html.Div(id='main',
                                     html.Div(id='test-output-div2'),
                                     html.Div(id='test-output-div3')
 
-                                ]) # end of 'main'
+                                ])
 
 @dash_example1.expanded_callback(
     dash.dependencies.Output('test-output-div', 'children'),
     [dash.dependencies.Input('my-dropdown1', 'value')])
-def callback_test(*args, **kwargs): #pylint: disable=unused-argument
+def callback_test(*args, **kwargs): 
     'Callback to generate test data on each change of the dropdown'
 
     # Creating a random Graph from a Plotly example:
