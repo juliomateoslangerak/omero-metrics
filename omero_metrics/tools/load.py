@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from omero.gateway import DatasetWrapper, ImageWrapper, ProjectWrapper
 
-import omero_tools
+from omero_metrics.tools import omero_tools
 
 # Creating logging services
 logger = logging.getLogger(__name__)

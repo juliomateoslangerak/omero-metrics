@@ -18,7 +18,7 @@
 from django.shortcuts import render
 # from .tools import get_info_dash
 from omeroweb.decorators import login_required
-from microscopemetrics_omero.load import load_image
+from omero_metrics.tools.load import load_image
 # from .tools import data_loader
 
 # login_required: if not logged-in, will redirect to webclient
