@@ -123,38 +123,64 @@ def dump_dataset(
         )
         dataset.data_reference = omero_tools.get_ref_from_object(omero_dataset)
 
-    input_params = {}
-    for input_field in fields(dataset.input):
-        input_element = getattr(dataset.input, input_field.name)
-        if dump_input_images and isinstance(input_element, mm_schema.Image):
-            dump_image(
-                conn=conn,
-                image=input_element,
-                target_dataset=omero_dataset,
-            )
-        elif dump_input_images and isinstance(input_element, list) and all(isinstance(i_e, mm_schema.Image) for i_e in input_element):
-            for image in input_element:
+    if dump_input_images:
+        for input_field in fields(dataset.input):
+            input_element = getattr(dataset.input, input_field.name)
+            if isinstance(input_element, mm_schema.Image):
                 dump_image(
                     conn=conn,
-                    image=image,
+                    image=input_element,
                     target_dataset=omero_dataset,
                 )
+            elif isinstance(input_element, list) and all(isinstance(i_e, mm_schema.Image) for i_e in input_element):
+                for image in input_element:
+                    dump_image(
+                        conn=conn,
+                        image=image,
+                        target_dataset=omero_dataset,
+                    )
+            else:
+                continue
+
+    if dump_output:
+        if dataset.output is not None:
+            _dump_dataset_output(dataset.output, omero_dataset)
         else:
-            input_params[input_field.name] = str(input_element)
+            logger.error(f"Dataset {dataset.name} has no output. Skipping dump.")
 
     if dump_input:
-        omero_tools.create_key_value(
-            conn=conn,
-            annotation=input_params,
-            omero_object=omero_dataset,
-            annotation_name="Input parameters",
-            annotation_description="microscope-metrics parameters for the analysis on the dataset",
-            namespace=dataset.input.class_model_uri,
-        )
-    if dump_output:
-        _dump_dataset_output(dataset.output, omero_dataset)
+        _dump_dataset_input(dataset.input, omero_dataset)
 
     return omero_dataset
+
+
+def _dump_dataset_input(
+    dataset_input: mm_schema.MetricsInput,
+    target_dataset: DatasetWrapper,
+):
+    logger.info(f"Dumping {dataset_input.class_name} to OMERO")
+    if not isinstance(dataset_input, mm_schema.MetricsInput):
+        logger.error(f"Invalid dataset input object provided for {dataset_input}. Skipping dump.")
+        return None
+
+    input_elements = {}
+    for input_field in fields(dataset_input):
+        input_element = getattr(dataset_input, input_field.name)
+        if isinstance(input_element, mm_schema.Image):
+            continue
+        elif isinstance(input_element, list) and all(isinstance(i_e, mm_schema.Image) for i_e in input_element):
+            continue
+        else:
+            input_elements[input_field.name] = str(input_element)
+
+    omero_key_value = omero_tools.create_key_value(
+        conn=target_dataset._conn,
+        annotation=input_elements,
+        omero_object=target_dataset,
+        annotation_name=dataset_input.class_name,
+        # annotation_description=dataset_input.description,
+        namespace=dataset_input.class_model_uri,
+    )
 
 
 def _dump_dataset_output(
