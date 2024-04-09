@@ -30,12 +30,11 @@ SHAPE_TYPE_TO_FUNCTION = {
 
 
 def dump_project(
-    conn: BlitzGateway,
-    project: mm_schema.MetricsDatasetCollection,
-    target_project: ProjectWrapper = None,
-    dump_input_images: bool = False,
-    dump_input: bool = True,
-    dump_output: bool = True,
+        conn: BlitzGateway,
+        project: mm_schema.MetricsDatasetCollection,
+        target_project: ProjectWrapper = None,
+        dump_input_images: bool = False,
+        dump_analysis: bool = True,
 ) -> ProjectWrapper:
     if target_project is None:
         if project.data_reference:
@@ -69,22 +68,20 @@ def dump_project(
             dataset=dataset,
             target_project=omero_project,
             dump_input_images=dump_input_images,
-            dump_input=dump_input,
-            dump_output=dump_output
+            dump_analysis=dump_analysis
         )
 
     return omero_project
 
 
 def dump_dataset(
-    conn: BlitzGateway,
-    dataset: mm_schema.MetricsDataset,
-    target_project: ProjectWrapper = None,
-    append_to_existing: bool = False,
-    as_table: bool = False,
-    dump_input_images: bool = False,
-    dump_input: bool = True,
-    dump_output: bool = True,
+        conn: BlitzGateway,
+        dataset: mm_schema.MetricsDataset,
+        target_project: ProjectWrapper = None,
+        append_to_existing: bool = False,
+        as_table: bool = False,
+        dump_input_images: bool = False,
+        dump_analysis: bool = True,
 ) -> DatasetWrapper:
     if append_to_existing or as_table:
         logger.error(
@@ -142,52 +139,81 @@ def dump_dataset(
             else:
                 continue
 
-    if dump_output:
-        if dataset.output is not None:
-            _dump_dataset_output(dataset.output, omero_dataset)
+    if dump_analysis:
+        if dataset.processed:
+            if dataset.output is not None:
+                _dump_analysis_metadata(dataset, omero_dataset)
+                _dump_dataset_output(dataset.output, omero_dataset)
+            else:
+                logger.error(f"Dataset {dataset.name} is processed but has no output. Skipping dump.")
         else:
-            logger.error(f"Dataset {dataset.name} has no output. Skipping dump.")
-
-    if dump_input:
-        _dump_dataset_input(dataset.input, omero_dataset)
+            logger.warning(f"Dataset {dataset.name} is not processed. Skipping output dump.")
 
     return omero_dataset
 
 
-def _dump_dataset_input(
-    dataset_input: mm_schema.MetricsInput,
-    target_dataset: DatasetWrapper,
+def _dump_analysis_metadata(
+        dataset: mm_schema.MetricsDataset,
+        target_dataset: DatasetWrapper,
 ):
-    logger.info(f"Dumping {dataset_input.class_name} to OMERO")
-    if not isinstance(dataset_input, mm_schema.MetricsInput):
-        logger.error(f"Invalid dataset input object provided for {dataset_input}. Skipping dump.")
+    logger.info(f"Dumping {dataset.class_name} to OMERO")
+    if not isinstance(dataset, mm_schema.MetricsDataset):
+        logger.error(f"Invalid dataset input object provided for {dataset}. Skipping dump.")
         return None
 
-    input_elements = {}
-    for input_field in fields(dataset_input):
-        input_element = getattr(dataset_input, input_field.name)
+    input_metadata = _get_input_metadata(dataset.input)
+
+    output_metadata = _get_output_metadata(dataset.output)
+
+    metadata = {**input_metadata, **output_metadata}
+
+    omero_tools.create_key_value(
+        conn=target_dataset._conn,
+        annotation=metadata,
+        omero_object=target_dataset,
+        annotation_name=dataset.class_name,
+        annotation_description=dataset.description,
+        namespace=dataset.class_model_uri,
+    )
+
+
+def _get_input_metadata(
+        input: mm_schema.MetricsInput,
+) -> dict:
+    metadata = {}
+    for input_field in fields(input):
+        input_element = getattr(input, input_field.name)
         if isinstance(input_element, mm_schema.Image):
             continue
         elif isinstance(input_element, list) and all(isinstance(i_e, mm_schema.Image) for i_e in input_element):
             continue
         else:
-            input_elements[input_field.name] = str(input_element)
+            metadata[input_field.name] = str(input_element)
 
-    omero_key_value = omero_tools.create_key_value(
-        conn=target_dataset._conn,
-        annotation=input_elements,
-        omero_object=target_dataset,
-        annotation_name=dataset_input.class_name,
-        # annotation_description=dataset_input.description,
-        namespace=dataset_input.class_model_uri,
-    )
+    return metadata
+
+
+def _get_output_metadata(
+        dataset_output: mm_schema.MetricsOutput,
+) -> dict:
+    output_elements = {}
+    for output_field in fields(dataset_output):
+        output_element = getattr(dataset_output, output_field.name)
+        if isinstance(output_element, mm_schema.MetricsObject):
+            continue
+        if isinstance(output_element, list) and \
+                any(isinstance(i, mm_schema.MetricsObject) for i in output_element):
+            continue
+        output_elements[output_field.name] = str(output_element)
+
+    return output_elements
 
 
 def _dump_dataset_output(
-    dataset_output: mm_schema.MetricsOutput,
-    target_dataset: DatasetWrapper,
-    append_to_existing: bool = False,
-    as_table: bool = False,
+        dataset_output: mm_schema.MetricsOutput,
+        target_dataset: DatasetWrapper,
+        append_to_existing: bool = False,
+        as_table: bool = False,
 ):
     logger.info(f"Dumping {dataset_output.class_name} to OMERO")
     if not isinstance(target_dataset, DatasetWrapper):
@@ -203,7 +229,15 @@ def _dump_dataset_output(
 
     for output_field in fields(dataset_output):
         output_element = getattr(dataset_output, output_field.name)
-        if isinstance(output_element, list):
+        if isinstance(output_element, mm_schema.MetricsObject):
+            _dump_output_element(
+                conn=conn,
+                output_element=output_element,
+                target_dataset=target_dataset,
+                # append_to_existing=append_to_existing,
+                # as_table=as_table,
+            )
+        elif isinstance(output_element, list) and all(isinstance(i, mm_schema.MetricsObject) for i in output_element):
             for element in output_element:
                 _dump_output_element(
                     conn=conn,
@@ -213,21 +247,14 @@ def _dump_dataset_output(
                     # as_table=as_table,
                 )
         else:
-            _dump_output_element(
-                conn=conn,
-                output_element=output_element,
-                target_dataset=target_dataset,
-                # append_to_existing=append_to_existing,
-                # as_table=as_table,
-            )
-
+            continue
 
 def _dump_output_element(
-    conn: BlitzGateway,
-    output_element,
-    target_dataset: DatasetWrapper,
-    # append_to_existing: bool = False,
-    # as_table: bool = False,
+        conn: BlitzGateway,
+        output_element,
+        target_dataset: DatasetWrapper,
+        # append_to_existing: bool = False,
+        # as_table: bool = False,
 ):
     match output_element:
         case mm_schema.Image():
@@ -276,12 +303,13 @@ def _dump_output_element(
             except AttributeError:
                 logger.error(f"{output_element} output could not be dumped to OMERO")
 
+
 def dump_image(
-    conn: BlitzGateway,
-    image: mm_schema.Image,
-    target_dataset: DatasetWrapper,
-    append_to_existing: bool = False,
-    as_table: bool = False,
+        conn: BlitzGateway,
+        image: mm_schema.Image,
+        target_dataset: DatasetWrapper,
+        append_to_existing: bool = False,
+        as_table: bool = False,
 ):
     if append_to_existing or as_table:
         logger.error(
@@ -321,11 +349,11 @@ def dump_image(
 
 
 def dump_roi(
-    conn: BlitzGateway,
-    roi: mm_schema.Roi,
-    target_images: Union[ImageWrapper, list[ImageWrapper]] = None,
-    append_to_existing: bool = False,
-    as_table: bool = False,
+        conn: BlitzGateway,
+        roi: mm_schema.Roi,
+        target_images: Union[ImageWrapper, list[ImageWrapper]] = None,
+        append_to_existing: bool = False,
+        as_table: bool = False,
 ):
     if append_to_existing or as_table:
         logger.error(
@@ -375,11 +403,11 @@ def dump_roi(
 
 
 def dump_tag(
-    conn: BlitzGateway,
-    tag: mm_schema.Tag,
-    target_objects: list[Union[ImageWrapper, DatasetWrapper, ProjectWrapper]] = None,
-    append_to_existing: bool = False,
-    as_table: bool = False,
+        conn: BlitzGateway,
+        tag: mm_schema.Tag,
+        target_objects: list[Union[ImageWrapper, DatasetWrapper, ProjectWrapper]] = None,
+        append_to_existing: bool = False,
+        as_table: bool = False,
 ):
     if append_to_existing or as_table:
         logger.error(
@@ -421,11 +449,11 @@ def dump_tag(
 
 
 def dump_key_value(
-    conn: BlitzGateway,
-    key_values: mm_schema.KeyValues,
-    target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper] = None,
-    append_to_existing: bool = False,
-    as_table: bool = False,
+        conn: BlitzGateway,
+        key_values: mm_schema.KeyValues,
+        target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper] = None,
+        append_to_existing: bool = False,
+        as_table: bool = False,
 ):
     if append_to_existing or as_table:
         logger.error(
@@ -475,11 +503,11 @@ def _eval_types(table: mm_schema.Table):
 
 
 def dump_table(
-    conn: BlitzGateway,
-    table: mm_schema.Table,
-    target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper] = None,
-    append_to_existing: bool = False,
-    as_table: bool = False,
+        conn: BlitzGateway,
+        table: mm_schema.Table,
+        target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper] = None,
+        append_to_existing: bool = False,
+        as_table: bool = False,
 ):
     if not isinstance(table, mm_schema.Table):
         logger.error(f"Unsupported table type for {table.name}: {table.class_name}")
@@ -508,11 +536,11 @@ def dump_table(
 
 
 def dump_comment(
-    conn: BlitzGateway,
-    comment: mm_schema.Comment,
-    target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
-    append_to_existing: bool = False,
-    as_table: bool = False,
+        conn: BlitzGateway,
+        comment: mm_schema.Comment,
+        target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
+        append_to_existing: bool = False,
+        as_table: bool = False,
 ):
     if target_object is None:
         try:

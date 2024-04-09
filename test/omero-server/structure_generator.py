@@ -289,8 +289,7 @@ if __name__ == "__main__":
                     temp_conn,
                     mm_project,
                     dump_input_images=True,  # We anyway want to dump test input images
-                    dump_input=False,
-                    dump_output=False,
+                    dump_analysis=False,
                 )
                 dir_attachments = os.path.join(
                     os.path.dirname(__file__),
@@ -309,8 +308,7 @@ if __name__ == "__main__":
                         temp_conn,
                         mm_project,
                         dump_input_images=False,  # We anyway want to dump test input images
-                        dump_input=True,
-                        dump_output=True,
+                        dump_analysis=True,
                     )
                 temp_conn.close()
 
