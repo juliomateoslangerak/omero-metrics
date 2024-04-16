@@ -487,12 +487,10 @@ def dump_key_value(
 
 def _eval(s):
     try:
-        ev = ast.literal_eval(s)
-        return ev
+        return ast.literal_eval(s)
     except ValueError:
-        corrected = "'" + s + "'"
-        ev = ast.literal_eval(corrected)
-        return ev
+        corrected = f"'{s}'"
+        return ast.literal_eval(corrected)
 
 
 def _eval_types(table: mm_schema.Table):
