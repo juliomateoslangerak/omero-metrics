@@ -4,7 +4,7 @@ from dataclasses import fields
 from typing import Union
 
 from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
-from omero.gateway import BlitzGateway, DatasetWrapper, ImageWrapper, ProjectWrapper
+from omero.gateway import BlitzGateway, DatasetWrapper, ImageWrapper, ProjectWrapper, ExperimenterGroupWrapper
 
 from omero_metrics.tools import omero_tools
 
@@ -27,6 +27,54 @@ SHAPE_TYPE_TO_FUNCTION = {
     "polygons": omero_tools.create_shape_polygon,
     "masks": omero_tools.create_shape_mask,
 }
+
+
+def dump_microscope(
+        conn: BlitzGateway,
+        microscope: mm_schema.Microscope,
+        target_group: ExperimenterGroupWrapper = None,
+) -> ExperimenterGroupWrapper:
+    """
+    This function is dumping the microscope metadata into an existing Group in OMERO.
+    :param conn: 
+    :param microscope: 
+    :param target_group: 
+    :return: 
+    """
+    if target_group is None:
+        if microscope.data_reference:
+            omero_group = omero_tools.get_omero_obj_from_mm_obj(
+                conn=conn,
+                mm_obj=microscope
+            )
+        else:
+            logger.error(
+                f"Microscope {microscope.name}: a target group must be provided"
+            )
+            return None
+    else:
+        if not isinstance(target_group, ExperimenterGroupWrapper):
+            logger.error(
+                f"Microscope {microscope.name} must be linked to a group. {target_group} object provided is not a group."
+            )
+            return None
+        if microscope.omero_object_id != target_group.getId():
+            logger.warning(
+                f"Microscope {microscope.name} is going to be linked to a different OMERO group."
+            )
+        omero_group = target_group
+        microscope.data_reference = omero_tools.get_ref_from_object(omero_group)
+
+    omero_tools.create_key_value(
+        conn=conn,
+        annotation=microscope._as_dict,
+        omero_object=omero_group,
+        annotation_name=microscope.name,
+        annotation_description=microscope.description,
+        namespace=microscope.class_model_uri,
+    )
+    
+    return omero_group
 
 
 def dump_project(
