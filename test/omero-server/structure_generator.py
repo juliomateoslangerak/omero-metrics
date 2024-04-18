@@ -166,7 +166,7 @@ def generate_users_groups(conn, users: dict, groups: dict):
     cli.register("group", GroupControl, "test")
     cli.register("obj", ObjControl, "test")
 
-    for group_name, group in groups.items():
+    for group in groups.values():
         cli.invoke(
             [
                 "group",
@@ -179,10 +179,10 @@ def generate_users_groups(conn, users: dict, groups: dict):
                 host,
                 "-p",
                 str(port),
-                group_name,
+                group["name"],
             ]
         )
-        group_id = conn.c.sf.getAdminService().lookupGroup(group_name).id.val
+        group_id = conn.c.sf.getAdminService().lookupGroup(group["name"]).id.val
 
         cli.invoke(
             ["obj",
@@ -219,7 +219,7 @@ def generate_users_groups(conn, users: dict, groups: dict):
             ]
         )
 
-    for group_name, group in groups.items():
+    for group in groups.values():
         for owner in group["owners"]:
             cli.invoke(
                 [
@@ -228,7 +228,7 @@ def generate_users_groups(conn, users: dict, groups: dict):
                     "--user-name",
                     owner,
                     "--name",
-                    group_name,
+                    group["name"],
                     "--as-owner",
                     "-k",
                     session_uuid,
@@ -247,7 +247,7 @@ def generate_users_groups(conn, users: dict, groups: dict):
                     "--user-name",
                     member,
                     "--name",
-                    group_name,
+                    group["name"],
                     "-k",
                     session_uuid,
                     "-s",
@@ -256,6 +256,25 @@ def generate_users_groups(conn, users: dict, groups: dict):
                     str(port),
                 ]
             )
+
+
+def annotate_microscopes(conn, microscopes: dict):
+    for microscope in microscopes.values():
+        try:
+            microscope = mm_schema.Microscope(
+                name=microscope["name"],
+                description=microscope["description"],
+                type=microscope["type"],
+                manufacturer=microscope["manufacturer"],
+                model=microscope["model"],
+                serial_number=microscope["serial_number"],
+            )
+            omero_group = conn.getObject("ExperimenterGroup", attributes={"name": microscope["name"]})
+
+            dump.dump_microscope(conn, microscope, omero_group)
+        except KeyError:
+            logger.info(f"Could not annotate microscope {microscope['name']}")
+            continue
 
 
 if __name__ == "__main__":
@@ -273,6 +292,8 @@ if __name__ == "__main__":
         conn.connect()
 
         generate_users_groups(conn, server_structure["users"], server_structure["microscopes"])
+
+        # annotate_microscopes(conn, server_structure["microscopes"])
 
         for microscope_name, microscope_projects in server_structure["projects"].items():
             for project in microscope_projects.values():
@@ -315,5 +336,4 @@ if __name__ == "__main__":
     finally:
         conn.close()
         temp_conn.close()
-    pass
 

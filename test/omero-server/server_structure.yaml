@@ -3,29 +3,30 @@ users:
     password: abc123
     first_name: Abraracurcix
     last_name: CoreFacilityManager
-    default_group: core_facility_staff
+    default_group: Core Facility Staff
     avatar: Abraracurcix.png
   Asterix:
     password: abc123
     first_name: Asterix
     last_name: CoreFacilityStaff
-    default_group: core_facility_staff
+    default_group: Core Facility Staff
     avatar: Asterix.png
   Obelix:
     password: abc123
     first_name: Obelix
     last_name: CoreFacilityStaff
-    default_group: core_facility_staff
+    default_group: Core Facility Staff
     avatar: Obelix.png
   Panoramix:
     password: abc123
     first_name: Panoramix
     last_name: CoreFacilityStaff
-    default_group: core_facility_staff
+    default_group: Core Facility Staff
     avatar: Panoramix.png
 
 microscopes:
   core_facility_staff:
+    name: Core Facility Staff
     description: A default group for core facility staff
     owners:
       - Abraracurcix
@@ -34,7 +35,13 @@ microscopes:
       - Obelix
       - Panoramix
   microscope_1:
-    description: Microscope 1
+    name: IGH-Z3
+    description: Axio Observer Z3 at the IGH
+    type: WIDE-FIELD
+    manufacturer: Zeiss
+    model: Axio Observer
+    serial_number: 123456
+  #    comments:
     owners:
       - Asterix
       - Obelix
@@ -42,7 +49,13 @@ microscopes:
       - Abraracurcix
       - Panoramix
   microscope_2:
-    description: Microscope 2
+    name: IGH-SP8
+    description: SP8 at the IGH
+    type: CONFOCAL
+    manufacturer: Leica
+    model: SP8
+    serial_number: 654321
+    #    comments:
     owners:
       - Asterix
       - Panoramix
@@ -51,7 +64,7 @@ microscopes:
       - Obelix
 
 projects:
-  microscope_1:
+  IGH-Z3:
     field_illumination_1:
       owner: Asterix
       name_project: Field Illumination 60x
@@ -99,7 +112,7 @@ projects:
       nr_datasets: 4
       start_date: 2021-01-04
       month_frequency: 2
-      process: false
+      process: true
       name_dataset: FI_10x
       description_dataset: Field Illumination dataset
       channel_names: [["DAPI"], ["FITC"], ["TRITC", "CY5"]]
@@ -137,7 +150,7 @@ projects:
       nr_datasets: 2
       start_date: 2021-01-01
       month_frequency: 1
-      process: false
+      process: true
       name_dataset: PSF-beads_60x
       description_dataset: PSF beads dataset
       channel_names: [ [ "DAPI", "FITC", "TRITC", "CY5" ] ]
@@ -184,7 +197,7 @@ projects:
         min: 100
         max: 1000
       bit_depth: 16
-  microscope_2:
+  IGH-SP8:
     field_illumination_1:
       owner: Asterix
       name_project: Field Illumination 40x
