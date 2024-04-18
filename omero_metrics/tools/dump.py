@@ -58,7 +58,7 @@ def dump_microscope(
                 f"Microscope {microscope.name} must be linked to a group. {target_group} object provided is not a group."
             )
             return None
-        if microscope.omero_object_id != target_group.getId():
+        if microscope.data_reference and microscope.data_reference.omero_object_id != target_group.getId():
             logger.warning(
                 f"Microscope {microscope.name} is going to be linked to a different OMERO group."
             )
