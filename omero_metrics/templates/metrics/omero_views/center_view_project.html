@@ -28,12 +28,12 @@
   <p>All dataset of this project.</p>
   {% for p in processed_datasets %}
   <ul>
-      <li class="loadContentButton" data-oid="{{ p }}"> Dataset ID: {{ p }}</li>
+      <li class="loadContentli" data-oid="{{ p }}"> Dataset ID: {{ p }}</li>
   </ul>
   {% endfor %}
   {% for p in unprocessed_datasets %}
   <ul>
-      <li class="loadContentButton" data-oid="{{ p }}"> Dataset ID: {{ p }}</li>
+      <li class="loadContentli" data-oid="{{ p }}"> Dataset ID: {{ p }}</li>
   </ul>
   {% endfor %}
 </div>
@@ -42,7 +42,7 @@
   <p>Processed dataset of this project.</p> 
   {% for p in processed_datasets %}
   <ul>
-      <li class="loadContentButton" data-oid="{{ p }}"> Dataset ID: {{ p }}</li>
+      <li class="loadContentli" data-oid="{{ p }}"> Dataset ID: {{ p }}</li>
   </ul>
   {% endfor %}
 </div>
@@ -51,28 +51,11 @@
  <p>Unprocessed dataset of this project</p>
   {% for p in unprocessed_datasets %}
 <ul>
-    <li class="loadContentButton" data-oid="{{ p }}"> Dataset ID: {{ p }}</li>
+    <li class="loadContentli" data-oid="{{ p }}"> Dataset ID: {{ p }}</li>
 </ul>
 {% endfor %}
 </div>
 
 
-
-<script>
-    $(document).ready(function(){
-        $(".loadContentButton").click(function(){
-            var oid = $(this).data('oid');
-            var inst = $.jstree.reference('#dataTree');
-            inst.deselect_all(true);
-            var selectedNode = inst.locate_node("dataset-" + oid);
-            inst.select_node(selectedNode);
-            
-            // we also focus the node, so that hotkey events come from the node
-            if (selectedNode) {
-                $("#" + selectedNode.id).children('.jstree-anchor').trigger('focus');
-            }
-        });
-    });
-</script>
 
 {% endblock %}
