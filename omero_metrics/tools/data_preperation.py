@@ -1,7 +1,8 @@
 import pandas as pd
 import plotly.graph_objs as go
 import numpy as np
-
+import yaml
+import omero.gateway as gateway
 
 def get_intensity_profile(imaaa):
     imaaa= imaaa[0, 0, :, :, 0] / 255
@@ -103,13 +104,12 @@ def get_info_roi_rectangles(shape_dict):
 
 
 
-def get_dataset_ids_lists(conn, project_id):
+def get_dataset_ids_lists(conn, project):
     """
     Get the processed and unprocessed dataset ids for a project
     """
     processed_datasets = []
     unprocessed_datasets = []
-    project = conn.getObject("Project", project_id)
     for dataset in project.listChildren():
         try:
             dataset.getAnnotation().getNs()
@@ -119,14 +119,23 @@ def get_dataset_ids_lists(conn, project_id):
     return processed_datasets, unprocessed_datasets
 
 
+def get_image_list_by_dataset_id(conn, dataset_id):
+    """
+    Get the list of images for a dataset
+    """
+    dataset = conn.getObject("Dataset", dataset_id)
+    images = []
+    for image in dataset.listChildren():
+        images.append(image.getId())
+    return images
 
-def get_dataset_mapAnnotation(conn, dataset_id):
+def get_dataset_mapAnnotation(datasetWrapper):
     """
     Get the mapAnnotation for a dataset
     """
-    dataset = conn.getObject("Dataset", dataset_id)
+
     try:
-        for i in dataset.listAnnotations():
+        for i in datasetWrapper.listAnnotations():
             if "FieldIlluminationKeyValues" in i.getNs():
                 table = dict(i.getValue())
                 df = pd.DataFrame(table.items(), columns=["Key", "Value"])
@@ -134,3 +143,24 @@ def get_dataset_mapAnnotation(conn, dataset_id):
         return df
     except:
         return {}
+    
+    
+def read_config_from_file_ann(file_annotation):
+    return yaml.load(
+        file_annotation.getFileInChunks().__next__().decode(), Loader=yaml.SafeLoader
+    )
+    
+def get_file_annotation_project(projectWrapper):
+    study_config = None
+    for ann in projectWrapper.listAnnotations():
+                if type(ann) == gateway.FileAnnotationWrapper:
+                    study_config = read_config_from_file_ann(ann)
+    return study_config 
+
+def get_analysis_type(projectWrapper):
+    study_config = get_file_annotation_project(projectWrapper)
+    try:
+        analysis_type = next(iter(study_config['analysis']))
+    except:
+        analysis_type = None
+    return analysis_type

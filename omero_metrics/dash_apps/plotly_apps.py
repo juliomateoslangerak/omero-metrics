@@ -51,7 +51,7 @@ app = DjangoDash('SimpleExample')
 app.layout =  html.Div([
      dmc.Text(
                 "Field Of Illumination Dashboard",
-                color="#189A35",
+                c="#189A35",
                 mb=30,
                 style={"margin-top": "20px", "fontSize": 40},
             ),

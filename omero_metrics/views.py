@@ -18,7 +18,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.views import generic
 from django.urls import reverse
-
+import omero.gateway as gateway
 from omeroweb.webgateway import views as webgateway_views
 
 from omeroweb.webclient.decorators import login_required, render_response
@@ -75,7 +75,7 @@ def dash_example_1_view(request, conn=None, template_name="metrics/foi_key_measu
     request.session['django_plotly_dash'] = dash_context
     return render(request, template_name=template_name, context=context, )
 
-
+@login_required()
 def session_state_view(request, template_name, **kwargs):
     'Example view that exhibits the use of sessions to store state'
 
@@ -134,12 +134,19 @@ def image_rois(request, image_id, conn=None,**kwargs):
     
 @login_required()
 def center_viewer_dataset(request,dataset_id,conn=None,**kwargs):
-    data = get_dataset_mapAnnotation(conn, dataset_id)
-    print(data)
-    dash_context = request.session.get("django_plotly_dash", dict())
-    dash_context['data'] = data
-    request.session['django_plotly_dash'] = dash_context
-    return render(request,'metrics/omero_views/center_view_dataset.html',{'dataset_id': dataset_id})
+    datasetWrapper= conn.getObject("Dataset", dataset_id)
+    projectWrapper = datasetWrapper.getParent()
+    analysis_type = get_analysis_type(projectWrapper)
+    if analysis_type == "PSFBeads":
+        return render(request,'metrics/omero_views/center_view_dataset_psf_beads.html',{'dataset_id': dataset_id})
+    elif analysis_type == "FieldIllumination":
+        data = get_dataset_mapAnnotation(datasetWrapper)
+        dash_context = request.session.get("django_plotly_dash", dict())
+        dash_context['data'] = data
+        request.session['django_plotly_dash'] = dash_context
+        return render(request,'metrics/omero_views/center_view_dataset_foi.html',{'dataset_id': dataset_id})
+    else:
+        return render(request,'metrics/omero_views/center_view_unknown_analysis_type.html',{'dataset_id': dataset_id})
 
 
 @login_required()
@@ -164,7 +171,15 @@ def center_viewer_image(request, image_id,conn=None,**kwargs):
 
 @login_required()
 def center_viewer_project(request,project_id,conn=None,**kwargs):
-    processed_datasets ,unprocessed_datasets  = get_dataset_ids_lists(conn, project_id)
-    context = {'processed_datasets': processed_datasets, 'unprocessed_datasets': unprocessed_datasets}
+    ProjectWrapper = conn.getObject("Project", project_id)
+    study_config = get_file_annotation_project(ProjectWrapper)
+    processed_datasets ,unprocessed_datasets  = get_dataset_ids_lists(conn, ProjectWrapper)
+    context = {'processed_datasets': processed_datasets, 'unprocessed_datasets': unprocessed_datasets, 'study_config': study_config}
     return render(request,'metrics/omero_views/center_view_project.html',context)
+
+
+
+@login_required()
+def center_viewer_group(request,conn=None,**kwargs):
+    return render(request,'metrics/omero_views/center_view_group.html')
 

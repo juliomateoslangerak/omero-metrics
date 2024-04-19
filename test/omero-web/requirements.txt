@@ -4,7 +4,7 @@ django-plotly-dash
 dpd_static_support
 dash-bootstrap-components
 django-bootstrap4
-dash_mantine_components
+dash-mantine-components
 hypothesis
 dash-iconify
 

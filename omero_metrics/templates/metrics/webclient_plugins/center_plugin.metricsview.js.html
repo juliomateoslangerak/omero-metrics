@@ -26,7 +26,7 @@
     $("#metrics_view_panel").omeroweb_center_plugin({
             plugin_index: {{ forloop.counter }},
             load_plugin_content: function(selected, dtype, oid){  var url ;
-                console.log(selected);
+                
                 var dataset_id = null;
                  if (dtype=="image") {
                     url = '{% url 'metrics_index' %}image/'+oid +'/';
@@ -34,6 +34,10 @@
                 else if (dtype=="dataset") {
                     url = '{% url 'metrics_index' %}dataset/'+oid +'/'
                     dataset_id = oid;
+                }
+                else if (dtype=="experimenter") {
+                    url = '{% url 'metrics_index' %}group/'
+                   
                 }
                 else if (dtype=="project") {
                     url = '{% url 'metrics_index' %}project/'+oid +'/'
@@ -45,7 +49,7 @@
                 $(this).load(url);
 
             },
-            supported_obj_types: ['project','dataset', 'image'],
+            supported_obj_types: ['experimenter','project','dataset', 'image'],
         });
   
      

@@ -1,6 +1,6 @@
 {% extends "webgateway/base/base_main.html" %}
 {%load plotly_dash%}
-{% block title %}Split View Figure{% endblock %}
+{% block title %}Omero Metrics{% endblock %}
 
 
 {% block link %}
@@ -11,7 +11,7 @@
 {% endblock %}
 
 {% block body %}
-
+<h1>Field Of Illumination</h1>
 <div class="{%plotly_class name="FOI_Demo"%}">
     {%plotly_app name="FOI_Demo" ratio=0.7%}
 </div>

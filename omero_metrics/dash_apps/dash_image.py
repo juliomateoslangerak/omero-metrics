@@ -10,8 +10,8 @@ import dash_mantine_components as dmc
 dashboard_name = 'omero_image_dash'
 dash_app_image = DjangoDash(name=dashboard_name, serve_locally=True,)
 
-dash_app_image.layout = html.Div(id='main',children=[
-                                    dmc.Title("Dashboard For Image", color="#63aa47", size="h3"),
+dash_app_image.layout = dmc.MantineProvider([html.Div(id='main',children=[
+                                    dmc.Title("Dashboard For Image", c="#63aa47", size="h3"),
                                     html.Div([dcc.Dropdown(id='my-dropdown1',
                                                           options={}, 
                                                           value="Channel 0",
@@ -26,11 +26,11 @@ dash_app_image.layout = html.Div(id='main',children=[
                                              ]),
                                     dcc.Graph(figure={}, id="rois-graph"),
                           html.Div([           
-                        dmc.Title("Intensity Profiles", color="#63aa47", size="h3"),
+                        dmc.Title("Intensity Profiles", c="#63aa47", size="h3"),
                         dcc.Graph(id='intensity_profiles',figure={}),
                         ] )
                     ], style={"background-color": "#eceff1",}
-                                 )
+                                 )])
 
 
 

@@ -24,11 +24,12 @@ c3 = "#63aa47"
 
 app = DjangoDash('FOI_Demo')
 
-app.layout = dmc.Container([
+app.layout = dmc.MantineProvider(
+     children=[dmc.Container([
       dmc.Center(
-            dmc.Text(
+                dmc.Text(
                 "Field Of Illumination Dashboard",
-                color="#63aa47",
+         
                 mb=30,
                 style={"margin-top": "20px", "fontSize": 40},
             )
@@ -37,13 +38,13 @@ app.layout = dmc.Container([
                dmc.Grid(
             [
                
-                dmc.Col(
+                dmc.GridCol(
                     [
                         dmc.Stack(
                             [
                                 dmc.Grid(
                                     [
-                                        dmc.Col(
+                                        dmc.GridCol(
                                             [
                                                 html.H3("Select Category"),
                                                 dcc.Dropdown(
@@ -53,7 +54,7 @@ app.layout = dmc.Container([
                                             span="auto",
                                             style={"background-color": c2, "margin-right": "10px"},
                                         ),
-                                        dmc.Col(
+                                        dmc.GridCol(
                                             [
                                                 html.H3("Select Date"),
                                                 dcc.DatePickerRange(
@@ -67,7 +68,7 @@ app.layout = dmc.Container([
                                     ],
                                 ),
                                 dmc.Title(
-                                    "Key Measurments for FOI", color="#63aa47", size="h3", mb=10
+                                    "Key Measurments for FOI", c="#63aa47", size="h3", mb=10
                                 ),
                                 dash_table.DataTable(
                                     id="table",
@@ -98,9 +99,9 @@ app.layout = dmc.Container([
                         "border-radius": "0.5rem",
                     },
                 ),
-                dmc.Col(
+                dmc.GridCol(
                     [
-                        dmc.Title("Plot Over Time", color="#63aa47", size="h3", mb=10),
+                        dmc.Title("Plot Over Time", c="#63aa47", size="h3", mb=10),
                         dcc.Graph(id="graph_line", figure={}),
                     ],
                     span="auto",
@@ -117,7 +118,7 @@ app.layout = dmc.Container([
       
       
 ])
-
+])
 @app.expanded_callback(
     dash.dependencies.Output('table', 'data'),
     [dash.dependencies.Input('key_dpd', 'value'),])

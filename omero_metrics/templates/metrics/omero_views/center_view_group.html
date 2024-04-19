@@ -1,0 +1,38 @@
+{% extends "webgateway/base/base_main.html" %}
+{%load plotly_dash%}
+{% load static %}
+
+{% block title %}Omero Metrics{% endblock %}
+{% block header %} {% endblock %}
+
+{% block link %}
+<!-- Add our styles or css links here. **NB**: Don't forget to include the parent content of this block -->
+{{ block.super }}
+
+
+<style type="text/css">
+
+    .header .text {
+        font-size: 40px;
+    }
+    
+    .header .image, 
+    .header .text {
+        display: inline-block;
+        vertical-align: top;
+    }
+    
+</style>
+{% endblock %}
+
+{% block script %}
+{% endblock %}
+
+{% block body %}
+
+
+<div class="header">
+    <div class="image"> <img src="{% static 'omero_metrics/images/logo.png' %}" width='110px' height="100px" alt="Omero metrics image"> </div>
+    <div class="text">Omero Metrics Dashboards</div>
+</div>
+{% endblock %}
