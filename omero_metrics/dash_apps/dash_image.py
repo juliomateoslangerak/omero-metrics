@@ -29,7 +29,7 @@ dash_app_image.layout = dmc.MantineProvider([html.Div(id='main',children=[
                         dmc.Title("Intensity Profiles", c="#63aa47", size="h3"),
                         dcc.Graph(id='intensity_profiles',figure={}),
                         ] )
-                    ], style={"background-color": "#eceff1",}
+                    ], style={"background-color": "#eceff1", "margin":"20px"}
                                  )])
 
 

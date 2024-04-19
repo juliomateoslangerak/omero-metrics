@@ -181,5 +181,11 @@ def center_viewer_project(request,project_id,conn=None,**kwargs):
 
 @login_required()
 def center_viewer_group(request,conn=None,**kwargs):
-    return render(request,'metrics/omero_views/center_view_group.html')
+    group = conn.getGroupFromContext()
+    
+    group_id = group.getId()
+    group_name = group.getName()
+    group_description = group.getDescription()
+    context = {'group_id': group_id, 'group_name': group_name, 'group_description': group_description}
+    return render(request,'metrics/omero_views/center_view_group.html', context)
 

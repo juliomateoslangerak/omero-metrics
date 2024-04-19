@@ -1,37 +1,63 @@
 {% extends "webgateway/base/base_main.html" %}
 {% load plotly_dash %}
+{% load static %}
 {% block title %}Omero Metrics{% endblock %}
 
 {% block link %}
+{{ block.super }}
+
+<link rel="stylesheet" type="text/css" href="{% static 'omero_metrics/css/style_project.css' %}">
+<script src="{% static 'omero_metrics/js/js_project.js' %}"></script>
 {% endblock %}
 
 {% block script %}
 {% endblock %}
 
 {% block body %}
-<h1>Processed Datasets</h1>
-{% for p in processed_datasets %}
-<ul>
-    <li>{{ p }}</li>
 
-    <button class="loadContentButton" data-oid="{{ p }}">Load Content</button>
-</ul>
-{% endfor %}
-<h1>Unprocessed Datasets</h1>
-{% for p in unprocessed_datasets %}
+<h2>Omero Metrics Project View</h2>
+<p>This is a simple view to display the processed and Unprocessed datasets for the selected project:</p>
+
+<div class="tab">
+  <button class="tablinks" onclick="openDataset(event, 'All')">All</button>
+  <button class="tablinks" onclick="openDataset(event, 'Processed')">Processed</button>
+  <button class="tablinks" onclick="openDataset(event, 'Unprocessed')">Unprocessed</button>
+</div>
+
+<div id="All" class="tabcontent">
+  <p>All dataset of this project.</p>
+  {% for p in processed_datasets %}
+  <ul>
+      <li class="loadContentButton" data-oid="{{ p }}"> Dataset ID: {{ p }}</li>
+  </ul>
+  {% endfor %}
+  {% for p in unprocessed_datasets %}
+  <ul>
+      <li class="loadContentButton" data-oid="{{ p }}"> Dataset ID: {{ p }}</li>
+  </ul>
+  {% endfor %}
+</div>
+
+<div id="Processed" class="tabcontent">
+  <p>Processed dataset of this project.</p> 
+  {% for p in processed_datasets %}
+  <ul>
+      <li class="loadContentButton" data-oid="{{ p }}"> Dataset ID: {{ p }}</li>
+  </ul>
+  {% endfor %}
+</div>
+
+<div id="Unprocessed" class="tabcontent">
+ <p>Unprocessed dataset of this project</p>
+  {% for p in unprocessed_datasets %}
 <ul>
-    <li class="datasetThumb ui-selectee">
-        <a href="{% url 'metrics_index' %}dataset/{{ p }}">{{ p }}</a>
-    </li>
-    <button class="loadContentButton" data-oid="{{ p }}">Load Content</button>
+    <li class="loadContentButton" data-oid="{{ p }}"> Dataset ID: {{ p }}</li>
 </ul>
 {% endfor %}
-<div class="card bg-light border-dark">
-    <div class="card-body">
-      <p>{{study_config}}</p>
-    </div>
-  </div>
-{% load plotly_dash %}
+</div>
+
+
+
 <script>
     $(document).ready(function(){
         $(".loadContentButton").click(function(){
