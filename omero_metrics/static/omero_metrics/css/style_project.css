@@ -1,5 +1,9 @@
 body {font-family: Arial;}
 
+
+.projectContainer {
+    margin-left: 20px;
+}
 /* Style the tab */
 .tab {
   overflow: hidden;
@@ -36,3 +40,16 @@ body {font-family: Arial;}
   border: 1px solid #ccc;
   border-top: none;
 }
+
+
+.boxCode {
+    background-color: #f7f5f5;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 20px 0;
+    width: 300px;
+    height: 300px;
+    border-radius: 0.5em;
+
+}
+

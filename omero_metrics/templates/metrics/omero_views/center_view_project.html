@@ -4,9 +4,10 @@
 {% block title %}Omero Metrics{% endblock %}
 
 {% block link %}
-{{ block.super }}
 
+{{ block.super }}
 <link rel="stylesheet" type="text/css" href="{% static 'omero_metrics/css/style_project.css' %}">
+
 <script src="{% static 'omero_metrics/js/js_project.js' %}"></script>
 {% endblock %}
 
@@ -14,7 +15,7 @@
 {% endblock %}
 
 {% block body %}
-
+<div class="projectContainer">
 <h2>Omero Metrics Project View</h2>
 <p>This is a simple view to display the processed and Unprocessed datasets for the selected project:</p>
 
@@ -25,7 +26,7 @@
 </div>
 
 <div id="All" class="tabcontent">
-  <p>All dataset of this project.</p>
+  <p>All datasets of this project.</p>
   {% for p in processed_datasets %}
   <ul>
       <li class="loadContentli" data-oid="{{ p }}"> Dataset ID: {{ p }}</li>
@@ -55,7 +56,10 @@
 </ul>
 {% endfor %}
 </div>
-
-
-
+{% if study_config%}
+<div class="boxCode">
+    <p> {{study_config}} <p>
+</div>
+{% endif %}
+<div>
 {% endblock %}

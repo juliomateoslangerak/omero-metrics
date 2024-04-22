@@ -14,3 +14,4 @@ react-webapp/react_webapp/templates/
 credentials.json
 
 .venv
+omero_metrics.egg-info
