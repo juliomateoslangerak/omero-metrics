@@ -13,7 +13,7 @@ dash_app_dataset.layout = html.Div(id='main',children=[
                                     html.Div([dcc.Dropdown(id='my-dropdown1',
                                                           options={}, 
                                                           value="Channel 0",
-                                                           className='col-md-12',
+                                                         className='col-md-12',
                                                           ),
                                               html.Div(id='test-output-div')
                                              ]),

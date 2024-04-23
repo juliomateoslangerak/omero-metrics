@@ -26,3 +26,17 @@ $(document).ready(function(){
         }
     });
 });
+
+
+function test(id){
+       var inst = $.jstree.reference('#dataTree');
+        inst.deselect_all(true);
+        var selectedNode = inst.locate_node("dataset-" + id);
+        inst.select_node(selectedNode);
+        
+        // we also focus the node, so that hotkey events come from the node
+        if (selectedNode) {
+            $("#" + selectedNode.id).children('.jstree-anchor').trigger('focus');
+        }
+        
+}
