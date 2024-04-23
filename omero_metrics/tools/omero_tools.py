@@ -708,6 +708,7 @@ def create_shape_mask(mm_mask: mm_schema.Mask):
     mask.setY(rdouble(mm_mask.y))
     mask.setTheZ(rint(mm_mask.z))
     mask.setTheT(rint(mm_mask.t))
+    mask.setTheC(rint(mm_mask.c))
     mask.setWidth(rdouble(mm_mask.mask.shape_x))  # TODO: see how to get shape if not np.array
     mask.setHeight(rdouble(mm_mask.mask.shape_y))
     mask_packed = np.packbits(mm_mask.mask.data)  # TODO: raise error when not boolean array
