@@ -4,7 +4,7 @@ from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 import plotly.express as px
 dashboard_name = 'omero_project_dash'
-dash_app_project = DjangoDash(name=dashboard_name, serve_locally=True,assets_external_path="./statics/omero_metrics/dash_apps/js/")
+dash_app_project = DjangoDash(name=dashboard_name, serve_locally=True,)
 
 
 dash_app_project.layout = dmc.MantineProvider([
@@ -64,8 +64,16 @@ dash_app_project.clientside_callback(
     """
     function(tab_value) {
     var p = tab_value["points"][0]["x"]
-    test(p)
-    console.log(tab_value)
+    var inst = $.jstree.reference('#dataTree');
+    inst.deselect_all(true);
+    var selectedNode = inst.locate_node("dataset-" + p);
+    inst.select_node(selectedNode);
+
+    // we also focus the node, so that hotkey events come from the node
+    if (selectedNode) {
+        $("#" + selectedNode.id).children('.jstree-anchor').trigger('focus');
+    }
+    console.log(p)
     }
     """,
     dash.dependencies.Output('blank-output', 'children'),

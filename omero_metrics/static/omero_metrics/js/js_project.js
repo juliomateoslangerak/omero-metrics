@@ -29,7 +29,7 @@ $(document).ready(function(){
 
 
 function test(id){
-       var inst = $.jstree.reference('#dataTree');
+        var inst = $.jstree.reference('#dataTree');
         inst.deselect_all(true);
         var selectedNode = inst.locate_node("dataset-" + id);
         inst.select_node(selectedNode);
