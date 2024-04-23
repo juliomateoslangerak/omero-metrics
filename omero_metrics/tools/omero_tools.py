@@ -4,7 +4,8 @@ import mimetypes
 from itertools import product
 from random import choice
 from string import ascii_letters
-from typing import Dict, List, Tuple, Union
+from typing import Union
+from jsonasobj2._jsonobj import JsonObj
 
 import numpy as np
 import pandas as pd
@@ -91,7 +92,7 @@ COLUMN_TYPES = {
 }
 
 
-def get_object_ids_from_url(url: str) -> List[Tuple[str, int]]:
+def get_object_ids_from_url(url: str) -> list[tuple[str, int]]:
     """Get the ID from an OMERO URL. For example:
     https://omero.server.fr/webclient/?show=image-12345 or
     https://omero.mri.cnrs.fr/webclient/?show=image-1556622|image-1556623 for multiple objects
@@ -118,7 +119,7 @@ def get_omero_obj_from_mm_obj(conn: BlitzGateway, mm_obj: mm_schema.MetricsObjec
         raise ValueError("Input should be a metrics object or a list of metrics objects")
 
 
-def get_ref_from_object(obj: ImageWrapper) -> mm_schema.DataReference:
+def get_ref_from_object(obj) -> mm_schema.DataReference:
     """Get the reference information from an OMERO object"""
     logger.debug(f"get_ref_from_object: object type is {type(obj)}")
 
@@ -157,7 +158,7 @@ def get_ref_from_object(obj: ImageWrapper) -> mm_schema.DataReference:
     )
 
 
-def _label_channels(image: ImageWrapper, labels: List):
+def _label_channels(image: ImageWrapper, labels: list):
     if len(labels) != image.getSizeC():
         raise ValueError(
             "The length of the channel labels is not of the same size as the size of the c dimension"
@@ -303,7 +304,7 @@ def create_dataset(
     dataset_name: str,
     description: str = None,
     project: ProjectWrapper = None,
-    tags: List[str] = None,
+    tags: list[str] = None,
 ):
     new_dataset = DatasetWrapper(conn, DatasetI())
     new_dataset.setName(dataset_name)
@@ -441,7 +442,7 @@ def create_image_from_numpy_array(
     channel_labels: Union[list, tuple] = None,
     dataset: DatasetWrapper = None,
     source_image_id: int = None,
-    channels_list: List[int] = None,
+    channels_list: list[int] = None,
     force_whole_planes: bool = False,
 ) -> ImageWrapper:
     """
@@ -562,7 +563,7 @@ def _get_tile_list(zct_list, data_shape, tile_size):
     return zct_tile_list
 
 
-def create_roi(conn: BlitzGateway, image: ImageWrapper, shapes: List, name, description):
+def create_roi(conn: BlitzGateway, image: ImageWrapper, shapes: list, name, description):
     # create an ROI, link it to Image
     roi = RoiI()  # TODO: work with wrappers
     # use the omero.model.ImageI that underlies the 'image' wrapper
@@ -793,8 +794,8 @@ def _create_column(data_type, kwargs):
 
 
 def _create_columns(
-    table: Union[DataFrame, List[Dict[str, list]], Dict[str, list]]
-) -> List[grid.Column]:
+    table: Union[DataFrame, list[dict[str, list]], dict[str, list]]
+) -> list[grid.Column]:
     # TODO: Verify implementation of empty table creation
     if isinstance(table, pd.DataFrame):
         column_names = table.columns.tolist()
@@ -805,19 +806,22 @@ def _create_columns(
     elif isinstance(table, dict):
         column_names = list(table.keys())
         values = [table[cn] for cn in column_names]
+    elif isinstance(table, JsonObj):
+        column_names = list(table._as_dict.keys())
+        values = [table[cn] for cn in column_names]
     else:
-        raise TypeError("Table must be a pandas dataframe or a list of dictionaries")
+        raise TypeError("Table must be a pandas dataframe or a list of dictionaries or a dictionary")
 
     columns = []
     for cn, v in zip(column_names, values):
         v_type = type(v[0])
-        if v_type == str:
+        if isinstance(v[0], str):
             size = (
                 len(max(v, key=len)) * 2
             )  # We assume here that the max size is double of what we really have...
             args = {"name": cn, "size": size, "values": v}
             columns.append(_create_column(data_type="string", kwargs=args))
-        elif v_type == int:
+        elif isinstance(v[0], (int, np.integer)):
             if cn.lower() in ["imageid", "image id", "image_id"]:
                 args = {"name": cn, "values": v}
                 columns.append(_create_column(data_type="image", kwargs=args))
@@ -842,29 +846,31 @@ def _create_columns(
             else:
                 args = {"name": cn, "values": v}
                 columns.append(_create_column(data_type="long", kwargs=args))
-        elif v_type == float:
+        elif isinstance(v[0], (float, np.floating)):
             args = {"name": cn, "values": v}
             columns.append(_create_column(data_type="double", kwargs=args))
-        elif v_type == bool:
-            args = {"name": cn, "values": v}
-            columns.append(_create_column(data_type="string", kwargs=args))
-        elif v_type in [ImageWrapper, ImageI]:
+        elif isinstance(v[0], (bool, np.bool_)):
+            args = {"name": cn, "values": [int(i) for i in v]}
+            columns.append(_create_column(data_type="long", kwargs=args))
+        elif isinstance(v[0], (ImageWrapper, ImageI)):
             args = {"name": cn, "values": [img.getId() for img in v]}
             columns.append(_create_column(data_type="image", kwargs=args))
-        elif v_type in [RoiWrapper, RoiI]:
+        elif isinstance(v[0], (RoiWrapper, RoiI)):
             args = {"name": cn, "values": [roi.getId() for roi in v]}
             columns.append(_create_column(data_type="roi", kwargs=args))
         elif isinstance(v_type, (list, tuple)):  # We are creating array columns
             raise NotImplementedError(f"Array columns are not implemented. Column {cn}")
+        elif v[0] is None:
+            continue
         else:
-            raise TypeError(f"Could not detect column datatype for column {cn}")
+            raise TypeError(f"Could not detect column datatype {v_type} for column {cn}")
 
     return columns
 
 
 def create_table(
     conn: BlitzGateway,
-    table: Union[DataFrame, List[Dict[str, list]], Dict[str, list]],
+    table: Union[DataFrame, list[dict[str, list]], dict[str, list]],
     table_name: str,
     omero_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
     table_description: str,

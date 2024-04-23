@@ -103,7 +103,7 @@ def session_state_view(request, template_name, **kwargs):
 #     conn.SERVICE_OPTS.setOmeroGroup(group_id)
 #     data_loader(conn, 10, 'Fake data')
 #     return render(request, template_name='metrics/add_data.html', context={})
-    
+
 
 
 
@@ -131,7 +131,7 @@ def image_rois(request, image_id, conn=None,**kwargs):
     roi_ids = image_id
     return render(request, 'metrics/omero_views/image_rois.html',
                   {'roiIds': roi_ids})
-    
+
 @login_required()
 def center_viewer_dataset(request,dataset_id,conn=None,**kwargs):
     datasetWrapper= conn.getObject("Dataset", dataset_id)
@@ -188,7 +188,7 @@ def center_viewer_project(request,project_id,conn=None,**kwargs):
 @login_required()
 def center_viewer_group(request,conn=None,**kwargs):
     group = conn.getGroupFromContext()
-    
+
     group_id = group.getId()
     group_name = group.getName()
     group_description = group.getDescription()
