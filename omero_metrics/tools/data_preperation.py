@@ -161,6 +161,10 @@ def get_dataset_mapAnnotation(datasetWrapper):
                 table = dict(i.getValue())
                 df = pd.DataFrame(table.items(), columns=["Key", "Value"])
                 break
+            elif "PSFBeadsKeyValues" in i.getNs():
+                table = dict(i.getValue())
+                df = pd.DataFrame(table.items(), columns=["Key", "Value"])
+                break
         return df
     except:
         return {}
@@ -196,6 +200,15 @@ def random_date(start, end):
     random_second = randrange(int_delta)
     return start + timedelta(seconds=random_second)
 
+
+def getOriginalFile_id(dataset):
+    id = None
+    for ann in dataset.listAnnotations():
+        if type(ann) == gateway.FileAnnotationWrapper:
+            if type(ann.getFile()) == gateway.OriginalFileWrapper:
+                id = ann.getFile().getId()
+                break
+    return id
 
 def processed_data_project_view(processed_list):
     d1 = datetime.strptime("1/1/2000 1:30 PM", "%m/%d/%Y %I:%M %p")

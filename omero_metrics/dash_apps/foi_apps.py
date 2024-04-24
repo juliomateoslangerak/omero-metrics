@@ -64,6 +64,24 @@ app.layout = dmc.MantineProvider(
                                         "fontWeight": "bold",
                                         "fontSize": 15,
                                     },
+                                ),  dash_table.DataTable(
+                                    id="table_pd",
+                                    page_size=10,
+                                    sort_action="native",
+                                    sort_mode="multi",
+                                    sort_as_null=["", "No"],
+                                    sort_by=[{"column_id": "pop", "direction": "asc"}],
+                                    editable=False,
+                                    style_cell={
+                                        "textAlign": "left",
+                                        "fontSize": 10,
+                                        "font-family": "sans-serif",
+                                    },
+                                    style_header={
+                                        "backgroundColor": "#5f7f53",
+                                        "fontWeight": "bold",
+                                        "fontSize": 15,
+                                    },
                                 ),
                             ]
                         )
@@ -89,7 +107,9 @@ app.layout = dmc.MantineProvider(
 ])
 @app.expanded_callback(
     dash.dependencies.Output('table', 'data'),
+    dash.dependencies.Output('table_pd', 'data'),
     [dash.dependencies.Input('blank-input', 'children'),])
 def keyvalue_callback(*args, **kwargs):
     data = kwargs['session_state']['data']
-    return data.to_dict('records')
+    pd_csv = kwargs['session_state']['data_pd']
+    return data.to_dict('records'), pd_csv.to_dict('records')

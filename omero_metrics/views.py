@@ -20,6 +20,7 @@ from django.views import generic
 from django.urls import reverse
 import omero.gateway as gateway
 from omeroweb.webgateway import views as webgateway_views
+from django.conf import settings
 
 from omeroweb.webclient.decorators import login_required, render_response
 
@@ -138,13 +139,22 @@ def center_viewer_dataset(request,dataset_id,conn=None,**kwargs):
     projectWrapper = datasetWrapper.getParent()
     analysis_type = get_analysis_type(projectWrapper)
     if analysis_type == "PSFBeads":
-        return render(request,'metrics/omero_views/center_view_dataset_psf_beads.html',{'dataset_id': dataset_id})
-    elif analysis_type == "FieldIllumination":
         data = get_dataset_mapAnnotation(datasetWrapper)
         dash_context = request.session.get("django_plotly_dash", dict())
         dash_context['data'] = data
         request.session['django_plotly_dash'] = dash_context
-        return render(request,'metrics/omero_views/center_view_dataset_foi.html',{'dataset_id': dataset_id})
+        return render(request,'metrics/omero_views/center_view_dataset_psf_beads.html',{'dataset_id': dataset_id})
+    elif analysis_type == "FieldIllumination":
+        data = get_dataset_mapAnnotation(datasetWrapper)
+        #file_id = getOriginalFile_id(datasetWrapper)
+        relative_url = reverse('omero_table', kwargs={'file_id': 101, 'mtype': 'csv'})
+        full_url = request.build_absolute_uri(relative_url)
+        dataframe = pd.read_csv(full_url)
+        dash_context = request.session.get("django_plotly_dash", dict())
+        dash_context['data'] = data
+        dash_context['data_pd'] = dataframe
+        request.session['django_plotly_dash'] = dash_context
+        return render(request,'metrics/omero_views/center_view_dataset_foi.html',{'dataset_id': dataset_id,'url': 101})
     else:
         return render(request,'metrics/omero_views/center_view_unknown_analysis_type.html',{'dataset_id': dataset_id})
 

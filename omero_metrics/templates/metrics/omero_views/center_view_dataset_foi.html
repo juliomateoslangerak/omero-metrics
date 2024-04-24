@@ -12,6 +12,9 @@
 
 {% block body %}
 
+<h1>URL: {{url}}</h1>
+<h1>URL: "{% url 'omero_table' url 'csv' %}"</h1>
+
 <div class="{%plotly_class name="FOI_Demo"%}">
     {%plotly_app name="FOI_Demo" ratio=0.7%}
 </div>
