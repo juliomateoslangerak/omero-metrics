@@ -10,6 +10,7 @@ from omero_metrics.dash_apps import dash_apps
 from omero_metrics.dash_apps import dash_image
 from omero_metrics.dash_apps import dash_project
 from omero_metrics.dash_apps import dash_dataset_psf_beads
+from omero_metrics.dash_apps import dash_image_psf_beads
 # pylint: disable=unused-import
 from django_plotly_dash.views import add_to_session
 from .views import *

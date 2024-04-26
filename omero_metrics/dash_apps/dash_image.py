@@ -50,9 +50,14 @@ dash_app_image.layout = dmc.MantineProvider([dmc.Container(id='main',children=[
                                         )
                                     ],
                                 ),
-                                    
-                                             
-                        dcc.Graph(figure={}, id="rois-graph", style={"margin-top": "20px", "margin-bottom": "20px"}),
+                                         
+                         dmc.Grid([
+                            dmc.GridCol([
+                                dcc.Slider(0,0,step=1,vertical='True',id='slider_z',  value=0)
+                                ],span="1",), 
+                                dmc.GridCol([
+                                dcc.Graph(figure={}, id="rois-graph", style={"margin-top": "20px", "margin-bottom": "20px"})],span="auto",), 
+                                    ]), 
                         html.Div([           
                         dmc.Title("Intensity Profiles", c="#63aa47", size="h3"),
                         dcc.Graph(id='intensity_profiles',figure={}),
@@ -65,39 +70,45 @@ dash_app_image.layout = dmc.MantineProvider([dmc.Container(id='main',children=[
 @dash_app_image.expanded_callback(
     dash.dependencies.Output('rois-graph', 'figure'),
     dash.dependencies.Output('my-dropdown1', 'options'),
+    dash.dependencies.Output('slider_z','max'),
     [dash.dependencies.Input('my-dropdown1', 'value'),
      dash.dependencies.Input('rois-radio', 'value'),
-     dash.dependencies.Input('dropdownColorScale', 'value')])
+     dash.dependencies.Input('dropdownColorScale', 'value'),
+     dash.dependencies.Input('slider_z', 'value'),])
 def callback_test4(*args, **kwargs):
     image_omero = kwargs['session_state']['ima']
-    imaaa = image_omero[0, 0, :, :, int(args[0][-1])] / 255
-    imaa_fliped = np.flip(imaaa, axis=1)
-    rb = imaaa[:,-1]
-    lb= imaaa[:,0]
-    dr = np.fliplr(imaaa).diagonal()
-    dl = np.fliplr(imaa_fliped).diagonal()
+    imaaa = image_omero[0,int(args[3]), :, :, int(args[0][-1])] / 255
     df_rects  = kwargs['session_state']['df_rects']
     df_lines  = kwargs['session_state']['df_lines']
     df_points = kwargs['session_state']['df_points']
+    df_point_channel = df_points[df_points['C'] == int(args[0][-1])].copy()
     channel_list = [f"channel {i}" for i in range(0, image_omero.shape[4])]
-    fig = px.imshow(imaaa, zmin=imaaa.min(), zmax=imaaa.max(), color_continuous_scale=args[2])
-    fig1 = px.imshow(imaaa, zmin=imaaa.min(), zmax=imaaa.max(), color_continuous_scale=args[2])
+    max_z = image_omero.shape[1] -1
+    fig = px.imshow(imaaa, zmin=0, zmax=255, color_continuous_scale=args[2])
+    fig1 = px.imshow(imaaa, zmin=0, zmax=255, color_continuous_scale=args[2])
     fig1 = add_rect_rois(go.Figure(fig1), df_rects)
     fig1 = add_line_rois(go.Figure(fig1), df_lines)
-    fig1 = add_point_rois(go.Figure(fig1), df_points)
+    fig1 = add_point_rois(go.Figure(fig1), df_point_channel)
     if args[1] == "Raw Image":
-        return fig, channel_list
+        return fig, channel_list, max_z
     elif args[1] == "ROIS Image":
-        return fig1, channel_list
+        return fig1, channel_list, max_z
     else:
-        return fig, channel_list
+        return fig, channel_list, max_z
 
 @dash_app_image.expanded_callback(
     dash.dependencies.Output('intensity_profiles', 'figure'),
     [dash.dependencies.Input('my-dropdown1', 'value')])
 def callback_test5(*args, **kwargs):
     df_intensity_profiles  = kwargs['session_state']['df_intensity_profiles']
-    fig = px.line(df_intensity_profiles, markers=True)
+    C = 'ch0' + args[0][-1]
+    df_profile = df_intensity_profiles[
+        df_intensity_profiles.columns[df_intensity_profiles.columns.str.startswith(C)]
+    ].copy()
+    df_profile.columns = df_profile.columns.str.replace("ch\d{2}_", "", regex=True)
+    df_profile.columns = df_profile.columns.str.replace("_", " ", regex=True)
+    df_profile.columns = df_profile.columns.str.title()
+    fig = px.line(df_profile, markers=True)
     return fig
 
 

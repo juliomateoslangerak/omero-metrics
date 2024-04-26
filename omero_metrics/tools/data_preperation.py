@@ -5,7 +5,8 @@ import yaml
 import omero.gateway as gateway
 from datetime import datetime, timedelta
 from random import randrange
-
+import collections
+import omero
 def get_intensity_profile(imaaa):
     imaaa= imaaa[0, 0, :, :, 0] / 255
     imaa_fliped = np.flip(imaaa, axis=1)
@@ -201,6 +202,25 @@ def random_date(start, end):
     return start + timedelta(seconds=random_second)
 
 
+def get_table_originalFile_id(conn,file_id):
+    ctx = conn.createServiceOptsDict()
+    ctx.setOmeroGroup("-1")
+    r = conn.getSharedResources()
+    t = r.openTable(omero.model.OriginalFileI(file_id), ctx)   
+    data_buffer = collections.defaultdict(list)
+    heads = t.getHeaders()
+    target_cols = range(len(heads))
+    index_buffer = []
+    num_rows = t.getNumberOfRows()
+    for start in range(0, num_rows):
+        data = t.read(target_cols, start, start)
+        for col in data.columns:
+            data_buffer[col.name] += col.values
+        index_buffer += data.rowNumbers
+    df = pd.DataFrame.from_dict(data_buffer)
+    df.index = index_buffer[0: len(df)]
+    return df
+
 def getOriginalFile_id(dataset):
     id = None
     for ann in dataset.listAnnotations():
@@ -215,3 +235,19 @@ def processed_data_project_view(processed_list):
     d2 = datetime.strptime("1/1/2024 4:50 AM", "%m/%d/%Y %I:%M %p")
     df = pd.DataFrame([[random_date(d1, d2), i] for i in processed_list], columns=['Date','Dataset_ID'])
     return df
+
+def get_originalFile_id_by_image_id(dataset):
+    list_file = []
+    for ann in dataset.listAnnotations():
+        if type(ann) == gateway.FileAnnotationWrapper:
+            if type(ann.getFile()) == gateway.OriginalFileWrapper:
+               list_file.append([ann.getFile().getId(), ann.getFile().getName()])
+    return list_file
+
+def get_intensity_map_image(image_name,list_file):
+    for file_id, name in list_file:
+        if image_name in name:
+            return file_id
+        else:
+            return None
+
