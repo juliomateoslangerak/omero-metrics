@@ -162,6 +162,7 @@ def center_viewer_image(request, image_id,conn=None,**kwargs):
         return render(request,'metrics/omero_views/center_view_image_psf.html')
     elif analysis_type == "FieldIllumination":
         image_loaded = load_image(image)
+        # image_loaded_mip = image_loaded[0].max(axis=0)
         file_id = getOriginalFile_id(image.getParent())
         df = get_table_originalFile_id(conn,file_id)
         roi_service = conn.getRoiService()
