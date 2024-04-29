@@ -3,6 +3,8 @@ import plotly.graph_objs as go
 import numpy as np
 import yaml
 import omero.gateway as gateway
+from datetime import datetime, timedelta
+from random import randrange
 
 def get_intensity_profile(imaaa):
     imaaa= imaaa[0, 0, :, :, 0] / 255
@@ -14,7 +16,7 @@ def get_intensity_profile(imaaa):
     df = pd.DataFrame({"Right Bottom": rb, "Left Bottom": lb, "Diagonal Right": dr, "Diagonal Left": dl})
     return df
 
-def add_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
+def add_rect_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
     for i, row in df.iterrows():
         fig.add_shape(
             go.layout.Shape(
@@ -34,7 +36,7 @@ def add_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
     return fig
 
 
-def add_profile_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
+def add_line_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
     for i, row in df.iterrows():
         fig.add_shape(
             go.layout.Shape(
@@ -55,10 +57,14 @@ def add_profile_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
     return fig
 
 
+def add_point_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
+    fig.add_trace(go.Scatter(x=df.X, y=df.Y, mode="markers"))
+    return fig
 
 def get_rois_omero(result):
     shapes_line = {}
     shapes_rectangle = {}
+    shapes_point = {}
     for roi in result.rois:
         for s in roi.copyShapes():
             shape = {}
@@ -80,11 +86,25 @@ def get_rois_omero(result):
                 shape["x2"] = s.getX2().getValue()
                 shape["y1"] = s.getY1().getValue()
                 shape["y2"] = s.getY2().getValue()
+                
                 shapes_line[s.getId().getValue()] = shape
+            elif s.__class__.__name__ == "PointI":
+                shape['type'] = 'Point'
+                shape['x'] = s.getX().getValue()
+                shape['y'] = s.getY().getValue()
+                shapes_point[s.getId().getValue()] = shape
             elif s.__class__.__name__ == "PolygonI":
                 continue
-    return shapes_rectangle, shapes_line
+    return shapes_rectangle, shapes_line, shapes_point
 
+
+def get_info_roi_points(shape_dict):
+    data = [
+        [key, int(value["x"]), int(value["y"]) ]
+        for key, value in shape_dict.items()
+    ]
+    df = pd.DataFrame(data, columns=["ROI", "X", "Y"])
+    return df
 
 def get_info_roi_lines(shape_dict):
     data = [
@@ -164,3 +184,20 @@ def get_analysis_type(projectWrapper):
     except:
         analysis_type = None
     return analysis_type
+
+def random_date(start, end):
+    """
+    This function will return a random datetime between two datetime
+    objects.
+    """
+    delta = end - start
+    int_delta = (delta.days * 24 * 60 * 60) + delta.seconds
+    random_second = randrange(int_delta)
+    return start + timedelta(seconds=random_second)
+
+
+def processed_data_project_view(processed_list):
+    d1 = datetime.strptime("1/1/2000 1:30 PM", "%m/%d/%Y %I:%M %p")
+    d2 = datetime.strptime("1/1/2024 4:50 AM", "%m/%d/%Y %I:%M %p")
+    df = pd.DataFrame([[random_date(d1, d2), i] for i in processed_list], columns=['Date','Dataset_ID'])
+    return df

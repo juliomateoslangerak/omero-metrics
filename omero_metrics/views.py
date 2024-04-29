@@ -155,14 +155,16 @@ def center_viewer_image(request, image_id,conn=None,**kwargs):
     image_loaded = load_image(image)
     roi_service = conn.getRoiService()
     result = roi_service.findByImage(int(image_id), None, conn.SERVICE_OPTS)
-    shapes_rectangle, shapes_line = get_rois_omero(result)
+    shapes_rectangle, shapes_line, shapes_point = get_rois_omero(result)
     df_lines_omero = get_info_roi_lines(shapes_line)
     df_rects_omero = get_info_roi_rectangles(shapes_rectangle)
+    df_points_omero = get_info_roi_points(shapes_point)
     dash_context = request.session.get("django_plotly_dash", dict())
     dash_context['django_to_dash_context'] = "I am Dash receiving context from Django"
     dash_context['ima'] = image_loaded
     dash_context['df_lines'] = df_lines_omero
     dash_context['df_rects'] = df_rects_omero
+    dash_context['df_points'] = df_points_omero
     dash_context['df_intensity_profiles'] = get_intensity_profile(image_loaded)
     request.session['django_plotly_dash'] = dash_context
     return render(request, 'metrics/omero_views/center_view_image.html',{'image_id': image_id})
@@ -174,8 +176,12 @@ def center_viewer_project(request,project_id,conn=None,**kwargs):
     ProjectWrapper = conn.getObject("Project", project_id)
     study_config = get_file_annotation_project(ProjectWrapper)
     processed_datasets ,unprocessed_datasets  = get_dataset_ids_lists(conn, ProjectWrapper)
+    df = processed_data_project_view(processed_datasets)
+    dash_context = request.session.get("django_plotly_dash", dict())
+    dash_context['data'] = df
+    request.session['django_plotly_dash'] = dash_context
     context = {'processed_datasets': processed_datasets, 'unprocessed_datasets': unprocessed_datasets, 'study_config': study_config}
-    return render(request,'metrics/omero_views/center_view_project.html',context)
+    return render(request,'metrics/omero_views/center_view_project_test.html',context)
 
 
 
