@@ -182,18 +182,11 @@ def dump_dataset(
         conn: BlitzGateway,
         dataset: mm_schema.MetricsDataset,
         target_project: ProjectWrapper = None,
-        append_to_existing: bool = False,
-        as_table: bool = False,
         dump_input_images: bool = False,
         dump_analysis: bool = True,
         dump_as_project_file_annotation: bool = True,
         dump_as_dataset_file_annotation: bool = False,
 ) -> DatasetWrapper:
-    if append_to_existing or as_table:
-        logger.error(
-            f"Dataset {dataset.class_name} cannot be appended to existing or dumped as table. Skipping dump."
-        )
-
     if dataset.data_reference:
         try:
             omero_dataset = omero_tools.get_omero_obj_from_mm_obj(
@@ -332,8 +325,6 @@ def _get_output_metadata(
 def _dump_dataset_output(
         dataset_output: mm_schema.MetricsOutput,
         target_dataset: DatasetWrapper,
-        append_to_existing: bool = False,
-        as_table: bool = False,
 ):
     logger.info(f"Dumping {dataset_output.class_name} to OMERO")
     if not isinstance(target_dataset, DatasetWrapper):
@@ -354,8 +345,6 @@ def _dump_dataset_output(
                 conn=conn,
                 output_element=output_element,
                 target_dataset=target_dataset,
-                # append_to_existing=append_to_existing,
-                # as_table=as_table,
             )
         elif isinstance(output_element, list) and all(isinstance(i, mm_schema.MetricsObject) for i in output_element):
             for element in output_element:
@@ -363,8 +352,6 @@ def _dump_dataset_output(
                     conn=conn,
                     output_element=element,
                     target_dataset=target_dataset,
-                    # append_to_existing=append_to_existing,
-                    # as_table=as_table,
                 )
         else:
             continue
@@ -373,8 +360,6 @@ def _dump_output_element(
         conn: BlitzGateway,
         output_element,
         target_dataset: DatasetWrapper,
-        # append_to_existing: bool = False,
-        # as_table: bool = False,
 ):
     match output_element:
         case mm_schema.Image():
@@ -398,24 +383,18 @@ def _dump_output_element(
                 conn=conn,
                 key_values=output_element,
                 target_object=target_dataset,
-                # append_to_existing=append_to_existing,
-                # as_table=as_table,
             )
         case mm_schema.Table():
             dump_table(
                 conn=conn,
                 table=output_element,
                 target_object=target_dataset,
-                # append_to_existing=append_to_existing,
-                # as_table=as_table,
             )
         # case mm_schema.Comment():
         #     dump_comment(
         #         conn=conn,
         #         comment=output_element,
         #         target_object=target_dataset,
-        #         # append_to_existing=append_to_existing,
-        #         # as_table=as_table,
         #     )
         case _:
             try:
@@ -428,13 +407,7 @@ def dump_image(
         conn: BlitzGateway,
         image: mm_schema.Image,
         target_dataset: DatasetWrapper,
-        append_to_existing: bool = False,
-        as_table: bool = False,
 ):
-    if append_to_existing or as_table:
-        logger.error(
-            f"Image {image.class_name} cannot be appended to existing or dumped as table. Skipping dump."
-        )
     if not isinstance(target_dataset, DatasetWrapper):
         logger.error(
             f"Image {image} must be linked to a dataset. {target_dataset} object provided is not a dataset."
@@ -472,14 +445,7 @@ def dump_roi(
         conn: BlitzGateway,
         roi: mm_schema.Roi,
         target_images: Union[ImageWrapper, list[ImageWrapper]] = None,
-        append_to_existing: bool = False,
-        as_table: bool = False,
 ):
-    if append_to_existing or as_table:
-        logger.error(
-            f"ROI {roi.class_name} cannot be appended to existing or dumped as table. Skipping dump."
-        )
-
     if target_images is None:
         try:
             target_images = [
@@ -526,14 +492,7 @@ def dump_tag(
         conn: BlitzGateway,
         tag: mm_schema.Tag,
         target_objects: list[Union[ImageWrapper, DatasetWrapper, ProjectWrapper]] = None,
-        append_to_existing: bool = False,
-        as_table: bool = False,
 ):
-    if append_to_existing or as_table:
-        logger.error(
-            f"Tag {tag.class_name} cannot be appended to existing or dumped as table. Skipping dump."
-        )
-
     if target_objects is None:
         try:
             target_objects = omero_tools.get_omero_obj_from_mm_obj(
@@ -572,14 +531,7 @@ def dump_key_value(
         conn: BlitzGateway,
         key_values: mm_schema.KeyValues,
         target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper] = None,
-        append_to_existing: bool = False,
-        as_table: bool = False,
 ):
-    if append_to_existing or as_table:
-        logger.error(
-            f"KeyValues {key_values.class_name} cannot yet be appended to existing or dumped as table. Skipping dump."
-        )
-
     if target_object is None:
         try:
             target_object = omero_tools.get_omero_obj_from_mm_obj(
@@ -624,8 +576,6 @@ def dump_table(
         conn: BlitzGateway,
         table: mm_schema.Table,
         target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper] = None,
-        append_to_existing: bool = False,
-        as_table: bool = False,
 ):
     if not isinstance(table, mm_schema.Table):
         logger.error(f"Unsupported table type for {table.name}: {table.class_name}")
@@ -657,8 +607,6 @@ def dump_comment(
         conn: BlitzGateway,
         comment: mm_schema.Comment,
         target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
-        append_to_existing: bool = False,
-        as_table: bool = False,
 ):
     if target_object is None:
         try:
@@ -671,10 +619,7 @@ def dump_comment(
                 f"ROI {comment.name} must be linked to an image. No image provided."
             )
             return None
-    if append_to_existing or as_table:
-        logger.error(
-            f"Comment {comment.class_name} cannot be appended to existing or dumped as table. Skipping dump."
-        )
+
     return omero_tools.create_comment(
         conn=conn,
         comment_text=comment.text,
