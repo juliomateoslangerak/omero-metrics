@@ -26,6 +26,7 @@ app = DjangoDash('FOI_Demo')
 
 app.layout = dmc.MantineProvider(
      children=[dmc.Container([
+      html.Div(id='blank-input', children=[]),
       dmc.Center(
                 dmc.Text(
                 "Field Of Illumination Dashboard",
@@ -42,31 +43,6 @@ app.layout = dmc.MantineProvider(
                     [
                         dmc.Stack(
                             [
-                                dmc.Grid(
-                                    [
-                                        dmc.GridCol(
-                                            [
-                                                html.H3("Select Category"),
-                                                dcc.Dropdown(
-                                                    ['ch1', 'ch2', 'ch3'], value="ch3", id="key_dpd"
-                                                ),
-                                            ],
-                                            span="auto",
-                                            style={"background-color": c2, "margin-right": "10px"},
-                                        ),
-                                        dmc.GridCol(
-                                            [
-                                                html.H3("Select Date"),
-                                                dcc.DatePickerRange(
-                                                    id="date_filter",
-                                                    start_date_placeholder_text="Start Period",
-                                                    end_date_placeholder_text="End Period",
-                                                ),
-                                            ],
-                                            span="auto",
-                                        ),
-                                    ],
-                                ),
                                 dmc.Title(
                                     "Key Measurments for FOI", c="#63aa47", size="h3", mb=10
                                 ),
@@ -88,7 +64,7 @@ app.layout = dmc.MantineProvider(
                                         "fontWeight": "bold",
                                         "fontSize": 15,
                                     },
-                                ),
+                                ), 
                             ]
                         )
                     ],
@@ -99,15 +75,7 @@ app.layout = dmc.MantineProvider(
                         "border-radius": "0.5rem",
                     },
                 ),
-                dmc.GridCol(
-                    [
-                        dmc.Title("Plot Over Time", c="#63aa47", size="h3", mb=10),
-                        dcc.Graph(id="graph_line", figure={}),
-                    ],
-                    span="auto",
-                    style={"background-color": "#eceff1", "border-radius": "5px"},
-                ),
-            ],
+               ],
             justify="space-between",
             align="stretch",
             gutter="xl",
@@ -121,7 +89,7 @@ app.layout = dmc.MantineProvider(
 ])
 @app.expanded_callback(
     dash.dependencies.Output('table', 'data'),
-    [dash.dependencies.Input('key_dpd', 'value'),])
+    [dash.dependencies.Input('blank-input', 'children'),])
 def keyvalue_callback(*args, **kwargs):
     data = kwargs['session_state']['data']
     return data.to_dict('records')

@@ -20,6 +20,7 @@ from django.views import generic
 from django.urls import reverse
 import omero.gateway as gateway
 from omeroweb.webgateway import views as webgateway_views
+from django.conf import settings
 
 from omeroweb.webclient.decorators import login_required, render_response
 
@@ -138,36 +139,48 @@ def center_viewer_dataset(request,dataset_id,conn=None,**kwargs):
     projectWrapper = datasetWrapper.getParent()
     analysis_type = get_analysis_type(projectWrapper)
     if analysis_type == "PSFBeads":
+        data = get_dataset_mapAnnotation(datasetWrapper)
+        dash_context = request.session.get("django_plotly_dash", dict())
+        dash_context['data'] = data
+        request.session['django_plotly_dash'] = dash_context
         return render(request,'metrics/omero_views/center_view_dataset_psf_beads.html',{'dataset_id': dataset_id})
     elif analysis_type == "FieldIllumination":
         data = get_dataset_mapAnnotation(datasetWrapper)
         dash_context = request.session.get("django_plotly_dash", dict())
         dash_context['data'] = data
         request.session['django_plotly_dash'] = dash_context
-        return render(request,'metrics/omero_views/center_view_dataset_foi.html',{'dataset_id': dataset_id})
+        return render(request,'metrics/omero_views/center_view_dataset_foi.html',{'dataset_id': dataset_id,'url': 101})
     else:
-        return render(request,'metrics/omero_views/center_view_unknown_analysis_type.html',{'dataset_id': dataset_id})
+        return render(request,'metrics/omero_views/center_view_unknown_analysis_type.html')
 
 
 @login_required()
 def center_viewer_image(request, image_id,conn=None,**kwargs):
     image = conn.getObject("Image", image_id)
-    image_loaded = load_image(image)
-    roi_service = conn.getRoiService()
-    result = roi_service.findByImage(int(image_id), None, conn.SERVICE_OPTS)
-    shapes_rectangle, shapes_line, shapes_point = get_rois_omero(result)
-    df_lines_omero = get_info_roi_lines(shapes_line)
-    df_rects_omero = get_info_roi_rectangles(shapes_rectangle)
-    df_points_omero = get_info_roi_points(shapes_point)
-    dash_context = request.session.get("django_plotly_dash", dict())
-    dash_context['django_to_dash_context'] = "I am Dash receiving context from Django"
-    dash_context['ima'] = image_loaded
-    dash_context['df_lines'] = df_lines_omero
-    dash_context['df_rects'] = df_rects_omero
-    dash_context['df_points'] = df_points_omero
-    dash_context['df_intensity_profiles'] = get_intensity_profile(image_loaded)
-    request.session['django_plotly_dash'] = dash_context
-    return render(request, 'metrics/omero_views/center_view_image.html',{'image_id': image_id})
+    analysis_type = get_analysis_type(image.getParent().getParent())
+    if analysis_type == "PSFBeads":
+        return render(request,'metrics/omero_views/center_view_image_psf.html')
+    elif analysis_type == "FieldIllumination":
+        image_loaded = load_image(image)
+        file_id = getOriginalFile_id(image.getParent())
+        df = get_table_originalFile_id(conn,file_id)
+        roi_service = conn.getRoiService()
+        result = roi_service.findByImage(int(image_id), None, conn.SERVICE_OPTS)
+        shapes_rectangle, shapes_line, shapes_point = get_rois_omero(result)
+        df_lines_omero = get_info_roi_lines(shapes_line)
+        df_rects_omero = get_info_roi_rectangles(shapes_rectangle)
+        df_points_omero = get_info_roi_points(shapes_point)
+        dash_context = request.session.get("django_plotly_dash", dict())
+        dash_context['django_to_dash_context'] = "I am Dash receiving context from Django"
+        dash_context['ima'] = image_loaded
+        dash_context['df_lines'] = df_lines_omero
+        dash_context['df_rects'] = df_rects_omero
+        dash_context['df_points'] = df_points_omero
+        dash_context['df_intensity_profiles'] = df
+        request.session['django_plotly_dash'] = dash_context
+        return render(request, 'metrics/omero_views/center_view_image.html',{'image_id': image_id})
+    else:
+        return render(request,'metrics/omero_views/center_view_unknown_analysis_type.html')
 
 
 
