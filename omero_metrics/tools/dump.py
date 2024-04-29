@@ -1,8 +1,10 @@
 import ast
 import logging
+import tempfile
 from dataclasses import fields
 from typing import Union
 
+from linkml_runtime.dumpers import YAMLDumper
 from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
 from omero.gateway import BlitzGateway, DatasetWrapper, ImageWrapper, ProjectWrapper, ExperimenterGroupWrapper
 
@@ -83,6 +85,8 @@ def dump_project(
         target_project: ProjectWrapper = None,
         dump_input_images: bool = False,
         dump_analysis: bool = True,
+        dump_as_project_file_annotation: bool = True,
+        dump_as_dataset_file_annotation: bool = False,
 ) -> ProjectWrapper:
     if target_project is None:
         if project.data_reference:
@@ -116,10 +120,62 @@ def dump_project(
             dataset=dataset,
             target_project=omero_project,
             dump_input_images=dump_input_images,
-            dump_analysis=dump_analysis
+            dump_analysis=dump_analysis,
+            dump_as_project_file_annotation=dump_as_project_file_annotation,
+            dump_as_dataset_file_annotation=dump_as_dataset_file_annotation,
         )
 
     return omero_project
+
+
+def _remove_unsupported_types(data_obj: Union[mm_schema.MetricsInput, mm_schema.MetricsOutput]):
+    def _remove(_attr):
+        match _attr:
+            case mm_schema.Image():
+                _attr.array_data = None
+            case mm_schema.Table():
+                _attr.table_data = None
+            case mm_schema.Roi():
+                if _attr.masks:
+                    [_remove(m.mask) for m in _attr.masks]
+
+    try:
+        for field in fields(data_obj):
+            try:
+                _attr = getattr(data_obj, field.name)
+                if isinstance(_attr, list):
+                    [_remove(i) for i in _attr]
+                else:
+                    _remove(_attr)
+            except AttributeError:
+                continue
+    except TypeError:
+        pass
+
+def _dump_mm_dataset_as_file_annotation(
+    conn: BlitzGateway,
+    mm_dataset: mm_schema.MetricsDataset,
+    target_omero_obj: Union[ProjectWrapper, DatasetWrapper],
+):
+    # We need to remove the data on the numppy and pandas data objects as they cannot be serialized by linkml
+    _remove_unsupported_types(mm_dataset.input)
+    if mm_dataset.output:
+        _remove_unsupported_types(mm_dataset.output)
+
+    dumper = YAMLDumper()
+
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
+        f.write(dumper.dumps(mm_dataset))
+        f.close()
+        file_path = f.name
+        ns = mm_dataset.class_model_uri
+        description = mm_dataset.description
+        mimetype = "application/yaml"
+        file_ann = conn.createFileAnnfromLocalFile(
+            file_path, mimetype=mimetype, ns=ns, desc=description)
+        target_omero_obj.linkAnnotation(file_ann)
+
+    return file_ann
 
 
 def dump_dataset(
@@ -130,6 +186,8 @@ def dump_dataset(
         as_table: bool = False,
         dump_input_images: bool = False,
         dump_analysis: bool = True,
+        dump_as_project_file_annotation: bool = True,
+        dump_as_dataset_file_annotation: bool = False,
 ) -> DatasetWrapper:
     if append_to_existing or as_table:
         logger.error(
@@ -196,6 +254,20 @@ def dump_dataset(
                 logger.error(f"Dataset {dataset.name} is processed but has no output. Skipping dump.")
         else:
             logger.warning(f"Dataset {dataset.name} is not processed. Skipping output dump.")
+
+    if dump_as_dataset_file_annotation:
+        _dump_mm_dataset_as_file_annotation(
+            conn=conn,
+            mm_dataset=dataset,
+            target_omero_obj=omero_dataset
+        )
+
+    if dump_as_project_file_annotation:
+        _dump_mm_dataset_as_file_annotation(
+            conn=conn,
+            mm_dataset=dataset,
+            target_omero_obj=target_project
+        )
 
     return omero_dataset
 

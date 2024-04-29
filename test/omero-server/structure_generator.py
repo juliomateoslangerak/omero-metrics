@@ -311,6 +311,8 @@ if __name__ == "__main__":
                     mm_project,
                     dump_input_images=True,  # We anyway want to dump test input images
                     dump_analysis=False,
+                    dump_as_project_file_annotation=False,
+                    dump_as_dataset_file_annotation=False,
                 )
                 dir_attachments = os.path.join(
                     os.path.dirname(__file__),
@@ -330,6 +332,8 @@ if __name__ == "__main__":
                         mm_project,
                         dump_input_images=False,  # We anyway want to dump test input images
                         dump_analysis=True,
+                        dump_as_project_file_annotation=True,
+                        dump_as_dataset_file_annotation=True,
                     )
                 temp_conn.close()
 
