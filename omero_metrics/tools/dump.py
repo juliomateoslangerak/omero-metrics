@@ -593,7 +593,7 @@ def dump_table(
             )
             return None
 
-    return omero_tools.create_table(
+    omero_table = omero_tools.create_table(
         conn=conn,
         table=table.table_data,
         table_name=table.name,
@@ -601,6 +601,9 @@ def dump_table(
         table_description=table.description,
         namespace=table.class_model_uri,
     )
+    table.data_reference = omero_tools.get_ref_from_object(omero_table)
+
+    return omero_table
 
 
 def dump_comment(
