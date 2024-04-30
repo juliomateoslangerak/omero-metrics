@@ -93,6 +93,7 @@ def get_rois_omero(result):
                 shape['type'] = 'Point'
                 shape['x'] = s.getX().getValue()
                 shape['y'] = s.getY().getValue()
+                shape['z'] = s.getTheZ().getValue()
                 shape['channel'] = s.getTheC().getValue()
                 shapes_point[s.getId().getValue()] = shape
             elif s.__class__.__name__ == "PolygonI":
@@ -102,10 +103,10 @@ def get_rois_omero(result):
 
 def get_info_roi_points(shape_dict):
     data = [
-        [key, int(value["x"]), int(value["y"]), int(value["channel"]) ]
+        [key, int(value["x"]), int(value["y"]),int(value["z"]), int(value["channel"]) ]
         for key, value in shape_dict.items()
     ]
-    df = pd.DataFrame(data, columns=["ROI", "X", "Y", 'C'])
+    df = pd.DataFrame(data, columns=["ROI", "X", "Y", "Z", 'C'])
     return df
 
 def get_info_roi_lines(shape_dict):
@@ -179,7 +180,7 @@ def read_config_from_file_ann(file_annotation):
 def get_file_annotation_project(projectWrapper):
     study_config = None
     for ann in projectWrapper.listAnnotations():
-                if type(ann) == gateway.FileAnnotationWrapper:
+                if type(ann) == gateway.FileAnnotationWrapper and ann.getFile().getName() == "study_config.yaml":
                     study_config = read_config_from_file_ann(ann)
     return study_config 
 

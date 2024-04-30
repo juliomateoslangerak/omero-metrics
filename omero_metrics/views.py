@@ -158,11 +158,17 @@ def center_viewer_dataset(request,dataset_id,conn=None,**kwargs):
 def center_viewer_image(request, image_id,conn=None,**kwargs):
     image = conn.getObject("Image", image_id)
     analysis_type = get_analysis_type(image.getParent().getParent())
+    image_loaded = load_image(image)
+    dash_context = request.session.get("django_plotly_dash", dict())
+    dash_context['ima'] = image_loaded
     if analysis_type == "PSFBeads":
+        
+        request.session['django_plotly_dash'] = dash_context
         return render(request,'metrics/omero_views/center_view_image_psf.html')
     elif analysis_type == "FieldIllumination":
-        image_loaded = load_image(image)
-        # image_loaded_mip = image_loaded[0].max(axis=0)
+        
+        # image_loaded_mip = image_loaded[0].max(axis=0) # Maximum intensity projection
+        
         file_id = getOriginalFile_id(image.getParent())
         df = get_table_originalFile_id(conn,file_id)
         roi_service = conn.getRoiService()
@@ -171,9 +177,7 @@ def center_viewer_image(request, image_id,conn=None,**kwargs):
         df_lines_omero = get_info_roi_lines(shapes_line)
         df_rects_omero = get_info_roi_rectangles(shapes_rectangle)
         df_points_omero = get_info_roi_points(shapes_point)
-        dash_context = request.session.get("django_plotly_dash", dict())
-        dash_context['django_to_dash_context'] = "I am Dash receiving context from Django"
-        dash_context['ima'] = image_loaded
+        
         dash_context['df_lines'] = df_lines_omero
         dash_context['df_rects'] = df_rects_omero
         dash_context['df_points'] = df_points_omero

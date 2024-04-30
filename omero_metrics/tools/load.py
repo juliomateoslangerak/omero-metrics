@@ -42,3 +42,5 @@ def load_image(image: ImageWrapper) -> np.ndarray:
     return omero_tools.get_image_intensities(image).transpose((2, 0, 3, 4, 1))
 
 
+def load_dataset_data(conn: BlitzGateway, dataset: DatasetWrapper) -> mm_schema.MetricsDataset:
+    pass
