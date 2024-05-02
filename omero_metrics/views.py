@@ -206,7 +206,6 @@ def center_viewer_project(request,project_id,conn=None,**kwargs):
 @login_required()
 def center_viewer_group(request,conn=None,**kwargs):
     group = conn.getGroupFromContext()
-
     group_id = group.getId()
     group_name = group.getName()
     group_description = group.getDescription()
