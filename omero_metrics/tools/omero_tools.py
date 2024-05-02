@@ -5,8 +5,7 @@ from itertools import product
 from random import choice
 from string import ascii_letters
 from typing import Union
-from jsonasobj2._jsonobj import JsonObj
-
+from jsonasobj2._jsonobj import JsonObj 
 import numpy as np
 import pandas as pd
 from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
@@ -137,7 +136,7 @@ def get_ref_from_object(obj) -> mm_schema.DataReference:
         case ImageWrapper():
             obj_type = "IMAGE"
         case FileAnnotationWrapper():
-            obj_type = "FILE"
+            obj_type = "FILEANNOTATION"
         case MapAnnotationWrapper():
             obj_type = "KEY_VALUES"
         case TagAnnotationWrapper():
