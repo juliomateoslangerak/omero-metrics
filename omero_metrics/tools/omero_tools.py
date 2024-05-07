@@ -137,7 +137,7 @@ def get_ref_from_object(obj) -> mm_schema.DataReference:
         case ImageWrapper():
             obj_type = "IMAGE"
         case FileAnnotationWrapper():
-            obj_type = "FILE"
+            obj_type = "FILEANNOTATION"
         case MapAnnotationWrapper():
             obj_type = "KEY_VALUES"
         case TagAnnotationWrapper():
