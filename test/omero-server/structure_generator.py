@@ -290,6 +290,7 @@ if __name__ == "__main__":
         # conn = BlitzGateway(username, password, host=host, port=port, secure=True)
         conn = BlitzGateway("root", "omero", host="localhost", port=6064, secure=True)
         conn.connect()
+        conn.keepAlive()
 
         generate_users_groups(conn, server_structure["users"], server_structure["microscopes"])
 
@@ -303,6 +304,8 @@ if __name__ == "__main__":
                     datasets=GENERATOR_MAPPER[project["dataset_class"]](project, microscope_name),
                     dataset_class=project["dataset_class"],
                 )
+                if not conn.keepAlive():
+                    conn.connect()
                 temp_conn = conn.suConn(project["owner"], microscope_name, ttl=300000)
 
                 # We first have to dump the input images so they are annotated with the omero references
