@@ -21,13 +21,10 @@ def load_project(conn: BlitzGateway, project_id: int) -> mm_schema.MetricsDatase
         if isinstance(file_ann, FileAnnotationWrapper):
             ds_type = file_ann.getFileName().split("_")[0]
             if ds_type in DATASET_TYPES:
-                file_anns.append(file_ann)
-                dataset_types.append(ds_type)
-
-    for file_ann, ds_type in zip(file_anns, dataset_types):
-        collection.datasets.append(
-            yaml_loader.loads(file_ann.getFileInChunks().__next__().decode(), target_class=getattr(mm_schema, ds_type))
-        )
+                collection.datasets.append(
+                    yaml_loader.loads(file_ann.getFileInChunks().__next__().decode(),
+                                      target_class=getattr(mm_schema, ds_type))
+                )
 
     return collection
 
