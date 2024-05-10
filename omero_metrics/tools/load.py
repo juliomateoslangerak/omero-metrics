@@ -8,11 +8,13 @@ import microscopemetrics_schema.datamodel as mm_schema
 from linkml_runtime.loaders import yaml_loader
 import pandas as pd
 from omero_metrics.tools import omero_tools
+from .data_preperation import get_table_originalFile_id
 
 # Creating logging services
 logger = logging.getLogger(__name__)
 
 DATASET_TYPES = ["FieldIlluminationDataset", "PSFBeadsDataset"]
+
 
 def load_project(conn: BlitzGateway, project_id: int) -> mm_schema.MetricsDatasetCollection:
     collection = mm_schema.MetricsDatasetCollection()
@@ -29,7 +31,8 @@ def load_project(conn: BlitzGateway, project_id: int) -> mm_schema.MetricsDatase
 
         for file_ann, ds_type in zip(file_anns, dataset_types):
             collection.datasets.append(
-                yaml_loader.loads(file_ann.getFileInChunks().__next__().decode(), target_class=getattr(mm_schema, ds_type))
+                yaml_loader.loads(file_ann.getFileInChunks().__next__().decode(),
+                                  target_class=getattr(mm_schema, ds_type))
             )
         return collection
     except Exception as e:
@@ -51,12 +54,13 @@ def load_dataset_data(conn: BlitzGateway, dataset: DatasetWrapper) -> mm_schema.
     pass
 
 
-
 def get_project_data(collections: mm_schema.MetricsDatasetCollection) -> pd.DataFrame:
     data = []
     for dataset in collections.datasets:
-        data.append([dataset.__class__.__name__, dataset.data_reference.omero_object_type, dataset.data_reference.omero_object_id, dataset.processed, dataset.acquisition_datetime])
-    df = pd.DataFrame(data, columns=["Analysis_type", "Omero_object_type", "Omero_object_id", "Processed", "Acquisition_datetime"])
+        data.append([dataset.__class__.__name__, dataset.data_reference.omero_object_type,
+                     dataset.data_reference.omero_object_id, dataset.processed, dataset.acquisition_datetime])
+    df = pd.DataFrame(data, columns=["Analysis_type", "Omero_object_type", "Omero_object_id", "Processed",
+                                     "Acquisition_datetime"])
     return df
 
 
@@ -68,32 +72,43 @@ def get_dataset_by_id(collections: mm_schema.MetricsDatasetCollection, dataset_i
         return None
 
 
-
-def get_images_intensity_profilers(dataset: mm_schema.MetricsDataset) -> pd.DataFrame:
-    data=[]
-    for i,j in zip(dataset.input['field_illumination_image'],dataset.output["intensity_profiles"]):
+def get_images_intensity_profiles(dataset: mm_schema.MetricsDataset) -> pd.DataFrame:
+    data = []
+    for i, j in zip(dataset.input['field_illumination_image'], dataset.output["intensity_profiles"]):
         data.append([i['data_reference']['omero_object_id'], j['data_reference']['omero_object_id'], i['shape_c']])
     df = pd.DataFrame(data, columns=["Field_illumination_image", "Intensity_profiles", "Channel"])
     return df
 
+
+def get_key_values(var: FieldIlluminationDataset.output) -> pd.DataFrame:
+    data_dict = var.key_values.__dict__
+    data_dict = [value + [key] for key, value in data_dict.items() if
+                 isinstance(value, list) and key not in ['name', 'description', 'data_reference', 'linked_references',
+                                                         'channel_name']]
+    df = pd.DataFrame(data_dict, columns=var.key_values.channel_name + ['Parameter'])
+    return df
+
+
 def concatenate_images(conn, df):
-    image_0 = conn.getObject('Image',df['Field_illumination_image'][0])
+    image_0 = conn.getObject('Image', df['Field_illumination_image'][0])
     image_array_0 = load_image(image_0)
     result = image_array_0
     for i in range(1, len(df)):
         image = conn.getObject('Image', df['Field_illumination_image'][i])
         image_array = load_image(image)
-        result = np.concatenate((result,image_array), axis=-1)
+        result = np.concatenate((result, image_array), axis=-1)
     return result
 
 
-def get_key_values(var: FieldIlluminationDataset.output) -> pd.DataFrame:
-    data_dict = var.key_values.__dict__
-    data_dict = {
-        key: value[0] if isinstance(value, list) and value else value
-        for key, value in data_dict.items()
-    }
-    data_list = list(data_dict.items())
-    df = pd.DataFrame(data_list, columns=["Key", "Value"])
-    df.Key = df.Key.str.replace("_", " ").str.title()
-    return df
+def get_all_intensity_profiles(conn, data_df):
+    df_01 = pd.DataFrame()
+    for i, row in data_df.iterrows():
+        file_id = conn.getObject('FileAnnotation', row.Intensity_profiles).getFile().getId()
+        data = get_table_originalFile_id(conn, str(file_id))
+        for j in range(row.Channel):
+            regx_find = f'ch0{j}'
+            ch = i + j
+            regx_repl = f'Ch0{ch}'
+            data.columns = data.columns.str.replace(regx_find, regx_repl)
+        df_01 = pd.concat([df_01, data], axis=1)
+    return df_01

@@ -196,16 +196,18 @@ def center_viewer_dataset_yaml(request, dataset_id, conn=None, **kwargs):
         match dataset.__class__.__name__:
             case "FieldIlluminationDataset":
                 title = 'Field Illumination Dataset'
-                df = get_images_intensity_profilers(dataset)
+                df = get_images_intensity_profiles(dataset)
                 images = concatenate_images(conn, df)
                 dash_context = request.session.get("django_plotly_dash", dict())
                 dash_context['title'] = title
                 dash_context['images'] = images
                 dash_context['key_values_df'] = load.get_key_values(dataset.output)
+                dash_context['intensity_profiles'] = get_all_intensity_profiles(conn, df)
                 request.session['django_plotly_dash'] = dash_context
                 return render(request, 'metrics/omero_views/center_view_dataset_foi.html',
                               {'dataset_id': dataset_id})
             case "PSFBeadsDataset":
+                title = 'PSF Beads Dataset'
                 return render(request, 'metrics/omero_views/center_view_unknown_analysis_type.html')
             case _:
                 return render(request, 'metrics/omero_views/center_view_unknown_analysis_type.html')
