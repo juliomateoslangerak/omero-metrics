@@ -12,7 +12,8 @@ from .data_preperation import get_table_originalFile_id
 
 # Creating logging services
 logger = logging.getLogger(__name__)
-
+import collections
+import omero
 DATASET_TYPES = ["FieldIlluminationDataset", "PSFBeadsDataset"]
 
 
@@ -112,3 +113,23 @@ def get_all_intensity_profiles(conn, data_df):
             data.columns = data.columns.str.replace(regx_find, regx_repl)
         df_01 = pd.concat([df_01, data], axis=1)
     return df_01
+
+def get_table_File_id(conn,fileAnnotation_id):
+    file_id = conn.getObject('FileAnnotation', fileAnnotation_id).getFile().getId()
+    ctx = conn.createServiceOptsDict()
+    ctx.setOmeroGroup("-1")
+    r = conn.getSharedResources()
+    t = r.openTable(omero.model.OriginalFileI(file_id), ctx)
+    data_buffer = collections.defaultdict(list)
+    heads = t.getHeaders()
+    target_cols = range(len(heads))
+    index_buffer = []
+    num_rows = t.getNumberOfRows()
+    for start in range(0, num_rows):
+        data = t.read(target_cols, start, start)
+        for col in data.columns:
+            data_buffer[col.name] += col.values
+        index_buffer += data.rowNumbers
+    df = pd.DataFrame.from_dict(data_buffer)
+    df.index = index_buffer[0: len(df)]
+    return df

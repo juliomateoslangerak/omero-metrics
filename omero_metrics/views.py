@@ -191,7 +191,6 @@ def center_viewer_dataset_yaml(request, dataset_id, conn=None, **kwargs):
     project_id = conn.getObject("Dataset", dataset_id).getParent().getId()
     collections_mm_p = load.load_project(conn, project_id)
     dataset = load.get_dataset_by_id(collections_mm_p, int(dataset_id))
-    #dataset = [i for i in collections_mm_p.datasets if i.data_reference.omero_object_id == dataset_id][0]
     if dataset.processed:
         match dataset.__class__.__name__:
             case "FieldIlluminationDataset":
@@ -208,7 +207,25 @@ def center_viewer_dataset_yaml(request, dataset_id, conn=None, **kwargs):
                               {'dataset_id': dataset_id})
             case "PSFBeadsDataset":
                 title = 'PSF Beads Dataset'
-                return render(request, 'metrics/omero_views/center_view_unknown_analysis_type.html')
+                bead_properties_df = get_table_File_id(conn,
+                                                       dataset.output.bead_properties.data_reference.omero_object_id)
+                bead_x_profiles_df = get_table_File_id(conn,
+                                                       dataset.output.bead_x_profiles.data_reference.omero_object_id)
+                bead_y_profiles_df = get_table_File_id(conn,
+                                                       dataset.output.bead_y_profiles.data_reference.omero_object_id)
+                bead_z_profiles_df = get_table_File_id(conn,
+                                                       dataset.output.bead_z_profiles.data_reference.omero_object_id)
+                image_omero = conn.getObject("Image", dataset.input.psf_beads_images[0].data_reference.omero_object_id)
+                image = load_image(image_omero)
+                dash_context = request.session.get("django_plotly_dash", dict())
+                dash_context['title'] = title
+                dash_context['image'] = image
+                dash_context['bead_properties_df'] = bead_properties_df
+                dash_context['bead_x_profiles_df'] = bead_x_profiles_df
+                dash_context['bead_y_profiles_df'] = bead_y_profiles_df
+                dash_context['bead_z_profiles_df'] = bead_z_profiles_df
+                request.session['django_plotly_dash'] = dash_context
+                return render(request, 'metrics/omero_views/center_view_dataset_psf_beads.html')
             case _:
                 return render(request, 'metrics/omero_views/center_view_unknown_analysis_type.html')
     else:
