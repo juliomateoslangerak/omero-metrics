@@ -83,10 +83,11 @@ def get_images_intensity_profiles(dataset: mm_schema.MetricsDataset) -> pd.DataF
 
 def get_key_values(var: FieldIlluminationDataset.output) -> pd.DataFrame:
     data_dict = var.key_values.__dict__
-    data_dict = [value + [key] for key, value in data_dict.items() if
+    col = var.key_values.channel_name
+    data_dict = [[key] + value for key, value in data_dict.items() if
                  isinstance(value, list) and key not in ['name', 'description', 'data_reference', 'linked_references',
                                                          'channel_name']]
-    df = pd.DataFrame(data_dict, columns=var.key_values.channel_name + ['Parameter'])
+    df = pd.DataFrame(data_dict, columns=['Measurements']+col)
     return df
 
 
