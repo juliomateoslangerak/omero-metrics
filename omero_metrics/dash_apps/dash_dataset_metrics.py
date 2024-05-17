@@ -30,12 +30,12 @@ dash_app_dataset.layout = dmc.MantineProvider([dmc.Container(
                                  dcc.Dropdown(value="Channel 0", id="channel_ddm"),
                                  dcc.Graph(id="dataset_image_graph", figure={},
                                            style={'display': 'inline-block', 'width': '100%', 'height': '100%;'}),
-                                 ],span="6"),
+                                 ], span="6"),
                     dmc.GridCol([
                         dmc.Title("Intensity Profile", c="#189A35", size="h3", mb=10),
                         dcc.Graph(id="intensity_profile", figure={},
                                   style={'display': 'inline-block', 'width': '100%', 'height': '100%;'}),
-                    ],span="6"),
+                    ], span="6"),
 
                 ]),
 
@@ -82,7 +82,7 @@ def dataset_callback_intensity_map(*args, **kwargs):
     table = kwargs['session_state']['key_values_df']
     images = kwargs['session_state']['images']
     df_intensity_profiles = kwargs['session_state']['intensity_profiles']
-    labels = table.columns[:-1].to_list()
+    labels = table.columns[1:].to_list()
     imaaa = images[0, 0, :, :, int(args[0][-1])] / 255
     channel_list = [{'label': labels[i], 'value': f"channel {i}"} for i in range(len(labels))]
     fig = px.imshow(imaaa, zmin=imaaa.min(), zmax=imaaa.max(), color_continuous_scale="gray")
