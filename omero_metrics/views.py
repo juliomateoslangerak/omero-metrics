@@ -123,20 +123,22 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
 @login_required()
 def center_viewer_image(request, image_id, conn=None, **kwargs):
     image = conn.getObject("Image", image_id)
-    analysis_type = get_analysis_type(image.getParent().getParent())
     image_loaded = load_image(image)
     dash_context = request.session.get("django_plotly_dash", dict())
     dash_context['ima'] = image_loaded
-    if analysis_type == "PSFBeads":
-
+    dataset_id = conn.getObject("Image", image_id).getParent().getId()
+    project_id = conn.getObject("Dataset", dataset_id).getParent().getId()
+    collections_mm_p = load.load_project(conn, project_id)
+    dataset = load.get_dataset_by_id(collections_mm_p, int(dataset_id))
+    if  dataset.__class__.__name__ == "PSFBeadsDataset":
         request.session['django_plotly_dash'] = dash_context
         return render(request, 'metrics/omero_views/center_view_image_psf.html')
-    elif analysis_type == "FieldIllumination":
-
+    elif dataset.__class__.__name__ == "FieldIlluminationDataset":
         # image_loaded_mip = image_loaded[0].max(axis=0) # Maximum intensity projection
-
-        file_id = getOriginalFile_id(image.getParent())
-        df = get_table_originalFile_id(conn, file_id)
+        df_file = load.get_images_intensity_profiles(dataset)
+        ANN_id = df_file[(df_file['Field_illumination_image']==int(image_id))]['Intensity_profiles'].values[0]
+        file_id = conn.getObject('FileAnnotation', ANN_id).getFile().getId()
+        df = load.get_table_originalFile_id(conn, file_id)
         roi_service = conn.getRoiService()
         result = roi_service.findByImage(int(image_id), None, conn.SERVICE_OPTS)
         shapes_rectangle, shapes_line, shapes_point = get_rois_omero(result)
@@ -165,7 +167,7 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
     request.session['django_plotly_dash'] = dash_context
     collections_mm_p = load.load_project(conn, project_id)
     context = {'project_id': project_id, 'collections_mm_p': collections_mm_p}
-    return render(request, 'metrics/omero_views/center_view_project_test.html', context)
+    return render(request, 'metrics/omero_views/center_view_project.html', context)
 
 
 @login_required()
