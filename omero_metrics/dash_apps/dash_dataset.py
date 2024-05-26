@@ -9,7 +9,7 @@ import plotly.express as px
 dashboard_name = 'omero_dataset_dash'
 dash_app_dataset = DjangoDash(name=dashboard_name, serve_locally=True,)
 
-dash_app_dataset.layout = html.Div(id='main',children=[
+dash_app_dataset.layout = html.Div(id='main', children=[
                                     html.Div([dcc.Dropdown(id='my-dropdown1',
                                                           options={}, 
                                                           value="Channel 0",

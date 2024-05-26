@@ -11,8 +11,6 @@ services:
       POSTGRES_PASSWORD: omero
     networks:
       - omero
-    ports:
-      - "5432:5432"
     volumes:
       - "database:/var/lib/postgresql/data"
 
