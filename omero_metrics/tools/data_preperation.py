@@ -7,7 +7,21 @@ from datetime import datetime, timedelta
 from random import randrange
 import collections
 import omero
+import vtk.util.numpy_support as numpy_support
+import vtk
 
+
+def numpyToVTK(data):
+    data_type = vtk.VTK_FLOAT
+    shape = data.shape
+
+    flat_data_array = data.flatten()
+    vtk_data = numpy_support.numpy_to_vtk(num_array=flat_data_array, deep=True, array_type=data_type)
+
+    img = vtk.vtkImageData()
+    img.GetPointData().SetScalars(vtk_data)
+    img.SetDimensions(shape[0], shape[1], shape[2])
+    return img
 def get_intensity_profile(imaaa):
     imaaa= imaaa[0, 0, :, :, 0] / 255
     imaa_fliped = np.flip(imaaa, axis=1)

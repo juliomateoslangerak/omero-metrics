@@ -11,4 +11,4 @@ dash-iconify
 # omero stuff
 microscopemetrics @ git+https://github.com/juliomateoslangerak/microscope-metrics.git
 microscopemetrics_schema @ git+https://github.com/juliomateoslangerak/microscopemetrics-schema.git
-
+dash-vtk

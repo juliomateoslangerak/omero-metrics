@@ -1,6 +1,9 @@
 FROM ghcr.io/manics/omero-web-docker:ubuntu
 USER root
 RUN apt-get update
+RUN apt-get install -y libgl1-mesa-glx
+RUN apt-get install libgl1
+RUN apt-get update
 RUN apt-get install -y git curl
 RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
 RUN apt-get install -y nodejs
@@ -13,6 +16,8 @@ RUN echo "X_FRAME_OPTIONS = 'SAMEORIGIN'" >> /opt/omero/web/venv3/lib/python3.10
 RUN echo 'TEMPLATES[0]["OPTIONS"]["context_processors"].append("django.template.context_processors.request")' >> /opt/omero/web/venv3/lib/python3.10/site-packages/omeroweb/settings.py
 ENV REACT_VERSION=18.2.0
 RUN npm install react@${REACT_VERSION}
+RUN apt-get update
+RUN apt-get install libxrender1
 USER omero-web
 #/opt/omero/web/venv3/bin/python /opt/omero/web/venv3/lib/python3.10/site-packages/omeroweb/manage.py migrate
 
