@@ -108,7 +108,7 @@ app.layout = dmc.MantineProvider([dmc.Container(
 
 
 @app.expanded_callback(
-     # dash.dependencies.Output('image', 'figure'),
+    dash.dependencies.Output('image', 'figure'),
     dash.dependencies.Output('mip', 'figure'),
     dash.dependencies.Output('channel_ddm_psf', 'options'),
     dash.dependencies.Output('bead_ddm_psf', 'options'),
