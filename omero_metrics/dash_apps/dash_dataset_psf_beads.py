@@ -19,12 +19,10 @@ app = DjangoDash('PSF_Beads')
 app.layout = dmc.MantineProvider([
     dmc.Container(
         [
-
             dmc.Center(
                 dmc.Text("PSF Beads Dashboard",
                          c="#189A35",
-                         mb=30,
-                         style={"margin-top": "20px", "fontSize": 40},
+                         style={"fontSize": 20},
                          )
             ),
             dmc.Grid(

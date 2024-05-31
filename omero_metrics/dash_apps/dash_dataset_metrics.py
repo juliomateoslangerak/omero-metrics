@@ -19,8 +19,7 @@ dash_app_dataset.layout = dmc.MantineProvider([dmc.Container(
             dmc.Text(
                 id='title',
                 c="#189A35",
-                mb=30,
-                style={"margin-top": "20px", "fontSize": 40},
+                style={"fontSize": 20},
             )
         ),
         dmc.Stack(
