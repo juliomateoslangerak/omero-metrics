@@ -7,7 +7,6 @@ import numpy as np
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import pandas as pd
-from ..tools.data_preperation import numpyToVTK
 import dash_bootstrap_components as dbc
 from dash_iconify import DashIconify
 
@@ -17,94 +16,91 @@ c3 = "#63aa47"
 
 app = DjangoDash('PSF_Beads')
 
-app.layout = dmc.MantineProvider([dmc.Container(
-    [dmc.Center(
-        dmc.Text("PSF Beads Dashboard",
-                 c="#189A35",
-                 mb=30,
-                 style={"margin-top": "20px", "fontSize": 40},
-                 )
-    ),
-        dmc.Stack(
-            [dmc.Grid([dmc.GridCol([dcc.Dropdown(value="Channel 0", id="channel_ddm_psf")], span='auto'),
-                       dmc.GridCol([dcc.Dropdown(value="Bead 0", id="bead_ddm_psf")], span='auto')]),
+app.layout = dmc.MantineProvider([
+    dmc.Container(
+        [
 
-             dmc.Grid([
-                 dmc.GridCol([dmc.Title("Image View", c="#189A35", size="h3", mb=10),
-                              dcc.Graph(id="image", figure={},
-                                        style={'display': 'inline-block', 'width': '100%', 'height': '100%;'}),
-                              ], span="6"),
-                 dmc.GridCol([
-                     dmc.Title("Key Values", c="#189A35", size="h3", mb=10),
-                     dash_table.DataTable(
-                         id="key_values_psf",
-                         page_size=10,
-                         sort_action="native",
-                         sort_mode="multi",
-                         sort_as_null=["", "No"],
-                         sort_by=[{"column_id": "pop", "direction": "asc"}],
-                         editable=False,
-                         style_cell={
-                             "textAlign": "left",
-                             "fontSize": 10,
-                             "font-family": "sans-serif",
-                         },
-                         style_header={
-                             "backgroundColor": "#189A35",
-                             "fontWeight": "bold",
-                             "fontSize": 15,
-                         },
-                         style_table={'overflowX': 'auto'},
-                     ),
-                 ], span="6"),
+            dmc.Center(
+                dmc.Text("PSF Beads Dashboard",
+                         c="#189A35",
+                         mb=30,
+                         style={"margin-top": "20px", "fontSize": 40},
+                         )
+            ),
+            dmc.Grid(
+                [dmc.GridCol(
+                    [
+                        html.H3("Select Channel", style={"color": "#63aa47"}),
+                        dcc.Dropdown(value="Channel 0", id="channel_ddm_psf"),
+                    ],
+                    span="auto",
 
-             ]),
+                ),
+                    dmc.GridCol(
+                        [
+                            html.H3("Select The Color Scale", style={"color": "#63aa47"}),
+                            dcc.Dropdown(value="Bead 0", id="bead_ddm_psf")
+                        ],
+                        span="auto",
+                    ),
+                ],
+                style={"margin-top": "20px", "margin-bottom": "20px", "border": "1px solid #63aa47",
+                       "padding": "10px", "border-radius": "0.5rem", "background-color": "white", }
+            ),
+            dmc.Grid([
+                dmc.GridCol([dmc.Title("Image View", c="#189A35", size="h3", mb=10),
+                             dcc.Graph(id="image", figure={},
+                                       style={'display': 'inline-block', 'width': '100%', 'height': '100%;'}),
+                             ], span="6"),
+                dmc.GridCol([
+                    dmc.Title("Key Values", c="#189A35", size="h3", mb=10),
+                    dcc.Graph(id="key_values_psf", figure={}, ),
+                ], span="6"),
 
-             dmc.Grid([
-                 dmc.GridCol([dmc.Title("Maximum Intensity Projection", c="#189A35", size="h3", mb=10),
-                              dcc.Graph(id="mip", figure={},
-                                        style={'display': 'inline-block', 'width': '100%', 'height': '100%;'}),
-                              ], span="6"),
-                 dmc.GridCol([
-                     dmc.Title("Chart", c="#189A35", size="h3", mb=10),
-                     dcc.Dropdown(options=['Axis: X', 'Axis: Y', 'Axis: Z'], value="Axis: X", id="axis_ddm_psf"),
-                     dcc.Graph(id="mip_chart", figure={},
-                               style={'display': 'inline-block', 'width': '100%', 'height': '100%;'}),
-                 ], span="6"),
+            ]),
 
-             ]),
+            dmc.Grid([
+                dmc.GridCol([dmc.Title("Maximum Intensity Projection", c="#189A35", size="h3", mb=10),
+                             dcc.Graph(id="mip", figure={},
+                                       style={'display': 'inline-block', 'width': '100%', 'height': '100%;'}),
+                             ], span="6"),
+                dmc.GridCol([
+                    dmc.Title("Chart", c="#189A35", size="h3", mb=10),
+                    dcc.Dropdown(options=['Axis: X', 'Axis: Y', 'Axis: Z'], value="Axis: X", id="axis_ddm_psf"),
+                    dcc.Graph(id="mip_chart", figure={},
+                              style={'display': 'inline-block', 'width': '100%', 'height': '100%;'}),
+                ], span="6"),
 
-             dmc.Stack(
-                 [
-                     dmc.Title(
-                         "Key Measurements", c="#189A35", size="h3", mb=10
-                     ),
-                     dash_table.DataTable(
-                         id="table1",
-                         page_size=10,
-                         sort_action="native",
-                         sort_mode="multi",
-                         sort_as_null=["", "No"],
-                         sort_by=[{"column_id": "pop", "direction": "asc"}],
-                         editable=False,
-                         style_cell={
-                             "textAlign": "left",
-                             "fontSize": 10,
-                             "font-family": "sans-serif",
-                         },
-                         style_header={
-                             "backgroundColor": "#189A35",
-                             "fontWeight": "bold",
-                             "fontSize": 15,
-                         },
-                         style_table={'overflowX': 'auto'},
-                     ),
-                 ]
-             )
-             ]),
-    ],
-    fluid=True,
-)])
+            ]),
+            dmc.Stack(
+                [
+                    dmc.Title(
+                        "Key Measurements", c="#189A35", size="h3", mb=10
+                    ),
+                    dash_table.DataTable(
+                        id="table1",
+                        page_size=10,
+                        sort_action="native",
+                        sort_mode="multi",
+                        sort_as_null=["", "No"],
+                        sort_by=[{"column_id": "pop", "direction": "asc"}],
+                        editable=False,
+                        style_cell={
+                            "textAlign": "left",
+                            "fontSize": 10,
+                            "font-family": "sans-serif",
+                        },
+                        style_header={
+                            "backgroundColor": "#189A35",
+                            "fontWeight": "bold",
+                            "fontSize": 15,
+                        },
+                        style_table={'overflowX': 'auto'},
+                    ),
+                ]
+            )
+        ], fluid=True, style={"background-color": "#eceff1", "margin": "20px", "border-radius": "0.5rem", "padding":"10px"}
+    )])
 
 
 @app.expanded_callback(
@@ -113,14 +109,13 @@ app.layout = dmc.MantineProvider([dmc.Container(
     dash.dependencies.Output('channel_ddm_psf', 'options'),
     dash.dependencies.Output('bead_ddm_psf', 'options'),
     dash.dependencies.Output('table1', 'data'),
-    dash.dependencies.Output('key_values_psf', 'data'),
     dash.dependencies.Output('mip_chart', 'figure'),
-
     [dash.dependencies.Input('channel_ddm_psf', 'value'),
      dash.dependencies.Input('bead_ddm_psf', 'value'),
      dash.dependencies.Input('axis_ddm_psf', 'value'), ])
 def func_psf_callback(*args, **kwargs):
     #TZYXC
+    global image_bead
     channel_index = int(args[0].split(" ")[-1])
     bead_index = int(args[1].split(" ")[-1])
     image_o = kwargs['session_state']['image']
@@ -168,6 +163,7 @@ def func_psf_callback(*args, **kwargs):
     cols_x = df_meta_x[((df_meta_x['bead_nb'] == bead_index) & (df_meta_x['channel_nb'] == channel_index))][
         'name'].values
     df_x = df_axis[cols_x].copy()
+    df_x.columns = df_x.columns.str.split("_").str[-1]
     fig_ip_x = px.line(df_x)
     beads_opt = [f"Bead {i}" for i in df_beads_location['bead_nr'].values]
     ima_3d = image_o[0, :, :, :, channel_index]
@@ -179,11 +175,24 @@ def func_psf_callback(*args, **kwargs):
         value=image_bead.flatten(),
         isomin=0.2,
         isomax=0.7,
-        opacity=0.1,
+        opacity=0.3,
         surface_count=25,
+
     ))
     test_v = test_v.update_layout(scene_xaxis_showticklabels=False,
                                   scene_yaxis_showticklabels=False,
                                   scene_zaxis_showticklabels=False)
-    return test_v, fig, channels, beads_opt, bead_properties_df.to_dict('records'), df_properties_channel.to_dict(
+    test_v = test_v.update_layout(scene=dict(xaxis_showspikes=False))
+    return test_v, fig, channels, beads_opt, df_properties_channel.to_dict(
         'records'), fig_ip_x
+
+
+@app.expanded_callback(
+    dash.dependencies.Output('key_values_psf', 'figure'),
+    [dash.dependencies.Input('image', 'clickData'), ],
+    prevent_initial_call=True,
+)
+def proj_callback(*args, **kwargs):
+    points = args[0]["points"][0]
+    proj_click = px.imshow(image_bead[int(points['x']), :int(points['y']), :int(points['z'])])
+    return proj_click

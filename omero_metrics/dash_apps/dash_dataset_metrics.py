@@ -67,7 +67,7 @@ dash_app_dataset.layout = dmc.MantineProvider([dmc.Container(
                 )
             ]),
     ],
-    fluid=True,
+    fluid=True, style={"background-color": "#eceff1", "margin": "20px", "border-radius": "0.5rem", "padding": "10px"}
 )])
 
 
