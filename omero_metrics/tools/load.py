@@ -3,7 +3,8 @@ from microscopemetrics_schema.datamodel.microscopemetrics_schema import (
     FieldIlluminationDataset,
 )
 import numpy as np
-from omero.gateway import BlitzGateway, DatasetWrapper, ImageWrapper, ProjectWrapper, FileAnnotationWrapper
+from omero.gateway import BlitzGateway, DatasetWrapper, ImageWrapper, ProjectWrapper, FileAnnotationWrapper, \
+    MapAnnotationWrapper
 import microscopemetrics_schema.datamodel as mm_schema
 from linkml_runtime.loaders import yaml_loader
 import pandas as pd
@@ -41,16 +42,61 @@ def load_project(conn: BlitzGateway, project_id: int) -> mm_schema.MetricsDatase
         return collection
 
 
-def load_mm_dataset(conn: BlitzGateway, dataset_id: int) -> mm_schema.MetricsDataset:
-    pass
+def load_dataset(dataset: DatasetWrapper) -> mm_schema.MetricsDataset:
+    mm_datasets = []
+    for ann in dataset.listAnnotations():
+        if isinstance(ann, FileAnnotationWrapper):
+            ns = ann.getNs()
+            if ns.startswith("microscopemetrics_schema:samples"):
+                ds_type = ns.split("/")[-1]
+                mm_datasets.append(
+                    yaml_loader.loads(ann.getFileInChunks().__next__().decode(),
+                                      target_class=getattr(mm_schema, ds_type))
+                )
+
+    return mm_datasets
 
 
-def load_image(image: ImageWrapper) -> np.ndarray:
-    """Load an image from OMERO and return it as a numpy array in the order desired by the analysis"""
-    # OMERO order zctyx -> microscope-metrics order TZYXC
-    return omero_tools.get_image_intensities(image).transpose((2, 0, 3, 4, 1))
+def load_analysis_config(project=ProjectWrapper):
+    configs = [
+        ann for ann in project.listAnnotations(ns="OMERO-metrics/analysis_config")
+        if isinstance(ann, MapAnnotationWrapper)
+    ]
+    if not configs:
+        return None, None
+    if len(configs) > 1:
+        logger.error(f"More than one configuration in project {project.getId()}. Using the last one saved")
+
+    return configs[-1].getId(), dict(configs[-1].getValue())  # TODO: Make this return the last modified config
 
 
+def save_analysis_config()
+
+
+def load_image(image: ImageWrapper) -> mm_schema.Image:
+    """Load an image from OMERO and return it as a schema Image"""
+    time_series = None  # TODO: implement this
+    channel_series = None
+    source_images = []
+
+    return mm_schema.Image(
+        name=image.getName(),
+        description=image.getDescription(),
+        shape_x=image.getSizeX(),
+        shape_y=image.getSizeY(),
+        shape_z=image.getSizeZ(),
+        shape_c=image.getSizeC(),
+        shape_t=image.getSizeT(),
+        acquisition_datetime=image.getAcquisitionDate(),
+        voxel_size_x_micron=image.getPixelSizeX(),  # TODO: verify Units
+        voxel_size_y_micron=image.getPixelSizeY(),
+        voxel_size_z_micron=image.getPixelSizeZ(),
+        time_series=time_series,
+        channel_series=channel_series,
+        source_images=source_images,
+        # OMERO order zctyx -> microscope-metrics order TZYXC
+        array_data=omero_tools.get_image_intensities(image).transpose((2, 0, 3, 4, 1))
+    )
 def load_dataset_data(conn: BlitzGateway, dataset: DatasetWrapper) -> mm_schema.MetricsDataset:
     pass
 
