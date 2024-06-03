@@ -1,3 +1,4 @@
+import datetime
 import logging
 from typing import Union
 
@@ -8,7 +9,7 @@ from microscopemetrics.samples import (
 from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
 from omero.gateway import BlitzGateway, DatasetWrapper, ImageWrapper, ProjectWrapper
 
-from omero_metrics.tools import load, dump, delete
+from omero_metrics.tools import load, dump, update, delete
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +63,7 @@ class DatasetManager:
         else:
             raise ValueError("datasets must be a DatasetWrapper or a dataset id")
 
+        self.omero_project = self.omero_dataset.getParent()
         self.mm_dataset = None
         self.analysis_config = None
         self.analysis_config_id = None
@@ -86,9 +88,7 @@ class DatasetManager:
         if not force_reload and self.analysis_config and self.analysis_config_id:
             return
         else:
-            self.analysis_config_id, self.analysis_config = load.load_analysis_config(
-                self.omero_dataset.getParent())
-
+            self.analysis_config_id, self.analysis_config = load.load_analysis_config(self.omero_project)
 
     def save_analysis_config(self):
         if self.analysis_config:
@@ -105,7 +105,7 @@ class DatasetManager:
             dump.dump_dataset(
                 conn=self._conn,
                 dataset=mm_ds,
-                target_dataset=self.omero_dataset
+                target_project=self.omero_project
             )
 
     def process_data(self, force_reprocess=False):
