@@ -7,8 +7,6 @@ import numpy as np
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import pandas as pd
-import dash_bootstrap_components as dbc
-from dash_iconify import DashIconify
 
 c1 = "#d8f3dc"
 c2 = "#eceff1"
@@ -41,6 +39,16 @@ app.layout = dmc.MantineProvider([
                         ],
                         span="auto",
                     ),
+                    dmc.GridCol(
+                        [html.H3("Add Rois", style={"color": "#63aa47"}),
+                         dcc.RadioItems(
+                             options=["Raw Image", "ROIS Image"],
+                             value="Raw Image",
+                             inline=True,
+                             id="psf-rois-radio",
+                         ), ],
+                        span="auto",
+                    )
                 ],
                 style={"margin-top": "20px", "margin-bottom": "20px", "border": "1px solid #63aa47",
                        "padding": "10px", "border-radius": "0.5rem", "background-color": "white", }
@@ -52,31 +60,8 @@ app.layout = dmc.MantineProvider([
                              ], span="6"),
                 dmc.GridCol([
                     dmc.Title("Key Values", c="#189A35", size="h3", mb=10),
-                    dcc.Graph(id="key_values_psf", figure={}, ),
-                ], span="6"),
-
-            ]),
-
-            dmc.Grid([
-                dmc.GridCol([dmc.Title("Maximum Intensity Projection", c="#189A35", size="h3", mb=10),
-                             dcc.Graph(id="mip", figure={},
-                                       style={'display': 'inline-block', 'width': '100%', 'height': '100%;'}),
-                             ], span="6"),
-                dmc.GridCol([
-                    dmc.Title("Chart", c="#189A35", size="h3", mb=10),
-                    dcc.Dropdown(options=['Axis: X', 'Axis: Y', 'Axis: Z'], value="Axis: X", id="axis_ddm_psf"),
-                    dcc.Graph(id="mip_chart", figure={},
-                              style={'display': 'inline-block', 'width': '100%', 'height': '100%;'}),
-                ], span="6"),
-
-            ]),
-            dmc.Stack(
-                [
-                    dmc.Title(
-                        "Key Measurements", c="#189A35", size="h3", mb=10
-                    ),
                     dash_table.DataTable(
-                        id="table1",
+                        id="key_values_psf",
                         page_size=10,
                         sort_action="native",
                         sort_mode="multi",
@@ -95,8 +80,25 @@ app.layout = dmc.MantineProvider([
                         },
                         style_table={'overflowX': 'auto'},
                     ),
-                ]
-            )
+                ], span="6"),
+
+            ]),
+
+            dmc.Grid([
+                dmc.GridCol([dmc.Title("Maximum Intensity Projection", c="#189A35", size="h3", mb=10),
+                             dcc.Graph(id="mip", figure={},
+                                       style={'display': 'inline-block', 'width': '100%', 'height': '100%;'}),
+                             ], span="6"),
+                dmc.GridCol([
+                    dmc.Title("Chart", c="#189A35", size="h3", mb=10),
+                    dcc.Dropdown(options=['Axis: X', 'Axis: Y', 'Axis: Z'], value="Axis: X", id="axis_ddm_psf"),
+                    dcc.Graph(id="mip_chart", figure={},
+                              style={'display': 'inline-block', 'width': '100%', 'height': '100%;'}),
+                ], span="6"),
+
+            ]),
+            html.Div(id='test_point',),
+
         ], fluid=True, style={"background-color": "#eceff1", "margin": "20px", "border-radius": "0.5rem", "padding":"10px"}
     )])
 
@@ -106,7 +108,7 @@ app.layout = dmc.MantineProvider([
     dash.dependencies.Output('mip', 'figure'),
     dash.dependencies.Output('channel_ddm_psf', 'options'),
     dash.dependencies.Output('bead_ddm_psf', 'options'),
-    dash.dependencies.Output('table1', 'data'),
+    dash.dependencies.Output('key_values_psf', 'data'),
     dash.dependencies.Output('mip_chart', 'figure'),
     [dash.dependencies.Input('channel_ddm_psf', 'value'),
      dash.dependencies.Input('bead_ddm_psf', 'value'),
@@ -119,6 +121,7 @@ def func_psf_callback(*args, **kwargs):
     image_o = kwargs['session_state']['image']
     channels = [f"Channel {i}" for i in range(0, image_o.shape[4])]
     stack = image_o[0, :, :, :, channel_index]
+    stack_Z = np.max(image_o[0, :, :, :, channel_index], axis=0)
     bead_properties_df = kwargs['session_state']['bead_properties_df']
     #------------------------Data Table 1--------------------------------
     df_properties_channel = bead_properties_df[bead_properties_df['channel_nr'] == channel_index][
@@ -126,8 +129,8 @@ def func_psf_callback(*args, **kwargs):
          'min_intensity_min', 'intensity_std', 'intensity_robust_z_score',
          'considered_intensity_outlier', 'z_fit_r2', 'y_fit_r2', 'x_fit_r2',
          'z_fwhm', 'y_fwhm', 'x_fwhm', 'fwhm_lateral_asymmetry_ratio']].copy()
-    df_beads_location = bead_properties_df[bead_properties_df['channel_nr'] == 0][
-        ['bead_nr', 'z_centroid', 'y_centroid', 'x_centroid']].copy()
+    df_beads_location = bead_properties_df[bead_properties_df['channel_nr'] == channel_index][
+        ['channel_nr','bead_nr', 'considered_axial_edge', 'z_centroid', 'y_centroid', 'x_centroid']].copy()
     bead = df_beads_location[df_beads_location['bead_nr'] == bead_index].copy()
     x = bead['x_centroid'].values[0] + 20
     y = bead['y_centroid'].values[0] + 20
@@ -171,8 +174,8 @@ def func_psf_callback(*args, **kwargs):
     test_v = go.Figure(data=go.Volume(
         x=Z.flatten(), y=Y.flatten(), z=X.flatten(),
         value=image_bead.flatten(),
-        isomin=0.2,
-        isomax=0.7,
+        isomin=0,
+        isomax=1,
         opacity=0.3,
         surface_count=25,
 
@@ -181,16 +184,30 @@ def func_psf_callback(*args, **kwargs):
                                   scene_yaxis_showticklabels=False,
                                   scene_zaxis_showticklabels=False)
     test_v = test_v.update_layout(scene=dict(xaxis_showspikes=False))
-    return test_v, fig, channels, beads_opt, df_properties_channel.to_dict(
+    stack_Z = stack_Z / stack_Z.max()
+    fig_image_z = px.imshow(stack_Z, zmin=stack_Z.min(), zmax=stack_Z.max(), color_continuous_scale="gray")
+    color_map = {0: 'red', 1: 'yellow'}
+    fig_image_z.add_trace(go.Scatter(y=df_beads_location['y_centroid'], x=df_beads_location['x_centroid'], mode='markers',
+                             marker=dict(size=10, color=df_beads_location['considered_axial_edge'].map(color_map),
+                                         opacity=0.3), text=df_beads_location['channel_nr'],
+                             customdata=df_beads_location['bead_nr'],
+                             hovertemplate=
+                             "   <b>Bead Number</b>  %{customdata} <br>" +
+                             "   <b>Channel Number</b>  %{text} <br>"
+                             ))
+    return fig_image_z, fig, channels, beads_opt, df_properties_channel.to_dict(
         'records'), fig_ip_x
 
-
 @app.expanded_callback(
-    dash.dependencies.Output('key_values_psf', 'figure'),
-    [dash.dependencies.Input('image', 'clickData'), ],
-    prevent_initial_call=True,
-)
+        dash.dependencies.Output('test_point', 'children'),
+        [dash.dependencies.Input('image', 'clickData'), ],
+        prevent_initial_call=True,
+    )
 def proj_callback(*args, **kwargs):
     points = args[0]["points"][0]
-    proj_click = px.imshow(image_bead[int(points['x']), :int(points['y']), :int(points['z'])])
-    return proj_click
+    if points.curveNumber == 1:
+        bead_number = points.pointNumber
+        return str(points)
+    else:
+        return None
+
