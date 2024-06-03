@@ -103,6 +103,17 @@ def get_object_ids_from_url(url: str) -> list[tuple[str, int]]:
         return [(tail.split("-")[0], int(tail.split("-")[-1]))]
     
 
+def get_omero_obj_id_from_mm_obj(mm_obj: mm_schema.MetricsObject) -> Union[ImageWrapper, DatasetWrapper, ProjectWrapper]:
+    if isinstance(mm_obj, mm_schema.DataReference):
+        return mm_obj.omero_object_id
+    elif isinstance(mm_obj, mm_schema.MetricsObject):
+        return mm_obj.data_reference.omero_object_id
+    elif isinstance(mm_obj, list):
+        return [get_omero_obj_id_from_mm_obj(obj) for obj in mm_obj]
+    else:
+        raise ValueError("Input should be a metrics object or a list of metrics objects")
+
+
 def get_omero_obj_from_mm_obj(conn: BlitzGateway, mm_obj: mm_schema.MetricsObject) -> Union[ImageWrapper, DatasetWrapper, ProjectWrapper]:
     # if not isinstance(mm_obj.omero_object_type, tuple):
     #     return conn.getObject(str(mm_obj.omero_object_type.code.text), mm_obj.omero_object_id)
