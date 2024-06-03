@@ -4,7 +4,6 @@ dpd_static_support
 dash-bootstrap-components
 django-bootstrap4
 dash_mantine_components
-hypothesis
 dash-iconify
 
 # omero stuff
