@@ -798,6 +798,37 @@ def create_key_value(
     return map_ann
 
 
+def update_key_value(
+    annotation: MapAnnotationWrapper,
+    updated_annotation: dict,
+    replace=True,
+    annotation_name=None,
+    annotation_description=None,
+    namespace=None,
+):
+    """Update the key-value pairs on a map_annotation. If replace is True, all values will be replaced.
+    """
+    curr_values = dict(annotation.getValue())
+
+    if replace:
+        new_values = updated_annotation
+    else:
+        new_values = curr_values | updated_annotation
+
+    new_values = _dict_to_map(new_values)
+
+    annotation.setValue(new_values)
+
+    if annotation_name is not None:
+        annotation.setName(annotation_name)
+    if annotation_description is not None:
+        annotation.setDescription(annotation_description)
+    if namespace is not None:
+        annotation.setNs(namespace)
+
+    annotation.save()
+
+
 def _create_column(data_type, kwargs):
     column_class = COLUMN_TYPES[data_type]
 
@@ -980,4 +1011,48 @@ def _link_image_to_dataset(conn: BlitzGateway, image: ImageWrapper, dataset: Dat
     link.setChild(ImageI(image.getId(), False))
     conn.getUpdateService().saveObject(link)
 
+
+def del_objects(conn: BlitzGateway,
+                object_ids: list[int],
+                object_types: list,
+                delete_anns: bool = True,
+                delete_children: bool = True,
+                dry_run_first: bool = True):
+    """Delete objects from OMERO"""
+    if dry_run_first:
+        try:
+            conn.deleteObjects(graph_spec="/".join(object_types),
+                               obj_ids=object_ids,
+                               deleteAnns=delete_anns,
+                               deleteChildren=delete_children,
+                               dryRun=True)
+        except Exception as e:
+            logger.error(f"Error during dry run deletion: {e}")
+            return False
+    try:
+        conn.deleteObjects(graph_spec="/".join(object_types),
+                           obj_ids=object_ids,
+                           deleteAnns=delete_anns,
+                           deleteChildren=delete_children,
+                           dryRun=False)
+        return True
+    except Exception as e:
+        logger.error(f"Error during deletion: {e}")
+        return False
+
+
+def del_object(conn: BlitzGateway,
+               object_id: int,
+               object_type: str,
+               delete_anns: bool = True,
+               delete_children: bool = True,
+               dry_run_first: bool = True):
+    return del_objects(
+        conn=conn,
+        object_ids=[object_id],
+        object_types=object_type,
+        delete_anns=delete_anns,
+        delete_children=delete_children,
+        dry_run_first=dry_run_first
+    )
 
