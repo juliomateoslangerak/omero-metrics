@@ -91,8 +91,18 @@ class DatasetManager:
             self.analysis_config_id, self.analysis_config = load.load_analysis_config(self.omero_project)
 
     def save_analysis_config(self):
-        if self.analysis_config:
+        if not self.analysis_config:
+            logger.error("No configuration to save.")
+            return
 
+        update.update_key_value(
+            conn=self._conn,
+            new_key_values=self.analysis_config,
+            target_key_values=self.analysis_config_id,
+            replace=True,
+            new_description=f"config saved on {datetime.datetime.now()}"
+        )
+        logger.info(f"Saved configuration on mapAnn id:{self.analysis_config_id}")
 
     def _update_dataset_input_config(self, config):
         for key, val in config.items():
@@ -130,7 +140,7 @@ class DatasetManager:
             return False
         try:
             logger.warning("Deleting processed data...")
-            delete.delete_mm_dataset_output(self._conn, self.mm_dataset)
+            delete.delete_dataset_output(self._conn, self.mm_dataset)
             self.mm_dataset.validated = False
             self.mm_dataset.processed = False
         except Exception as e:
