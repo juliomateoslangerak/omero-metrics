@@ -70,7 +70,8 @@ def load_analysis_config(project=ProjectWrapper):
     return configs[-1].getId(), dict(configs[-1].getValue())  # TODO: Make this return the last modified config
 
 
-def save_analysis_config()
+def save_analysis_config():
+    pass
 
 
 def load_image(image: ImageWrapper) -> mm_schema.Image:
