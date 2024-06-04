@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import mimetypes
@@ -42,7 +43,7 @@ from omero.model import (
     RoiI,
     enums,
 )
-from omero.rtypes import rdouble, rint, rlong, rstring
+from omero.rtypes import rdouble, rint, rlong, rstring, rtime
 from pandas import DataFrame
 
 logger = logging.getLogger(__name__)
@@ -308,7 +309,6 @@ def create_project(conn, name, description=None):
     return new_project
 
 
-
 def create_dataset(
     conn: BlitzGateway,
     dataset_name: str,
@@ -450,6 +450,7 @@ def create_image_from_numpy_array(
     image_name: str,
     image_description: str = None,
     channel_labels: Union[list, tuple] = None,
+    acquisition_datetime: str = None,
     dataset: DatasetWrapper = None,
     source_image_id: int = None,
     channels_list: list[int] = None,
@@ -457,6 +458,7 @@ def create_image_from_numpy_array(
 ) -> ImageWrapper:
     """
     Creates a new image in OMERO from a n dimensional numpy array.
+    :param acquisition_datetime: The acquisition datetime of the image in ISO format
     :param channel_labels: A list of channel labels
     :param force_whole_planes:
     :param channels_list:
@@ -552,7 +554,19 @@ def create_image_from_numpy_array(
     if channel_labels is not None:
         _label_channels(new_image, channel_labels)
 
+    if acquisition_datetime is not None:
+        _update_acquisition_datetime(conn, new_image, acquisition_datetime)
+
     return new_image
+
+
+def _update_acquisition_datetime(conn: BlitzGateway, image: ImageWrapper, acquisition_datetime: str):
+    # image = conn.getObject("Image", image_id)
+    acquisition_datetime = datetime.datetime.fromisoformat(acquisition_datetime)
+    milli_secs = acquisition_datetime.timestamp() * 1000
+    image = conn.getObject("Image", image.getId())
+    image._obj.acquisitionDate = rtime(milli_secs)
+    conn.getUpdateService().saveObject(image._obj, conn.SERVICE_OPTS)
 
 
 def _get_tile_list(zct_list, data_shape, tile_size):

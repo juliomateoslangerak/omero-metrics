@@ -434,6 +434,7 @@ def dump_image(
         dataset=target_dataset,
         source_image_id=source_image_id,
         channels_list=None,
+        acquisition_datetime=image.acquisition_datetime,
         force_whole_planes=False,
     )
     image.data_reference = omero_tools.get_ref_from_object(omero_image)
