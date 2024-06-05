@@ -131,6 +131,9 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
     collections_mm_p = load.load_project(conn, project_id)
     dataset = load.get_dataset_by_id(collections_mm_p, int(dataset_id))
     if  dataset.__class__.__name__ == "PSFBeadsDataset":
+        bead_properties_df = get_table_File_id(conn,
+                                               dataset.output.bead_properties.data_reference.omero_object_id)
+        dash_context['bead_properties_df'] = bead_properties_df
         request.session['django_plotly_dash'] = dash_context
         return render(request, 'metrics/omero_views/center_view_image_psf.html')
     elif dataset.__class__.__name__ == "FieldIlluminationDataset":

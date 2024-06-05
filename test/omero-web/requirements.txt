@@ -9,5 +9,5 @@ hypothesis
 dash-iconify
 
 # omero stuff
-microscopemetrics @ git+https://github.com/juliomateoslangerak/microscope-metrics.git
-microscopemetrics_schema @ git+https://github.com/juliomateoslangerak/microscopemetrics-schema.git
+microscopemetrics @ git+https://github.com/juliomateoslangerak/microscope-metrics.git@dev
+microscopemetrics_schema @ git+https://github.com/juliomateoslangerak/microscopemetrics-schema.git@dev
