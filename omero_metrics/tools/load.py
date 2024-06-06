@@ -17,6 +17,11 @@ import collections
 import omero
 DATASET_TYPES = ["FieldIlluminationDataset", "PSFBeadsDataset"]
 
+# TODO: Workout how to deal here with input images of different types
+INPUT_IMAGES_MAPPING = {
+    "FieldIlluminationDataset": "field_illumination_image",
+    "PSFBeadsDataset": "psf_beads_images"
+}
 
 def load_project(conn: BlitzGateway, project_id: int) -> mm_schema.MetricsDatasetCollection:
     collection = mm_schema.MetricsDatasetCollection()
@@ -42,7 +47,7 @@ def load_project(conn: BlitzGateway, project_id: int) -> mm_schema.MetricsDatase
         return collection
 
 
-def load_dataset(dataset: DatasetWrapper) -> mm_schema.MetricsDataset:
+def load_dataset(dataset: DatasetWrapper, load_images: bool = True) -> mm_schema.MetricsDataset:
     mm_datasets = []
     for ann in dataset.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
@@ -53,8 +58,27 @@ def load_dataset(dataset: DatasetWrapper) -> mm_schema.MetricsDataset:
                     yaml_loader.loads(ann.getFileInChunks().__next__().decode(),
                                       target_class=getattr(mm_schema, ds_type))
                 )
+    if len(mm_datasets) == 1:
+        mm_dataset = mm_datasets[0]
+    elif len(mm_datasets) > 1:
+        logger.warning(f"More than one dataset found in dataset {dataset.getId()}. Using the first one")
+        mm_dataset = mm_datasets[0]
+    else:
+        logger.info(f"No dataset found in dataset {dataset.getId()}")
+        return None
 
-    return mm_datasets
+    if load_images:
+        # First time loading the images the dataset does not know which images to load
+        if mm_dataset.processed:
+            input_images = getattr(mm_dataset, INPUT_IMAGES_MAPPING[mm_dataset.__class__.__name__])
+            for input_image in input_images:
+                image_wrapper = omero_tools.get_omero_obj_from_mm_obj(dataset._conn, input_image)
+                input_image.array_data = _load_image_intensities(image_wrapper)
+        else:
+            input_images = [load_image(image) for image in dataset.listChildren()]
+            setattr(mm_dataset, INPUT_IMAGES_MAPPING[mm_dataset.__class__.__name__], input_images)
+
+    return mm_dataset
 
 
 def load_analysis_config(project=ProjectWrapper):
@@ -74,15 +98,17 @@ def save_analysis_config():
     pass
 
 
-def load_image(image: ImageWrapper) -> mm_schema.Image:
+def load_image(image: ImageWrapper, load_array: bool = True) -> mm_schema.Image:
     """Load an image from OMERO and return it as a schema Image"""
     time_series = None  # TODO: implement this
     channel_series = None
     source_images = []
+    array_data = _load_image_intensities(image) if load_array else None
 
     return mm_schema.Image(
         name=image.getName(),
         description=image.getDescription(),
+        data_reference=omero_tools.get_ref_from_object(image),
         shape_x=image.getSizeX(),
         shape_y=image.getSizeY(),
         shape_z=image.getSizeZ(),
@@ -96,8 +122,12 @@ def load_image(image: ImageWrapper) -> mm_schema.Image:
         channel_series=channel_series,
         source_images=source_images,
         # OMERO order zctyx -> microscope-metrics order TZYXC
-        array_data=omero_tools.get_image_intensities(image).transpose((2, 0, 3, 4, 1))
+        array_data=array_data
     )
+
+def _load_image_intensities(image: ImageWrapper) -> np.ndarray:
+    return omero_tools.get_image_intensities(image).transpose((2, 0, 3, 4, 1))
+
 def load_dataset_data(conn: BlitzGateway, dataset: DatasetWrapper) -> mm_schema.MetricsDataset:
     pass
 
