@@ -3,13 +3,15 @@ from dash import dcc, html
 import plotly.graph_objs as go
 import numpy as np
 from django_plotly_dash import DjangoDash
-
+import dash_bootstrap_components as dbc
 dashboard_name1 = 'dash_example_1'
 dash_example1 = DjangoDash(name=dashboard_name1,
                            serve_locally=True,
                           )
 dash_example1.layout = html.Div(id='main',
                                 children=[
+                                    dbc.Button("Primary", color="primary", className="me-1"),
+
                                     html.Div([dcc.Dropdown(id='my-dropdown1',
                                                            options=[{'label': 'New York City', 'value': 'NYC'},
                                                                     {'label': 'Montreal', 'value': 'MTL'},

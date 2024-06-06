@@ -19,8 +19,7 @@ dash_app_dataset.layout = dmc.MantineProvider([dmc.Container(
             dmc.Text(
                 id='title',
                 c="#189A35",
-                mb=30,
-                style={"margin-top": "20px", "fontSize": 40},
+                style={"fontSize": 20},
             )
         ),
         dmc.Stack(
@@ -67,7 +66,7 @@ dash_app_dataset.layout = dmc.MantineProvider([dmc.Container(
                 )
             ]),
     ],
-    fluid=True,
+    fluid=True, style={"background-color": "#eceff1", "margin": "20px", "border-radius": "0.5rem", "padding": "10px"}
 )])
 
 
@@ -92,5 +91,5 @@ def dataset_callback_intensity_map(*args, **kwargs):
     df_profile.columns = df_profile.columns.str.replace("Ch\d{2}_", "", regex=True)
     df_profile.columns = df_profile.columns.str.replace("_", " ", regex=True)
     df_profile.columns = df_profile.columns.str.title()
-    fig_ip = px.line(df_profile, markers=True)
+    fig_ip = px.line(df_profile, x=df_profile.index, y=df_profile.columns, title="Intensity Profile")
     return fig, channel_list, title, table.to_dict('records'), fig_ip

@@ -1,22 +1,27 @@
-import pandas as pd
 import plotly.graph_objs as go
-import numpy as np
 import yaml
 import omero.gateway as gateway
 from datetime import datetime, timedelta
 from random import randrange
 import collections
 import omero
+import plotly.express as px
+import numpy as np
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+import pandas as pd
+
 
 def get_intensity_profile(imaaa):
-    imaaa= imaaa[0, 0, :, :, 0] / 255
+    imaaa = imaaa[0, 0, :, :, 0] / 255
     imaa_fliped = np.flip(imaaa, axis=1)
-    rb = imaaa[:,-1]
-    lb= imaaa[:,0]
+    rb = imaaa[:, -1]
+    lb = imaaa[:, 0]
     dr = np.fliplr(imaaa).diagonal()
     dl = np.fliplr(imaa_fliped).diagonal()
     df = pd.DataFrame({"Right Bottom": rb, "Left Bottom": lb, "Diagonal Right": dr, "Diagonal Left": dl})
     return df
+
 
 def add_rect_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
     for i, row in df.iterrows():
@@ -63,6 +68,7 @@ def add_point_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
     fig.add_trace(go.Scatter(x=df.X, y=df.Y, mode="markers"))
     return fig
 
+
 def get_rois_omero(result):
     shapes_line = {}
     shapes_rectangle = {}
@@ -71,8 +77,8 @@ def get_rois_omero(result):
         for s in roi.copyShapes():
             shape = {}
             shape["id"] = s.getId().getValue()
-           # shape["theT"] = s.getTheT().getValue()
-           # shape["theZ"] = s.getTheZ().getValue()
+            # shape["theT"] = s.getTheT().getValue()
+            # shape["theZ"] = s.getTheZ().getValue()
             if s.getTextValue():
                 shape["textValue"] = s.getTextValue().getValue()
             if s.__class__.__name__ == "RectangleI":
@@ -88,7 +94,7 @@ def get_rois_omero(result):
                 shape["x2"] = s.getX2().getValue()
                 shape["y1"] = s.getY1().getValue()
                 shape["y2"] = s.getY2().getValue()
-                
+
                 shapes_line[s.getId().getValue()] = shape
             elif s.__class__.__name__ == "PointI":
                 shape['type'] = 'Point'
@@ -104,11 +110,12 @@ def get_rois_omero(result):
 
 def get_info_roi_points(shape_dict):
     data = [
-        [key, int(value["x"]), int(value["y"]), int(value["channel"]) ]
+        [key, int(value["x"]), int(value["y"]), int(value["channel"])]
         for key, value in shape_dict.items()
     ]
-    df = pd.DataFrame(data, columns=["ROI", "X", "Y",  'C'])
+    df = pd.DataFrame(data, columns=["ROI", "X", "Y", 'C'])
     return df
+
 
 def get_info_roi_lines(shape_dict):
     data = [
@@ -125,7 +132,6 @@ def get_info_roi_rectangles(shape_dict):
     ]
     df = pd.DataFrame(data, columns=["ROI", "X", "Y", "W", "H"])
     return df
-
 
 
 def get_dataset_ids_lists(conn, project):
@@ -153,6 +159,7 @@ def get_image_list_by_dataset_id(conn, dataset_id):
         images.append(image.getId())
     return images
 
+
 def get_dataset_mapAnnotation(datasetWrapper):
     """
     Get the mapAnnotation for a dataset
@@ -171,19 +178,21 @@ def get_dataset_mapAnnotation(datasetWrapper):
         return df
     except:
         return {}
-    
-    
+
+
 def read_config_from_file_ann(file_annotation):
     return yaml.load(
         file_annotation.getFileInChunks().__next__().decode(), Loader=yaml.SafeLoader
     )
-    
+
+
 def get_file_annotation_project(projectWrapper):
     study_config = None
     for ann in projectWrapper.listAnnotations():
-                if type(ann) == gateway.FileAnnotationWrapper and ann.getFile().getName() == "study_config.yaml":
-                    study_config = read_config_from_file_ann(ann)
-    return study_config 
+        if type(ann) == gateway.FileAnnotationWrapper and ann.getFile().getName() == "study_config.yaml":
+            study_config = read_config_from_file_ann(ann)
+    return study_config
+
 
 def get_analysis_type(projectWrapper):
     study_config = get_file_annotation_project(projectWrapper)
@@ -192,6 +201,7 @@ def get_analysis_type(projectWrapper):
     except:
         analysis_type = None
     return analysis_type
+
 
 def random_date(start, end):
     """
@@ -204,11 +214,11 @@ def random_date(start, end):
     return start + timedelta(seconds=random_second)
 
 
-def get_table_originalFile_id(conn,file_id):
+def get_table_originalFile_id(conn, file_id):
     ctx = conn.createServiceOptsDict()
     ctx.setOmeroGroup("-1")
     r = conn.getSharedResources()
-    t = r.openTable(omero.model.OriginalFileI(file_id), ctx)   
+    t = r.openTable(omero.model.OriginalFileI(file_id), ctx)
     data_buffer = collections.defaultdict(list)
     heads = t.getHeaders()
     target_cols = range(len(heads))
@@ -223,6 +233,7 @@ def get_table_originalFile_id(conn,file_id):
     df.index = index_buffer[0: len(df)]
     return df
 
+
 def getOriginalFile_id(dataset):
     id = None
     for ann in dataset.listAnnotations():
@@ -232,24 +243,84 @@ def getOriginalFile_id(dataset):
                 break
     return id
 
+
 def processed_data_project_view(processed_list):
     d1 = datetime.strptime("1/1/2000 1:30 PM", "%m/%d/%Y %I:%M %p")
     d2 = datetime.strptime("1/1/2024 4:50 AM", "%m/%d/%Y %I:%M %p")
-    df = pd.DataFrame([[random_date(d1, d2), i] for i in processed_list], columns=['Date','Dataset_ID'])
+    df = pd.DataFrame([[random_date(d1, d2), i] for i in processed_list], columns=['Date', 'Dataset_ID'])
     return df
+
 
 def get_originalFile_id_by_image_id(dataset):
     list_file = []
     for ann in dataset.listAnnotations():
         if type(ann) == gateway.FileAnnotationWrapper:
             if type(ann.getFile()) == gateway.OriginalFileWrapper:
-               list_file.append([ann.getFile().getId(), ann.getFile().getName()])
+                list_file.append([ann.getFile().getId(), ann.getFile().getName()])
     return list_file
 
-def get_intensity_map_image(image_name,list_file):
+
+def get_intensity_map_image(image_name, list_file):
     for file_id, name in list_file:
         if image_name in name:
             return file_id
         else:
             return None
 
+
+#---------------------------------------dash_functions--------------------------------------------------
+
+
+def fig_mip(mip_X, mip_Y, mip_Z, title):
+    fig = make_subplots(rows=2, cols=2, specs=[[{}, {}],
+                                               [{"colspan": 2}, None]],
+                        subplot_titles=("MIP X axis", "MIP Y axis", "MIP Z axis"))
+    fig = fig.add_trace(mip_X.data[0], row=1, col=1)
+    fig = fig.add_trace(mip_Y.data[0], row=1, col=2)
+    fig = fig.add_trace(mip_Z.data[0], row=2, col=1)
+    fig = fig.update_layout(title_text=title, coloraxis=dict(colorscale='hot'))
+    return fig
+
+
+def mip_graphs(x0, xf, y0, yf, z, stack):
+    image_bead = stack[:, y0:yf, x0:xf]
+    z_ima = stack[z, y0:yf, x0:xf]
+    image_X = np.max(image_bead, axis=2)
+    image_Y = np.max(image_bead, axis=1)
+    image_X = (image_X / image_X.max())
+    image_Y = (image_Y / image_Y.max())
+    image_Z = (z_ima / z_ima.max())
+    mip_X = px.imshow(image_X, zmin=image_X.min(), zmax=image_X.max(), color_continuous_scale="hot")
+    mip_Y = px.imshow(image_Y, zmin=image_Y.min(), zmax=image_Y.max(), color_continuous_scale="hot")
+    mip_Z = px.imshow(image_Z, zmin=image_Z.min(), zmax=image_Z.max(), color_continuous_scale="hot")
+    return mip_X, mip_Y, mip_Z
+
+
+def crop_bead_index(bead, min_dist, stack):
+    x = bead['x_centroid'].values[0]
+    y = bead['y_centroid'].values[0]
+    z = bead['z_centroid'].values[0]
+    x0 = max(0, x - min_dist)
+    y0 = max(0, y - min_dist)
+    xf = min(stack.shape[2], x + min_dist)
+    yf = min(stack.shape[1], y + min_dist)
+    return x0, xf, y0, yf, z
+
+
+def image_3d_chart(image_bead):
+    image_bead = image_bead / image_bead.max()
+    lz, ly, lx = image_bead.shape
+    Z, Y, X = np.mgrid[:lz, :ly, :lx]
+    fig = go.Figure(data=go.Volume(
+        x=Z.flatten(), y=Y.flatten(), z=X.flatten(),
+        value=image_bead.flatten(),
+        isomin=0,
+        isomax=1,
+        opacity=0.3,
+        surface_count=25,
+
+    ))
+    fig = fig.update_layout(scene_xaxis_showticklabels=False,
+                            scene_yaxis_showticklabels=False,
+                            scene_zaxis_showticklabels=False)
+    return fig

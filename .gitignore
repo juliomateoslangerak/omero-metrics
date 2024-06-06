@@ -15,3 +15,6 @@ credentials.json
 
 .venv
 omero_metrics.egg-info/*
+/omero_metrics/tools/psf_bead_notebook.ipynb
+/omero_metrics/tools/test.ipynb
+

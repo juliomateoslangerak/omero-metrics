@@ -4,201 +4,163 @@ from django_plotly_dash import DjangoDash
 import plotly.express as px
 import dash_mantine_components as dmc
 import numpy as np
-from plotly.subplots import make_subplots
 import plotly.graph_objects as go
-
+import pandas as pd
+from ..tools.data_preperation import crop_bead_index, mip_graphs, fig_mip
 c1 = "#d8f3dc"
 c2 = "#eceff1"
 c3 = "#63aa47"
 
 app = DjangoDash('PSF_Beads')
 
-app.layout = dmc.MantineProvider([dmc.Container(
-    [
-        dmc.Center(
-            dmc.Text("PSF Beads Dashboard",
-                     c="#189A35",
-                     mb=30,
-                     style={"margin-top": "20px", "fontSize": 40},
-                     )
-        ),
-        dmc.Stack(
-            [dcc.Dropdown(value="Channel 0", id="channel_ddm_psf"),
-             html.Div([html.H4(children='This view is for the PSF Beads Analysis.'),
-                       html.P('Drag the slider to change the axis Z:'), ]),
-             html.Div([
-                 dcc.Slider(
-                     id='z-slider',
-                     min=0,
-                     max=0,
-                     value=0,
-                     marks={},
-                 ),
-             ], style={'width': 400, 'margin': 25}),
-             dmc.Grid([
-                 dmc.GridCol([dmc.Title("Image View", c="#189A35", size="h3", mb=10),
-                              dcc.Graph(id="image", figure={},
-                                        style={'display': 'inline-block', 'width': '100%', 'height': '100%;'}),
-                              ], span="6"),
-                 dmc.GridCol([
-                     dmc.Title("Key Values", c="#189A35", size="h3", mb=10),
-                     dcc.Graph(id="key_values_psf", figure={},
-                               style={'display': 'inline-block', 'width': '100%', 'height': '100%;'}),
-                 ], span="6"),
+app.layout = dmc.MantineProvider([
+    dmc.Container(
+        [
+            dmc.Center(
+                dmc.Text("PSF Beads Dashboard",
+                         c="#189A35",
+                         style={"fontSize": 20},
+                         )
+            ),
+            dmc.Grid(
+                [dmc.GridCol(
+                    [
+                        html.H3("Select Channel", style={"color": "#63aa47"}),
+                        dcc.Dropdown(value="Channel 0", id="channel_ddm_psf"),
+                    ],
+                    span="auto",
 
-             ]),
+                ),
+                ],
+                style={"margin-top": "20px", "margin-bottom": "20px", "border": "1px solid #63aa47",
+                       "padding": "10px", "border-radius": "0.5rem", "background-color": "white", }
+            ),
+            dmc.Grid([
+                dmc.GridCol([dmc.Title("Image View", c="#189A35", size="h3", mb=10),
+                             dcc.Graph(id="image", figure={},
+                                       style={'display': 'inline-block', 'width': '100%', 'height': '100%;'}),
+                             ], span="6"),
+                dmc.GridCol([
+                    dmc.Title("Key Values", c="#189A35", size="h3", mb=10),
+                    dash_table.DataTable(
+                        id="key_values_psf",
+                        page_size=10,
+                        sort_action="native",
+                        sort_mode="multi",
+                        sort_as_null=["", "No"],
+                        sort_by=[{"column_id": "pop", "direction": "asc"}],
+                        editable=False,
+                        style_cell={
+                            "textAlign": "left",
+                            "fontSize": 10,
+                            "font-family": "sans-serif",
+                        },
+                        style_header={
+                            "backgroundColor": "#189A35",
+                            "fontWeight": "bold",
+                            "fontSize": 15,
+                        },
+                        style_table={'overflowX': 'auto'},
+                    ),
+                ], span="6"),
 
-             dmc.Grid([
-                 dmc.GridCol([dmc.Title("Maximum Intensity Projection", c="#189A35", size="h3", mb=10),
-                              dcc.Graph(id="mip", figure={},
-                                        style={'display': 'inline-block', 'width': '100%', 'height': '100%;'}),
-                              ], span="6"),
-                 dmc.GridCol([
-                     dmc.Title("Chart", c="#189A35", size="h3", mb=10),
-                     dcc.Graph(id="mip_chart", figure={},
-                               style={'display': 'inline-block', 'width': '100%', 'height': '100%;'}),
-                 ], span="6"),
+            ]),
 
-             ]),
+            dmc.Grid([
+                dmc.GridCol([dmc.Title("Maximum Intensity Projection", c="#189A35", size="h3", mb=10),
+                             dcc.Graph(id="mip", figure={},
+                                       style={'display': 'inline-block', 'width': '100%', 'height': '100%;'}),
+                             ], span="6"),
+                dmc.GridCol([
+                    dmc.Title("Chart", c="#189A35", size="h3", mb=10),
+                    dcc.Dropdown(value="Axis: X", id="axis_ddm_psf"),
+                    dcc.Graph(id="mip_chart", figure={},
+                              style={'display': 'inline-block', 'width': '100%', 'height': '100%;'}),
+                ], span="6"),
 
-             dmc.Stack(
-                 [
-                     dmc.Title(
-                         "Key Measurements", c="#189A35", size="h3", mb=10
-                     ),
-                     dash_table.DataTable(
-                         id="table1",
-                         page_size=10,
-                         sort_action="native",
-                         sort_mode="multi",
-                         sort_as_null=["", "No"],
-                         sort_by=[{"column_id": "pop", "direction": "asc"}],
-                         editable=False,
-                         style_cell={
-                             "textAlign": "left",
-                             "fontSize": 10,
-                             "font-family": "sans-serif",
-                         },
-                         style_header={
-                             "backgroundColor": "#189A35",
-                             "fontWeight": "bold",
-                             "fontSize": 15,
-                         },
-                     ),
-                     dash_table.DataTable(
-                         id="table2",
-                         page_size=10,
-                         sort_action="native",
-                         sort_mode="multi",
-                         sort_as_null=["", "No"],
-                         sort_by=[{"column_id": "pop", "direction": "asc"}],
-                         editable=False,
-                         style_cell={
-                             "textAlign": "left",
-                             "fontSize": 10,
-                             "font-family": "sans-serif",
-                         },
-                         style_header={
-                             "backgroundColor": "#189A35",
-                             "fontWeight": "bold",
-                             "fontSize": 15,
-                         },
-                     ),
-                     dash_table.DataTable(
-                         id="table3",
-                         page_size=10,
-                         sort_action="native",
-                         sort_mode="multi",
-                         sort_as_null=["", "No"],
-                         sort_by=[{"column_id": "pop", "direction": "asc"}],
-                         editable=False,
-                         style_cell={
-                             "textAlign": "left",
-                             "fontSize": 10,
-                             "font-family": "sans-serif",
-                         },
-                         style_header={
-                             "backgroundColor": "#189A35",
-                             "fontWeight": "bold",
-                             "fontSize": 15,
-                         },
-                     ),
-                     dash_table.DataTable(
-                         id="table4",
-                         page_size=10,
-                         sort_action="native",
-                         sort_mode="multi",
-                         sort_as_null=["", "No"],
-                         sort_by=[{"column_id": "pop", "direction": "asc"}],
-                         editable=False,
-                         style_cell={
-                             "textAlign": "left",
-                             "fontSize": 10,
-                             "font-family": "sans-serif",
-                         },
-                         style_header={
-                             "backgroundColor": "#189A35",
-                             "fontWeight": "bold",
-                             "fontSize": 15,
-                         },
-                     ),
-                 ]
-             )
-             ]),
-    ],
-    fluid=True,
-)])
+            ]),
+            html.Div(id='test_point', ),
+
+        ], fluid=True,
+        style={"background-color": "#eceff1", "margin": "20px", "border-radius": "0.5rem", "padding": "10px"}
+    )])
 
 
 @app.expanded_callback(
     dash.dependencies.Output('image', 'figure'),
-    dash.dependencies.Output('mip', 'figure'),
     dash.dependencies.Output('channel_ddm_psf', 'options'),
-    dash.dependencies.Output('z-slider', 'max'),
-    dash.dependencies.Output('z-slider', 'marks'),
-    dash.dependencies.Output('table1', 'data'),
-    dash.dependencies.Output('table2', 'data'),
-    dash.dependencies.Output('table3', 'data'),
-    dash.dependencies.Output('table4', 'data'),
-
-    [dash.dependencies.Input('channel_ddm_psf', 'value'),
-     dash.dependencies.Input('z-slider', 'value'), ])
+    dash.dependencies.Output('key_values_psf', 'data'),
+    [dash.dependencies.Input('channel_ddm_psf', 'value'), ])
 def func_psf_callback(*args, **kwargs):
-    #TZYXC
-
+    channel_index = int(args[0].split(" ")[-1])
     image_o = kwargs['session_state']['image']
-    max_slider = image_o.shape[3] - 1
-    markers = {i: str(i) for i in range(0, max_slider + 1)}
     channels = [f"Channel {i}" for i in range(0, image_o.shape[4])]
-    image = image_o[0, int(args[1]), :, :, int(args[0][-1])]
-    stack = image_o[0, :, :, :, int(args[0][-1])]
-    image_Z = np.max(stack, axis=0)
-    image_X = np.max(stack, axis=2)
-    image_Y = np.max(stack, axis=1)
-    image_X = 255 * (image_X / image_X.max())
-    image_Y = 255 * (image_Y / image_Y.max())
-    image_Z = 255 * (image_Z / image_Z.max())
+    stack_Z = np.max(image_o[0, :, :, :, channel_index], axis=0)
     bead_properties_df = kwargs['session_state']['bead_properties_df']
-    bead_x_profiles_df = kwargs['session_state']['bead_x_profiles_df']
-    bead_y_profiles_df = kwargs['session_state']['bead_y_profiles_df']
-    bead_z_profiles_df = kwargs['session_state']['bead_z_profiles_df']
-    fig1 = px.imshow(image, zmin=image.min(), zmax=image.max(), color_continuous_scale="gray")
-    mip_X = px.imshow(image_X, zmin=image_X.min(), zmax=image_X.max(), color_continuous_scale="gray")
-    mip_Y = px.imshow(image_Y, zmin=image_Y.min(), zmax=image_Y.max(), color_continuous_scale="gray")
-    mip_Z = px.imshow(image_Z, zmin=image_Z.min(), zmax=image_Z.max(), color_continuous_scale="gray")
-    fig = make_subplots(rows=2, cols=2, specs=[[{}, {}],
-                                               [{"colspan": 2}, None]],
-                        subplot_titles=("MIP X axis", "MIP Y axis", "MIP Z axis"))
-    fig = fig.add_trace(mip_X.data[0], row=1, col=1)
-    fig = fig.add_trace(mip_Y.data[0], row=1, col=2)
-    fig = fig.add_trace(mip_Z.data[0], row=2, col=1)
-    fig = fig.update_layout(title_text="MIP for each axis", )
-    return fig1, fig, channels,max_slider, markers,  bead_properties_df.to_dict('records'), bead_x_profiles_df.to_dict(
-        'records'), bead_y_profiles_df.to_dict('records'), bead_z_profiles_df.to_dict('records')
+    df_properties_channel = bead_properties_df[bead_properties_df['channel_nr'] == channel_index][
+        ['bead_nr', 'intensity_max',
+         'min_intensity_min', 'intensity_std', 'intensity_robust_z_score',
+         'considered_intensity_outlier', 'z_fit_r2', 'y_fit_r2', 'x_fit_r2',
+         'z_fwhm', 'y_fwhm', 'x_fwhm', 'fwhm_lateral_asymmetry_ratio']].copy()
+    df_beads_location = bead_properties_df[bead_properties_df['channel_nr'] == channel_index][
+        ['channel_nr', 'bead_nr', 'considered_axial_edge', 'z_centroid', 'y_centroid', 'x_centroid']].copy()
+    df_beads_location['considered_axial_edge'] = df_beads_location['considered_axial_edge'].map({0: 'No', 1: 'Yes'})
+    stack_Z = stack_Z / stack_Z.max()
+    fig_image_z = px.imshow(stack_Z, zmin=stack_Z.min(), zmax=stack_Z.max(), color_continuous_scale="gray")
+    color_map = {'Yes': 'red', "No": 'yellow'}
+    fig_image_z.add_trace(
+        go.Scatter(y=df_beads_location['y_centroid'], x=df_beads_location['x_centroid'], mode='markers',
+                   marker=dict(size=10, color=df_beads_location['considered_axial_edge'].map(color_map),
+                               opacity=0.3), text=df_beads_location['channel_nr'],
+                   customdata=np.stack((df_beads_location['bead_nr'], df_beads_location['considered_axial_edge']),
+                                       axis=-1),
+                   hovertemplate=
+                   "<b>Bead Number:</b>  %{customdata[0]} <br>" +
+                   "<b>Channel Number:</b>  %{text} <br>" +
+                   "<b>Considered Axial Edge:</b> %{customdata[1]} <br><extra></extra>"
+                   ))
+    return fig_image_z, channels, df_properties_channel.to_dict('records')
 
 
-def fun_rm(fig):
-    fig = fig.update_layout(coloraxis_showscale=False)
-    fig = fig.update_xaxes(showticklabels=False)
-    fig = fig.update_yaxes(showticklabels=False)
-    return fig
+@app.expanded_callback(
+    dash.dependencies.Output('mip', 'figure'),
+    dash.dependencies.Output('mip_chart', 'figure'),
+    dash.dependencies.Output('axis_ddm_psf', 'options'),
+    [dash.dependencies.Input('image', 'clickData'),
+     dash.dependencies.Input('axis_ddm_psf', 'value'),
+     dash.dependencies.Input('channel_ddm_psf', 'value'), ],
+    prevent_initial_call=True)
+def callback_mip(*args, **kwargs):
+    point = args[0]["points"][0]
+    axis = args[1].split(" ")[-1].lower()
+    channel_index = int(args[2].split(" ")[-1])
+    options = ['Axis: X', 'Axis: Y', 'Axis: Z']
+    stack = kwargs['session_state']['image'][0, :, :, :, channel_index]
+    bead_properties_df = kwargs['session_state']['bead_properties_df']
+    df_beads_location = bead_properties_df[bead_properties_df['channel_nr'] == channel_index][
+        ['channel_nr', 'bead_nr', 'considered_axial_edge', 'z_centroid', 'y_centroid', 'x_centroid']].copy()
+    min_dist = 20
+    if point['curveNumber'] == 1:
+        bead_index = point['pointNumber']
+        title = f"MIP for bead number: {bead_index} in channel: {channel_index}"
+        bead = df_beads_location[df_beads_location['bead_nr'] == bead_index].copy()
+        x0, xf, y0, yf, z = crop_bead_index(bead, min_dist, stack)
+        mip_X, mip_Y, mip_Z = mip_graphs(x0, xf, y0, yf, z, stack)
+        return fig_mip(mip_X, mip_Y, mip_Z, title), line_graph_axis(bead_index, channel_index, axis, kwargs), options
+    else:
+        return dash.no_update
+
+
+def line_graph_axis(bead_index, channel_index, axis, kwargs):
+    df_axis = kwargs['session_state'][f'bead_{axis}_profiles_df']
+    df_meta_x = pd.DataFrame(
+        data=[[int(col.split("_")[-2]), int(col.split("_")[-4]), col.split("_")[-1], col] for col in
+              df_axis.columns], columns=['bead_nb', 'channel_nb', 'type', 'name'])
+    cols_x = df_meta_x[((df_meta_x['bead_nb'] == bead_index) & (df_meta_x['channel_nb'] == channel_index))][
+        'name'].values
+    df_x = df_axis[cols_x].copy()
+    df_x.columns = df_x.columns.str.split("_").str[-1]
+    fig_ip_x = px.line(df_x)
+    fig_ip_x.update_traces(patch={"line": {"dash": "dot"}}, selector={'name': 'fitted'})
+    return fig_ip_x
+
