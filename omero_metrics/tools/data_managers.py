@@ -33,11 +33,6 @@ INPUT_MAPPINGS = {
     "PSFBeadsInput": mm_schema.PSFBeadsInput,
 }
 
-# TODO: Workout how to deal here with input images of different types
-INPUT_IMAGES_MAPPING = {
-    "FieldIlluminationDataset": mm_schema.field_illumination_image,
-    "PSFBeadsDataset": mm_schema.psf_beads_images
-}
 
 OBJECT_TO_DUMP_FUNCTION = {
     mm_schema.Image: dump.dump_image,
