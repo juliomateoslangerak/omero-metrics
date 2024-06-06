@@ -106,6 +106,6 @@ def dataset_callback_intensity_map(*args, **kwargs):
     df_profile.columns = df_profile.columns.str.replace("_", " ", regex=True)
     df_profile.columns = df_profile.columns.str.title()
     extracted_table_cols = channel_list[int(args[0][-1])]['label']
-    table = table[['Measurements', extracted_table_cols]]
+    table_filtered = table[['Measurements', extracted_table_cols]]
     fig_ip = px.line(df_profile, x=df_profile.index, y=df_profile.columns, title="Intensity Profile")
-    return fig, channel_list, title, table.to_dict('records'), fig_ip
+    return fig, channel_list, title, table_filtered.to_dict('records'), fig_ip
