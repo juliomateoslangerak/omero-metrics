@@ -11,7 +11,7 @@ c2 = "#eceff1"
 c3 = "#189A35"
 
 dashboard_name = 'omero_dataset_metrics'
-dash_app_dataset = DjangoDash(name=dashboard_name, serve_locally=True, )
+dash_app_dataset = DjangoDash(name=dashboard_name)
 
 dash_app_dataset.layout = dmc.MantineProvider([dmc.Container(
     [
@@ -19,30 +19,31 @@ dash_app_dataset.layout = dmc.MantineProvider([dmc.Container(
             dmc.Text(
                 id='title',
                 c="#189A35",
-                style={"fontSize": 20},
+                style={"fontSize": 30},
             )
+        ),
+        dmc.Grid(
+            [dmc.GridCol(
+                [
+                    html.H3("Select Channel", style={"color": "#63aa47"}),
+                    dcc.Dropdown(value="Channel 0", id="channel_ddm"),
+                ],
+                span="auto",
+
+            ),
+            ],
+            style={"margin-top": "20px", "margin-bottom": "20px", "border": "1px solid #63aa47",
+                   "padding": "10px", "border-radius": "0.5rem", "background-color": "white", }
         ),
         dmc.Stack(
             [
                 dmc.Grid([
                     dmc.GridCol([dmc.Title("Intensity Map", c="#189A35", size="h3", mb=10),
-                                 dcc.Dropdown(value="Channel 0", id="channel_ddm"),
                                  dcc.Graph(id="dataset_image_graph", figure={},
                                            style={'display': 'inline-block', 'width': '100%', 'height': '100%;'}),
                                  ], span="6"),
                     dmc.GridCol([
-                        dmc.Title("Intensity Profile", c="#189A35", size="h3", mb=10),
-                        dcc.Graph(id="intensity_profile", figure={},
-                                  style={'display': 'inline-block', 'width': '100%', 'height': '100%;'}),
-                    ], span="6"),
-
-                ]),
-
-                dmc.Stack(
-                    [
-                        dmc.Title(
-                            "Key Measurements", c="#189A35", size="h3", mb=10
-                        ),
+                        dmc.Title("Key Measurements", c="#189A35", size="h3", mb=10, mt=10),
                         dash_table.DataTable(
                             id="table",
                             page_size=10,
@@ -61,7 +62,20 @@ dash_app_dataset.layout = dmc.MantineProvider([dmc.Container(
                                 "fontWeight": "bold",
                                 "fontSize": 15,
                             },
+                            style_table={'overflowX': 'auto'},
                         ),
+
+                    ], span="6"),
+
+                ]),
+
+                dmc.Stack(
+                    [
+                        dmc.Title(
+                            "Intensity Profile", c="#189A35", size="h3", mb=10
+                        ),
+                        dcc.Graph(id="intensity_profile", figure={},
+                                  style={'display': 'inline-block', 'width': '100%', 'height': '100%;'}),
                     ]
                 )
             ]),
@@ -91,5 +105,7 @@ def dataset_callback_intensity_map(*args, **kwargs):
     df_profile.columns = df_profile.columns.str.replace("Ch\d{2}_", "", regex=True)
     df_profile.columns = df_profile.columns.str.replace("_", " ", regex=True)
     df_profile.columns = df_profile.columns.str.title()
+    extracted_table_cols = channel_list[int(args[0][-1])]['label']
+    table = table[['Measurements', extracted_table_cols]]
     fig_ip = px.line(df_profile, x=df_profile.index, y=df_profile.columns, title="Intensity Profile")
     return fig, channel_list, title, table.to_dict('records'), fig_ip

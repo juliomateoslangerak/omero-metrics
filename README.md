@@ -12,20 +12,13 @@ Install `omero_metrics` in development mode as follows:
     $ cd OMERO-metrics
     $ pip install -e .
 
-Add the app to the `omero.web.apps` setting:
+Run in your terminal to start the server:
 
-N.B. Here we use single quotes around double quotes:
-
-    $ omero config append omero.web.apps '"omero_metrics"'
-
-Optionally, add a link "Metrics" at the top of the webclient to
-open the index page of this app:
-
-    $ omero config append omero.web.ui.top_links '["Metrics", "metrics_index", {"title": "Open OMERO metrics in new tab", "target": "_blank"}]'
+    $ docker compose up -d
 
 
 Now restart your `omero-web` server and go to
-<http://localhost:4080/omero_metrics/> in your browser.
+<http://localhost:5080/omero_metrics/> in your browser.
 
 
 Further Info

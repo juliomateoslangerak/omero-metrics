@@ -114,8 +114,7 @@ def get_all_intensity_profiles(conn, data_df):
             data.columns = data.columns.str.replace(regx_find, regx_repl)
         df_01 = pd.concat([df_01, data], axis=1)
     return df_01
-
-def get_table_File_id(conn,fileAnnotation_id):
+def get_table_File_id(conn, fileAnnotation_id):
     file_id = conn.getObject('FileAnnotation', fileAnnotation_id).getFile().getId()
     ctx = conn.createServiceOptsDict()
     ctx.setOmeroGroup("-1")

@@ -188,7 +188,9 @@ def center_viewer_group(request, conn=None, **kwargs):
 
 @login_required()
 def center_view_project_yaml(request, project_id, conn=None, **kwargs):
-    pass
+    project_id = conn.getObject("Project", project_id)
+    collections_mm_p = load.load_project(conn, project_id)
+    
 
 
 @login_required()
