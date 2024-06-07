@@ -9,3 +9,11 @@ react-webapp/react_webapp/templates/
 
 # PyCharm files
 .idea
+
+# Credentials
+credentials.json
+
+.venv
+omero_metrics.egg-info/*
+tools/psf_bead_notebook.ipynb
+tools/test.ipynb
