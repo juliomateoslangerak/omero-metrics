@@ -168,7 +168,7 @@ def _dump_mm_dataset_as_file_annotation(
         f.write(dumper.dumps(mm_dataset))
         f.close()
         file_path = f.name
-        ns = mm_dataset.class_model_uri
+        ns = mm_dataset.class_class_curie
         description = mm_dataset.description
         mimetype = "application/yaml"
         file_ann = conn.createFileAnnfromLocalFile(

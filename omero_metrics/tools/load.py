@@ -15,6 +15,7 @@ from .data_preperation import get_table_originalFile_id
 logger = logging.getLogger(__name__)
 import collections
 import omero
+
 DATASET_TYPES = ["FieldIlluminationDataset", "PSFBeadsDataset"]
 
 # TODO: Workout how to deal here with input images of different types
@@ -22,6 +23,12 @@ INPUT_IMAGES_MAPPING = {
     "FieldIlluminationDataset": "field_illumination_image",
     "PSFBeadsDataset": "psf_beads_images"
 }
+
+OUTPUT_DATA = {
+    "FieldIlluminationDataset": "intensity_profiles",
+    "PSFBeadsDataset": "psf_beads"
+}
+
 
 def load_project(conn: BlitzGateway, project_id: int) -> mm_schema.MetricsDatasetCollection:
     collection = mm_schema.MetricsDatasetCollection()
@@ -47,7 +54,7 @@ def load_project(conn: BlitzGateway, project_id: int) -> mm_schema.MetricsDatase
         return collection
 
 
-def load_dataset(dataset: DatasetWrapper, load_images: bool = True) -> mm_schema.MetricsDataset:
+def load_dataset(dataset: DatasetWrapper, load_images: bool = True, load_data: bool = True) -> mm_schema.MetricsDataset:
     mm_datasets = []
     for ann in dataset.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
@@ -70,13 +77,15 @@ def load_dataset(dataset: DatasetWrapper, load_images: bool = True) -> mm_schema
     if load_images:
         # First time loading the images the dataset does not know which images to load
         if mm_dataset.processed:
-            input_images = getattr(mm_dataset, INPUT_IMAGES_MAPPING[mm_dataset.__class__.__name__])
+            input_images = getattr(mm_dataset.input, INPUT_IMAGES_MAPPING[mm_dataset.__class__.__name__])
             for input_image in input_images:
                 image_wrapper = omero_tools.get_omero_obj_from_mm_obj(dataset._conn, input_image)
                 input_image.array_data = _load_image_intensities(image_wrapper)
         else:
             input_images = [load_image(image) for image in dataset.listChildren()]
             setattr(mm_dataset, INPUT_IMAGES_MAPPING[mm_dataset.__class__.__name__], input_images)
+    else:
+        setattr(mm_dataset, INPUT_IMAGES_MAPPING[mm_dataset.__class__.__name__], [])
 
     return mm_dataset
 
@@ -125,8 +134,10 @@ def load_image(image: ImageWrapper, load_array: bool = True) -> mm_schema.Image:
         array_data=array_data
     )
 
+
 def _load_image_intensities(image: ImageWrapper) -> np.ndarray:
     return omero_tools.get_image_intensities(image).transpose((2, 0, 3, 4, 1))
+
 
 def load_dataset_data(conn: BlitzGateway, dataset: DatasetWrapper) -> mm_schema.MetricsDataset:
     pass
@@ -164,17 +175,17 @@ def get_key_values(var: FieldIlluminationDataset.output) -> pd.DataFrame:
     data_dict = [[key] + value for key, value in data_dict.items() if
                  isinstance(value, list) and key not in ['name', 'description', 'data_reference', 'linked_references',
                                                          'channel_name']]
-    df = pd.DataFrame(data_dict, columns=['Measurements']+col)
+    df = pd.DataFrame(data_dict, columns=['Measurements'] + col)
     return df
 
 
 def concatenate_images(conn, df):
     image_0 = conn.getObject('Image', df['Field_illumination_image'][0])
-    image_array_0 = load_image(image_0)
+    image_array_0 = load_image(image_0).array_data
     result = image_array_0
     for i in range(1, len(df)):
         image = conn.getObject('Image', df['Field_illumination_image'][i])
-        image_array = load_image(image)
+        image_array = load_image(image).array_data
         result = np.concatenate((result, image_array), axis=-1)
     return result
 
@@ -191,6 +202,8 @@ def get_all_intensity_profiles(conn, data_df):
             data.columns = data.columns.str.replace(regx_find, regx_repl)
         df_01 = pd.concat([df_01, data], axis=1)
     return df_01
+
+
 def get_table_File_id(conn, fileAnnotation_id):
     file_id = conn.getObject('FileAnnotation', fileAnnotation_id).getFile().getId()
     ctx = conn.createServiceOptsDict()
@@ -210,3 +223,11 @@ def get_table_File_id(conn, fileAnnotation_id):
     df = pd.DataFrame.from_dict(data_buffer)
     df.index = index_buffer[0: len(df)]
     return df
+
+
+#**********************************************************************************************************************
+
+
+def load_dataset_context(dataset:  mm_schema.MetricsDataset) -> dict:
+    context = []
+    return mm_dataset

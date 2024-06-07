@@ -42,6 +42,14 @@ OBJECT_TO_DUMP_FUNCTION = {
     mm_schema.Table: dump.dump_table,
 }
 
+TEMPLATE_MAPPINGS = {
+    "mm_schema.FieldIlluminationDataset": "metrics/omero_views/center_view_dataset_foi.html",
+    "mm_schema.PSFBeadsDataset": "center_view_dataset_psf_beads.html",
+    "unknown_analysis": "metrics/omero_views/center_view_unknown_analysis_type.html",
+    "unprocessed_analysis": "metrics/omero_views/unprocessed_dataset.html"
+}
+
+
 
 class DatasetManager:
     """
@@ -63,6 +71,8 @@ class DatasetManager:
         self.analysis_config = None
         self.analysis_config_id = None
         self.analysis_func = None
+        self.template = None
+        self.context = None
         self.microscope = mm_schema.Microscope()  # TODO: top it up!!
 
     def is_processed(self):
@@ -162,6 +172,21 @@ class DatasetManager:
             logger.warning("Data is already not validated. Keeping unchanged.")
         self.mm_dataset.validated = False
         logger.info("Invalidating dataset.")
+
+    def visualize_data(self):
+        if self.mm_dataset.processed:
+            if self.mm_dataset.__class__.__name__ in TEMPLATE_MAPPINGS:
+                self.template = TEMPLATE_MAPPINGS.get(self.mm_dataset.__class__.__name__)
+                self.context = load.load_dataset_context(self.mm_dataset)
+            else:
+                logger.warning("Unknown analysis type. Unable to visualize")
+                self.template = TEMPLATE_MAPPINGS.get("unknown_analysis")
+                self.context = {}
+        else:
+            logger.warning("Dataset has not been processed. Unable to visualize")
+            self.template = TEMPLATE_MAPPINGS.get("unprocessed_analysis")
+            self.context = {}
+
 
     def save_settings(self):
         pass
