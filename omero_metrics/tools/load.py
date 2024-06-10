@@ -1,6 +1,6 @@
 import logging
 from microscopemetrics_schema.datamodel.microscopemetrics_schema import (
-    FieldIlluminationDataset,
+    FieldIlluminationDataset, PSFBeadsDataset
 )
 import numpy as np
 from omero.gateway import BlitzGateway, DatasetWrapper, ImageWrapper, ProjectWrapper, FileAnnotationWrapper, \
@@ -54,7 +54,7 @@ def load_project(conn: BlitzGateway, project_id: int) -> mm_schema.MetricsDatase
         return collection
 
 
-def load_dataset(dataset: DatasetWrapper, load_images: bool = True, load_data: bool = True) -> mm_schema.MetricsDataset:
+def load_dataset(dataset: DatasetWrapper, load_images: bool = True) -> mm_schema.MetricsDataset:
     mm_datasets = []
     for ann in dataset.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
@@ -88,6 +88,32 @@ def load_dataset(dataset: DatasetWrapper, load_images: bool = True, load_data: b
         setattr(mm_dataset, INPUT_IMAGES_MAPPING[mm_dataset.__class__.__name__], [])
 
     return mm_dataset
+
+
+def load_dash_data(conn: BlitzGateway, dataset: mm_schema.MetricsDataset) -> dict:
+    dash_context = {}
+    if isinstance(dataset, FieldIlluminationDataset):
+        title = 'Field Illumination Dataset'
+        df = get_images_intensity_profiles(dataset)
+        images = concatenate_images(conn, df)
+        dash_context['title'] = title
+        dash_context['images'] = images
+        dash_context['key_values_df'] = get_key_values(dataset.output)
+        dash_context['intensity_profiles'] = get_all_intensity_profiles(conn, df)
+    elif isinstance(dataset, PSFBeadsDataset):
+        dash_context['title'] = 'PSF Beads Dataset'
+        dash_context['image'] = dataset.input.psf_beads_images[0].array_data
+        dash_context['bead_properties_df'] = get_table_File_id(conn,
+                                                               dataset.output.bead_properties.data_reference.omero_object_id)
+        dash_context['bead_x_profiles_df'] = get_table_File_id(conn,
+                                                               dataset.output.bead_x_profiles.data_reference.omero_object_id)
+        dash_context['bead_y_profiles_df'] = get_table_File_id(conn,
+                                                               dataset.output.bead_y_profiles.data_reference.omero_object_id)
+        dash_context['bead_z_profiles_df'] = get_table_File_id(conn,
+                                                               dataset.output.bead_z_profiles.data_reference.omero_object_id)
+    else:
+        dash_context = {}
+    return dash_context
 
 
 def load_analysis_config(project=ProjectWrapper):
@@ -227,7 +253,3 @@ def get_table_File_id(conn, fileAnnotation_id):
 
 #**********************************************************************************************************************
 
-
-def load_dataset_context(dataset:  mm_schema.MetricsDataset) -> dict:
-    context = []
-    return mm_dataset

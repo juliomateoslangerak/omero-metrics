@@ -43,8 +43,8 @@ OBJECT_TO_DUMP_FUNCTION = {
 }
 
 TEMPLATE_MAPPINGS = {
-    "mm_schema.FieldIlluminationDataset": "metrics/omero_views/center_view_dataset_foi.html",
-    "mm_schema.PSFBeadsDataset": "center_view_dataset_psf_beads.html",
+    "FieldIlluminationDataset": "metrics/omero_views/center_view_dataset_foi.html",
+    "PSFBeadsDataset": "metrics/omero_views/center_view_dataset_psf_beads.html",
     "unknown_analysis": "metrics/omero_views/center_view_unknown_analysis_type.html",
     "unprocessed_analysis": "metrics/omero_views/unprocessed_dataset.html"
 }
@@ -177,7 +177,7 @@ class DatasetManager:
         if self.mm_dataset.processed:
             if self.mm_dataset.__class__.__name__ in TEMPLATE_MAPPINGS:
                 self.template = TEMPLATE_MAPPINGS.get(self.mm_dataset.__class__.__name__)
-                self.context = load.load_dataset_context(self.mm_dataset)
+                self.context = load.load_dash_data(self._conn, self.mm_dataset)
             else:
                 logger.warning("Unknown analysis type. Unable to visualize")
                 self.template = TEMPLATE_MAPPINGS.get("unknown_analysis")
