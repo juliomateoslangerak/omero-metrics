@@ -1,9 +1,6 @@
 import dash
-from dash import dcc, html, dash_table
-import plotly.graph_objs as go
-import numpy as np
+from dash import dcc, html
 from django_plotly_dash import DjangoDash
-import plotly.express as px
 from ..tools.data_preperation import *
 import dash_mantine_components as dmc
 
@@ -93,9 +90,9 @@ def callback_test4(*args, **kwargs):
     [dash.dependencies.Input('my-dropdown1', 'value')])
 def callback_test5(*args, **kwargs):
     df_intensity_profiles = kwargs['session_state']['df_intensity_profiles']
-    C = 'ch0' + args[0][-1]
+    ch = 'ch0' + args[0][-1]
     df_profile = df_intensity_profiles[
-        df_intensity_profiles.columns[df_intensity_profiles.columns.str.startswith(C)]
+        df_intensity_profiles.columns[df_intensity_profiles.columns.str.startswith(ch)]
     ].copy()
     df_profile.columns = df_profile.columns.str.replace("ch\d{2}_", "", regex=True)
     df_profile.columns = df_profile.columns.str.replace("_", " ", regex=True)

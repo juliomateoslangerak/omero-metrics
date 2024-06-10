@@ -7,9 +7,6 @@ import numpy as np
 import plotly.graph_objects as go
 import pandas as pd
 from ..tools.data_preperation import crop_bead_index, mip_graphs, fig_mip
-c1 = "#d8f3dc"
-c2 = "#eceff1"
-c3 = "#63aa47"
 
 app = DjangoDash('PSF_Beads')
 
@@ -95,7 +92,7 @@ def func_psf_callback(*args, **kwargs):
     channel_index = int(args[0].split(" ")[-1])
     image_o = kwargs['session_state']['context']['image']
     channels = [f"Channel {i}" for i in range(0, image_o.shape[4])]
-    stack_Z = np.max(image_o[0, :, :, :, channel_index], axis=0)
+    stack_z = np.max(image_o[0, :, :, :, channel_index], axis=0)
     bead_properties_df = kwargs['session_state']['context']['bead_properties_df']
     df_properties_channel = bead_properties_df[bead_properties_df['channel_nr'] == channel_index][
         ['bead_nr', 'intensity_max',
@@ -105,8 +102,8 @@ def func_psf_callback(*args, **kwargs):
     df_beads_location = bead_properties_df[bead_properties_df['channel_nr'] == channel_index][
         ['channel_nr', 'bead_nr', 'considered_axial_edge', 'z_centroid', 'y_centroid', 'x_centroid']].copy()
     df_beads_location['considered_axial_edge'] = df_beads_location['considered_axial_edge'].map({0: 'No', 1: 'Yes'})
-    stack_Z = stack_Z / stack_Z.max()
-    fig_image_z = px.imshow(stack_Z, zmin=stack_Z.min(), zmax=stack_Z.max(), color_continuous_scale="gray")
+    stack_z = stack_z / stack_z.max()
+    fig_image_z = px.imshow(stack_z, zmin=stack_z.min(), zmax=stack_z.max(), color_continuous_scale="gray")
     color_map = {'Yes': 'red', "No": 'yellow'}
     fig_image_z.add_trace(
         go.Scatter(y=df_beads_location['y_centroid'], x=df_beads_location['x_centroid'], mode='markers',
@@ -145,8 +142,8 @@ def callback_mip(*args, **kwargs):
         title = f"MIP for bead number: {bead_index} in channel: {channel_index}"
         bead = df_beads_location[df_beads_location['bead_nr'] == bead_index].copy()
         x0, xf, y0, yf, z = crop_bead_index(bead, min_dist, stack)
-        mip_X, mip_Y, mip_Z = mip_graphs(x0, xf, y0, yf, z, stack)
-        return fig_mip(mip_X, mip_Y, mip_Z, title), line_graph_axis(bead_index, channel_index, axis, kwargs), options
+        mip_x, mip_y, mip_z = mip_graphs(x0, xf, y0, yf, z, stack)
+        return fig_mip(mip_x, mip_y, mip_z, title), line_graph_axis(bead_index, channel_index, axis, kwargs), options
     else:
         return dash.no_update
 

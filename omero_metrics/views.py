@@ -1,22 +1,9 @@
-from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
-from django.views import generic
-from django.urls import reverse
-import omero.gateway as gateway
-from omeroweb.webgateway import views as webgateway_views
-from django.conf import settings
 from .tools import load
 from omeroweb.webclient.decorators import login_required, render_response
-from io import BytesIO
 from .tools.data_preperation import *
 from .tools.load import *
 from .tools.data_managers import DatasetManager
-
-import logging
-import omero
-from omero.rtypes import rstring
-import omero.gateway
-import random
 
 
 @login_required()
@@ -66,20 +53,10 @@ def session_state_view(request, template_name, **kwargs):
     return render(request, template_name=template_name, context=context)
 
 
-# @login_required()
-# def data_view(request, conn=None, **kwargs):
-#     g = conn.listGroups()
-#     for i in g:
-#         group_id=i.getId()
-#     conn.SERVICE_OPTS.setOmeroGroup(group_id)
-#     data_loader(conn, 10, 'Fake data')
-#     return render(request, template_name='metrics/add_data.html', context={})
-
-
-def webgateway_templates(request, base_template):
+def web_gateway_templates(request, base_template):
     """ Simply return the named template. Similar functionality to
     django.views.generic.simple.direct_to_template """
-    template_name = 'metrics/webgateway/%s.html' % base_template
+    template_name = 'metrics/web_gateway/%s.html' % base_template
     return render(request, template_name, {})
 
 
@@ -88,7 +65,7 @@ def webgateway_templates(request, base_template):
 def webclient_templates(request, base_template, **kwargs):
     """ Simply return the named template. Similar functionality to
     django.views.generic.simple.direct_to_template """
-    template_name = 'metrics/webgateway/%s.html' % base_template
+    template_name = 'metrics/web_gateway/%s.html' % base_template
     return {'template': template_name}
 
 
@@ -101,28 +78,6 @@ def image_rois(request, image_id, conn=None, **kwargs):
 
 
 @login_required()
-def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
-    datasetWrapper = conn.getObject("Dataset", dataset_id)
-    projectWrapper = datasetWrapper.getParent()
-    analysis_type = get_analysis_type(projectWrapper)
-    if analysis_type == "PSFBeads":
-        data = get_dataset_mapAnnotation(datasetWrapper)
-        dash_context = request.session.get("django_plotly_dash", dict())
-        dash_context['data'] = data
-        request.session['django_plotly_dash'] = dash_context
-        return render(request, 'metrics/omero_views/center_view_dataset_psf_beads.html', {'dataset_id': dataset_id})
-    elif analysis_type == "FieldIllumination":
-        data = get_dataset_mapAnnotation(datasetWrapper)
-        dash_context = request.session.get("django_plotly_dash", dict())
-        dash_context['data'] = data
-        request.session['django_plotly_dash'] = dash_context
-        return render(request, 'metrics/omero_views/center_view_dataset_foi.html',
-                      {'dataset_id': dataset_id})
-    else:
-        return render(request, 'metrics/omero_views/center_view_unknown_analysis_type.html')
-
-
-@login_required()
 def center_viewer_image(request, image_id, conn=None, **kwargs):
     image = conn.getObject("Image", image_id)
     image_loaded = load_image(image).array_data
@@ -132,7 +87,7 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
     project_id = conn.getObject("Dataset", dataset_id).getParent().getId()
     collections_mm_p = load.load_project(conn, project_id)
     dataset = load.get_dataset_by_id(collections_mm_p, int(dataset_id))
-    if  dataset.__class__.__name__ == "PSFBeadsDataset":
+    if dataset.__class__.__name__ == "PSFBeadsDataset":
         bead_properties_df = get_table_File_id(conn,
                                                dataset.output.bead_properties.data_reference.omero_object_id)
         dash_context['bead_properties_df'] = bead_properties_df
@@ -141,7 +96,7 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
     elif dataset.__class__.__name__ == "FieldIlluminationDataset":
         # image_loaded_mip = image_loaded[0].max(axis=0) # Maximum intensity projection
         df_file = load.get_images_intensity_profiles(dataset)
-        ANN_id = df_file[(df_file['Field_illumination_image']==int(image_id))]['Intensity_profiles'].values[0]
+        ANN_id = df_file[(df_file['Field_illumination_image'] == int(image_id))]['Intensity_profiles'].values[0]
         file_id = conn.getObject('FileAnnotation', ANN_id).getFile().getId()
         df = load.get_table_originalFile_id(conn, file_id)
         roi_service = conn.getRoiService()
@@ -163,9 +118,9 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
 
 @login_required()
 def center_viewer_project(request, project_id, conn=None, **kwargs):
-    ProjectWrapper = conn.getObject("Project", project_id)
-    study_config = get_file_annotation_project(ProjectWrapper)
-    processed_datasets, unprocessed_datasets = get_dataset_ids_lists(conn, ProjectWrapper)
+    project_wrapper = conn.getObject("Project", project_id)
+    study_config = get_file_annotation_project(project_wrapper)
+    processed_datasets, unprocessed_datasets = get_dataset_ids_lists(conn, project_wrapper)
     df = processed_data_project_view(processed_datasets)
     dash_context = request.session.get("django_plotly_dash", dict())
     dash_context['data'] = df
@@ -183,12 +138,6 @@ def center_viewer_group(request, conn=None, **kwargs):
     group_description = group.getDescription()
     context = {'group_id': group_id, 'group_name': group_name, 'group_description': group_description}
     return render(request, 'metrics/omero_views/center_view_group.html', context)
-
-
-@login_required()
-def center_view_project_yaml(request, project_id, conn=None, **kwargs):
-    project_id = conn.getObject("Project", project_id)
-    collections_mm_p = load.load_project(conn, project_id)
 
 
 @login_required()
