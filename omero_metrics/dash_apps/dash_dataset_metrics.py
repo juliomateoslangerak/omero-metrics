@@ -91,10 +91,10 @@ dash_app_dataset.layout = dmc.MantineProvider([dmc.Container(
                                     dash.dependencies.Output('intensity_profile', 'figure'),
                                     [dash.dependencies.Input('channel_ddm', 'value')])
 def dataset_callback_intensity_map(*args, **kwargs):
-    title = kwargs['session_state']['title']
-    table = kwargs['session_state']['key_values_df']
-    images = kwargs['session_state']['images']
-    df_intensity_profiles = kwargs['session_state']['intensity_profiles']
+    title = kwargs['session_state']['context']['title']
+    table = kwargs['session_state']['context']['key_values_df']
+    images = kwargs['session_state']['context']['images']
+    df_intensity_profiles = kwargs['session_state']['context']['intensity_profiles']
     labels = table.columns[1:].to_list()
     imaaa = images[0, 0, :, :, int(args[0][-1])] / 255
     channel_list = [{'label': labels[i], 'value': f"channel {i}"} for i in range(len(labels))]

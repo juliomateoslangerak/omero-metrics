@@ -3,6 +3,7 @@
 
 import logging
 import mimetypes
+import time
 
 import yaml
 import numpy as np
@@ -85,6 +86,7 @@ def field_illumination_generator(args, microscope_name):
                             name=f"{args['name_dataset']}_{'_'.join(channel_names)}_{dates[dataset_id]}",
                             description=f"An image taken on the {microscope_name} microscope on the {dates[dataset_id]} for QC",
                             channel_names=args["channel_names"][image_id],
+                            acquisition_datetime=datetime.strptime(dates[dataset_id], "%Y-%m-%d"),
                         )
                         for image_id, channel_names in enumerate(args["channel_names"])
                     ]
@@ -134,6 +136,7 @@ def psf_beads_generator(args, microscope_name):
                             name=f"{args['name_dataset']}_{dates[dataset_id]}",
                             description=f"An image taken on the {microscope_name} microscope on the {dates[dataset_id]} for QC",
                             channel_names=args["channel_names"][image_id],
+                            acquisition_datetime=datetime.strptime(dates[dataset_id], "%Y-%m-%d"),
                         )
                         for image_id, channel_names in enumerate(args["channel_names"])
                     ]
@@ -290,6 +293,7 @@ if __name__ == "__main__":
         # conn = BlitzGateway(username, password, host=host, port=port, secure=True)
         conn = BlitzGateway("root", "omero", host="localhost", port=6064, secure=True)
         conn.connect()
+        conn.keepAlive()
 
         generate_users_groups(conn, server_structure["users"], server_structure["microscopes"])
 
@@ -303,6 +307,10 @@ if __name__ == "__main__":
                     datasets=GENERATOR_MAPPER[project["dataset_class"]](project, microscope_name),
                     dataset_class=project["dataset_class"],
                 )
+                time.sleep(60)
+
+                if not conn.keepAlive():
+                    conn.connect()
                 temp_conn = conn.suConn(project["owner"], microscope_name, ttl=300000)
 
                 # We first have to dump the input images so they are annotated with the omero references

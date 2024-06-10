@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import mimetypes
@@ -42,7 +43,7 @@ from omero.model import (
     RoiI,
     enums,
 )
-from omero.rtypes import rdouble, rint, rlong, rstring
+from omero.rtypes import rdouble, rint, rlong, rstring, rtime
 from pandas import DataFrame
 
 logger = logging.getLogger(__name__)
@@ -102,6 +103,17 @@ def get_object_ids_from_url(url: str) -> list[tuple[str, int]]:
     else:
         return [(tail.split("-")[0], int(tail.split("-")[-1]))]
     
+
+def get_omero_obj_id_from_mm_obj(mm_obj: mm_schema.MetricsObject) -> Union[ImageWrapper, DatasetWrapper, ProjectWrapper]:
+    if isinstance(mm_obj, mm_schema.DataReference):
+        return mm_obj.omero_object_id
+    elif isinstance(mm_obj, mm_schema.MetricsObject):
+        return mm_obj.data_reference.omero_object_id
+    elif isinstance(mm_obj, list):
+        return [get_omero_obj_id_from_mm_obj(obj) for obj in mm_obj]
+    else:
+        raise ValueError("Input should be a metrics object or a list of metrics objects")
+
 
 def get_omero_obj_from_mm_obj(conn: BlitzGateway, mm_obj: mm_schema.MetricsObject) -> Union[ImageWrapper, DatasetWrapper, ProjectWrapper]:
     # if not isinstance(mm_obj.omero_object_type, tuple):
@@ -297,7 +309,6 @@ def create_project(conn, name, description=None):
     return new_project
 
 
-
 def create_dataset(
     conn: BlitzGateway,
     dataset_name: str,
@@ -439,6 +450,7 @@ def create_image_from_numpy_array(
     image_name: str,
     image_description: str = None,
     channel_labels: Union[list, tuple] = None,
+    acquisition_datetime: str = None,
     dataset: DatasetWrapper = None,
     source_image_id: int = None,
     channels_list: list[int] = None,
@@ -446,6 +458,7 @@ def create_image_from_numpy_array(
 ) -> ImageWrapper:
     """
     Creates a new image in OMERO from a n dimensional numpy array.
+    :param acquisition_datetime: The acquisition datetime of the image in ISO format
     :param channel_labels: A list of channel labels
     :param force_whole_planes:
     :param channels_list:
@@ -541,7 +554,19 @@ def create_image_from_numpy_array(
     if channel_labels is not None:
         _label_channels(new_image, channel_labels)
 
+    if acquisition_datetime is not None:
+        _update_acquisition_datetime(conn, new_image, acquisition_datetime)
+
     return new_image
+
+
+def _update_acquisition_datetime(conn: BlitzGateway, image: ImageWrapper, acquisition_datetime: str):
+    # image = conn.getObject("Image", image_id)
+    acquisition_datetime = datetime.datetime.fromisoformat(acquisition_datetime)
+    milli_secs = acquisition_datetime.timestamp() * 1000
+    image = conn.getObject("Image", image.getId())
+    image._obj.acquisitionDate = rtime(milli_secs)
+    conn.getUpdateService().saveObject(image._obj, conn.SERVICE_OPTS)
 
 
 def _get_tile_list(zct_list, data_shape, tile_size):
@@ -787,6 +812,37 @@ def create_key_value(
     return map_ann
 
 
+def update_key_value(
+    annotation: MapAnnotationWrapper,
+    updated_annotation: dict,
+    replace=True,
+    annotation_name=None,
+    annotation_description=None,
+    namespace=None,
+):
+    """Update the key-value pairs on a map_annotation. If replace is True, all values will be replaced.
+    """
+    curr_values = dict(annotation.getValue())
+
+    if replace:
+        new_values = updated_annotation
+    else:
+        new_values = curr_values | updated_annotation
+
+    new_values = _dict_to_map(new_values)
+
+    annotation.setValue(new_values)
+
+    if annotation_name is not None:
+        annotation.setName(annotation_name)
+    if annotation_description is not None:
+        annotation.setDescription(annotation_description)
+    if namespace is not None:
+        annotation.setNs(namespace)
+
+    annotation.save()
+
+
 def _create_column(data_type, kwargs):
     column_class = COLUMN_TYPES[data_type]
 
@@ -969,4 +1025,48 @@ def _link_image_to_dataset(conn: BlitzGateway, image: ImageWrapper, dataset: Dat
     link.setChild(ImageI(image.getId(), False))
     conn.getUpdateService().saveObject(link)
 
+
+def del_objects(conn: BlitzGateway,
+                object_ids: list[int],
+                object_types: list,
+                delete_anns: bool = True,
+                delete_children: bool = True,
+                dry_run_first: bool = True):
+    """Delete objects from OMERO"""
+    if dry_run_first:
+        try:
+            conn.deleteObjects(graph_spec="/".join(object_types),
+                               obj_ids=object_ids,
+                               deleteAnns=delete_anns,
+                               deleteChildren=delete_children,
+                               dryRun=True)
+        except Exception as e:
+            logger.error(f"Error during dry run deletion: {e}")
+            return False
+    try:
+        conn.deleteObjects(graph_spec="/".join(object_types),
+                           obj_ids=object_ids,
+                           deleteAnns=delete_anns,
+                           deleteChildren=delete_children,
+                           dryRun=False)
+        return True
+    except Exception as e:
+        logger.error(f"Error during deletion: {e}")
+        return False
+
+
+def del_object(conn: BlitzGateway,
+               object_id: int,
+               object_type: str,
+               delete_anns: bool = True,
+               delete_children: bool = True,
+               dry_run_first: bool = True):
+    return del_objects(
+        conn=conn,
+        object_ids=[object_id],
+        object_types=object_type,
+        delete_anns=delete_anns,
+        delete_children=delete_children,
+        dry_run_first=dry_run_first
+    )
 

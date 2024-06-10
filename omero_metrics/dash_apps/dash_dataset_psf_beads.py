@@ -93,10 +93,10 @@ app.layout = dmc.MantineProvider([
     [dash.dependencies.Input('channel_ddm_psf', 'value'), ])
 def func_psf_callback(*args, **kwargs):
     channel_index = int(args[0].split(" ")[-1])
-    image_o = kwargs['session_state']['image']
+    image_o = kwargs['session_state']['context']['image']
     channels = [f"Channel {i}" for i in range(0, image_o.shape[4])]
     stack_Z = np.max(image_o[0, :, :, :, channel_index], axis=0)
-    bead_properties_df = kwargs['session_state']['bead_properties_df']
+    bead_properties_df = kwargs['session_state']['context']['bead_properties_df']
     df_properties_channel = bead_properties_df[bead_properties_df['channel_nr'] == channel_index][
         ['bead_nr', 'intensity_max',
          'min_intensity_min', 'intensity_std', 'intensity_robust_z_score',
@@ -135,8 +135,8 @@ def callback_mip(*args, **kwargs):
     axis = args[1].split(" ")[-1].lower()
     channel_index = int(args[2].split(" ")[-1])
     options = ['Axis: X', 'Axis: Y', 'Axis: Z']
-    stack = kwargs['session_state']['image'][0, :, :, :, channel_index]
-    bead_properties_df = kwargs['session_state']['bead_properties_df']
+    stack = kwargs['session_state']['context']['image'][0, :, :, :, channel_index]
+    bead_properties_df = kwargs['session_state']['context']['bead_properties_df']
     df_beads_location = bead_properties_df[bead_properties_df['channel_nr'] == channel_index][
         ['channel_nr', 'bead_nr', 'considered_axial_edge', 'z_centroid', 'y_centroid', 'x_centroid']].copy()
     min_dist = 20
@@ -152,7 +152,7 @@ def callback_mip(*args, **kwargs):
 
 
 def line_graph_axis(bead_index, channel_index, axis, kwargs):
-    df_axis = kwargs['session_state'][f'bead_{axis}_profiles_df']
+    df_axis = kwargs['session_state']['context'][f'bead_{axis}_profiles_df']
     df_meta_x = pd.DataFrame(
         data=[[int(col.split("_")[-2]), int(col.split("_")[-4]), col.split("_")[-1], col] for col in
               df_axis.columns], columns=['bead_nb', 'channel_nb', 'type', 'name'])
