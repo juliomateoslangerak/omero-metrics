@@ -37,19 +37,13 @@ def dash_example_1_view(request, conn=None, template_name="metrics/foi_key_measu
 @login_required()
 def session_state_view(request, template_name, **kwargs):
     'Example view that exhibits the use of sessions to store state'
-
     session = request.session
-
     omero_views_count = session.get('django_plotly_dash', {})
-
     ind_use = omero_views_count.get('ind_use', 0)
     ind_use += 1
     omero_views_count['ind_use'] = ind_use
-
     context = {'ind_use': ind_use}
-
     session['django_plotly_dash'] = omero_views_count
-
     return render(request, template_name=template_name, context=context)
 
 
@@ -79,41 +73,16 @@ def image_rois(request, image_id, conn=None, **kwargs):
 
 @login_required()
 def center_viewer_image(request, image_id, conn=None, **kwargs):
-    image = conn.getObject("Image", image_id)
-    image_loaded = load_image(image).array_data
     dash_context = request.session.get("django_plotly_dash", dict())
-    dash_context['ima'] = image_loaded
-    dataset_id = conn.getObject("Image", image_id).getParent().getId()
-    project_id = conn.getObject("Dataset", dataset_id).getParent().getId()
-    collections_mm_p = load.load_project(conn, project_id)
-    dataset = load.get_dataset_by_id(collections_mm_p, int(dataset_id))
-    if dataset.__class__.__name__ == "PSFBeadsDataset":
-        bead_properties_df = get_table_File_id(conn,
-                                               dataset.output.bead_properties.data_reference.omero_object_id)
-        dash_context['bead_properties_df'] = bead_properties_df
-        request.session['django_plotly_dash'] = dash_context
-        return render(request, 'metrics/omero_views/center_view_image_psf.html')
-    elif dataset.__class__.__name__ == "FieldIlluminationDataset":
-        # image_loaded_mip = image_loaded[0].max(axis=0) # Maximum intensity projection
-        df_file = load.get_images_intensity_profiles(dataset)
-        ANN_id = df_file[(df_file['Field_illumination_image'] == int(image_id))]['Intensity_profiles'].values[0]
-        file_id = conn.getObject('FileAnnotation', ANN_id).getFile().getId()
-        df = load.get_table_originalFile_id(conn, file_id)
-        roi_service = conn.getRoiService()
-        result = roi_service.findByImage(int(image_id), None, conn.SERVICE_OPTS)
-        shapes_rectangle, shapes_line, shapes_point = get_rois_omero(result)
-        df_lines_omero = get_info_roi_lines(shapes_line)
-        df_rects_omero = get_info_roi_rectangles(shapes_rectangle)
-        df_points_omero = get_info_roi_points(shapes_point)
-
-        dash_context['df_lines'] = df_lines_omero
-        dash_context['df_rects'] = df_rects_omero
-        dash_context['df_points'] = df_points_omero
-        dash_context['df_intensity_profiles'] = df
-        request.session['django_plotly_dash'] = dash_context
-        return render(request, 'metrics/omero_views/center_view_image.html', {'image_id': image_id})
-    else:
-        return render(request, 'metrics/omero_views/center_view_unknown_analysis_type.html')
+    image_wrapper = conn.getObject("Image", image_id)
+    dm = DatasetManager(conn, image_wrapper)
+    dm.load_data()
+    dm.is_processed()
+    dm.visualize_data()
+    dash_context['context'] = dm.context
+    template = dm.template
+    request.session['django_plotly_dash'] = dash_context
+    return render(request, template_name=template)
 
 
 @login_required()
@@ -141,10 +110,12 @@ def center_viewer_group(request, conn=None, **kwargs):
 
 
 @login_required()
-def center_viewer_dataset_yaml(request, dataset_id, conn=None, **kwargs):
+def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
     dash_context = request.session.get("django_plotly_dash", dict())
-    dm = DatasetManager(conn, int(dataset_id))
+    dataset_wrapper = conn.getObject("Dataset", dataset_id)
+    dm = DatasetManager(conn, dataset_wrapper)
     dm.load_data()
+    dm.is_processed()
     dm.visualize_data()
     dash_context['context'] = dm.context
     template = dm.template

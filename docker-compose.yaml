@@ -58,7 +58,6 @@ services:
       - omero
     ports:
       - "5080:4080"
-    command: /bin/sh -c '/opt/omero/web/venv3/bin/python /opt/omero/web/venv3/lib/python3.10/site-packages/omeroweb/manage.py migrate'
 
 networks:
   omero:

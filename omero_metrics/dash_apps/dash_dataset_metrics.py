@@ -87,15 +87,14 @@ dash_app_dataset.layout = dmc.MantineProvider([dmc.Container(
 def dataset_callback_intensity_map(*args, **kwargs):
     title = kwargs['session_state']['context']['title']
     table = kwargs['session_state']['context']['key_values_df']
-    images = kwargs['session_state']['context']['images']
+    images = kwargs['session_state']['context']['image']
     df_intensity_profiles = kwargs['session_state']['context']['intensity_profiles']
     labels = table.columns[1:].to_list()
     imaaa = images[0, 0, :, :, int(args[0][-1])] / 255
     channel_list = [{'label': labels[i], 'value': f"channel {i}"} for i in range(len(labels))]
     fig = px.imshow(imaaa, zmin=imaaa.min(), zmax=imaaa.max(), color_continuous_scale="gray")
     C = 'Ch0' + args[0][-1]
-    df_profile = df_intensity_profiles[df_intensity_profiles.columns[df_intensity_profiles.columns.str.startswith(C)]
-    ].copy()
+    df_profile = df_intensity_profiles[df_intensity_profiles.columns[df_intensity_profiles.columns.str.startswith(C)]].copy()
     df_profile.columns = df_profile.columns.str.replace("Ch\d{2}_", "", regex=True)
     df_profile.columns = df_profile.columns.str.replace("_", " ", regex=True)
     df_profile.columns = df_profile.columns.str.title()
