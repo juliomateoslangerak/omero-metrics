@@ -6,12 +6,13 @@ from django_plotly_dash import (
 )
 import plotly.express as px
 import plotly.graph_objs as go
-from ..tools.data_preperation import\
-    add_rect_rois, add_line_rois, add_point_rois
-
-colorscales = (
-    px.colors.named_colorscales()
+from ..tools.data_preperation import (
+    add_rect_rois,
+    add_line_rois,
+    add_point_rois,
 )
+
+colorscales = px.colors.named_colorscales()
 
 dashboard_name = "omero_image_dash"
 dash_app_image = DjangoDash(
@@ -37,9 +38,7 @@ dash_app_image.layout = dmc.MantineProvider(
                             [
                                 html.H3(
                                     "Select Channel",
-                                    style={
-                                        "color": "#63aa47"
-                                    },
+                                    style={"color": "#63aa47"},
                                 ),
                                 dcc.Dropdown(
                                     id="my-dropdown1",
@@ -53,9 +52,7 @@ dash_app_image.layout = dmc.MantineProvider(
                             [
                                 html.H3(
                                     "Select The Color Scale",
-                                    style={
-                                        "color": "#63aa47"
-                                    },
+                                    style={"color": "#63aa47"},
                                 ),
                                 dcc.Dropdown(
                                     id="dropdownColorScale",
@@ -69,9 +66,7 @@ dash_app_image.layout = dmc.MantineProvider(
                             [
                                 html.H3(
                                     "Add Rois",
-                                    style={
-                                        "color": "#63aa47"
-                                    },
+                                    style={"color": "#63aa47"},
                                 ),
                                 dcc.RadioItems(
                                     options=[
@@ -136,19 +131,11 @@ dash_app_image.layout = dmc.MantineProvider(
 
 
 @dash_app_image.expanded_callback(
-    dash.dependencies.Output(
-        "rois-graph", "figure"
-    ),
-    dash.dependencies.Output(
-        "my-dropdown1", "options"
-    ),
+    dash.dependencies.Output("rois-graph", "figure"),
+    dash.dependencies.Output("my-dropdown1", "options"),
     [
-        dash.dependencies.Input(
-            "my-dropdown1", "value"
-        ),
-        dash.dependencies.Input(
-            "rois-radio", "value"
-        ),
+        dash.dependencies.Input("my-dropdown1", "value"),
+        dash.dependencies.Input("rois-radio", "value"),
         dash.dependencies.Input(
             "dropdownColorScale",
             "value",
@@ -156,34 +143,13 @@ dash_app_image.layout = dmc.MantineProvider(
     ],
 )
 def callback_test4(*args, **kwargs):
-    image_omero = kwargs[
-        "session_state"
-    ]["context"]["image"]
-    imaaa = (
-        image_omero[
-            0, 0, :, :, int(args[0][-1])
-        ]
-        / 255
-    )
-    df_rects = kwargs["session_state"][
-        "context"
-    ]["df_rects"]
-    df_lines = kwargs["session_state"][
-        "context"
-    ]["df_lines"]
-    df_points = kwargs["session_state"][
-        "context"
-    ]["df_points"]
-    df_point_channel = df_points[
-        df_points["C"]
-        == int(args[0][-1])
-    ].copy()
-    channel_list = [
-        f"channel {i}"
-        for i in range(
-            0, image_omero.shape[4]
-        )
-    ]
+    image_omero = kwargs["session_state"]["context"]["image"]
+    imaaa = image_omero[0, 0, :, :, int(args[0][-1])] / 255
+    df_rects = kwargs["session_state"]["context"]["df_rects"]
+    df_lines = kwargs["session_state"]["context"]["df_lines"]
+    df_points = kwargs["session_state"]["context"]["df_points"]
+    df_point_channel = df_points[df_points["C"] == int(args[0][-1])].copy()
+    channel_list = [f"channel {i}" for i in range(0, image_omero.shape[4])]
     fig = px.imshow(
         imaaa,
         zmin=0,
@@ -196,12 +162,8 @@ def callback_test4(*args, **kwargs):
         zmax=255,
         color_continuous_scale=args[2],
     )
-    fig1 = add_rect_rois(
-        go.Figure(fig1), df_rects
-    )
-    fig1 = add_line_rois(
-        go.Figure(fig1), df_lines
-    )
+    fig1 = add_rect_rois(go.Figure(fig1), df_rects)
+    fig1 = add_line_rois(go.Figure(fig1), df_lines)
     fig1 = add_point_rois(
         go.Figure(fig1),
         df_point_channel,
@@ -215,41 +177,23 @@ def callback_test4(*args, **kwargs):
 
 
 @dash_app_image.expanded_callback(
-    dash.dependencies.Output(
-        "intensity_profiles", "figure"
-    ),
-    [
-        dash.dependencies.Input(
-            "my-dropdown1", "value"
-        )
-    ],
+    dash.dependencies.Output("intensity_profiles", "figure"),
+    [dash.dependencies.Input("my-dropdown1", "value")],
 )
 def callback_test5(*args, **kwargs):
-    df_intensity_profiles = kwargs[
-        "session_state"
-    ]["context"][
+    df_intensity_profiles = kwargs["session_state"]["context"][
         "df_intensity_profiles"
     ]
     ch = "ch0" + args[0][-1]
     df_profile = df_intensity_profiles[
         df_intensity_profiles.columns[
-            df_intensity_profiles.columns.str.startswith(
-                ch
-            )
+            df_intensity_profiles.columns.str.startswith(ch)
         ]
     ].copy()
-    df_profile.columns = (
-        df_profile.columns.str.replace(
-            r"ch\d{2}_", "", regex=True
-        )
+    df_profile.columns = df_profile.columns.str.replace(
+        r"ch\d{2}_", "", regex=True
     )
-    df_profile.columns = (
-        df_profile.columns.str.replace(
-            "_", " ", regex=True
-        )
-    )
-    df_profile.columns = (
-        df_profile.columns.str.title()
-    )
+    df_profile.columns = df_profile.columns.str.replace("_", " ", regex=True)
+    df_profile.columns = df_profile.columns.str.title()
     fig = px.line(df_profile)
     return fig

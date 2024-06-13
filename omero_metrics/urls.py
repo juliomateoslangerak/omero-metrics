@@ -15,15 +15,17 @@ from omero_metrics.dash_apps import (
     plotly_apps,
 )
 
-from .views import (index,
-                    dash_example_1_view,
-                    web_gateway_templates,
-                    webclient_templates,
-                    center_viewer_project,
-                    center_viewer_dataset,
-                    center_viewer_group,
-                    center_viewer_image,
-                    image_rois)
+from .views import (
+    index,
+    dash_example_1_view,
+    web_gateway_templates,
+    webclient_templates,
+    center_viewer_project,
+    center_viewer_dataset,
+    center_viewer_group,
+    center_viewer_image,
+    image_rois,
+)
 
 urlpatterns = [
     re_path(
@@ -33,9 +35,7 @@ urlpatterns = [
     ),
     re_path(
         r"^demo-one",
-        TemplateView.as_view(
-            template_name="metrics/demo_one.html"
-        ),
+        TemplateView.as_view(template_name="metrics/demo_one.html"),
         name="demo-one",
     ),
     re_path(
@@ -83,13 +83,15 @@ urlpatterns = [
 ]
 logger = logging.getLogger(__name__)
 
-list_test = [dash_apps,
-             dash_dataset_metrics,
-             dash_dataset_psf_beads,
-             dash_image,
-             dash_image_psf_beads,
-             dash_project,
-             foi_apps,
-             plotly_apps]
+list_test = [
+    dash_apps,
+    dash_dataset_metrics,
+    dash_dataset_psf_beads,
+    dash_image,
+    dash_image_psf_beads,
+    dash_project,
+    foi_apps,
+    plotly_apps,
+]
 
 logger.info(len(list_test))

@@ -35,8 +35,8 @@ from django_plotly_dash import (
 )
 
 df = pd.read_csv(
-    "https://raw.githubusercontent.com/plotl" +
-    "y/datasets/master/gapminderDataFiveYear.csv"
+    "https://raw.githubusercontent.com/plotl"
+    + "y/datasets/master/gapminderDataFiveYear.csv"
 )
 
 app = DjangoDash("SimpleExample")
@@ -70,12 +70,7 @@ app.layout = html.Div(
             df["year"].max(),
             step=None,
             value=df["year"].min(),
-            marks={
-                str(year): str(year)
-                for year in df[
-                    "year"
-                ].unique()
-            },
+            marks={str(year): str(year) for year in df["year"].unique()},
             id="year-slider",
         ),
     ]
@@ -83,19 +78,11 @@ app.layout = html.Div(
 
 
 @app.callback(
-    dash.dependencies.Output(
-        "graph-with-slider", "figure"
-    ),
-    [
-        dash.dependencies.Input(
-            "year-slider", "value"
-        )
-    ],
+    dash.dependencies.Output("graph-with-slider", "figure"),
+    [dash.dependencies.Input("year-slider", "value")],
 )
 def update_figure(selected_year):
-    filtered_df = df[
-        df.year == selected_year
-    ]
+    filtered_df = df[df.year == selected_year]
 
     fig = px.scatter(
         filtered_df,
@@ -108,16 +95,12 @@ def update_figure(selected_year):
         size_max=55,
     )
 
-    fig.update_layout(
-        transition_duration=500
-    )
+    fig.update_layout(transition_duration=500)
 
     return fig
 
 
-a2 = DjangoDash(
-    "Ex2", serve_locally=True
-)
+a2 = DjangoDash("Ex2", serve_locally=True)
 
 a2.layout = html.Div(
     [
@@ -142,51 +125,27 @@ a2.layout = html.Div(
 
 
 @a2.expanded_callback(
-    dash.dependencies.Output(
-        "output-one", "children"
-    ),
-    [
-        dash.dependencies.Input(
-            "dropdown-one", "value"
-        )
-    ],
+    dash.dependencies.Output("output-one", "children"),
+    [dash.dependencies.Input("dropdown-one", "value")],
 )
 def callback_c(*args, **kwargs):
     "Update the output following a change of the input selection"
     # da = kwargs['dash_app']
 
-    session_state = kwargs[
-        "session_state"
-    ]
+    session_state = kwargs["session_state"]
 
-    calls_so_far = session_state.get(
-        "calls_so_far", 0
-    )
-    session_state["calls_so_far"] = (
-        calls_so_far + 1
-    )
+    calls_so_far = session_state.get("calls_so_far", 0)
+    session_state["calls_so_far"] = calls_so_far + 1
 
-    user_counts = session_state.get(
-        "user_counts", None
-    )
+    user_counts = session_state.get("user_counts", None)
     user_name = str(kwargs["user"])
     if user_counts is None:
         user_counts = {user_name: 1}
-        session_state["user_counts"] = (
-            user_counts
-        )
+        session_state["user_counts"] = user_counts
     else:
-        user_counts[user_name] = (
-            user_counts.get(
-                user_name, 0
-            )
-            + 1
-        )
+        user_counts[user_name] = user_counts.get(user_name, 0) + 1
 
-    return (
-        "Args are [%s] and kwargs are %s"
-        % (",".join(args), str(kwargs))
-    )
+    return "Args are [%s] and kwargs are %s" % (",".join(args), str(kwargs))
 
 
 liveIn = DjangoDash(

@@ -7,9 +7,7 @@ from django_plotly_dash import (
 )
 
 dashboard_name = "omero_dataset_metrics"
-dash_app_dataset = DjangoDash(
-    name=dashboard_name
-)
+dash_app_dataset = DjangoDash(name=dashboard_name)
 
 dash_app_dataset.layout = dmc.MantineProvider(
     [
@@ -19,9 +17,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                     dmc.Text(
                         id="title",
                         c="#189A35",
-                        style={
-                            "fontSize": 30
-                        },
+                        style={"fontSize": 30},
                     )
                 ),
                 dmc.Grid(
@@ -30,9 +26,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                             [
                                 html.H3(
                                     "Select Channel",
-                                    style={
-                                        "color": "#63aa47"
-                                    },
+                                    style={"color": "#63aa47"},
                                 ),
                                 dcc.Dropdown(
                                     value="Channel 0",
@@ -110,9 +104,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                                 "fontWeight": "bold",
                                                 "fontSize": 15,
                                             },
-                                            style_table={
-                                                "overflowX": "auto"
-                                            },
+                                            style_table={"overflowX": "auto"},
                                         ),
                                     ],
                                     span="6",
@@ -154,49 +146,22 @@ dash_app_dataset.layout = dmc.MantineProvider(
 
 
 @dash_app_dataset.expanded_callback(
-    dash.dependencies.Output(
-        "dataset_image_graph", "figure"
-    ),
-    dash.dependencies.Output(
-        "channel_ddm", "options"
-    ),
-    dash.dependencies.Output(
-        "title", "children"
-    ),
-    dash.dependencies.Output(
-        "table", "data"
-    ),
-    dash.dependencies.Output(
-        "intensity_profile", "figure"
-    ),
-    [
-        dash.dependencies.Input(
-            "channel_ddm", "value"
-        )
-    ],
+    dash.dependencies.Output("dataset_image_graph", "figure"),
+    dash.dependencies.Output("channel_ddm", "options"),
+    dash.dependencies.Output("title", "children"),
+    dash.dependencies.Output("table", "data"),
+    dash.dependencies.Output("intensity_profile", "figure"),
+    [dash.dependencies.Input("channel_ddm", "value")],
 )
-def dataset_callback_intensity_map(
-        *args, **kwargs
-):
-    title = kwargs["session_state"][
-        "context"
-    ]["title"]
-    table = kwargs["session_state"][
-        "context"
-    ]["key_values_df"]
-    images = kwargs["session_state"][
-        "context"
-    ]["image"]
-    df_intensity_profiles = kwargs[
-        "session_state"
-    ]["context"]["intensity_profiles"]
+def dataset_callback_intensity_map(*args, **kwargs):
+    title = kwargs["session_state"]["context"]["title"]
+    table = kwargs["session_state"]["context"]["key_values_df"]
+    images = kwargs["session_state"]["context"]["image"]
+    df_intensity_profiles = kwargs["session_state"]["context"][
+        "intensity_profiles"
+    ]
     labels = table.columns[1:].to_list()
-    imaaa = (
-        images[
-            0, 0, :, :, int(args[0][-1])
-        ]
-        / 255
-    )
+    imaaa = images[0, 0, :, :, int(args[0][-1])] / 255
     channel_list = [
         {
             "label": labels[i],
@@ -213,27 +178,15 @@ def dataset_callback_intensity_map(
     C = "Ch0" + args[0][-1]
     df_profile = df_intensity_profiles[
         df_intensity_profiles.columns[
-            df_intensity_profiles.columns.str.startswith(
-                C
-            )
+            df_intensity_profiles.columns.str.startswith(C)
         ]
     ].copy()
-    df_profile.columns = (
-        df_profile.columns.str.replace(
-            r"Ch\d{2}_", "", regex=True
-        )
+    df_profile.columns = df_profile.columns.str.replace(
+        r"Ch\d{2}_", "", regex=True
     )
-    df_profile.columns = (
-        df_profile.columns.str.replace(
-            "_", " ", regex=True
-        )
-    )
-    df_profile.columns = (
-        df_profile.columns.str.title()
-    )
-    extracted_table_cols = channel_list[
-        int(args[0][-1])
-    ]["label"]
+    df_profile.columns = df_profile.columns.str.replace("_", " ", regex=True)
+    df_profile.columns = df_profile.columns.str.title()
+    extracted_table_cols = channel_list[int(args[0][-1])]["label"]
     table_filtered = table[
         [
             "Measurements",
@@ -250,8 +203,6 @@ def dataset_callback_intensity_map(
         fig,
         channel_list,
         title,
-        table_filtered.to_dict(
-            "records"
-        ),
+        table_filtered.to_dict("records"),
         fig_ip,
     )

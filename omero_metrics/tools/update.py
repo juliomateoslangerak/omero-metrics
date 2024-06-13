@@ -1,10 +1,7 @@
 from typing import Union
 
 import microscopemetrics_schema.datamodel as mm_schema
-from omero.gateway import (
-    BlitzGateway,
-    MapAnnotationWrapper
-)
+from omero.gateway import BlitzGateway, MapAnnotationWrapper
 
 from omero_metrics.tools import (
     omero_tools,
@@ -13,25 +10,17 @@ from omero_metrics.tools import (
 
 def update_key_value(
     conn: BlitzGateway,
-    new_key_values: Union[
-        dict, mm_schema.KeyValues
-    ],
-    target_key_values: Union[
-        int, MapAnnotationWrapper
-    ],
+    new_key_values: Union[dict, mm_schema.KeyValues],
+    target_key_values: Union[int, MapAnnotationWrapper],
     replace: bool,
     new_name: str = None,
     new_description: str = None,
     new_namespace: str = None,
 ):
-    if isinstance(
-        target_key_values, int
-    ):
-        target_key_values = (
-            conn.getObject(
-                "MapAnnotation",
-                target_key_values,
-            )
+    if isinstance(target_key_values, int):
+        target_key_values = conn.getObject(
+            "MapAnnotation",
+            target_key_values,
         )
 
     omero_tools.update_key_value(

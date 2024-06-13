@@ -21,9 +21,7 @@ def get_intensity_profile(imaaa):
     rb = imaaa[:, -1]
     lb = imaaa[:, 0]
     dr = np.fliplr(imaaa).diagonal()
-    dl = np.fliplr(
-        imaa_fliped
-    ).diagonal()
+    dl = np.fliplr(imaa_fliped).diagonal()
     df = pd.DataFrame(
         {
             "Right Bottom": rb,
@@ -35,9 +33,7 @@ def get_intensity_profile(imaaa):
     return df
 
 
-def add_rect_rois(
-        fig: go.Figure, df: pd.DataFrame
-) -> go.Figure:
+def add_rect_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
     for i, row in df.iterrows():
         fig.add_shape(
             go.layout.Shape(
@@ -57,9 +53,7 @@ def add_rect_rois(
     return fig
 
 
-def add_line_rois(
-        fig: go.Figure, df: pd.DataFrame
-) -> go.Figure:
+def add_line_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
     for i, row in df.iterrows():
         fig.add_shape(
             go.layout.Shape(
@@ -80,9 +74,7 @@ def add_line_rois(
     return fig
 
 
-def add_point_rois(
-        fig: go.Figure, df: pd.DataFrame
-) -> go.Figure:
+def add_point_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
     fig.add_trace(
         go.Scatter(
             x=df.X,
@@ -100,80 +92,34 @@ def get_rois_omero(result):
     for roi in result.rois:
         for s in roi.copyShapes():
             shape = {}
-            shape["id"] = (
-                s.getId().getValue()
-            )
+            shape["id"] = s.getId().getValue()
             # shape["theT"] = s.getTheT().getValue()
             # shape["theZ"] = s.getTheZ().getValue()
             if s.getTextValue():
-                shape["textValue"] = (
-                    s.getTextValue().getValue()
-                )
-            if (
-                    s.__class__.__name__
-                    == "RectangleI"
-            ):
-                shape["type"] = (
-                    "Rectangle"
-                )
-                shape["x"] = (
-                    s.getX().getValue()
-                )
-                shape["y"] = (
-                    s.getY().getValue()
-                )
-                shape["w"] = (
-                    s.getWidth().getValue()
-                )
-                shape["h"] = (
-                    s.getHeight().getValue()
-                )
-                shapes_rectangle[
-                    s.getId().getValue()
-                ] = shape
-            elif (
-                    s.__class__.__name__
-                    == "LineI"
-            ):
+                shape["textValue"] = s.getTextValue().getValue()
+            if s.__class__.__name__ == "RectangleI":
+                shape["type"] = "Rectangle"
+                shape["x"] = s.getX().getValue()
+                shape["y"] = s.getY().getValue()
+                shape["w"] = s.getWidth().getValue()
+                shape["h"] = s.getHeight().getValue()
+                shapes_rectangle[s.getId().getValue()] = shape
+            elif s.__class__.__name__ == "LineI":
                 shape["type"] = "Line"
-                shape["x1"] = (
-                    s.getX1().getValue()
-                )
-                shape["x2"] = (
-                    s.getX2().getValue()
-                )
-                shape["y1"] = (
-                    s.getY1().getValue()
-                )
-                shape["y2"] = (
-                    s.getY2().getValue()
-                )
+                shape["x1"] = s.getX1().getValue()
+                shape["x2"] = s.getX2().getValue()
+                shape["y1"] = s.getY1().getValue()
+                shape["y2"] = s.getY2().getValue()
 
-                shapes_line[
-                    s.getId().getValue()
-                ] = shape
-            elif (
-                    s.__class__.__name__
-                    == "PointI"
-            ):
+                shapes_line[s.getId().getValue()] = shape
+            elif s.__class__.__name__ == "PointI":
                 shape["type"] = "Point"
-                shape["x"] = (
-                    s.getX().getValue()
-                )
-                shape["y"] = (
-                    s.getY().getValue()
-                )
+                shape["x"] = s.getX().getValue()
+                shape["y"] = s.getY().getValue()
                 # shape['z'] = s.getZ().getValue()
-                shape["channel"] = (
-                    s.getTheC().getValue()
-                )
-                shapes_point[
-                    s.getId().getValue()
-                ] = shape
-            elif (
-                    s.__class__.__name__
-                    == "PolygonI"
-            ):
+                shape["channel"] = s.getTheC().getValue()
+                shapes_point[s.getId().getValue()] = shape
+            elif s.__class__.__name__ == "PolygonI":
                 continue
     return (
         shapes_rectangle,
@@ -247,41 +193,29 @@ def get_info_roi_rectangles(shape_dict):
     return df
 
 
-def get_dataset_ids_lists(
-        conn, project
-):
+def get_dataset_ids_lists(conn, project):
     """
     Get the processed and unprocessed dataset ids for a project
     """
     processed_datasets = []
     unprocessed_datasets = []
-    for (
-            dataset
-    ) in project.listChildren():
+    for dataset in project.listChildren():
         try:
             dataset.getAnnotation().getNs()
-            processed_datasets.append(
-                dataset.getId()
-            )
+            processed_datasets.append(dataset.getId())
         except AttributeError:
-            unprocessed_datasets.append(
-                dataset.getId()
-            )
+            unprocessed_datasets.append(dataset.getId())
     return (
         processed_datasets,
         unprocessed_datasets,
     )
 
 
-def get_image_list_by_dataset_id(
-        conn, dataset_id
-):
+def get_image_list_by_dataset_id(conn, dataset_id):
     """
     Get the list of images for a dataset
     """
-    dataset = conn.getObject(
-        "Dataset", dataset_id
-    )
+    dataset = conn.getObject("Dataset", dataset_id)
     images = []
     for image in dataset.listChildren():
         images.append(image.getId())
@@ -289,25 +223,16 @@ def get_image_list_by_dataset_id(
 
 
 def get_dataset_mapAnnotation(
-        datasetWrapper,
+    datasetWrapper,
 ):
     """
     Get the mapAnnotation for a dataset
     """
 
     try:
-        for (
-                i
-        ) in (
-                datasetWrapper.listAnnotations()
-        ):
-            if (
-                    "FieldIlluminationKeyValues"
-                    in i.getNs()
-            ):
-                table = dict(
-                    i.getValue()
-                )
+        for i in datasetWrapper.listAnnotations():
+            if "FieldIlluminationKeyValues" in i.getNs():
+                table = dict(i.getValue())
                 df = pd.DataFrame(
                     table.items(),
                     columns=[
@@ -316,13 +241,8 @@ def get_dataset_mapAnnotation(
                     ],
                 )
                 break
-            elif (
-                    "PSFBeadsKeyValues"
-                    in i.getNs()
-            ):
-                table = dict(
-                    i.getValue()
-                )
+            elif "PSFBeadsKeyValues" in i.getNs():
+                table = dict(i.getValue())
                 df = pd.DataFrame(
                     table.items(),
                     columns=[
@@ -337,41 +257,31 @@ def get_dataset_mapAnnotation(
 
 
 def read_config_from_file_ann(
-        file_annotation,
+    file_annotation,
 ):
     return yaml.load(
-        file_annotation.getFileInChunks()
-        .__next__()
-        .decode(),
+        file_annotation.getFileInChunks().__next__().decode(),
         Loader=yaml.SafeLoader,
     )
 
 
 def get_file_annotation_project(
-        projectWrapper,
+    projectWrapper,
 ):
     study_config = None
-    for (ann) in (projectWrapper.listAnnotations()):
-        if (type(ann) == gateway.FileAnnotationWrapper
-                and ann.getFile().getName() == "study_config.yaml"):
-            study_config = read_config_from_file_ann(
-                ann
-            )
+    for ann in projectWrapper.listAnnotations():
+        if (
+            type(ann) == gateway.FileAnnotationWrapper
+            and ann.getFile().getName() == "study_config.yaml"
+        ):
+            study_config = read_config_from_file_ann(ann)
     return study_config
 
 
 def get_analysis_type(projectWrapper):
-    study_config = (
-        get_file_annotation_project(
-            projectWrapper
-        )
-    )
+    study_config = get_file_annotation_project(projectWrapper)
     try:
-        analysis_type = next(
-            iter(
-                study_config["analysis"]
-            )
-        )
+        analysis_type = next(iter(study_config["analysis"]))
     except:
         analysis_type = None
     return analysis_type
@@ -383,70 +293,46 @@ def random_date(start, end):
     objects.
     """
     delta = end - start
-    int_delta = (
-                        delta.days * 24 * 60 * 60
-                ) + delta.seconds
+    int_delta = (delta.days * 24 * 60 * 60) + delta.seconds
     random_second = randrange(int_delta)
-    return start + timedelta(
-        seconds=random_second
-    )
+    return start + timedelta(seconds=random_second)
 
 
-def get_table_originalFile_id(
-        conn, file_id
-):
+def get_table_originalFile_id(conn, file_id):
     ctx = conn.createServiceOptsDict()
     ctx.setOmeroGroup("-1")
     r = conn.getSharedResources()
     t = r.openTable(
-        omero.model.OriginalFileI(
-            file_id
-        ),
+        omero.model.OriginalFileI(file_id),
         ctx,
     )
-    data_buffer = (
-        collections.defaultdict(list)
-    )
+    data_buffer = collections.defaultdict(list)
     heads = t.getHeaders()
     target_cols = range(len(heads))
     index_buffer = []
     num_rows = t.getNumberOfRows()
     for start in range(0, num_rows):
-        data = t.read(
-            target_cols, start, start
-        )
+        data = t.read(target_cols, start, start)
         for col in data.columns:
-            data_buffer[
-                col.name
-            ] += col.values
+            data_buffer[col.name] += col.values
         index_buffer += data.rowNumbers
-    df = pd.DataFrame.from_dict(
-        data_buffer
-    )
-    df.index = index_buffer[0: len(df)]
+    df = pd.DataFrame.from_dict(data_buffer)
+    df.index = index_buffer[0 : len(df)]
     return df
 
 
 def getOriginalFile_id(dataset):
     id = None
-    for (
-            ann
-    ) in dataset.listAnnotations():
-        if (
-                type(ann)
-                == gateway.FileAnnotationWrapper
-        ):
-            if (
-                    type(ann.getFile())
-                    == gateway.OriginalFileWrapper
-            ):
-                id = (ann.getFile().getId())
+    for ann in dataset.listAnnotations():
+        if type(ann) == gateway.FileAnnotationWrapper:
+            if type(ann.getFile()) == gateway.OriginalFileWrapper:
+                id = ann.getFile().getId()
                 break
     return id
 
 
 def processed_data_project_view(
-        processed_list,
+    processed_list,
 ):
     d1 = datetime.strptime(
         "1/1/2000 1:30 PM",
@@ -457,30 +343,19 @@ def processed_data_project_view(
         "%m/%d/%Y %I:%M %p",
     )
     df = pd.DataFrame(
-        [
-            [random_date(d1, d2), i]
-            for i in processed_list
-        ],
+        [[random_date(d1, d2), i] for i in processed_list],
         columns=["Date", "Dataset_ID"],
     )
     return df
 
 
 def get_originalFile_id_by_image_id(
-        dataset,
+    dataset,
 ):
     list_file = []
-    for (
-            ann
-    ) in dataset.listAnnotations():
-        if (
-                type(ann)
-                == gateway.FileAnnotationWrapper
-        ):
-            if (
-                    type(ann.getFile())
-                    == gateway.OriginalFileWrapper
-            ):
+    for ann in dataset.listAnnotations():
+        if type(ann) == gateway.FileAnnotationWrapper:
+            if type(ann.getFile()) == gateway.OriginalFileWrapper:
                 list_file.append(
                     [
                         ann.getFile().getId(),
@@ -490,9 +365,7 @@ def get_originalFile_id_by_image_id(
     return list_file
 
 
-def get_intensity_map_image(
-        image_name, list_file
-):
+def get_intensity_map_image(image_name, list_file):
     for file_id, name in list_file:
         if image_name in name:
             return file_id
@@ -517,27 +390,17 @@ def fig_mip(mip_x, mip_y, mip_z, title):
             "MIP Z axis",
         ),
     )
-    fig = fig.add_trace(
-        mip_x.data[0], row=1, col=1
-    )
-    fig = fig.add_trace(
-        mip_y.data[0], row=1, col=2
-    )
-    fig = fig.add_trace(
-        mip_z.data[0], row=2, col=1
-    )
+    fig = fig.add_trace(mip_x.data[0], row=1, col=1)
+    fig = fig.add_trace(mip_y.data[0], row=1, col=2)
+    fig = fig.add_trace(mip_z.data[0], row=2, col=1)
     fig = fig.update_layout(
         title_text=title,
-        coloraxis=dict(
-            colorscale="hot"
-        ),
+        coloraxis=dict(colorscale="hot"),
     )
     return fig
 
 
-def mip_graphs(
-        x0, xf, y0, yf, z, stack
-):
+def mip_graphs(x0, xf, y0, yf, z, stack):
     image_bead = stack[:, y0:yf, x0:xf]
     z_ima = stack[z, y0:yf, x0:xf]
     image_x = np.max(image_bead, axis=2)
@@ -566,27 +429,19 @@ def mip_graphs(
     return mip_x, mip_y, mip_z
 
 
-def crop_bead_index(
-        bead, min_dist, stack
-):
+def crop_bead_index(bead, min_dist, stack):
     x = bead["x_centroid"].values[0]
     y = bead["y_centroid"].values[0]
     z = bead["z_centroid"].values[0]
     x0 = max(0, x - min_dist)
     y0 = max(0, y - min_dist)
-    xf = min(
-        stack.shape[2], x + min_dist
-    )
-    yf = min(
-        stack.shape[1], y + min_dist
-    )
+    xf = min(stack.shape[2], x + min_dist)
+    yf = min(stack.shape[1], y + min_dist)
     return x0, xf, y0, yf, z
 
 
 def image_3d_chart(image_bead):
-    image_bead = (
-            image_bead / image_bead.max()
-    )
+    image_bead = image_bead / image_bead.max()
     lz, ly, lx = image_bead.shape
     Z, Y, X = np.mgrid[:lz, :ly, :lx]
     fig = go.Figure(

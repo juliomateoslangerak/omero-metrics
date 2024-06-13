@@ -84,41 +84,25 @@ class DatasetManager:
     def __init__(
         self,
         conn: BlitzGateway,
-        omero_object: Union[
-            DatasetWrapper, ImageWrapper
-        ],
+        omero_object: Union[DatasetWrapper, ImageWrapper],
     ):
         self._conn = conn
-        if isinstance(
-            omero_object, DatasetWrapper
-        ):
-            self.omero_dataset = (
-                omero_object
-            )
+        if isinstance(omero_object, DatasetWrapper):
+            self.omero_dataset = omero_object
             self.data_type = "Dataset"
             self.load_images = True
-            self.omero_object = (
-                omero_object
-            )
-        elif isinstance(
-            omero_object, ImageWrapper
-        ):
-            self.omero_dataset = (
-                omero_object.getParent()
-            )
+            self.omero_object = omero_object
+        elif isinstance(omero_object, ImageWrapper):
+            self.omero_dataset = omero_object.getParent()
             self.data_type = "Image"
             self.load_images = False
-            self.omero_object = (
-                omero_object
-            )
+            self.omero_object = omero_object
         else:
             raise ValueError(
                 "datasets must be a DatasetWrapper or a dataset id"
             )
 
-        self.omero_project = (
-            self.omero_dataset.getParent()
-        )
+        self.omero_project = self.omero_dataset.getParent()
         self.mm_dataset = None
         self.analysis_config = None
         self.analysis_config_id = None
@@ -126,46 +110,29 @@ class DatasetManager:
         self.template = None
         self.context = None
         self.processed = False
-        self.microscope = (
-            mm_schema.Microscope()
-        )
+        self.microscope = mm_schema.Microscope()
 
     def is_processed(self):
         if self.mm_dataset:
-            self.processed = (
-                self.mm_dataset.processed
-            )
+            self.processed = self.mm_dataset.processed
         else:
             self.processed = False
 
     def is_validated(self):
-        return (
-            self.mm_dataset.validated
-            if self.mm_dataset
-            else False
-        )
+        return self.mm_dataset.validated if self.mm_dataset else False
 
-    def load_data(
-        self, force_reload=True
-    ):
-        if (
-            force_reload
-            or self.mm_dataset is None
-        ):
-            self.mm_dataset = (
-                load.load_dataset(
-                    self.omero_dataset,
-                    self.load_images,
-                )
+    def load_data(self, force_reload=True):
+        if force_reload or self.mm_dataset is None:
+            self.mm_dataset = load.load_dataset(
+                self.omero_dataset,
+                self.load_images,
             )
         else:
             raise NotImplementedError(
                 "partial loading of data from OMERO is not yet implemented"
             )
 
-    def load_analysis_config(
-        self, force_reload=True
-    ):
+    def load_analysis_config(self, force_reload=True):
         if (
             not force_reload
             and self.analysis_config
@@ -176,15 +143,11 @@ class DatasetManager:
             (
                 self.analysis_config_id,
                 self.analysis_config,
-            ) = load.load_analysis_config(
-                self.omero_project
-            )
+            ) = load.load_analysis_config(self.omero_project)
 
     def dump_analysis_config(self):
         if not self.analysis_config:
-            logger.error(
-                "No configuration to save."
-            )
+            logger.error("No configuration to save.")
             return
 
         update.update_key_value(
@@ -198,9 +161,7 @@ class DatasetManager:
             f"Saved configuration on mapAnn id:{self.analysis_config_id}"
         )
 
-    def _update_dataset_input_config(
-        self, config
-    ):
+    def _update_dataset_input_config(self, config):
         for key, val in config.items():
             setattr(
                 self.mm_dataset.input,
@@ -211,22 +172,15 @@ class DatasetManager:
     def dump_data(self):
         for mm_ds in self.mm_dataset:
             if not mm_ds.processed:
-                logger.error(
-                    "Dataset not processed. Unable to dump data"
-                )
+                logger.error("Dataset not processed. Unable to dump data")
             dump.dump_dataset(
                 conn=self._conn,
                 dataset=mm_ds,
                 target_project=self.omero_project,
             )
 
-    def process_data(
-        self, force_reprocess=False
-    ):
-        if (
-            not force_reprocess
-            and self.is_processed()
-        ):
+    def process_data(self, force_reprocess=False):
+        if not force_reprocess and self.is_processed():
             if self.is_validated():
                 logger.warning(
                     "Dataset has been processed and validated. Force reprocess to process again"
@@ -243,43 +197,27 @@ class DatasetManager:
             if k not in items_to_remove
         }
 
-        self._update_dataset_input_config(
-            config
-        )
-        self.analysis_func(
-            self.mm_dataset
-        )
+        self._update_dataset_input_config(config)
+        self.analysis_func(self.mm_dataset)
 
         return True
 
     def delete_processed_data(self):
         """This function deletes the output of the dataset"""
         if not self.is_processed():
-            logger.warning(
-                "Data has not been processed. Nothing to delete"
-            )
+            logger.warning("Data has not been processed. Nothing to delete")
             return False
         try:
-            logger.warning(
-                "Deleting processed data..."
-            )
+            logger.warning("Deleting processed data...")
             delete.delete_dataset_output(
                 self._conn,
                 self.mm_dataset,
             )
-            self.mm_dataset.validated = (
-                False
-            )
-            self.mm_dataset.processed = (
-                False
-            )
+            self.mm_dataset.validated = False
+            self.mm_dataset.processed = False
         except Exception as e:
-            logger.error(
-                f"Error deleting processed data: {e}"
-            )
-            self.mm_dataset.validated = (
-                False
-            )
+            logger.error(f"Error deleting processed data: {e}")
+            self.mm_dataset.validated = False
             return False
 
         return True
@@ -288,70 +226,41 @@ class DatasetManager:
         pass
 
     def validate_data(self):
-        if (
-            not self.mm_dataset.processed
-        ):
-            logger.error(
-                "Data has not been processed. It cannot be validated"
-            )
+        if not self.mm_dataset.processed:
+            logger.error("Data has not been processed. It cannot be validated")
         if self.mm_dataset.validated:
-            logger.warning(
-                "Data was already validated. Keeping unchanged."
-            )
+            logger.warning("Data was already validated. Keeping unchanged.")
 
         self.mm_dataset.validated = True
-        logger.info(
-            "Validating dataset."
-        )
+        logger.info("Validating dataset.")
 
     def invalidate_data(self):
-        if (
-            not self.mm_dataset.validated
-        ):
-            logger.warning(
-                "Data is already not validated. Keeping unchanged."
-            )
-        self.mm_dataset.validated = (
-            False
-        )
-        logger.info(
-            "Invalidating dataset."
-        )
+        if not self.mm_dataset.validated:
+            logger.warning("Data is already not validated. Keeping unchanged.")
+        self.mm_dataset.validated = False
+        logger.info("Invalidating dataset.")
 
     def visualize_data(self):
         if self.processed:
-            if (
-                self.mm_dataset.__class__.__name__
-                in TEMPLATE_MAPPINGS
-            ):
-                index = DATA_TYPE_MAPPINGS.get(
-                    self.data_type
-                )
+            if self.mm_dataset.__class__.__name__ in TEMPLATE_MAPPINGS:
+                index = DATA_TYPE_MAPPINGS.get(self.data_type)
                 self.template = TEMPLATE_MAPPINGS.get(
                     self.mm_dataset.__class__.__name__
-                )[
-                    index
-                ]
+                )[index]
                 self.context = load.load_dash_data(
                     self._conn,
                     self.mm_dataset,
                     self.omero_object,
                 )
             else:
-                logger.warning(
-                    "Unknown analysis type. Unable to visualize"
-                )
-                self.template = TEMPLATE_MAPPINGS.get(
-                    "unknown_analysis"
-                )
+                logger.warning("Unknown analysis type. Unable to visualize")
+                self.template = TEMPLATE_MAPPINGS.get("unknown_analysis")
                 self.context = {}
         else:
             logger.warning(
                 "Dataset has not been processed. Unable to visualize"
             )
-            self.template = TEMPLATE_MAPPINGS.get(
-                "unprocessed_analysis"
-            )
+            self.template = TEMPLATE_MAPPINGS.get("unprocessed_analysis")
             self.context = {}
 
     def save_settings(self):
