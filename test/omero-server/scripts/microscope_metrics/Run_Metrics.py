@@ -32,7 +32,6 @@ This script runs microscope-metrics on the selected dataset.
 
 # import logging utilities
 import logging
-from datetime import datetime
 from io import StringIO
 
 import omero.gateway as gateway
@@ -167,7 +166,7 @@ def run_script():
 
             process.process_dataset(dataset=dataset, config=config)
 
-        logger.info(f"Metrics analysis finished")
+        logger.info("Metrics analysis finished")
 
     finally:
         logger.info("Closing connection")

@@ -7,5 +7,7 @@ class OmeroAuth:
     def __call__(self, request):
         # code before response is handled goes here
         request.user = "OMERO User"
-        response = self.get_response(request)
+        response = self.get_response(
+            request
+        )
         return response

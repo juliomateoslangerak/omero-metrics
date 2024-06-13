@@ -31,10 +31,7 @@ This script is generating a number of copies of a dataset introducing some noise
 """
 
 # import logging
-import logging
 import random
-from datetime import datetime
-from itertools import product
 
 import numpy as np
 
@@ -44,10 +41,8 @@ import omero.gateway as gateway
 from metrics.interface import omero as ome
 
 # import configuration parser
-from metrics.utils.utils import MetricsConfig
-from skimage import img_as_float
 from skimage.filters import gaussian
-from skimage.util import random_noise
+
 
 # from omero.rtypes import rlong, rstring
 
@@ -85,24 +80,24 @@ def Run_script_locally():
         conn.connect()
 
         source_dataset = conn.getObject("Dataset", script_params["DatasetID"])
-        project = source_dataset.getParent()
+        # project = source_dataset.getParent()
         images = list(source_dataset.listChildren())
         images_data = [ome.get_image_intensities(i) for i in images]
 
         for n in range(script_params["nr of copies"]):
-            new_dataset = ome.create_dataset(
-                connection=conn,
-                name=script_params["Dates"][n],
-                description=f'copy of dataset ID:{script_params["DatasetID"]}\nRandom noise and sigma added',
-                parent_project=project,
-            )
+            #  new_dataset = ome.create_dataset(
+            #  connection=conn,
+            #  name=script_params["Dates"][n],
+            #  description=f'copy of dataset ID:{script_params["DatasetID"]}\nRandom noise and sigma added',
+            # parent_project=project,
+            # )
             random_sigma = abs(random.gauss(0.6, 0.3))
-            random_noise_level = random.gauss(0.1, 0.01)
+            # random_noise_level = random.gauss(0.1, 0.01)
             for image, image_data in zip(images, images_data):
                 new_image_data = np.squeeze(np.copy(image_data))
-                noise_image = np.ones_like(new_image_data, dtype="float64")
+                # noise_image = np.ones_like(new_image_data, dtype="float64")
                 for c in range(
-                    new_image_data.shape[1]
+                        new_image_data.shape[1]
                 ):  # dimensions are zctxy
                     # adding gaussian blur
                     new_image_data[:, c, ...] = gaussian(
@@ -124,25 +119,25 @@ def Run_script_locally():
                 # new_image_data = new_image_data * noise_image
                 new_image_data = new_image_data.astype(np.int)
                 new_image_data = new_image_data.astype(image_data.dtype)
-                zct_list = list(
-                    product(
-                        range(new_image_data.shape[0]),
-                        range(new_image_data.shape[1]),
-                    )
-                )
-                zct_generator = (
-                    new_image_data[z, c, :, :] for z, c in zct_list
-                )
+                # zct_list = list(
+                #     product(
+                #         range(new_image_data.shape[0]),
+                #         range(new_image_data.shape[1]),
+                #     )
+                # )
+                # zct_generator = (
+                #     new_image_data[z, c, :, :] for z, c in zct_list
+                # )
 
-                new_image = conn.createImageFromNumpySeq(
-                    zctPlanes=zct_generator,
-                    imageName=f"{script_params['Dates'][n][:4]}{script_params['Dates'][n][5:7]}{image.getName()[6:]}",
-                    sizeZ=new_image_data.shape[0],
-                    sizeC=new_image_data.shape[1],
-                    sizeT=1,
-                    dataset=new_dataset,
-                    sourceImageId=image.getId(),
-                )
+                # new_image = conn.createImageFromNumpySeq(
+                #     zctPlanes=zct_generator,
+                #     imageName=f"{script_params['Dates'][n][:4]}{script_params['Dates'][n][5:7]}{image.getName()[6:]}",
+                #     sizeZ=new_image_data.shape[0],
+                #     sizeC=new_image_data.shape[1],
+                #     sizeT=1,
+                #     dataset=new_dataset,
+                #     sourceImageId=image.getId(),
+                # )
 
     finally:
         conn.close()
