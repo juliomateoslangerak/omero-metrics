@@ -8,9 +8,10 @@ import omero.gateway as gateway
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import plotly.graph_objs as go
 import yaml
-from plotly.subplots import make_subplots
+from plotly.subplots import (
+    make_subplots,
+)
 
 
 # This function is no longer needed
@@ -20,7 +21,9 @@ def get_intensity_profile(imaaa):
     rb = imaaa[:, -1]
     lb = imaaa[:, 0]
     dr = np.fliplr(imaaa).diagonal()
-    dl = np.fliplr(imaa_fliped).diagonal()
+    dl = np.fliplr(
+        imaa_fliped
+    ).diagonal()
     df = pd.DataFrame(
         {
             "Right Bottom": rb,
@@ -32,7 +35,9 @@ def get_intensity_profile(imaaa):
     return df
 
 
-def add_rect_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
+def add_rect_rois(
+        fig: go.Figure, df: pd.DataFrame
+) -> go.Figure:
     for i, row in df.iterrows():
         fig.add_shape(
             go.layout.Shape(
@@ -52,7 +57,9 @@ def add_rect_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
     return fig
 
 
-def add_line_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
+def add_line_rois(
+        fig: go.Figure, df: pd.DataFrame
+) -> go.Figure:
     for i, row in df.iterrows():
         fig.add_shape(
             go.layout.Shape(
@@ -73,8 +80,16 @@ def add_line_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
     return fig
 
 
-def add_point_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
-    fig.add_trace(go.Scatter(x=df.X, y=df.Y, mode="markers"))
+def add_point_rois(
+        fig: go.Figure, df: pd.DataFrame
+) -> go.Figure:
+    fig.add_trace(
+        go.Scatter(
+            x=df.X,
+            y=df.Y,
+            mode="markers",
+        )
+    )
     return fig
 
 
@@ -85,133 +100,278 @@ def get_rois_omero(result):
     for roi in result.rois:
         for s in roi.copyShapes():
             shape = {}
-            shape["id"] = s.getId().getValue()
+            shape["id"] = (
+                s.getId().getValue()
+            )
             # shape["theT"] = s.getTheT().getValue()
             # shape["theZ"] = s.getTheZ().getValue()
             if s.getTextValue():
-                shape["textValue"] = s.getTextValue().getValue()
-            if s.__class__.__name__ == "RectangleI":
-                shape["type"] = "Rectangle"
-                shape["x"] = s.getX().getValue()
-                shape["y"] = s.getY().getValue()
-                shape["w"] = s.getWidth().getValue()
-                shape["h"] = s.getHeight().getValue()
-                shapes_rectangle[s.getId().getValue()] = shape
-            elif s.__class__.__name__ == "LineI":
+                shape["textValue"] = (
+                    s.getTextValue().getValue()
+                )
+            if (
+                    s.__class__.__name__
+                    == "RectangleI"
+            ):
+                shape["type"] = (
+                    "Rectangle"
+                )
+                shape["x"] = (
+                    s.getX().getValue()
+                )
+                shape["y"] = (
+                    s.getY().getValue()
+                )
+                shape["w"] = (
+                    s.getWidth().getValue()
+                )
+                shape["h"] = (
+                    s.getHeight().getValue()
+                )
+                shapes_rectangle[
+                    s.getId().getValue()
+                ] = shape
+            elif (
+                    s.__class__.__name__
+                    == "LineI"
+            ):
                 shape["type"] = "Line"
-                shape["x1"] = s.getX1().getValue()
-                shape["x2"] = s.getX2().getValue()
-                shape["y1"] = s.getY1().getValue()
-                shape["y2"] = s.getY2().getValue()
+                shape["x1"] = (
+                    s.getX1().getValue()
+                )
+                shape["x2"] = (
+                    s.getX2().getValue()
+                )
+                shape["y1"] = (
+                    s.getY1().getValue()
+                )
+                shape["y2"] = (
+                    s.getY2().getValue()
+                )
 
-                shapes_line[s.getId().getValue()] = shape
-            elif s.__class__.__name__ == "PointI":
+                shapes_line[
+                    s.getId().getValue()
+                ] = shape
+            elif (
+                    s.__class__.__name__
+                    == "PointI"
+            ):
                 shape["type"] = "Point"
-                shape["x"] = s.getX().getValue()
-                shape["y"] = s.getY().getValue()
+                shape["x"] = (
+                    s.getX().getValue()
+                )
+                shape["y"] = (
+                    s.getY().getValue()
+                )
                 # shape['z'] = s.getZ().getValue()
-                shape["channel"] = s.getTheC().getValue()
-                shapes_point[s.getId().getValue()] = shape
-            elif s.__class__.__name__ == "PolygonI":
+                shape["channel"] = (
+                    s.getTheC().getValue()
+                )
+                shapes_point[
+                    s.getId().getValue()
+                ] = shape
+            elif (
+                    s.__class__.__name__
+                    == "PolygonI"
+            ):
                 continue
-    return shapes_rectangle, shapes_line, shapes_point
+    return (
+        shapes_rectangle,
+        shapes_line,
+        shapes_point,
+    )
 
 
 def get_info_roi_points(shape_dict):
     data = [
-        [key, int(value["x"]), int(value["y"]), int(value["channel"])]
+        [
+            key,
+            int(value["x"]),
+            int(value["y"]),
+            int(value["channel"]),
+        ]
         for key, value in shape_dict.items()
     ]
-    df = pd.DataFrame(data, columns=["ROI", "X", "Y", "C"])
+    df = pd.DataFrame(
+        data,
+        columns=["ROI", "X", "Y", "C"],
+    )
     return df
 
 
 def get_info_roi_lines(shape_dict):
     data = [
-        [key, value["x1"], value["y1"], value["x2"], value["y2"]]
+        [
+            key,
+            value["x1"],
+            value["y1"],
+            value["x2"],
+            value["y2"],
+        ]
         for key, value in shape_dict.items()
     ]
-    df = pd.DataFrame(data, columns=["ROI", "X1", "Y1", "X2", "Y2"])
+    df = pd.DataFrame(
+        data,
+        columns=[
+            "ROI",
+            "X1",
+            "Y1",
+            "X2",
+            "Y2",
+        ],
+    )
     return df
 
 
 def get_info_roi_rectangles(shape_dict):
     data = [
-        [key, value["x"], value["y"], value["w"], value["h"]]
+        [
+            key,
+            value["x"],
+            value["y"],
+            value["w"],
+            value["h"],
+        ]
         for key, value in shape_dict.items()
     ]
-    df = pd.DataFrame(data, columns=["ROI", "X", "Y", "W", "H"])
+    df = pd.DataFrame(
+        data,
+        columns=[
+            "ROI",
+            "X",
+            "Y",
+            "W",
+            "H",
+        ],
+    )
     return df
 
 
-def get_dataset_ids_lists(conn, project):
+def get_dataset_ids_lists(
+        conn, project
+):
     """
     Get the processed and unprocessed dataset ids for a project
     """
     processed_datasets = []
     unprocessed_datasets = []
-    for dataset in project.listChildren():
+    for (
+            dataset
+    ) in project.listChildren():
         try:
             dataset.getAnnotation().getNs()
-            processed_datasets.append(dataset.getId())
+            processed_datasets.append(
+                dataset.getId()
+            )
         except AttributeError:
-            unprocessed_datasets.append(dataset.getId())
-    return processed_datasets, unprocessed_datasets
+            unprocessed_datasets.append(
+                dataset.getId()
+            )
+    return (
+        processed_datasets,
+        unprocessed_datasets,
+    )
 
 
-def get_image_list_by_dataset_id(conn, dataset_id):
+def get_image_list_by_dataset_id(
+        conn, dataset_id
+):
     """
     Get the list of images for a dataset
     """
-    dataset = conn.getObject("Dataset", dataset_id)
+    dataset = conn.getObject(
+        "Dataset", dataset_id
+    )
     images = []
     for image in dataset.listChildren():
         images.append(image.getId())
     return images
 
 
-def get_dataset_mapAnnotation(datasetWrapper):
+def get_dataset_mapAnnotation(
+        datasetWrapper,
+):
     """
     Get the mapAnnotation for a dataset
     """
 
     try:
-        for i in datasetWrapper.listAnnotations():
-            if "FieldIlluminationKeyValues" in i.getNs():
-                table = dict(i.getValue())
-                df = pd.DataFrame(table.items(), columns=["Key", "Value"])
+        for (
+                i
+        ) in (
+                datasetWrapper.listAnnotations()
+        ):
+            if (
+                    "FieldIlluminationKeyValues"
+                    in i.getNs()
+            ):
+                table = dict(
+                    i.getValue()
+                )
+                df = pd.DataFrame(
+                    table.items(),
+                    columns=[
+                        "Key",
+                        "Value",
+                    ],
+                )
                 break
-            elif "PSFBeadsKeyValues" in i.getNs():
-                table = dict(i.getValue())
-                df = pd.DataFrame(table.items(), columns=["Key", "Value"])
+            elif (
+                    "PSFBeadsKeyValues"
+                    in i.getNs()
+            ):
+                table = dict(
+                    i.getValue()
+                )
+                df = pd.DataFrame(
+                    table.items(),
+                    columns=[
+                        "Key",
+                        "Value",
+                    ],
+                )
                 break
         return df
     except:
         return {}
 
 
-def read_config_from_file_ann(file_annotation):
+def read_config_from_file_ann(
+        file_annotation,
+):
     return yaml.load(
-        file_annotation.getFileInChunks().__next__().decode(),
+        file_annotation.getFileInChunks()
+        .__next__()
+        .decode(),
         Loader=yaml.SafeLoader,
     )
 
 
-def get_file_annotation_project(projectWrapper):
+def get_file_annotation_project(
+        projectWrapper,
+):
     study_config = None
-    for ann in projectWrapper.listAnnotations():
-        if (
-            type(ann) == gateway.FileAnnotationWrapper
-            and ann.getFile().getName() == "study_config.yaml"
-        ):
-            study_config = read_config_from_file_ann(ann)
+    for (ann) in (projectWrapper.listAnnotations()):
+        if (type(ann) == gateway.FileAnnotationWrapper
+                and ann.getFile().getName() == "study_config.yaml"):
+            study_config = read_config_from_file_ann(
+                ann
+            )
     return study_config
 
 
 def get_analysis_type(projectWrapper):
-    study_config = get_file_annotation_project(projectWrapper)
+    study_config = (
+        get_file_annotation_project(
+            projectWrapper
+        )
+    )
     try:
-        analysis_type = next(iter(study_config["analysis"]))
+        analysis_type = next(
+            iter(
+                study_config["analysis"]
+            )
+        )
     except:
         analysis_type = None
     return analysis_type
@@ -223,63 +383,116 @@ def random_date(start, end):
     objects.
     """
     delta = end - start
-    int_delta = (delta.days * 24 * 60 * 60) + delta.seconds
+    int_delta = (
+                        delta.days * 24 * 60 * 60
+                ) + delta.seconds
     random_second = randrange(int_delta)
-    return start + timedelta(seconds=random_second)
+    return start + timedelta(
+        seconds=random_second
+    )
 
 
-def get_table_originalFile_id(conn, file_id):
+def get_table_originalFile_id(
+        conn, file_id
+):
     ctx = conn.createServiceOptsDict()
     ctx.setOmeroGroup("-1")
     r = conn.getSharedResources()
-    t = r.openTable(omero.model.OriginalFileI(file_id), ctx)
-    data_buffer = collections.defaultdict(list)
+    t = r.openTable(
+        omero.model.OriginalFileI(
+            file_id
+        ),
+        ctx,
+    )
+    data_buffer = (
+        collections.defaultdict(list)
+    )
     heads = t.getHeaders()
     target_cols = range(len(heads))
     index_buffer = []
     num_rows = t.getNumberOfRows()
     for start in range(0, num_rows):
-        data = t.read(target_cols, start, start)
+        data = t.read(
+            target_cols, start, start
+        )
         for col in data.columns:
-            data_buffer[col.name] += col.values
+            data_buffer[
+                col.name
+            ] += col.values
         index_buffer += data.rowNumbers
-    df = pd.DataFrame.from_dict(data_buffer)
-    df.index = index_buffer[0 : len(df)]
+    df = pd.DataFrame.from_dict(
+        data_buffer
+    )
+    df.index = index_buffer[0: len(df)]
     return df
 
 
 def getOriginalFile_id(dataset):
     id = None
-    for ann in dataset.listAnnotations():
-        if type(ann) == gateway.FileAnnotationWrapper:
-            if type(ann.getFile()) == gateway.OriginalFileWrapper:
-                id = ann.getFile().getId()
+    for (
+            ann
+    ) in dataset.listAnnotations():
+        if (
+                type(ann)
+                == gateway.FileAnnotationWrapper
+        ):
+            if (
+                    type(ann.getFile())
+                    == gateway.OriginalFileWrapper
+            ):
+                id = (ann.getFile().getId())
                 break
     return id
 
 
-def processed_data_project_view(processed_list):
-    d1 = datetime.strptime("1/1/2000 1:30 PM", "%m/%d/%Y %I:%M %p")
-    d2 = datetime.strptime("1/1/2024 4:50 AM", "%m/%d/%Y %I:%M %p")
+def processed_data_project_view(
+        processed_list,
+):
+    d1 = datetime.strptime(
+        "1/1/2000 1:30 PM",
+        "%m/%d/%Y %I:%M %p",
+    )
+    d2 = datetime.strptime(
+        "1/1/2024 4:50 AM",
+        "%m/%d/%Y %I:%M %p",
+    )
     df = pd.DataFrame(
-        [[random_date(d1, d2), i] for i in processed_list],
+        [
+            [random_date(d1, d2), i]
+            for i in processed_list
+        ],
         columns=["Date", "Dataset_ID"],
     )
     return df
 
 
-def get_originalFile_id_by_image_id(dataset):
+def get_originalFile_id_by_image_id(
+        dataset,
+):
     list_file = []
-    for ann in dataset.listAnnotations():
-        if type(ann) == gateway.FileAnnotationWrapper:
-            if type(ann.getFile()) == gateway.OriginalFileWrapper:
+    for (
+            ann
+    ) in dataset.listAnnotations():
+        if (
+                type(ann)
+                == gateway.FileAnnotationWrapper
+        ):
+            if (
+                    type(ann.getFile())
+                    == gateway.OriginalFileWrapper
+            ):
                 list_file.append(
-                    [ann.getFile().getId(), ann.getFile().getName()]
+                    [
+                        ann.getFile().getId(),
+                        ann.getFile().getName(),
+                    ]
                 )
     return list_file
 
 
-def get_intensity_map_image(image_name, list_file):
+def get_intensity_map_image(
+        image_name, list_file
+):
     for file_id, name in list_file:
         if image_name in name:
             return file_id
@@ -290,64 +503,90 @@ def get_intensity_map_image(image_name, list_file):
 # ---------------------------------------dash_functions--------------------------------------------------
 
 
-def fig_mip(mip_X, mip_Y, mip_Z, title):
+def fig_mip(mip_x, mip_y, mip_z, title):
     fig = make_subplots(
         rows=2,
         cols=2,
-        specs=[[{}, {}], [{"colspan": 2}, None]],
-        subplot_titles=("MIP X axis", "MIP Y axis", "MIP Z axis"),
+        specs=[
+            [{}, {}],
+            [{"colspan": 2}, None],
+        ],
+        subplot_titles=(
+            "MIP X axis",
+            "MIP Y axis",
+            "MIP Z axis",
+        ),
     )
-    fig = fig.add_trace(mip_X.data[0], row=1, col=1)
-    fig = fig.add_trace(mip_Y.data[0], row=1, col=2)
-    fig = fig.add_trace(mip_Z.data[0], row=2, col=1)
+    fig = fig.add_trace(
+        mip_x.data[0], row=1, col=1
+    )
+    fig = fig.add_trace(
+        mip_y.data[0], row=1, col=2
+    )
+    fig = fig.add_trace(
+        mip_z.data[0], row=2, col=1
+    )
     fig = fig.update_layout(
-        title_text=title, coloraxis=dict(colorscale="hot")
+        title_text=title,
+        coloraxis=dict(
+            colorscale="hot"
+        ),
     )
     return fig
 
 
-def mip_graphs(x0, xf, y0, yf, z, stack):
+def mip_graphs(
+        x0, xf, y0, yf, z, stack
+):
     image_bead = stack[:, y0:yf, x0:xf]
     z_ima = stack[z, y0:yf, x0:xf]
-    image_X = np.max(image_bead, axis=2)
-    image_Y = np.max(image_bead, axis=1)
-    image_X = image_X / image_X.max()
-    image_Y = image_Y / image_Y.max()
-    image_Z = z_ima / z_ima.max()
-    mip_X = px.imshow(
-        image_X,
-        zmin=image_X.min(),
-        zmax=image_X.max(),
+    image_x = np.max(image_bead, axis=2)
+    image_y = np.max(image_bead, axis=1)
+    image_x = image_x / image_x.max()
+    image_y = image_y / image_y.max()
+    image_z = z_ima / z_ima.max()
+    mip_x = px.imshow(
+        image_x,
+        zmin=image_x.min(),
+        zmax=image_x.max(),
         color_continuous_scale="hot",
     )
-    mip_Y = px.imshow(
-        image_Y,
-        zmin=image_Y.min(),
-        zmax=image_Y.max(),
+    mip_y = px.imshow(
+        image_y,
+        zmin=image_y.min(),
+        zmax=image_y.max(),
         color_continuous_scale="hot",
     )
-    mip_Z = px.imshow(
-        image_Z,
-        zmin=image_Z.min(),
-        zmax=image_Z.max(),
+    mip_z = px.imshow(
+        image_z,
+        zmin=image_z.min(),
+        zmax=image_z.max(),
         color_continuous_scale="hot",
     )
-    return mip_X, mip_Y, mip_Z
+    return mip_x, mip_y, mip_z
 
 
-def crop_bead_index(bead, min_dist, stack):
+def crop_bead_index(
+        bead, min_dist, stack
+):
     x = bead["x_centroid"].values[0]
     y = bead["y_centroid"].values[0]
     z = bead["z_centroid"].values[0]
     x0 = max(0, x - min_dist)
     y0 = max(0, y - min_dist)
-    xf = min(stack.shape[2], x + min_dist)
-    yf = min(stack.shape[1], y + min_dist)
+    xf = min(
+        stack.shape[2], x + min_dist
+    )
+    yf = min(
+        stack.shape[1], y + min_dist
+    )
     return x0, xf, y0, yf, z
 
 
 def image_3d_chart(image_bead):
-    image_bead = image_bead / image_bead.max()
+    image_bead = (
+            image_bead / image_bead.max()
+    )
     lz, ly, lx = image_bead.shape
     Z, Y, X = np.mgrid[:lz, :ly, :lx]
     fig = go.Figure(

@@ -45,7 +45,12 @@ from omero.model import (
     RoiI,
     enums,
 )
-from omero.rtypes import rdouble, rint, rlong, rstring, rtime
+from omero.rtypes import (
+    rdouble,
+    rint,
+    rstring,
+    rtime,
+)
 from pandas import DataFrame
 
 logger = logging.getLogger(__name__)
@@ -94,29 +99,62 @@ COLUMN_TYPES = {
 }
 
 
-def get_object_ids_from_url(url: str) -> list[tuple[str, int]]:
+def get_object_ids_from_url(
+    url: str,
+) -> list[tuple[str, int]]:
     """Get the ID from an OMERO URL. For example:
     https://omero.server.fr/webclient/?show=image-12345 or
-    https://omero.mri.cnrs.fr/webclient/?show=image-1556622|image-1556623 for multiple objects
+    https://omero.mri.cnrs.fr/webclient/?show=image-1556622|\
+    image-1556623 for multiple objects
     """
-    tail = url.split("/")[-1].split("=")[-1]  # TODO: make all of this a regex
+    tail = url.split("/")[-1].split(
+        "="
+    )[
+        -1
+    ]
     if "|" in tail:
         return [
-            (x.split("-")[0], int(x.split("-")[-1])) for x in tail.split("|")
+            (
+                x.split("-")[0],
+                int(x.split("-")[-1]),
+            )
+            for x in tail.split("|")
         ]
     else:
-        return [(tail.split("-")[0], int(tail.split("-")[-1]))]
+        return [
+            (
+                tail.split("-")[0],
+                int(
+                    tail.split("-")[-1]
+                ),
+            )
+        ]
 
 
 def get_omero_obj_id_from_mm_obj(
     mm_obj: mm_schema.MetricsObject,
-) -> Union[ImageWrapper, DatasetWrapper, ProjectWrapper]:
-    if isinstance(mm_obj, mm_schema.DataReference):
+) -> Union[
+    ImageWrapper,
+    DatasetWrapper,
+    ProjectWrapper,
+]:
+    if isinstance(
+        mm_obj, mm_schema.DataReference
+    ):
         return mm_obj.omero_object_id
-    elif isinstance(mm_obj, mm_schema.MetricsObject):
-        return mm_obj.data_reference.omero_object_id
+    elif isinstance(
+        mm_obj, mm_schema.MetricsObject
+    ):
+        return (
+            mm_obj.data_reference.omero_object_id
+        )
     elif isinstance(mm_obj, list):
-        return [get_omero_obj_id_from_mm_obj(obj) for obj in mm_obj]
+        return [
+            get_omero_obj_id_from_mm_obj(
+                obj
+            )
+            for obj in mm_obj
+        ]
     else:
         raise ValueError(
             "Input should be a metrics object or a list of metrics objects"
@@ -124,32 +162,47 @@ def get_omero_obj_id_from_mm_obj(
 
 
 def get_omero_obj_from_mm_obj(
-    conn: BlitzGateway, mm_obj: mm_schema.MetricsObject
-) -> Union[ImageWrapper, DatasetWrapper, ProjectWrapper]:
-    # if not isinstance(mm_obj.omero_object_type, tuple):
-    #     return conn.getObject(str(mm_obj.omero_object_type.code.text), mm_obj.omero_object_id)
-    # else:
-    #     return conn.getObject(mm_obj.omero_object_type[0], mm_obj.omero_object_id)
-    if isinstance(mm_obj, mm_schema.DataReference):
+    conn: BlitzGateway,
+    mm_obj: mm_schema.MetricsObject,
+) -> Union[
+    ImageWrapper,
+    DatasetWrapper,
+    ProjectWrapper,
+]:
+    if isinstance(
+        mm_obj, mm_schema.DataReference
+    ):
         return conn.getObject(
-            mm_obj.omero_object_type.code.text, mm_obj.omero_object_id
+            mm_obj.omero_object_type.code.text,
+            mm_obj.omero_object_id,
         )
-    elif isinstance(mm_obj, mm_schema.MetricsObject):
+    elif isinstance(
+        mm_obj, mm_schema.MetricsObject
+    ):
         return conn.getObject(
             mm_obj.data_reference.omero_object_type.code.text,
             mm_obj.data_reference.omero_object_id,
         )
     elif isinstance(mm_obj, list):
-        return [get_omero_obj_from_mm_obj(conn, obj) for obj in mm_obj]
+        return [
+            get_omero_obj_from_mm_obj(
+                conn, obj
+            )
+            for obj in mm_obj
+        ]
     else:
         raise ValueError(
             "Input should be a metrics object or a list of metrics objects"
         )
 
 
-def get_ref_from_object(obj) -> mm_schema.DataReference:
+def get_ref_from_object(
+    obj,
+) -> mm_schema.DataReference:
     """Get the reference information from an OMERO object"""
-    logger.debug(f"get_ref_from_object: object type is {type(obj)}")
+    logger.debug(
+        f"get_ref_from_object: object type is {type(obj)}"
+    )
 
     obj_type = None
 
@@ -175,10 +228,13 @@ def get_ref_from_object(obj) -> mm_schema.DataReference:
         case RoiWrapper():
             obj_type = "ROI"
         case _:
-            logger.error(f"Object type {type(obj)} is not supported")
+            logger.error(
+                f"Object type {type(obj)} is not supported"
+            )
 
     return mm_schema.DataReference(
-        data_uri=f"https://{obj._conn.host}:{obj._conn.port}/webclient/?show={obj_type.lower()}-{obj.getId()}",
+        data_uri=f"https://{obj._conn.host}:" +
+                 f"{obj._conn.port}/webclient/?show={obj_type.lower()}-{obj.getId()}",
         omero_host=obj._conn.host,
         omero_port=obj._conn.port,
         omero_object_type=obj_type,
@@ -186,18 +242,27 @@ def get_ref_from_object(obj) -> mm_schema.DataReference:
     )
 
 
-def _label_channels(image: ImageWrapper, labels: list):
+def _label_channels(
+    image: ImageWrapper, labels: list
+):
     if len(labels) != image.getSizeC():
         raise ValueError(
             "The length of the channel labels is not of the same size as the size of the c dimension"
         )
-    for label, channel in zip(labels, image.getChannels(noRE=True)):
-        logical_channel = channel.getLogicalChannel()
+    for label, channel in zip(
+        labels,
+        image.getChannels(noRE=True),
+    ):
+        logical_channel = (
+            channel.getLogicalChannel()
+        )
         logical_channel.setName(label)
         logical_channel.save()
 
 
-def _get_image_shape(image: ImageWrapper):
+def _get_image_shape(
+    image: ImageWrapper,
+):
     try:
         image_shape = (
             image.getSizeZ(),
@@ -212,40 +277,77 @@ def _get_image_shape(image: ImageWrapper):
     return image_shape
 
 
-def _get_pixel_size(image: ImageWrapper, order: str = "ZXY"):
+def _get_pixel_size(
+    image: ImageWrapper,
+    order: str = "ZXY",
+):
     pixels = image.getPrimaryPixels()
 
     order = order.upper()
-    if order not in ["ZXY", "ZYX", "XYZ", "XZY", "YXZ", "YZX"]:
-        raise ValueError("The provided order for the axis is not valid")
+    if order not in [
+        "ZXY",
+        "ZYX",
+        "XYZ",
+        "XZY",
+        "YXZ",
+        "YZX",
+    ]:
+        raise ValueError(
+            "The provided order for the axis is not valid"
+        )
     pixel_sizes = ()
     for a in order:
-        pixel_sizes += (getattr(pixels, f"getPhysicalSize{a}")().getValue(),)
+        pixel_sizes += (
+            getattr(
+                pixels,
+                f"getPhysicalSize{a}",
+            )().getValue(),
+        )
     return pixel_sizes
 
 
-def _get_pixel_size_units(image: ImageWrapper):
+def _get_pixel_size_units(
+    image: ImageWrapper,
+):
     pixels = image.getPrimaryPixels()
 
     return (
-        pixels.getPhysicalSizeX().getUnit().name,
-        pixels.getPhysicalSizeY().getUnit().name,
-        pixels.getPhysicalSizeZ().getUnit().name,
+        pixels.getPhysicalSizeX()
+        .getUnit()
+        .name,
+        pixels.getPhysicalSizeY()
+        .getUnit()
+        .name,
+        pixels.getPhysicalSizeZ()
+        .getUnit()
+        .name,
     )
 
 
 def get_image_intensities(
     image: ImageWrapper,
-    z_range: Union[int, tuple, range] = None,
-    c_range: Union[int, tuple, range] = None,
-    t_range: Union[int, tuple, range] = None,
-    y_range: Union[int, tuple, range] = None,
-    x_range: Union[int, tuple, range] = None,
+    z_range: Union[
+        int, tuple, range
+    ] = None,
+    c_range: Union[
+        int, tuple, range
+    ] = None,
+    t_range: Union[
+        int, tuple, range
+    ] = None,
+    y_range: Union[
+        int, tuple, range
+    ] = None,
+    x_range: Union[
+        int, tuple, range
+    ] = None,
 ):
     """Returns a numpy array containing the intensity values of the image
     Returns an array with dimensions arranged as zctyx
     """
-    image_shape = _get_image_shape(image)
+    image_shape = _get_image_shape(
+        image
+    )
 
     # TODO: verify that image fits in ice message size. Otherwise get in tiles
 
@@ -255,27 +357,51 @@ def get_image_intensities(
     else:
         whole_planes = False
 
-    ranges = [z_range, c_range, t_range, y_range, x_range]
+    ranges = [
+        z_range,
+        c_range,
+        t_range,
+        y_range,
+        x_range,
+    ]
     for dim, r in enumerate(ranges):
         if r is None:
-            ranges[dim] = range(image_shape[dim])
+            ranges[dim] = range(
+                image_shape[dim]
+            )
         elif isinstance(r, range):
             continue
         elif isinstance(r, int):
-            ranges[dim] = range(r, r + 1)
+            ranges[dim] = range(
+                r, r + 1
+            )
         elif isinstance(r, tuple):
             if len(r) == 1:
-                ranges[dim] = range(r[0])
+                ranges[dim] = range(
+                    r[0]
+                )
             elif len(r) == 2:
-                ranges[dim] = range(r[0], r[1])
+                ranges[dim] = range(
+                    r[0], r[1]
+                )
             elif len(r) == 3:
-                ranges[dim] = range(r[0], r[1], r[2])
+                ranges[dim] = range(
+                    r[0], r[1], r[2]
+                )
             else:
-                raise IndexError("Range values must contain 1 to 3 values")
+                raise IndexError(
+                    "Range values must contain 1 to 3 values"
+                )
         else:
-            raise TypeError("Range is not provided as a tuple.")
+            raise TypeError(
+                "Range is not provided as a tuple."
+            )
 
-        if not 1 <= ranges[dim].stop <= image_shape[dim]:
+        if (
+            not 1
+            <= ranges[dim].stop
+            <= image_shape[dim]
+        ):
             raise IndexError(
                 "Specified range is outside of the image dimensions"
             )
@@ -287,19 +413,43 @@ def get_image_intensities(
         len(ranges[3]),
         len(ranges[4]),
     )
-    nr_planes = output_shape[0] * output_shape[1] * output_shape[2]
-    zct_list = list(product(ranges[0], ranges[1], ranges[2]))
+    nr_planes = (
+        output_shape[0]
+        * output_shape[1]
+        * output_shape[2]
+    )
+    zct_list = list(
+        product(
+            ranges[0],
+            ranges[1],
+            ranges[2],
+        )
+    )
 
     pixels = image.getPrimaryPixels()
-    data_type = DTYPES_OMERO_TO_NP[pixels.getPixelsType().getValue()]
+    data_type = DTYPES_OMERO_TO_NP[
+        pixels.getPixelsType().getValue()
+    ]
 
     # intensities = np.zeros(output_shape, dtype=data_type)
 
     intensities = np.zeros(
-        shape=(nr_planes, output_shape[3], output_shape[4]), dtype=data_type
+        shape=(
+            nr_planes,
+            output_shape[3],
+            output_shape[4],
+        ),
+        dtype=data_type,
     )
     if whole_planes:
-        np.stack(list(pixels.getPlanes(zctList=zct_list)), out=intensities)
+        np.stack(
+            list(
+                pixels.getPlanes(
+                    zctList=zct_list
+                )
+            ),
+            out=intensities,
+        )
     else:
         # Tile is formatted (X, Y, Width, Heigth)
         tile_region = (
@@ -308,30 +458,56 @@ def get_image_intensities(
             len(ranges[4]),
             len(ranges[3]),
         )
-        zct_tile_list = [(z, c, t, tile_region) for z, c, t in zct_list]
+        zct_tile_list = [
+            (z, c, t, tile_region)
+            for z, c, t in zct_list
+        ]
         np.stack(
-            list(pixels.getTiles(zctTileList=zct_tile_list)), out=intensities
+            list(
+                pixels.getTiles(
+                    zctTileList=zct_tile_list
+                )
+            ),
+            out=intensities,
         )
 
-    intensities = np.reshape(intensities, newshape=output_shape)
+    intensities = np.reshape(
+        intensities,
+        newshape=output_shape,
+    )
 
     return intensities
 
 
-def get_tagged_images_in_dataset(dataset, tag_id):
+def get_tagged_images_in_dataset(
+    dataset, tag_id
+):
     images = []
     for image in dataset.listChildren():
-        for ann in image.listAnnotations():
-            if type(ann) == TagAnnotationWrapper and ann.getId() == tag_id:
+        for (
+            ann
+        ) in image.listAnnotations():
+            if (
+                type(ann)
+                == TagAnnotationWrapper
+                and ann.getId()
+                == tag_id
+            ):
                 images.append(image)
     return images
 
 
-def create_project(conn, name, description=None):
-    new_project = ProjectWrapper(conn, ProjectI())
+def create_project(
+    conn, name, description=None
+):
+    new_project = ProjectWrapper(
+        conn, ProjectI()
+    )
     new_project.setName(name)
     if description:
-        new_project.setDescription(description)
+        new_project.setDescription(
+            description
+        )
     new_project.save()
 
     return new_project
@@ -344,13 +520,19 @@ def create_dataset(
     project: ProjectWrapper = None,
     tags: list[str] = None,
 ):
-    new_dataset = DatasetWrapper(conn, DatasetI())
+    new_dataset = DatasetWrapper(
+        conn, DatasetI()
+    )
     new_dataset.setName(dataset_name)
     if description is not None:
-        new_dataset.setDescription(description)
+        new_dataset.setDescription(
+            description
+        )
     new_dataset.save()
     if project is not None:
-        _link_dataset_to_project(conn, new_dataset, project)
+        _link_dataset_to_project(
+            conn, new_dataset, project
+        )
 
     return new_dataset
 
@@ -367,12 +549,21 @@ def _create_image_copy(
     size_t=None,
 ):
     """Creates a copy of an existing OMERO image using all the metadata but not the pixels values.
-    The parameter values will override the ones of the original image"""
-    pixels_service = conn.getPixelsService()
+    The parameter values will override the ones of the original image
+    """
+    pixels_service = (
+        conn.getPixelsService()
+    )
 
     if channel_list is None:
-        source_image = conn.getObject("Image", source_image_id)
-        channel_list = list(range(source_image.getSizeC()))
+        source_image = conn.getObject(
+            "Image", source_image_id
+        )
+        channel_list = list(
+            range(
+                source_image.getSizeC()
+            )
+        )
 
     image_id = pixels_service.copyAndResizeImage(
         imageId=source_image_id,
@@ -385,12 +576,15 @@ def _create_image_copy(
         copyStats=False,
     )
 
-    new_image = conn.getObject("Image", image_id)
+    new_image = conn.getObject(
+        "Image", image_id
+    )
 
-    if (
-        image_description is not None
-    ):  # Description is not provided as an override option in the OMERO interface
-        new_image.setDescription(image_description)
+    # Description is not provided as an override option in the OMERO interface
+    if (image_description is not None):
+        new_image.setDescription(
+            image_description
+        )
         new_image.save()
 
     return new_image
@@ -409,18 +603,26 @@ def _create_image(
     image_description=None,
 ):
     """Creates an OMERO empty image from scratch"""
-    pixels_service = conn.getPixelsService()
-    query_service = conn.getQueryService()
+    pixels_service = (
+        conn.getPixelsService()
+    )
+    query_service = (
+        conn.getQueryService()
+    )
 
     if (
-        data_type not in DTYPES_NP_TO_OMERO
+        data_type
+        not in DTYPES_NP_TO_OMERO
     ):  # try to look up any not named above
         pixel_type = data_type
     else:
-        pixel_type = DTYPES_NP_TO_OMERO[data_type]
+        pixel_type = DTYPES_NP_TO_OMERO[
+            data_type
+        ]
 
     pixels_type = query_service.findByQuery(
-        f"from PixelsType as p where p.value='{pixel_type}'", None
+        f"from PixelsType as p where p.value='{pixel_type}'",
+        None,
     )
     if pixels_type is None:
         raise ValueError(
@@ -438,10 +640,14 @@ def _create_image(
         description=image_description,
     )
 
-    new_image = conn.getObject("Image", image_id.getValue())
+    new_image = conn.getObject(
+        "Image", image_id.getValue()
+    )
 
     if channel_labels is not None:
-        _label_channels(new_image, channel_labels)
+        _label_channels(
+            new_image, channel_labels
+        )
 
     return new_image
 
@@ -458,7 +664,9 @@ def _create_image_whole(
     zct_generator = (
         data[z, c, t, :, :]
         for z, c, t in product(
-            range(data.shape[0]), range(data.shape[1]), range(data.shape[2])
+            range(data.shape[0]),
+            range(data.shape[1]),
+            range(data.shape[2]),
         )
     )
 
@@ -480,7 +688,9 @@ def create_image_from_numpy_array(
     data: np.ndarray,
     image_name: str,
     image_description: str = None,
-    channel_labels: Union[list, tuple] = None,
+    channel_labels: Union[
+        list, tuple
+    ] = None,
     acquisition_datetime: str = None,
     dataset: DatasetWrapper = None,
     source_image_id: int = None,
@@ -504,16 +714,25 @@ def create_image_from_numpy_array(
 
     zct_list = list(
         product(
-            range(data.shape[0]), range(data.shape[1]), range(data.shape[2])
+            range(data.shape[0]),
+            range(data.shape[1]),
+            range(data.shape[2]),
         )
     )
-    zct_generator = (data[z, c, t, :, :] for z, c, t in zct_list)
+    zct_generator = (
+        data[z, c, t, :, :]
+        for z, c, t in zct_list
+    )
 
     # Verify if the image must be tiled
-    max_plane_size = conn.getMaxPlaneSize()
+    max_plane_size = (
+        conn.getMaxPlaneSize()
+    )
     if force_whole_planes or (
-        data.shape[-1] < max_plane_size[-1]
-        and data.shape[-2] < max_plane_size[-2]
+        data.shape[-1]
+        < max_plane_size[-1]
+        and data.shape[-2]
+        < max_plane_size[-2]
     ):
         # Image is small enough to fill it with full planes
         new_image = conn.createImageFromNumpySeq(
@@ -529,7 +748,11 @@ def create_image_from_numpy_array(
         )
 
     else:
-        zct_tile_list = _get_tile_list(zct_list, data.shape, max_plane_size)
+        zct_tile_list = _get_tile_list(
+            zct_list,
+            data.shape,
+            max_plane_size,
+        )
 
         if source_image_id is not None:
             new_image = _create_image_copy(
@@ -557,20 +780,36 @@ def create_image_from_numpy_array(
                 image_description=image_description,
             )
 
-        raw_pixel_store = conn.c.sf.createRawPixelsStore()
-        pixels_id = new_image.getPrimaryPixels().getId()
-        raw_pixel_store.setPixelsId(pixels_id, True)
+        raw_pixel_store = (
+            conn.c.sf.createRawPixelsStore()
+        )
+        pixels_id = (
+            new_image.getPrimaryPixels().getId()
+        )
+        raw_pixel_store.setPixelsId(
+            pixels_id, True
+        )
 
         for tile_coord in zct_tile_list:
             tile_data = data[
                 tile_coord[0],
                 tile_coord[1],
                 tile_coord[2],
-                tile_coord[3][1] : tile_coord[3][1] + tile_coord[3][3],
-                tile_coord[3][0] : tile_coord[3][0] + tile_coord[3][2],
+                tile_coord[3][
+                    1
+                ]:tile_coord[3][1]
+                + tile_coord[3][3],
+                tile_coord[3][
+                    0
+                ]:tile_coord[3][0]
+                + tile_coord[3][2],
             ]
-            tile_data = tile_data.byteswap()
-            bin_tile_data = tile_data.tostring()
+            tile_data = (
+                tile_data.byteswap()
+            )
+            bin_tile_data = (
+                tile_data.tostring()
+            )
 
             raw_pixel_store.setTile(
                 bin_tile_data,
@@ -585,41 +824,90 @@ def create_image_from_numpy_array(
             )
 
         if dataset is not None:
-            _link_image_to_dataset(conn, new_image, dataset)
+            _link_image_to_dataset(
+                conn, new_image, dataset
+            )
 
     if channel_labels is not None:
-        _label_channels(new_image, channel_labels)
+        _label_channels(
+            new_image, channel_labels
+        )
 
     if acquisition_datetime is not None:
-        _update_acquisition_datetime(conn, new_image, acquisition_datetime)
+        _update_acquisition_datetime(
+            conn,
+            new_image,
+            acquisition_datetime,
+        )
 
     return new_image
 
 
 def _update_acquisition_datetime(
-    conn: BlitzGateway, image: ImageWrapper, acquisition_datetime: str
+    conn: BlitzGateway,
+    image: ImageWrapper,
+    acquisition_datetime: str,
 ):
     # image = conn.getObject("Image", image_id)
-    acquisition_datetime = datetime.datetime.fromisoformat(
-        acquisition_datetime
+    acquisition_datetime = (
+        datetime.datetime.fromisoformat(
+            acquisition_datetime
+        )
     )
-    milli_secs = acquisition_datetime.timestamp() * 1000
-    image = conn.getObject("Image", image.getId())
-    image._obj.acquisitionDate = rtime(milli_secs)
-    conn.getUpdateService().saveObject(image._obj, conn.SERVICE_OPTS)
+    milli_secs = (
+        acquisition_datetime.timestamp()
+        * 1000
+    )
+    image = conn.getObject(
+        "Image", image.getId()
+    )
+    image._obj.acquisitionDate = rtime(
+        milli_secs
+    )
+    conn.getUpdateService().saveObject(
+        image._obj, conn.SERVICE_OPTS
+    )
 
 
-def _get_tile_list(zct_list, data_shape, tile_size):
+def _get_tile_list(
+    zct_list, data_shape, tile_size
+):
     zct_tile_list = []
     for p in zct_list:
-        for tile_offset_y in range(0, data_shape[-2], tile_size[1]):
-            for tile_offset_x in range(0, data_shape[-1], tile_size[0]):
-                tile_width = tile_size[0]
-                tile_height = tile_size[1]
-                if tile_width + tile_offset_x > data_shape[-1]:
-                    tile_width = data_shape[-1] - tile_offset_x
-                if tile_height + tile_offset_y > data_shape[-2]:
-                    tile_height = data_shape[-2] - tile_offset_y
+        for tile_offset_y in range(
+            0,
+            data_shape[-2],
+            tile_size[1],
+        ):
+            for tile_offset_x in range(
+                0,
+                data_shape[-1],
+                tile_size[0],
+            ):
+                tile_width = tile_size[
+                    0
+                ]
+                tile_height = tile_size[
+                    1
+                ]
+                if (
+                    tile_width
+                    + tile_offset_x
+                    > data_shape[-1]
+                ):
+                    tile_width = (
+                        data_shape[-1]
+                        - tile_offset_x
+                    )
+                if (
+                    tile_height
+                    + tile_offset_y
+                    > data_shape[-2]
+                ):
+                    tile_height = (
+                        data_shape[-2]
+                        - tile_offset_y
+                    )
 
                 tile_xywh = (
                     tile_offset_x,
@@ -627,37 +915,56 @@ def _get_tile_list(zct_list, data_shape, tile_size):
                     tile_width,
                     tile_height,
                 )
-                zct_tile_list.append((*p, tile_xywh))
+                zct_tile_list.append(
+                    (*p, tile_xywh)
+                )
 
     return zct_tile_list
 
 
 def create_roi(
-    conn: BlitzGateway, image: ImageWrapper, shapes: list, name, description
+    conn: BlitzGateway,
+    image: ImageWrapper,
+    shapes: list,
+    name,
+    description,
 ):
     # create an ROI, link it to Image
-    roi = RoiI()  # TODO: work with wrappers
+    roi = (
+        RoiI()
+    )
     # use the omero.model.ImageI that underlies the 'image' wrapper
     roi.setImage(image._obj)
     if name is not None:
         roi.setName(rstring(name))
     if description is not None:
-        roi.setDescription(rstring(description))
+        roi.setDescription(
+            rstring(description)
+        )
     for shape in shapes:
         roi.addShape(shape)
 
-    return RoiWrapper(conn, conn.getUpdateService().saveAndReturnObject(roi))
+    return RoiWrapper(
+        conn,
+        conn.getUpdateService().saveAndReturnObject(
+            roi
+        ),
+    )
 
 
 # TODO: move references to model out of here
-def _rgba_to_int(rgba_color: mm_schema.Color):
+def _rgba_to_int(
+    rgba_color: mm_schema.Color,
+):
     """Return the color as an Integer in RGBA encoding"""
     r = rgba_color.r << 24
     g = rgba_color.g << 16
     b = rgba_color.b << 8
     a = rgba_color.alpha
     rgba_int = sum([r, g, b, a])
-    if rgba_int > (2**31 - 1):  # convert to signed 32-bit int
+    if rgba_int > (
+        2**31 - 1
+    ):  # convert to signed 32-bit int
         rgba_int = rgba_int - 2**32
 
     return rgba_int
@@ -671,16 +978,35 @@ def _set_shape_properties(
     stroke_width: int = None,
 ):
     if name is not None:
-        shape.setTextValue(rstring(name))
+        shape.setTextValue(
+            rstring(name)
+        )
     if fill_color is not None:
-        shape.setFillColor(rint(_rgba_to_int(fill_color)))
+        shape.setFillColor(
+            rint(
+                _rgba_to_int(fill_color)
+            )
+        )
     if stroke_color is not None:
-        shape.setStrokeColor(rint(_rgba_to_int(stroke_color)))
+        shape.setStrokeColor(
+            rint(
+                _rgba_to_int(
+                    stroke_color
+                )
+            )
+        )
     if stroke_width is not None:
-        shape.setStrokeWidth(LengthI(stroke_width, enums.UnitsLength.PIXEL))
+        shape.setStrokeWidth(
+            LengthI(
+                stroke_width,
+                enums.UnitsLength.PIXEL,
+            )
+        )
 
 
-def create_shape_point(mm_point: mm_schema.Point):
+def create_shape_point(
+    mm_point: mm_schema.Point,
+):
     point = PointI()
     point.x = rdouble(mm_point.x)
     point.y = rdouble(mm_point.y)
@@ -700,7 +1026,9 @@ def create_shape_point(mm_point: mm_schema.Point):
     return point
 
 
-def create_shape_line(mm_line: mm_schema.Line):
+def create_shape_line(
+    mm_line: mm_schema.Line,
+):
     line = LineI()
     line.x1 = rdouble(mm_line.x1)
     line.x2 = rdouble(mm_line.x2)
@@ -719,12 +1047,16 @@ def create_shape_line(mm_line: mm_schema.Line):
     return line
 
 
-def create_shape_rectangle(mm_rectangle: mm_schema.Rectangle):
+def create_shape_rectangle(
+    mm_rectangle: mm_schema.Rectangle,
+):
     rect = RectangleI()
     rect.x = rdouble(mm_rectangle.x)
     rect.y = rdouble(mm_rectangle.y)
     rect.width = rdouble(mm_rectangle.w)
-    rect.height = rdouble(mm_rectangle.h)
+    rect.height = rdouble(
+        mm_rectangle.h
+    )
     rect.theZ = rint(mm_rectangle.z)
     rect.theT = rint(mm_rectangle.t)
     _set_shape_properties(
@@ -737,14 +1069,18 @@ def create_shape_rectangle(mm_rectangle: mm_schema.Rectangle):
     return rect
 
 
-def create_shape_ellipse(mm_ellipse: mm_schema.Ellipse):
+def create_shape_ellipse(
+    mm_ellipse: mm_schema.Ellipse,
+):
     ellipse = EllipseI()
     ellipse.setX(rdouble(mm_ellipse.x))
-    ellipse.setY(
-        rdouble(mm_ellipse.y)
+    ellipse.setY(rdouble(mm_ellipse.y))
+    ellipse.radiusX = rdouble(
+        mm_ellipse.x_rad
     )
-    ellipse.radiusX = rdouble(mm_ellipse.x_rad)
-    ellipse.radiusY = rdouble(mm_ellipse.y_rad)
+    ellipse.radiusY = rdouble(
+        mm_ellipse.y_rad
+    )
     ellipse.theZ = rint(mm_ellipse.z)
     ellipse.theT = rint(mm_ellipse.t)
     _set_shape_properties(
@@ -757,11 +1093,20 @@ def create_shape_ellipse(mm_ellipse: mm_schema.Ellipse):
     return ellipse
 
 
-def create_shape_polygon(mm_polygon: mm_schema.Polygon):
+def create_shape_polygon(
+    mm_polygon: mm_schema.Polygon,
+):
     polygon = PolygonI()
     points_str = "".join(
         [
-            "".join([str(vertex.x), ",", str(vertex.y), ", "])
+            "".join(
+                [
+                    str(vertex.x),
+                    ",",
+                    str(vertex.y),
+                    ", ",
+                ]
+            )
             for vertex in mm_polygon.vertexes
         ]
     )[:-2]
@@ -778,7 +1123,9 @@ def create_shape_polygon(mm_polygon: mm_schema.Polygon):
     return polygon
 
 
-def create_shape_mask(mm_mask: mm_schema.Mask):
+def create_shape_mask(
+    mm_mask: mm_schema.Mask,
+):
     mask = MaskI()
     mask.setX(rdouble(mm_mask.x))
     mask.setY(rdouble(mm_mask.y))
@@ -788,7 +1135,9 @@ def create_shape_mask(mm_mask: mm_schema.Mask):
     mask.setWidth(
         rdouble(mm_mask.mask.shape_x)
     )  # TODO: see how to get shape if not np.array
-    mask.setHeight(rdouble(mm_mask.mask.shape_y))
+    mask.setHeight(
+        rdouble(mm_mask.mask.shape_y)
+    )
     mask_packed = np.packbits(
         mm_mask.mask.array_data
     )  # TODO: raise error when not boolean array
@@ -807,11 +1156,19 @@ def create_tag(
     conn: BlitzGateway,
     tag_name: str,
     tag_description: str,
-    omero_objects: list[Union[ImageWrapper, DatasetWrapper, ProjectWrapper]],
+    omero_objects: list[
+        Union[
+            ImageWrapper,
+            DatasetWrapper,
+            ProjectWrapper,
+        ]
+    ],
 ):
     tag_ann = TagAnnotationWrapper(conn)
     tag_ann.setValue(tag_name)
-    tag_ann.setDescription(tag_description)
+    tag_ann.setDescription(
+        tag_description
+    )
     tag_ann.save()
 
     for obj in omero_objects:
@@ -827,19 +1184,32 @@ def _serialize_map_value(value):
         return json.dumps(value)
     except ValueError:
         # TODO: log an error
-        return json.dumps(value.__str__())
+        return json.dumps(
+            value.__str__()
+        )
 
 
 def _dict_to_map(dictionary):
     """Converts a dictionary into a list of key:value pairs to be fed as map annotation.
-    If value is not a string we serialize it as a json string"""
-    return [[str(k), _serialize_map_value(v)] for k, v in dictionary.items()]
+    If value is not a string we serialize it as a json string
+    """
+    return [
+        [
+            str(k),
+            _serialize_map_value(v),
+        ]
+        for k, v in dictionary.items()
+    ]
 
 
 def create_key_value(
     conn: BlitzGateway,
     annotation: dict,
-    omero_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
+    omero_object: Union[
+        ImageWrapper,
+        DatasetWrapper,
+        ProjectWrapper,
+    ],
     annotation_name=None,
     annotation_description=None,
     namespace=None,
@@ -852,20 +1222,29 @@ def create_key_value(
             metadata.NSCLIENTMAPANNOTATION
         )  # This makes the annotation editable in the client
     # Convert a dictionary into a map annotation
-    annotation = _dict_to_map(annotation)
+    annotation = _dict_to_map(
+        annotation
+    )
 
     map_ann = MapAnnotationWrapper(conn)
     if annotation_name is not None:
         map_ann.setName(annotation_name)
-    if annotation_description is not None:
-        map_ann.setDescription(annotation_description)
+    if (
+        annotation_description
+        is not None
+    ):
+        map_ann.setDescription(
+            annotation_description
+        )
 
     map_ann.setNs(namespace)
 
     map_ann.setValue(annotation)
     map_ann.save()
 
-    _link_annotation(omero_object, map_ann)
+    _link_annotation(
+        omero_object, map_ann
+    )
 
     return map_ann
 
@@ -878,22 +1257,37 @@ def update_key_value(
     annotation_description=None,
     namespace=None,
 ):
-    """Update the key-value pairs on a map_annotation. If replace is True, all values will be replaced."""
-    curr_values = dict(annotation.getValue())
+    """Update the key-value pairs on a map_annotation.\
+     If replace is True, all values will be replaced."""
+    curr_values = dict(
+        annotation.getValue()
+    )
 
     if replace:
         new_values = updated_annotation
     else:
-        new_values = curr_values | updated_annotation
+        new_values = (
+            curr_values
+            | updated_annotation
+        )
 
-    new_values = _dict_to_map(new_values)
+    new_values = _dict_to_map(
+        new_values
+    )
 
     annotation.setValue(new_values)
 
     if annotation_name is not None:
-        annotation.setName(annotation_name)
-    if annotation_description is not None:
-        annotation.setDescription(annotation_description)
+        annotation.setName(
+            annotation_name
+        )
+    if (
+        annotation_description
+        is not None
+    ):
+        annotation.setDescription(
+            annotation_description
+        )
     if namespace is not None:
         annotation.setNs(namespace)
 
@@ -901,80 +1295,258 @@ def update_key_value(
 
 
 def _create_column(data_type, kwargs):
-    column_class = COLUMN_TYPES[data_type]
+    column_class = COLUMN_TYPES[
+        data_type
+    ]
 
     return column_class(**kwargs)
 
 
 def _create_columns(
-    table: Union[DataFrame, list[dict[str, list]], dict[str, list]]
+    table: Union[
+        DataFrame,
+        list[dict[str, list]],
+        dict[str, list],
+    ]
 ) -> list[grid.Column]:
     # TODO: Verify implementation of empty table creation
     if isinstance(table, pd.DataFrame):
-        column_names = table.columns.tolist()
-        values = [table[c].values.tolist() for c in table.columns]
+        column_names = (
+            table.columns.tolist()
+        )
+        values = [
+            table[c].values.tolist()
+            for c in table.columns
+        ]
     elif isinstance(table, list):
-        column_names = [next(iter(c)) for c in table]
-        values = [table[cn] for cn in column_names]
+        column_names = [
+            next(iter(c)) for c in table
+        ]
+        values = [
+            table[cn]
+            for cn in column_names
+        ]
     elif isinstance(table, dict):
-        column_names = list(table.keys())
-        values = [table[cn] for cn in column_names]
+        column_names = list(
+            table.keys()
+        )
+        values = [
+            table[cn]
+            for cn in column_names
+        ]
     elif isinstance(table, JsonObj):
-        column_names = list(table._as_dict.keys())
-        values = [table[cn] for cn in column_names]
+        column_names = list(
+            table._as_dict.keys()
+        )
+        values = [
+            table[cn]
+            for cn in column_names
+        ]
     else:
         raise TypeError(
             "Table must be a pandas dataframe or a list of dictionaries or a dictionary"
         )
 
     columns = []
-    for cn, v in zip(column_names, values):
+    for cn, v in zip(
+        column_names, values
+    ):
         v_type = type(v[0])
         if isinstance(v[0], str):
-            size = (
-                len(max(v, key=len)) * 2
-            )  # We assume here that the max size is double of what we really have...
-            args = {"name": cn, "size": size, "values": v}
-            columns.append(_create_column(data_type="string", kwargs=args))
-        elif isinstance(v[0], (int, np.integer)):
-            if cn.lower() in ["imageid", "image id", "image_id"]:
-                args = {"name": cn, "values": v}
-                columns.append(_create_column(data_type="image", kwargs=args))
-            elif cn.lower() in ["datasetid", "dataset id", "dataset_id"]:
-                args = {"name": cn, "values": v}
-                columns.append(
-                    _create_column(data_type="dataset", kwargs=args)
+            # We assume here that the max size is double of what we really
+            # have...
+            size = (len(max(v, key=len)) * 2)
+            args = {
+                "name": cn,
+                "size": size,
+                "values": v,
+            }
+            columns.append(
+                _create_column(
+                    data_type="string",
+                    kwargs=args,
                 )
-            elif cn.lower() in ["plateid", "plate id", "plate_id"]:
-                args = {"name": cn, "values": v}
-                columns.append(_create_column(data_type="plate", kwargs=args))
-            elif cn.lower() in ["wellid", "well id", "well_id"]:
-                args = {"name": cn, "values": v}
-                columns.append(_create_column(data_type="well", kwargs=args))
-            elif cn.lower() in ["roiid", "roi id", "roi_id"]:
-                args = {"name": cn, "values": v}
-                columns.append(_create_column(data_type="roi", kwargs=args))
-            elif cn.lower() in ["mask", "maskid", "mask id", "mask_id"]:
-                args = {"name": cn, "values": v}
-                columns.append(_create_column(data_type="mask", kwargs=args))
-            elif cn.lower() in ["fileid", "file id", "file_id"]:
-                args = {"name": cn, "values": v}
-                columns.append(_create_column(data_type="file", kwargs=args))
+            )
+        elif isinstance(
+            v[0], (int, np.integer)
+        ):
+            if cn.lower() in [
+                "imageid",
+                "image id",
+                "image_id",
+            ]:
+                args = {
+                    "name": cn,
+                    "values": v,
+                }
+                columns.append(
+                    _create_column(
+                        data_type="image",
+                        kwargs=args,
+                    )
+                )
+            elif cn.lower() in [
+                "datasetid",
+                "dataset id",
+                "dataset_id",
+            ]:
+                args = {
+                    "name": cn,
+                    "values": v,
+                }
+                columns.append(
+                    _create_column(
+                        data_type="dataset",
+                        kwargs=args,
+                    )
+                )
+            elif cn.lower() in [
+                "plateid",
+                "plate id",
+                "plate_id",
+            ]:
+                args = {
+                    "name": cn,
+                    "values": v,
+                }
+                columns.append(
+                    _create_column(
+                        data_type="plate",
+                        kwargs=args,
+                    )
+                )
+            elif cn.lower() in [
+                "wellid",
+                "well id",
+                "well_id",
+            ]:
+                args = {
+                    "name": cn,
+                    "values": v,
+                }
+                columns.append(
+                    _create_column(
+                        data_type="well",
+                        kwargs=args,
+                    )
+                )
+            elif cn.lower() in [
+                "roiid",
+                "roi id",
+                "roi_id",
+            ]:
+                args = {
+                    "name": cn,
+                    "values": v,
+                }
+                columns.append(
+                    _create_column(
+                        data_type="roi",
+                        kwargs=args,
+                    )
+                )
+            elif cn.lower() in [
+                "mask",
+                "maskid",
+                "mask id",
+                "mask_id",
+            ]:
+                args = {
+                    "name": cn,
+                    "values": v,
+                }
+                columns.append(
+                    _create_column(
+                        data_type="mask",
+                        kwargs=args,
+                    )
+                )
+            elif cn.lower() in [
+                "fileid",
+                "file id",
+                "file_id",
+            ]:
+                args = {
+                    "name": cn,
+                    "values": v,
+                }
+                columns.append(
+                    _create_column(
+                        data_type="file",
+                        kwargs=args,
+                    )
+                )
             else:
-                args = {"name": cn, "values": v}
-                columns.append(_create_column(data_type="long", kwargs=args))
-        elif isinstance(v[0], (float, np.floating)):
-            args = {"name": cn, "values": v}
-            columns.append(_create_column(data_type="double", kwargs=args))
-        elif isinstance(v[0], (bool, np.bool_)):
-            args = {"name": cn, "values": [int(i) for i in v]}
-            columns.append(_create_column(data_type="long", kwargs=args))
-        elif isinstance(v[0], (ImageWrapper, ImageI)):
-            args = {"name": cn, "values": [img.getId() for img in v]}
-            columns.append(_create_column(data_type="image", kwargs=args))
-        elif isinstance(v[0], (RoiWrapper, RoiI)):
-            args = {"name": cn, "values": [roi.getId() for roi in v]}
-            columns.append(_create_column(data_type="roi", kwargs=args))
+                args = {
+                    "name": cn,
+                    "values": v,
+                }
+                columns.append(
+                    _create_column(
+                        data_type="long",
+                        kwargs=args,
+                    )
+                )
+        elif isinstance(
+            v[0], (float, np.floating)
+        ):
+            args = {
+                "name": cn,
+                "values": v,
+            }
+            columns.append(
+                _create_column(
+                    data_type="double",
+                    kwargs=args,
+                )
+            )
+        elif isinstance(
+            v[0], (bool, np.bool_)
+        ):
+            args = {
+                "name": cn,
+                "values": [
+                    int(i) for i in v
+                ],
+            }
+            columns.append(
+                _create_column(
+                    data_type="long",
+                    kwargs=args,
+                )
+            )
+        elif isinstance(
+            v[0], (ImageWrapper, ImageI)
+        ):
+            args = {
+                "name": cn,
+                "values": [
+                    img.getId()
+                    for img in v
+                ],
+            }
+            columns.append(
+                _create_column(
+                    data_type="image",
+                    kwargs=args,
+                )
+            )
+        elif isinstance(
+            v[0], (RoiWrapper, RoiI)
+        ):
+            args = {
+                "name": cn,
+                "values": [
+                    roi.getId()
+                    for roi in v
+                ],
+            }
+            columns.append(
+                _create_column(
+                    data_type="roi",
+                    kwargs=args,
+                )
+            )
         elif isinstance(
             v_type, (list, tuple)
         ):  # We are creating array columns
@@ -993,37 +1565,62 @@ def _create_columns(
 
 def create_table(
     conn: BlitzGateway,
-    table: Union[DataFrame, list[dict[str, list]], dict[str, list]],
+    table: Union[
+        DataFrame,
+        list[dict[str, list]],
+        dict[str, list],
+    ],
     table_name: str,
-    omero_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
+    omero_object: Union[
+        ImageWrapper,
+        DatasetWrapper,
+        ProjectWrapper,
+    ],
     table_description: str,
     namespace: str,
 ):
-    """Creates a table annotation from a pandas dataframe or a list of columns as dictionaries."""
-
+    """Creates a table annotation from a pandas \
+    dataframe or a list of columns as dictionaries."""
     table_name = f'{table_name}_{"".join([choice(ascii_letters) for _ in range(32)])}.h5'
     columns = _create_columns(table)
 
-    resources = conn.c.sf.sharedResources()
-    repository_id = (
-        resources.repositories().descriptions[0].getId().getValue()
+    resources = (
+        conn.c.sf.sharedResources()
     )
-    table = resources.newTable(repository_id, table_name)
+    repository_id = (
+        resources.repositories()
+        .descriptions[0]
+        .getId()
+        .getValue()
+    )
+    table = resources.newTable(
+        repository_id, table_name
+    )
     table.initialize(columns)
     table.addData(columns)
-    original_file = table.getOriginalFile()
+    original_file = (
+        table.getOriginalFile()
+    )
     table.close()
 
-    file_ann = FileAnnotationWrapper(conn)
+    file_ann = FileAnnotationWrapper(
+        conn
+    )
     if namespace is not None:
         file_ann.setNs(namespace)
-    file_ann.setDescription(table_description)
+    file_ann.setDescription(
+        table_description
+    )
     file_ann.setFile(
-        OriginalFileI(original_file.id.val, False)
+        OriginalFileI(
+            original_file.id.val, False
+        )
     )  # TODO: try to get this with a wrapper
     file_ann.save()
 
-    _link_annotation(omero_object, file_ann)
+    _link_annotation(
+        omero_object, file_ann
+    )
 
     return file_ann
 
@@ -1031,19 +1628,27 @@ def create_table(
 def create_comment(
     conn: BlitzGateway,
     comment_text: str,
-    omero_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
+    omero_object: Union[
+        ImageWrapper,
+        DatasetWrapper,
+        ProjectWrapper,
+    ],
     namespace: str,
 ):
     if namespace is None:
         namespace = (
             metadata.NSCLIENTMAPANNOTATION
         )  # This makes the annotation editable in the client
-    comment_ann = CommentAnnotationWrapper(conn)
+    comment_ann = (
+        CommentAnnotationWrapper(conn)
+    )
     comment_ann.setValue(comment_text)
     comment_ann.setNs(namespace)
     comment_ann.save()
 
-    _link_annotation(omero_object, comment_ann)
+    _link_annotation(
+        omero_object, comment_ann
+    )
 
     return comment_ann
 
@@ -1051,24 +1656,43 @@ def create_comment(
 def create_file(
     conn: BlitzGateway,
     file_path: str,
-    omero_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
+    omero_object: Union[
+        ImageWrapper,
+        DatasetWrapper,
+        ProjectWrapper,
+    ],
     file_description: str,
     namespace: str,
 ):
     if not isinstance(file_path, str):
-        raise TypeError(f"file_path {file_path} must be a string")
+        raise TypeError(
+            f"file_path {file_path} must be a string"
+        )
 
-    mimetype, _ = mimetypes.guess_type(file_path)
-    file_ann = conn.createFileAnnfromLocalFile(
-        file_path, mimetype=mimetype, ns=namespace, desc=file_description
+    mimetype, _ = mimetypes.guess_type(
+        file_path
     )
-    _link_annotation(omero_object, file_ann)
+    file_ann = (
+        conn.createFileAnnfromLocalFile(
+            file_path,
+            mimetype=mimetype,
+            ns=namespace,
+            desc=file_description,
+        )
+    )
+    _link_annotation(
+        omero_object, file_ann
+    )
 
     return file_ann
 
 
 def _link_annotation(
-    object_wrapper: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
+    object_wrapper: Union[
+        ImageWrapper,
+        DatasetWrapper,
+        ProjectWrapper,
+    ],
     annotation_wrapper: Union[
         TagAnnotationWrapper,
         MapAnnotationWrapper,
@@ -1076,27 +1700,43 @@ def _link_annotation(
         CommentAnnotationWrapper,
     ],
 ):
-    object_wrapper.linkAnnotation(annotation_wrapper)
+    object_wrapper.linkAnnotation(
+        annotation_wrapper
+    )
 
 
 def _link_dataset_to_project(
-    conn: BlitzGateway, dataset: DatasetWrapper, project: ProjectWrapper
+    conn: BlitzGateway,
+    dataset: DatasetWrapper,
+    project: ProjectWrapper,
 ):
     link = ProjectDatasetLinkI()
     link.setParent(
         ProjectI(project.getId(), False)
     )  # linking to a loaded project might raise exception
-    link.setChild(DatasetI(dataset.getId(), False))
-    conn.getUpdateService().saveObject(link)
+    link.setChild(
+        DatasetI(dataset.getId(), False)
+    )
+    conn.getUpdateService().saveObject(
+        link
+    )
 
 
 def _link_image_to_dataset(
-    conn: BlitzGateway, image: ImageWrapper, dataset: DatasetWrapper
+    conn: BlitzGateway,
+    image: ImageWrapper,
+    dataset: DatasetWrapper,
 ):
     link = DatasetImageLinkI()
-    link.setParent(DatasetI(dataset.getId(), False))
-    link.setChild(ImageI(image.getId(), False))
-    conn.getUpdateService().saveObject(link)
+    link.setParent(
+        DatasetI(dataset.getId(), False)
+    )
+    link.setChild(
+        ImageI(image.getId(), False)
+    )
+    conn.getUpdateService().saveObject(
+        link
+    )
 
 
 def del_objects(
@@ -1111,18 +1751,24 @@ def del_objects(
     if dry_run_first:
         try:
             conn.deleteObjects(
-                graph_spec="/".join(object_types),
+                graph_spec="/".join(
+                    object_types
+                ),
                 obj_ids=object_ids,
                 deleteAnns=delete_anns,
                 deleteChildren=delete_children,
                 dryRun=True,
             )
         except Exception as e:
-            logger.error(f"Error during dry run deletion: {e}")
+            logger.error(
+                f"Error during dry run deletion: {e}"
+            )
             return False
     try:
         conn.deleteObjects(
-            graph_spec="/".join(object_types),
+            graph_spec="/".join(
+                object_types
+            ),
             obj_ids=object_ids,
             deleteAnns=delete_anns,
             deleteChildren=delete_children,
@@ -1130,7 +1776,9 @@ def del_objects(
         )
         return True
     except Exception as e:
-        logger.error(f"Error during deletion: {e}")
+        logger.error(
+            f"Error during deletion: {e}"
+        )
         return False
 
 

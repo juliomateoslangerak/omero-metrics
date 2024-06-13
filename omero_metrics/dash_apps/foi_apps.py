@@ -1,20 +1,13 @@
-import random
-import uuid
-from datetime import datetime
-
 import dash
 import dash_mantine_components as dmc
-import dpd_components as dpd
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objs as go
-from dash import Dash, Input, Output, callback, dash_table, dcc, html
-from dash.dependencies import ALL, MATCH
-from dash.exceptions import PreventUpdate
-from django.core.cache import cache
-from django.utils.translation import gettext, gettext_lazy
-from django_plotly_dash import DjangoDash
-from django_plotly_dash.consumers import send_to_pipe_channel
+
+from dash import (
+    dash_table,
+    html,
+)
+from django_plotly_dash import (
+    DjangoDash,
+)
 
 c1 = "#d8f3dc"
 c2 = "#eceff1"
@@ -27,12 +20,18 @@ app.layout = dmc.MantineProvider(
     children=[
         dmc.Container(
             [
-                html.Div(id="blank-input", children=[]),
+                html.Div(
+                    id="blank-input",
+                    children=[],
+                ),
                 dmc.Center(
                     dmc.Text(
                         "Field Of Illumination Dashboard",
                         mb=30,
-                        style={"margin-top": "20px", "fontSize": 40},
+                        style={
+                            "margin-top": "20px",
+                            "fontSize": 40,
+                        },
                     )
                 ),
                 dmc.Grid(
@@ -52,7 +51,10 @@ app.layout = dmc.MantineProvider(
                                             page_size=10,
                                             sort_action="native",
                                             sort_mode="multi",
-                                            sort_as_null=["", "No"],
+                                            sort_as_null=[
+                                                "",
+                                                "No",
+                                            ],
                                             sort_by=[
                                                 {
                                                     "column_id": "pop",
@@ -96,11 +98,17 @@ app.layout = dmc.MantineProvider(
 
 
 @app.expanded_callback(
-    dash.dependencies.Output("table", "data"),
+    dash.dependencies.Output(
+        "table", "data"
+    ),
     [
-        dash.dependencies.Input("blank-input", "children"),
+        dash.dependencies.Input(
+            "blank-input", "children"
+        ),
     ],
 )
 def keyvalue_callback(*args, **kwargs):
-    data = kwargs["session_state"]["data"]
+    data = kwargs["session_state"][
+        "data"
+    ]
     return data.to_dict("records")
