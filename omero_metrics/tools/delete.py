@@ -1,9 +1,7 @@
 from omero_metrics.tools import (
     omero_tools,
 )
-from omero.gateway import (
-    BlitzGateway
-)
+from omero.gateway import BlitzGateway
 import microscopemetrics_schema.datamodel as mm_schema
 from dataclasses import fields
 import logging
@@ -24,21 +22,12 @@ def _empty_data_reference(
 def delete_data_references(
     mm_obj: mm_schema.MetricsObject,
 ) -> None:
-    if isinstance(
-        mm_obj, mm_schema.DataReference
-    ):
+    if isinstance(mm_obj, mm_schema.DataReference):
         _empty_data_reference(mm_obj)
-    elif isinstance(
-        mm_obj, mm_schema.MetricsObject
-    ):
-        _empty_data_reference(
-            mm_obj.data_reference
-        )
+    elif isinstance(mm_obj, mm_schema.MetricsObject):
+        _empty_data_reference(mm_obj.data_reference)
     elif isinstance(mm_obj, list):
-        return [
-            delete_data_references(obj)
-            for obj in mm_obj
-        ]
+        return [delete_data_references(obj) for obj in mm_obj]
     else:
         raise ValueError(
             "Input should be a metrics object or a list of metrics objects"
@@ -62,19 +51,17 @@ def delete_dataset_output(
         except AttributeError:
             continue
 
-    del_success = (
-        omero_tools.del_objects(
-            conn=conn,
-            object_ids=ids_to_del,
-            object_types=[
-                "Annotation",
-                "Roi",
-                "Image/Pixels/Channel",
-            ],
-            delete_anns=True,
-            delete_children=True,
-            dry_run_first=True,
-        )
+    del_success = omero_tools.del_objects(
+        conn=conn,
+        object_ids=ids_to_del,
+        object_types=[
+            "Annotation",
+            "Roi",
+            "Image/Pixels/Channel",
+        ],
+        delete_anns=True,
+        delete_children=True,
+        dry_run_first=True,
     )
 
     if del_success:
@@ -95,9 +82,7 @@ def delete_dataset_file_ann(
     dataset: mm_schema.MetricsDataset,
 ) -> bool:
     try:
-        id_to_del = (
-            dataset.data_reference.omero_object_id
-        )
+        id_to_del = dataset.data_reference.omero_object_id
     except AttributeError:
         logger.error(
             "No file annotation reference associated with dataset. Unable to delete"

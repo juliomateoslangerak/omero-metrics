@@ -97,7 +97,7 @@ def Run_script_locally():
                 new_image_data = np.squeeze(np.copy(image_data))
                 # noise_image = np.ones_like(new_image_data, dtype="float64")
                 for c in range(
-                        new_image_data.shape[1]
+                    new_image_data.shape[1]
                 ):  # dimensions are zctxy
                     # adding gaussian blur
                     new_image_data[:, c, ...] = gaussian(

@@ -30,9 +30,7 @@ dash_app_project.layout = dmc.MantineProvider(
                         ),
                     ],
                 ),
-                html.Div(
-                    id="tabs-example-content-1"
-                ),
+                html.Div(id="tabs-example-content-1"),
                 dmc.Title(
                     "Plot Over Time",
                     c="#63aa47",
@@ -55,17 +53,13 @@ dash_app_project.layout = dmc.MantineProvider(
         "tabs-example-content-1",
         "children",
     ),
-    dash.dependencies.Input(
-        "tabs-example-1", "value"
-    ),
+    dash.dependencies.Input("tabs-example-1", "value"),
 )
 def render_content(tab):
     if tab == "tab-1":
         return html.Div(
             [
-                html.H3(
-                    "Tab content 1"
-                ),
+                html.H3("Tab content 1"),
                 dcc.Graph(
                     figure=dict(
                         data=[
@@ -90,9 +84,7 @@ def render_content(tab):
     elif tab == "tab-2":
         return html.Div(
             [
-                html.H3(
-                    "Tab content 2"
-                ),
+                html.H3("Tab content 2"),
                 dcc.Graph(
                     figure=dict(
                         data=[

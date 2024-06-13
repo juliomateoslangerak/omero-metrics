@@ -42,9 +42,7 @@ dash_example1.layout = html.Div(
                     value="NYC",
                     className="col-md-12",
                 ),
-                html.Div(
-                    id="test-output-div"
-                ),
+                html.Div(id="test-output-div"),
             ]
         ),
         dcc.Dropdown(
@@ -73,14 +71,8 @@ dash_example1.layout = html.Div(
 
 
 @dash_example1.expanded_callback(
-    dash.dependencies.Output(
-        "test-output-div", "children"
-    ),
-    [
-        dash.dependencies.Input(
-            "my-dropdown1", "value"
-        )
-    ],
+    dash.dependencies.Output("test-output-div", "children"),
+    [dash.dependencies.Input("my-dropdown1", "value")],
 )
 def callback_test(*args, **kwargs):
     "Callback to generate test data on each change of the dropdown"
@@ -91,9 +83,7 @@ def callback_test(*args, **kwargs):
     random_y = np.random.randn(N)
 
     # Create a trace
-    trace = go.Scatter(
-        x=random_x, y=random_y
-    )
+    trace = go.Scatter(x=random_x, y=random_y)
 
     data = [trace]
 
@@ -108,9 +98,7 @@ def callback_test(*args, **kwargs):
             title="Date",
             tickangle=0,
         ),
-        margin=dict(
-            t=20, b=50, l=50, r=40
-        ),
+        margin=dict(t=20, b=50, l=50, r=40),
         height=350,
     )
 
@@ -130,35 +118,18 @@ def callback_test(*args, **kwargs):
 
 
 @dash_example1.expanded_callback(
-    dash.dependencies.Output(
-        "test-output-div2", "children"
-    ),
-    [
-        dash.dependencies.Input(
-            "my-dropdown2", "value"
-        )
-    ],
+    dash.dependencies.Output("test-output-div2", "children"),
+    [dash.dependencies.Input("my-dropdown2", "value")],
 )
 def callback_test2(*args, **kwargs):
     "Callback to exercise session functionality"
 
     children = [
-        html.Div(
-            [
-                "You have selected %s."
-                % (args[0])
-            ]
-        ),
+        html.Div(["You have selected %s." % (args[0])]),
         html.Div(
             [
                 "The session context message is '%s'"
-                % (
-                    kwargs[
-                        "session_state"
-                    ][
-                        "django_to_dash_context"
-                    ]
-                )
+                % (kwargs["session_state"]["django_to_dash_context"])
             ]
         ),
     ]

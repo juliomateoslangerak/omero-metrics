@@ -98,17 +98,11 @@ app.layout = dmc.MantineProvider(
 
 
 @app.expanded_callback(
-    dash.dependencies.Output(
-        "table", "data"
-    ),
+    dash.dependencies.Output("table", "data"),
     [
-        dash.dependencies.Input(
-            "blank-input", "children"
-        ),
+        dash.dependencies.Input("blank-input", "children"),
     ],
 )
 def keyvalue_callback(*args, **kwargs):
-    data = kwargs["session_state"][
-        "data"
-    ]
+    data = kwargs["session_state"]["data"]
     return data.to_dict("records")
