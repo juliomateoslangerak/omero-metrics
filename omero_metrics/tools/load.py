@@ -9,12 +9,13 @@ import microscopemetrics_schema.datamodel as mm_schema
 from linkml_runtime.loaders import yaml_loader
 import pandas as pd
 from omero_metrics.tools import omero_tools
-from .data_preperation import get_table_originalFile_id
+from .data_preperation import get_table_originalFile_id, get_info_roi_lines, get_info_roi_rectangles, get_info_roi_points, get_rois_omero
 
 # Creating logging services
 logger = logging.getLogger(__name__)
 import collections
 import omero
+from typing import Union
 
 DATASET_TYPES = ["FieldIlluminationDataset", "PSFBeadsDataset"]
 
@@ -90,27 +91,46 @@ def load_dataset(dataset: DatasetWrapper, load_images: bool = True) -> mm_schema
     return mm_dataset
 
 
-def load_dash_data(conn: BlitzGateway, dataset: mm_schema.MetricsDataset) -> dict:
+def load_dash_data(conn: BlitzGateway, dataset: mm_schema.MetricsDataset,
+                   omero_object: Union[DatasetWrapper, ImageWrapper]) -> dict:
     dash_context = {}
     if isinstance(dataset, FieldIlluminationDataset):
         title = 'Field Illumination Dataset'
-        df = get_images_intensity_profiles(dataset)
-        images = concatenate_images(conn, df)
         dash_context['title'] = title
-        dash_context['images'] = images
-        dash_context['key_values_df'] = get_key_values(dataset.output)
-        dash_context['intensity_profiles'] = get_all_intensity_profiles(conn, df)
+        df = get_images_intensity_profiles(dataset)
+        if isinstance(omero_object, DatasetWrapper):
+            dash_context['image'] = concatenate_images(dataset.input.field_illumination_image)
+            dash_context['intensity_profiles'] = get_all_intensity_profiles(conn, df)
+            dash_context['key_values_df'] = get_key_values(dataset.output)
+        elif isinstance(omero_object, ImageWrapper):
+            dash_context['image'] = load_image(omero_object, load_array=True).array_data
+            ann_id = df[(df['Field_illumination_image'] == int(omero_object.getId()))]['Intensity_profiles'].values[0]
+            roi_service = conn.getRoiService()
+            result = roi_service.findByImage(int(omero_object.getId()), None, conn.SERVICE_OPTS)
+            shapes_rectangle, shapes_line, shapes_point = get_rois_omero(result)
+            df_lines_omero = get_info_roi_lines(shapes_line)
+            df_rects_omero = get_info_roi_rectangles(shapes_rectangle)
+            df_points_omero = get_info_roi_points(shapes_point)
+            dash_context['df_lines'] = df_lines_omero
+            dash_context['df_rects'] = df_rects_omero
+            dash_context['df_points'] = df_points_omero
+            dash_context['df_intensity_profiles'] = get_table_file_id(conn, ann_id)
     elif isinstance(dataset, PSFBeadsDataset):
         dash_context['title'] = 'PSF Beads Dataset'
-        dash_context['image'] = dataset.input.psf_beads_images[0].array_data
-        dash_context['bead_properties_df'] = get_table_File_id(conn,
-                                                               dataset.output.bead_properties.data_reference.omero_object_id)
-        dash_context['bead_x_profiles_df'] = get_table_File_id(conn,
-                                                               dataset.output.bead_x_profiles.data_reference.omero_object_id)
-        dash_context['bead_y_profiles_df'] = get_table_File_id(conn,
-                                                               dataset.output.bead_y_profiles.data_reference.omero_object_id)
-        dash_context['bead_z_profiles_df'] = get_table_File_id(conn,
-                                                               dataset.output.bead_z_profiles.data_reference.omero_object_id)
+        if isinstance(omero_object, DatasetWrapper):
+            dash_context['image'] = dataset.input.psf_beads_images[0].array_data
+            dash_context['bead_properties_df'] = get_table_file_id(conn,
+                                                                   dataset.output.bead_properties.data_reference.omero_object_id)
+            dash_context['bead_x_profiles_df'] = get_table_file_id(conn,
+                                                                   dataset.output.bead_x_profiles.data_reference.omero_object_id)
+            dash_context['bead_y_profiles_df'] = get_table_file_id(conn,
+                                                                   dataset.output.bead_y_profiles.data_reference.omero_object_id)
+            dash_context['bead_z_profiles_df'] = get_table_file_id(conn,
+                                                                   dataset.output.bead_z_profiles.data_reference.omero_object_id)
+        elif isinstance(omero_object, ImageWrapper):
+            dash_context['image'] = load_image(omero_object).array_data
+            dash_context['bead_properties_df'] = get_table_file_id(conn,
+                                                                   dataset.output.bead_properties.data_reference.omero_object_id)
     else:
         dash_context = {}
     return dash_context
@@ -127,10 +147,6 @@ def load_analysis_config(project=ProjectWrapper):
         logger.error(f"More than one configuration in project {project.getId()}. Using the last one saved")
 
     return configs[-1].getId(), dict(configs[-1].getValue())  # TODO: Make this return the last modified config
-
-
-def save_analysis_config():
-    pass
 
 
 def load_image(image: ImageWrapper, load_array: bool = True) -> mm_schema.Image:
@@ -205,13 +221,11 @@ def get_key_values(var: FieldIlluminationDataset.output) -> pd.DataFrame:
     return df
 
 
-def concatenate_images(conn, df):
-    image_0 = conn.getObject('Image', df['Field_illumination_image'][0])
-    image_array_0 = load_image(image_0).array_data
+def concatenate_images(images):
+    image_array_0 = images[0].array_data
     result = image_array_0
-    for i in range(1, len(df)):
-        image = conn.getObject('Image', df['Field_illumination_image'][i])
-        image_array = load_image(image).array_data
+    for i in range(1, len(images)):
+        image_array = images[i].array_data
         result = np.concatenate((result, image_array), axis=-1)
     return result
 
@@ -230,8 +244,8 @@ def get_all_intensity_profiles(conn, data_df):
     return df_01
 
 
-def get_table_File_id(conn, fileAnnotation_id):
-    file_id = conn.getObject('FileAnnotation', fileAnnotation_id).getFile().getId()
+def get_table_file_id(conn, file_annotation_id):
+    file_id = conn.getObject('FileAnnotation', file_annotation_id).getFile().getId()
     ctx = conn.createServiceOptsDict()
     ctx.setOmeroGroup("-1")
     r = conn.getSharedResources()
@@ -249,7 +263,3 @@ def get_table_File_id(conn, fileAnnotation_id):
     df = pd.DataFrame.from_dict(data_buffer)
     df.index = index_buffer[0: len(df)]
     return df
-
-
-#**********************************************************************************************************************
-

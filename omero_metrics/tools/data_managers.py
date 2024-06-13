@@ -7,11 +7,16 @@ from microscopemetrics.samples import (
     psf_beads
 )
 from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
-from omero.gateway import BlitzGateway, DatasetWrapper, ImageWrapper, ProjectWrapper
+from omero.gateway import BlitzGateway, DatasetWrapper, ImageWrapper
 
 from omero_metrics.tools import load, dump, update, delete
 
 logger = logging.getLogger(__name__)
+
+DATA_TYPE_MAPPINGS = {
+    "Dataset": 0,
+    "Image": 1
+}
 
 ANALYSIS_MAPPINGS = {
     "analise_field_illumination": field_illumination.analise_field_illumination,
@@ -33,7 +38,6 @@ INPUT_MAPPINGS = {
     "PSFBeadsInput": mm_schema.PSFBeadsInput,
 }
 
-
 OBJECT_TO_DUMP_FUNCTION = {
     mm_schema.Image: dump.dump_image,
     mm_schema.Roi: dump.dump_roi,
@@ -42,13 +46,15 @@ OBJECT_TO_DUMP_FUNCTION = {
     mm_schema.Table: dump.dump_table,
 }
 
+
 TEMPLATE_MAPPINGS = {
-    "FieldIlluminationDataset": "metrics/omero_views/center_view_dataset_foi.html",
-    "PSFBeadsDataset": "metrics/omero_views/center_view_dataset_psf_beads.html",
+    "FieldIlluminationDataset": ["metrics/omero_views/center_view_dataset_foi.html",
+                                 "metrics/omero_views/center_view_image.html"],
+    "PSFBeadsDataset": ["metrics/omero_views/center_view_dataset_psf_beads.html",
+                        "metrics/omero_views/center_view_image_psf.html"],
     "unknown_analysis": "metrics/omero_views/center_view_unknown_analysis_type.html",
     "unprocessed_analysis": "metrics/omero_views/unprocessed_dataset.html"
 }
-
 
 
 class DatasetManager:
@@ -57,12 +63,19 @@ class DatasetManager:
     It contains the data (microscope-metrics_schema datasets and dataset_collections) and the necessary methods
     to interact with OMERO and load and dump data.
     """
-    def __init__(self, conn: BlitzGateway, dataset: Union[DatasetWrapper, int]):
+
+    def __init__(self, conn: BlitzGateway, omero_object: Union[DatasetWrapper, ImageWrapper]):
         self._conn = conn
-        if isinstance(dataset, DatasetWrapper):
-            self.omero_dataset = dataset
-        elif isinstance(dataset, int):
-            self.omero_dataset = self._conn.getObject("Dataset", dataset)
+        if isinstance(omero_object, DatasetWrapper):
+            self.omero_dataset = omero_object
+            self.data_type = "Dataset"
+            self.load_images = True
+            self.omero_object = omero_object
+        elif isinstance(omero_object, ImageWrapper):
+            self.omero_dataset = omero_object.getParent()
+            self.data_type = "Image"
+            self.load_images = False
+            self.omero_object = omero_object
         else:
             raise ValueError("datasets must be a DatasetWrapper or a dataset id")
 
@@ -73,10 +86,14 @@ class DatasetManager:
         self.analysis_func = None
         self.template = None
         self.context = None
+        self.processed = False
         self.microscope = mm_schema.Microscope()  # TODO: top it up!!
 
     def is_processed(self):
-        return self.mm_dataset.processed if self.mm_dataset else False
+        if self.mm_dataset:
+            self.processed = self.mm_dataset.processed
+        else:
+            self.processed = False
 
     def is_validated(self):
         return self.mm_dataset.validated if self.mm_dataset else False
@@ -85,7 +102,7 @@ class DatasetManager:
         # TODO: If a user deletes the images but not the whole dataset and attachments,
         #  there is the possibility to read invalid data. Take into account
         if force_reload or self.mm_dataset is None:
-            self.mm_dataset = load.load_dataset(self.omero_dataset)
+            self.mm_dataset = load.load_dataset(self.omero_dataset, self.load_images)
         else:
             raise NotImplementedError("partial loading of data from OMERO is not yet implemented")
 
@@ -95,7 +112,7 @@ class DatasetManager:
         else:
             self.analysis_config_id, self.analysis_config = load.load_analysis_config(self.omero_project)
 
-    def save_analysis_config(self):
+    def dump_analysis_config(self):
         if not self.analysis_config:
             logger.error("No configuration to save.")
             return
@@ -131,7 +148,7 @@ class DatasetManager:
                 logger.warning("Dataset has been processed but not validated. Force reprocess to process again")
             return False
         items_to_remove = []
-        config = {k:v for k, v in self.analysis_config.items() if k not in items_to_remove}
+        config = {k: v for k, v in self.analysis_config.items() if k not in items_to_remove}
 
         self._update_dataset_input_config(config)
         self.analysis_func(self.mm_dataset)
@@ -174,10 +191,11 @@ class DatasetManager:
         logger.info("Invalidating dataset.")
 
     def visualize_data(self):
-        if self.mm_dataset.processed:
+        if self.processed:
             if self.mm_dataset.__class__.__name__ in TEMPLATE_MAPPINGS:
-                self.template = TEMPLATE_MAPPINGS.get(self.mm_dataset.__class__.__name__)
-                self.context = load.load_dash_data(self._conn, self.mm_dataset)
+                index = DATA_TYPE_MAPPINGS.get(self.data_type)
+                self.template = TEMPLATE_MAPPINGS.get(self.mm_dataset.__class__.__name__)[index]
+                self.context = load.load_dash_data(self._conn, self.mm_dataset, self.omero_object)
             else:
                 logger.warning("Unknown analysis type. Unable to visualize")
                 self.template = TEMPLATE_MAPPINGS.get("unknown_analysis")
@@ -186,7 +204,6 @@ class DatasetManager:
             logger.warning("Dataset has not been processed. Unable to visualize")
             self.template = TEMPLATE_MAPPINGS.get("unprocessed_analysis")
             self.context = {}
-
 
     def save_settings(self):
         pass

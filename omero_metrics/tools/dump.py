@@ -306,6 +306,9 @@ def _get_input_metadata(
     return metadata
 
 
+def dump_analysis_config():
+    pass
+
 def _get_output_metadata(
         dataset_output: mm_schema.MetricsOutput,
 ) -> dict:

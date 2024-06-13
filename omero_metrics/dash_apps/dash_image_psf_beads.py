@@ -1,5 +1,5 @@
 import dash
-from dash import Dash, dcc, html, Input, Output, callback, dash_table
+from dash import dcc, html
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 from ..tools.data_preperation import crop_bead_index, image_3d_chart
@@ -40,16 +40,11 @@ app.layout = dmc.MantineProvider(
                         dash.dependencies.Input('bead_ddm_psf', 'value')])
 def update_image(*args, **kwargs):
     global image_bead
-    image_omero = kwargs['session_state']['ima']
+    image_omero = kwargs['session_state']['context']['image']
     channel_index = int(args[0].split(' ')[-1])
     channel_options = [{'label': f'Channel {i}', 'value': f'Channel {i}'} for i in range(image_omero.shape[4])]
     bead_index = int(args[1].split(' ')[-1])
-    bead_properties_df = kwargs['session_state']['bead_properties_df']
-    df_properties_channel = bead_properties_df[bead_properties_df['channel_nr'] == channel_index][
-        ['bead_nr', 'intensity_max',
-         'min_intensity_min', 'intensity_std', 'intensity_robust_z_score',
-         'considered_intensity_outlier', 'z_fit_r2', 'y_fit_r2', 'x_fit_r2',
-         'z_fwhm', 'y_fwhm', 'x_fwhm', 'fwhm_lateral_asymmetry_ratio']].copy()
+    bead_properties_df = kwargs['session_state']['context']['bead_properties_df']
     df_beads_location = bead_properties_df[bead_properties_df['channel_nr'] == channel_index][['channel_nr', 'bead_nr', 'considered_axial_edge', 'z_centroid', 'y_centroid', 'x_centroid']].copy()
     bead_options = [{'label': f'Bead {i}', 'value': f'Bead {i}'} for i in df_beads_location['bead_nr']]
     bead = df_beads_location[df_beads_location['bead_nr'] == bead_index].copy()
