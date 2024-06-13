@@ -394,7 +394,9 @@ def callback_show_timeseries(internal_state_string, state_uid, **kwargs):
                 pd.Series(levels, index=timestamps).groupby(level=0).first()
             )
 
-    df = pd.DataFrame(colour_series).fillna(method="ffill").reset_index()[-25:]
+    df = (
+        pd.DataFrame(colour_series).fillna(method="ffill").reset_index()[-25:]
+    )
 
     traces = [
         go.Scatter(

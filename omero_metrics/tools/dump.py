@@ -124,7 +124,9 @@ def dump_project(
                 f"Project {project.name} is going to be linked to a different OMERO project."
             )
         omero_project = target_project
-        project.data_reference = omero_tools.get_ref_from_object(omero_project)
+        project.data_reference = omero_tools.get_ref_from_object(
+            omero_project
+        )
 
     for dataset in project.datasets:
         dump_dataset(
@@ -236,7 +238,9 @@ def dump_dataset(
             description=dataset.description,
             project=target_project,
         )
-        dataset.data_reference = omero_tools.get_ref_from_object(omero_dataset)
+        dataset.data_reference = omero_tools.get_ref_from_object(
+            omero_dataset
+        )
 
     if dump_input_images:
         for input_field in fields(dataset.input):

@@ -51,7 +51,10 @@ app.layout = dmc.MantineProvider(
                         dmc.GridCol(
                             [
                                 dmc.Title(
-                                    "Image View", c="#189A35", size="h3", mb=10
+                                    "Image View",
+                                    c="#189A35",
+                                    size="h3",
+                                    mb=10,
                                 ),
                                 dcc.Graph(
                                     id="image",
@@ -68,7 +71,10 @@ app.layout = dmc.MantineProvider(
                         dmc.GridCol(
                             [
                                 dmc.Title(
-                                    "Key Values", c="#189A35", size="h3", mb=10
+                                    "Key Values",
+                                    c="#189A35",
+                                    size="h3",
+                                    mb=10,
                                 ),
                                 dash_table.DataTable(
                                     id="key_values_psf",
