@@ -5,11 +5,16 @@ from dataclasses import fields
 from typing import Union
 
 from linkml_runtime.dumpers import YAMLDumper
-from microscopemetrics_schema.datamodel import \
-    microscopemetrics_schema as mm_schema
-from omero.gateway import (BlitzGateway, DatasetWrapper,
-                           ExperimenterGroupWrapper, ImageWrapper,
-                           ProjectWrapper)
+from microscopemetrics_schema.datamodel import (
+    microscopemetrics_schema as mm_schema,
+)
+from omero.gateway import (
+    BlitzGateway,
+    DatasetWrapper,
+    ExperimenterGroupWrapper,
+    ImageWrapper,
+    ProjectWrapper,
+)
 
 from omero_metrics.tools import omero_tools
 

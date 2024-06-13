@@ -3,8 +3,9 @@ import logging
 from typing import Union
 
 from microscopemetrics.samples import field_illumination, psf_beads
-from microscopemetrics_schema.datamodel import \
-    microscopemetrics_schema as mm_schema
+from microscopemetrics_schema.datamodel import (
+    microscopemetrics_schema as mm_schema,
+)
 from omero.gateway import BlitzGateway, DatasetWrapper, ImageWrapper
 
 from omero_metrics.tools import delete, dump, load, update
@@ -92,7 +93,7 @@ class DatasetManager:
         self.template = None
         self.context = None
         self.processed = False
-        self.microscope = mm_schema.Microscope()  # TODO: top it up!!
+        self.microscope = mm_schema.Microscope()
 
     def is_processed(self):
         if self.mm_dataset:
@@ -104,8 +105,6 @@ class DatasetManager:
         return self.mm_dataset.validated if self.mm_dataset else False
 
     def load_data(self, force_reload=True):
-        # TODO: If a user deletes the images but not the whole dataset and attachments,
-        #  there is the possibility to read invalid data. Take into account
         if force_reload or self.mm_dataset is None:
             self.mm_dataset = load.load_dataset(
                 self.omero_dataset, self.load_images

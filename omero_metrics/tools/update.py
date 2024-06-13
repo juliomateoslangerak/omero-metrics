@@ -1,8 +1,14 @@
 from typing import Union
 
 import microscopemetrics_schema.datamodel as mm_schema
-from omero.gateway import (BlitzGateway, DatasetWrapper, FileAnnotationWrapper,
-                           ImageWrapper, MapAnnotationWrapper, ProjectWrapper)
+from omero.gateway import (
+    BlitzGateway,
+    DatasetWrapper,
+    FileAnnotationWrapper,
+    ImageWrapper,
+    MapAnnotationWrapper,
+    ProjectWrapper,
+)
 
 from omero_metrics.tools import omero_tools
 

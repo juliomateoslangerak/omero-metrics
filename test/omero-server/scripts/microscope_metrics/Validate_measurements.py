@@ -35,6 +35,7 @@ import logging
 from datetime import datetime
 
 import omero.gateway as gateway
+
 # import omero dependencies
 import omero.scripts as scripts
 from omero.rtypes import rlong, robject, rstring
