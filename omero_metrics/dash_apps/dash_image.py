@@ -1,8 +1,9 @@
 import dash
+import dash_mantine_components as dmc
 from dash import dcc, html
 from django_plotly_dash import DjangoDash
+
 from ..tools.data_preperation import *
-import dash_mantine_components as dmc
 
 colorscales = px.colors.named_colorscales()
 

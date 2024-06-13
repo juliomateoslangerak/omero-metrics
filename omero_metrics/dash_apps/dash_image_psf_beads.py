@@ -1,9 +1,10 @@
 import dash
+import dash_mantine_components as dmc
+import plotly.express as px
 from dash import dcc, html
 from django_plotly_dash import DjangoDash
-import dash_mantine_components as dmc
+
 from ..tools.data_preperation import crop_bead_index, image_3d_chart
-import plotly.express as px
 
 app = DjangoDash("PSF_Beads_image")
 

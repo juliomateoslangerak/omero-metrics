@@ -1,8 +1,7 @@
 import dash
+import plotly.express as px
 from dash import dcc, html
 from django_plotly_dash import DjangoDash
-import plotly.express as px
-
 
 dashboard_name = "omero_dataset_dash"
 dash_app_dataset = DjangoDash(

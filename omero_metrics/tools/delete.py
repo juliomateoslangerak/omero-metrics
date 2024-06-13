@@ -2,20 +2,14 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+from dataclasses import fields
 from typing import Union
 
-from omero_metrics.tools import omero_tools
 import microscopemetrics_schema.datamodel as mm_schema
-from omero.gateway import (
-    BlitzGateway,
-    DatasetWrapper,
-    ImageWrapper,
-    ProjectWrapper,
-    FileAnnotationWrapper,
-    MapAnnotationWrapper,
-)
+from omero.gateway import (BlitzGateway, DatasetWrapper, FileAnnotationWrapper,
+                           ImageWrapper, MapAnnotationWrapper, ProjectWrapper)
 
-from dataclasses import fields
+from omero_metrics.tools import omero_tools
 
 
 def _empty_data_reference(reference: mm_schema.DataReference) -> None:

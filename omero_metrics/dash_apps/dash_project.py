@@ -1,7 +1,7 @@
 import dash
+import dash_mantine_components as dmc
 from dash import dcc, html
 from django_plotly_dash import DjangoDash
-import dash_mantine_components as dmc
 
 dashboard_name = "omero_project_dash"
 dash_app_project = DjangoDash(

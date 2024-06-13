@@ -1,9 +1,9 @@
 import dash
-from dash import dcc, html
-import plotly.graph_objs as go
-import numpy as np
-from django_plotly_dash import DjangoDash
 import dash_bootstrap_components as dbc
+import numpy as np
+import plotly.graph_objs as go
+from dash import dcc, html
+from django_plotly_dash import DjangoDash
 
 dashboard_name1 = "dash_example_1"
 dash_example1 = DjangoDash(name=dashboard_name1, serve_locally=True)

@@ -1,9 +1,10 @@
 from django.shortcuts import render
-from .tools import load
 from omeroweb.webclient.decorators import login_required, render_response
+
+from .tools import load
+from .tools.data_managers import DatasetManager
 from .tools.data_preperation import *
 from .tools.load import *
-from .tools.data_managers import DatasetManager
 
 
 @login_required()

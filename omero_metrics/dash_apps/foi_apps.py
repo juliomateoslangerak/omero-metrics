@@ -1,20 +1,20 @@
-import uuid
 import random
+import uuid
 from datetime import datetime
+
+import dash
+import dash_mantine_components as dmc
+import dpd_components as dpd
 import pandas as pd
+import plotly.express as px
+import plotly.graph_objs as go
+from dash import Dash, Input, Output, callback, dash_table, dcc, html
+from dash.dependencies import ALL, MATCH
+from dash.exceptions import PreventUpdate
 from django.core.cache import cache
 from django.utils.translation import gettext, gettext_lazy
-import dash
-from dash import Dash, dcc, html, Input, Output, callback, dash_table
-from dash.dependencies import MATCH, ALL
-import plotly.graph_objs as go
-import dpd_components as dpd
-from dash.exceptions import PreventUpdate
 from django_plotly_dash import DjangoDash
 from django_plotly_dash.consumers import send_to_pipe_channel
-import plotly.express as px
-import dash_mantine_components as dmc
-
 
 c1 = "#d8f3dc"
 c2 = "#eceff1"
