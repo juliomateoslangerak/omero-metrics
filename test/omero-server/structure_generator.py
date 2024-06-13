@@ -20,7 +20,10 @@ from omero.plugins.obj import ObjControl
 
 from omero_metrics.tools import dump
 
-from microscopemetrics.strategies.strategies import _gen_field_illumination_image, _gen_psf_beads_image
+from microscopemetrics.strategies.strategies import (
+    _gen_field_illumination_image,
+    _gen_psf_beads_image,
+)
 from microscopemetrics.samples import numpy_to_mm_image
 from microscopemetrics.samples import field_illumination, psf_beads
 from microscopemetrics_schema import datamodel as mm_schema
@@ -46,9 +49,27 @@ def generate_monthly_dates(start_date, nr_dates, month_frequency=1):
         month = current_date.month - 1 + 1
         year = current_date.year + month // 12
         month = month % 12 + month_frequency
-        day = min(current_date.day, [31,
-            29 if year%4==0 and (year%100!=0 or year%400==0) else 28,
-            31,30,31,30,31,31,30,31,30,31][month-1])
+        day = min(
+            current_date.day,
+            [
+                31,
+                (
+                    29
+                    if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
+                    else 28
+                ),
+                31,
+                30,
+                31,
+                30,
+                31,
+                31,
+                30,
+                31,
+                30,
+                31,
+            ][month - 1],
+        )
         date1 = datetime(year, month, day)
         dates.append(date1.strftime("%Y-%m-%d"))
         current_date = date1
@@ -57,7 +78,9 @@ def generate_monthly_dates(start_date, nr_dates, month_frequency=1):
 
 def field_illumination_generator(args, microscope_name):
     datasets = []
-    dates = generate_monthly_dates(args["start_date"], args["nr_datasets"], args["month_frequency"])
+    dates = generate_monthly_dates(
+        args["start_date"], args["nr_datasets"], args["month_frequency"]
+    )
 
     for dataset_id in range(args["nr_datasets"]):
         print(f"Generating dataset {dataset_id} for {args['name_dataset']}")
@@ -71,26 +94,72 @@ def field_illumination_generator(args, microscope_name):
                     field_illumination_image=[
                         numpy_to_mm_image(
                             array=_gen_field_illumination_image(
-                                y_shape=random.randint(args["y_image_shape"]["min"], args["y_image_shape"]["max"]),
-                                x_shape=random.randint(args["x_image_shape"]["min"], args["x_image_shape"]["max"]),
+                                y_shape=random.randint(
+                                    args["y_image_shape"]["min"],
+                                    args["y_image_shape"]["max"],
+                                ),
+                                x_shape=random.randint(
+                                    args["x_image_shape"]["min"],
+                                    args["x_image_shape"]["max"],
+                                ),
                                 c_shape=len(channel_names),
-                                y_center_rel_offset=[random.uniform(args["center_y_relative"]["min"], args["center_y_relative"]["max"]) for _ in range(len(channel_names))],
-                                x_center_rel_offset=[random.uniform(args["center_x_relative"]["min"], args["center_x_relative"]["max"]) for _ in range(len(channel_names))],
-                                dispersion=[random.uniform(args["dispersion"]["min"], args["dispersion"]["max"]) for _ in range(len(channel_names))],
-                                target_min_intensity=[random.uniform(args["target_min_intensity"]["min"], args["target_min_intensity"]["max"]) for _ in range(len(channel_names))],
-                                target_max_intensity=[random.uniform(args["target_max_intensity"]["min"], args["target_max_intensity"]["max"]) for _ in range(len(channel_names))],
+                                y_center_rel_offset=[
+                                    random.uniform(
+                                        args["center_y_relative"]["min"],
+                                        args["center_y_relative"]["max"],
+                                    )
+                                    for _ in range(len(channel_names))
+                                ],
+                                x_center_rel_offset=[
+                                    random.uniform(
+                                        args["center_x_relative"]["min"],
+                                        args["center_x_relative"]["max"],
+                                    )
+                                    for _ in range(len(channel_names))
+                                ],
+                                dispersion=[
+                                    random.uniform(
+                                        args["dispersion"]["min"],
+                                        args["dispersion"]["max"],
+                                    )
+                                    for _ in range(len(channel_names))
+                                ],
+                                target_min_intensity=[
+                                    random.uniform(
+                                        args["target_min_intensity"]["min"],
+                                        args["target_min_intensity"]["max"],
+                                    )
+                                    for _ in range(len(channel_names))
+                                ],
+                                target_max_intensity=[
+                                    random.uniform(
+                                        args["target_max_intensity"]["min"],
+                                        args["target_max_intensity"]["max"],
+                                    )
+                                    for _ in range(len(channel_names))
+                                ],
                                 do_noise=True,
-                                signal=[random.randint(args["signal"]["min"], args["signal"]["max"]) for _ in range(len(channel_names))],
+                                signal=[
+                                    random.randint(
+                                        args["signal"]["min"],
+                                        args["signal"]["max"],
+                                    )
+                                    for _ in range(len(channel_names))
+                                ],
                                 dtype=BIT_DEPTH_TO_DTYPE[args["bit_depth"]],
                             ),
                             name=f"{args['name_dataset']}_{'_'.join(channel_names)}_{dates[dataset_id]}",
                             description=f"An image taken on the {microscope_name} microscope on the {dates[dataset_id]} for QC",
                             channel_names=args["channel_names"][image_id],
-                            acquisition_datetime=datetime.strptime(dates[dataset_id], "%Y-%m-%d"),
+                            acquisition_datetime=datetime.strptime(
+                                dates[dataset_id], "%Y-%m-%d"
+                            ),
                         )
-                        for image_id, channel_names in enumerate(args["channel_names"])
+                        for image_id, channel_names in enumerate(
+                            args["channel_names"]
+                        )
                     ]
-                )
+                ),
             )
         )
 
@@ -99,7 +168,9 @@ def field_illumination_generator(args, microscope_name):
 
 def psf_beads_generator(args, microscope_name):
     datasets = []
-    dates = generate_monthly_dates(args["start_date"], args["nr_datasets"], args["month_frequency"])
+    dates = generate_monthly_dates(
+        args["start_date"], args["nr_datasets"], args["month_frequency"]
+    )
 
     for dataset_id in range(args["nr_datasets"]):
         print(f"Generating dataset {dataset_id} for {args['name_dataset']}")
@@ -113,34 +184,77 @@ def psf_beads_generator(args, microscope_name):
                     psf_beads_images=[
                         numpy_to_mm_image(
                             array=_gen_psf_beads_image(
-                                z_image_shape=random.randint(args["z_image_shape"]["min"], args["z_image_shape"]["max"]),
-                                y_image_shape=random.randint(args["y_image_shape"]["min"], args["y_image_shape"]["max"]),
-                                x_image_shape=random.randint(args["x_image_shape"]["min"], args["x_image_shape"]["max"]),
+                                z_image_shape=random.randint(
+                                    args["z_image_shape"]["min"],
+                                    args["z_image_shape"]["max"],
+                                ),
+                                y_image_shape=random.randint(
+                                    args["y_image_shape"]["min"],
+                                    args["y_image_shape"]["max"],
+                                ),
+                                x_image_shape=random.randint(
+                                    args["x_image_shape"]["min"],
+                                    args["x_image_shape"]["max"],
+                                ),
                                 c_image_shape=len(channel_names),
-                                nr_valid_beads=random.randint(args["nr_valid_beads"]["min"], args["nr_valid_beads"]["max"]),
-                                nr_edge_beads=random.randint(args["nr_edge_beads"]["min"], args["nr_edge_beads"]["max"]),
-                                nr_out_of_focus_beads=random.randint(args["nr_out_of_focus_beads"]["min"], args["nr_out_of_focus_beads"]["max"]),
-                                nr_clustering_beads=random.randint(args["nr_clustering_beads"]["min"], args["nr_clustering_beads"]["max"]),
+                                nr_valid_beads=random.randint(
+                                    args["nr_valid_beads"]["min"],
+                                    args["nr_valid_beads"]["max"],
+                                ),
+                                nr_edge_beads=random.randint(
+                                    args["nr_edge_beads"]["min"],
+                                    args["nr_edge_beads"]["max"],
+                                ),
+                                nr_out_of_focus_beads=random.randint(
+                                    args["nr_out_of_focus_beads"]["min"],
+                                    args["nr_out_of_focus_beads"]["max"],
+                                ),
+                                nr_clustering_beads=random.randint(
+                                    args["nr_clustering_beads"]["min"],
+                                    args["nr_clustering_beads"]["max"],
+                                ),
                                 min_distance_z=args["min_distance_z"],
                                 min_distance_y=args["min_distance_y"],
                                 min_distance_x=args["min_distance_x"],
-                                sigma_z=random.uniform(args["sigma_z"]["min"], args["sigma_z"]["max"]),
-                                sigma_y=random.uniform(args["sigma_y"]["min"], args["sigma_y"]["max"]),
-                                sigma_x=random.uniform(args["sigma_x"]["min"], args["sigma_x"]["max"]),
-                                target_min_intensity=random.uniform(args["target_min_intensity"]["min"], args["target_min_intensity"]["max"]),
-                                target_max_intensity=random.uniform(args["target_max_intensity"]["min"], args["target_max_intensity"]["max"]),
+                                sigma_z=random.uniform(
+                                    args["sigma_z"]["min"],
+                                    args["sigma_z"]["max"],
+                                ),
+                                sigma_y=random.uniform(
+                                    args["sigma_y"]["min"],
+                                    args["sigma_y"]["max"],
+                                ),
+                                sigma_x=random.uniform(
+                                    args["sigma_x"]["min"],
+                                    args["sigma_x"]["max"],
+                                ),
+                                target_min_intensity=random.uniform(
+                                    args["target_min_intensity"]["min"],
+                                    args["target_min_intensity"]["max"],
+                                ),
+                                target_max_intensity=random.uniform(
+                                    args["target_max_intensity"]["min"],
+                                    args["target_max_intensity"]["max"],
+                                ),
                                 do_noise=True,
-                                signal=random.randint(args["signal"]["min"], args["signal"]["max"]),
+                                signal=random.randint(
+                                    args["signal"]["min"],
+                                    args["signal"]["max"],
+                                ),
                                 dtype=BIT_DEPTH_TO_DTYPE[args["bit_depth"]],
                             )[0],
                             name=f"{args['name_dataset']}_{dates[dataset_id]}",
                             description=f"An image taken on the {microscope_name} microscope on the {dates[dataset_id]} for QC",
                             channel_names=args["channel_names"][image_id],
-                            acquisition_datetime=datetime.strptime(dates[dataset_id], "%Y-%m-%d"),
+                            acquisition_datetime=datetime.strptime(
+                                dates[dataset_id], "%Y-%m-%d"
+                            ),
                         )
-                        for image_id, channel_names in enumerate(args["channel_names"])
+                        for image_id, channel_names in enumerate(
+                            args["channel_names"]
+                        )
                     ]
-                )
+                ),
             )
         )
 
@@ -152,10 +266,12 @@ GENERATOR_MAPPER = {
     "PSFBeadsDataset": psf_beads_generator,
 }
 
+
 def _attach_config(conn, project, file_path):
     mimetype, _ = mimetypes.guess_type(file_path)
     file_ann = conn.createFileAnnfromLocalFile(
-        file_path, mimetype=mimetype, desc="configuration file")
+        file_path, mimetype=mimetype, desc="configuration file"
+    )
     project.linkAnnotation(file_ann)
 
 
@@ -185,19 +301,22 @@ def generate_users_groups(conn, users: dict, groups: dict):
                 group["name"],
             ]
         )
-        group_id = conn.c.sf.getAdminService().lookupGroup(group["name"]).id.val
+        group_id = (
+            conn.c.sf.getAdminService().lookupGroup(group["name"]).id.val
+        )
 
         cli.invoke(
-            ["obj",
-            "update",
-            f"ExperimenterGroup:{group_id}",
-            f"description={group['description']}",
-            "-k",
-            session_uuid,
-            "-s",
-            host,
-            "-p",
-            str(port),
+            [
+                "obj",
+                "update",
+                f"ExperimenterGroup:{group_id}",
+                f"description={group['description']}",
+                "-k",
+                session_uuid,
+                "-s",
+                host,
+                "-p",
+                str(port),
             ]
         )
 
@@ -218,7 +337,7 @@ def generate_users_groups(conn, users: dict, groups: dict):
                 user["first_name"],
                 user["last_name"],
                 "--group-name",
-                user["default_group"]
+                user["default_group"],
             ]
         )
 
@@ -272,7 +391,9 @@ def annotate_microscopes(conn, microscopes: dict):
                 model=microscope["model"],
                 serial_number=microscope["serial_number"],
             )
-            omero_group = conn.getObject("ExperimenterGroup", attributes={"name": microscope["name"]})
+            omero_group = conn.getObject(
+                "ExperimenterGroup", attributes={"name": microscope["name"]}
+            )
 
             dump.dump_microscope(conn, microscope, omero_group)
         except KeyError:
@@ -291,27 +412,37 @@ if __name__ == "__main__":
 
     try:
         # conn = BlitzGateway(username, password, host=host, port=port, secure=True)
-        conn = BlitzGateway("root", "omero", host="localhost", port=6064, secure=True)
+        conn = BlitzGateway(
+            "root", "omero", host="localhost", port=6064, secure=True
+        )
         conn.connect()
         conn.keepAlive()
 
-        generate_users_groups(conn, server_structure["users"], server_structure["microscopes"])
+        generate_users_groups(
+            conn, server_structure["users"], server_structure["microscopes"]
+        )
 
         # annotate_microscopes(conn, server_structure["microscopes"])
 
-        for microscope_name, microscope_projects in server_structure["projects"].items():
+        for microscope_name, microscope_projects in server_structure[
+            "projects"
+        ].items():
             for project in microscope_projects.values():
                 mm_project = mm_schema.HarmonizedMetricsDatasetCollection(
                     name=project["name_project"],
                     description=project["description_project"],
-                    datasets=GENERATOR_MAPPER[project["dataset_class"]](project, microscope_name),
+                    datasets=GENERATOR_MAPPER[project["dataset_class"]](
+                        project, microscope_name
+                    ),
                     dataset_class=project["dataset_class"],
                 )
                 time.sleep(60)
 
                 if not conn.keepAlive():
                     conn.connect()
-                temp_conn = conn.suConn(project["owner"], microscope_name, ttl=300000)
+                temp_conn = conn.suConn(
+                    project["owner"], microscope_name, ttl=300000
+                )
 
                 # We first have to dump the input images so they are annotated with the omero references
                 omero_project = dump.dump_project(
@@ -325,9 +456,15 @@ if __name__ == "__main__":
                 dir_attachments = os.path.join(
                     os.path.dirname(__file__),
                     "config_files",
-                    project["attachments_dir"]
+                    project["attachments_dir"],
                 )
-                attachment_files = [os.path.join(dir_path, f) for (dir_path, dir_names, filenames) in os.walk(dir_attachments) for f in filenames]
+                attachment_files = [
+                    os.path.join(dir_path, f)
+                    for (dir_path, dir_names, filenames) in os.walk(
+                        dir_attachments
+                    )
+                    for f in filenames
+                ]
                 for file_path in attachment_files:
                     _attach_config(temp_conn, omero_project, file_path)
 
@@ -348,4 +485,3 @@ if __name__ == "__main__":
     finally:
         conn.close()
         temp_conn.close()
-

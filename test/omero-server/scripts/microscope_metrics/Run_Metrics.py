@@ -63,7 +63,9 @@ string_hdl.setFormatter(formatter)
 # create console handler with a higher log level
 console_hdl = logging.StreamHandler()
 console_hdl.setLevel(logging.DEBUG)
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 console_hdl.setFormatter(formatter)
 
 # add the handlers to the logger
@@ -73,7 +75,8 @@ logger.addHandler(string_hdl)
 
 def _read_config_from_file_ann(file_annotation):
     return yaml.load(
-        file_annotation.getFileInChunks().__next__().decode(), Loader=yaml.SafeLoader
+        file_annotation.getFileInChunks().__next__().decode(),
+        Loader=yaml.SafeLoader,
     )
 
 
@@ -82,7 +85,9 @@ def run_script():
         with open("/etc/microscopemetrics_omero/main_config.yaml", "r") as f:
             main_config = yaml.load(f, Loader=yaml.SafeLoader)
     except FileNotFoundError:
-        logger.error("No main configuration file found: Contact your administrator.")
+        logger.error(
+            "No main configuration file found: Contact your administrator."
+        )
         return
 
     client = scripts.client(
@@ -100,7 +105,10 @@ def run_script():
             default="Dataset",
         ),
         scripts.List(
-            "IDs", optional=False, grouping="1", description="List of Dataset IDs"
+            "IDs",
+            optional=False,
+            grouping="1",
+            description="List of Dataset IDs",
         ).ofType(rlong(0)),
         scripts.String(
             "Comment",
@@ -124,7 +132,9 @@ def run_script():
         datasets = conn.getObjects("Dataset", script_params["IDs"])
 
         for dataset in datasets:
-            microscope_prj = dataset.getParent()  # We assume one project per dataset
+            microscope_prj = (
+                dataset.getParent()
+            )  # We assume one project per dataset
 
             if microscope_prj is None:
                 logger.error(

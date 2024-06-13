@@ -101,7 +101,9 @@ def Run_script_locally():
             for image, image_data in zip(images, images_data):
                 new_image_data = np.squeeze(np.copy(image_data))
                 noise_image = np.ones_like(new_image_data, dtype="float64")
-                for c in range(new_image_data.shape[1]):  # dimensions are zctxy
+                for c in range(
+                    new_image_data.shape[1]
+                ):  # dimensions are zctxy
                     # adding gaussian blur
                     new_image_data[:, c, ...] = gaussian(
                         np.squeeze(new_image_data[:, c, ...]),
@@ -128,7 +130,9 @@ def Run_script_locally():
                         range(new_image_data.shape[1]),
                     )
                 )
-                zct_generator = (new_image_data[z, c, :, :] for z, c in zct_list)
+                zct_generator = (
+                    new_image_data[z, c, :, :] for z, c in zct_list
+                )
 
                 new_image = conn.createImageFromNumpySeq(
                     zctPlanes=zct_generator,
