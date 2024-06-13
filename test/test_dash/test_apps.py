@@ -1,5 +1,5 @@
 '''
-Test demo appliction
+Test demo application
 
 Most of these tests are simply the loading of the individual files that
 constitute the demo. A configuration failure would
@@ -31,6 +31,27 @@ SOFTWARE.
 import pytest
 
 
+def mocking_connection():
+    'Mocking connection'
+    from unittest.mock import MagicMock
+    from omero.gateway import BlitzGateway
+    conn = MagicMock(spec=BlitzGateway)
+    return conn
+
+
+def connection_mocking(host, port, user, password):
+    'Mocking connection to the server'
+    from omero.gateway import BlitzGateway
+    conn = BlitzGateway(user, password, host=host, port=port)
+    return conn
+
+
+host='localhost'
+port=4064
+user='Asterix'
+password='abc123'
+
+
 def test_url_loading():
     'Test loading of a module'
     from omero_metrics.urls import urlpatterns
@@ -46,3 +67,6 @@ def test_demo_loading():
 
 
 
+def test_for_the_test(client):
+    response = client.get('/metrics_index/')
+    assert response.status_code == 200

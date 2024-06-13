@@ -13,7 +13,8 @@ react-webapp/react_webapp/templates/
 # Credentials
 credentials.json
 
-.venv
+/.venv/
 omero_metrics.egg-info/*
-tools/psf_bead_notebook.ipynb
-tools/test.ipynb
+/etc/
+/var/
+/omero_metrics/tools/test_code.ipynb
