@@ -36,8 +36,10 @@ from datetime import datetime
 from io import StringIO
 
 import omero.gateway as gateway
+
 # import omero dependencies
 import omero.scripts as scripts
+
 # import configuration parser
 import yaml
 from omero.rtypes import rlong, rstring

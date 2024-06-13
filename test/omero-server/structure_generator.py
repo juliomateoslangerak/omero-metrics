@@ -10,10 +10,15 @@ from datetime import datetime
 
 import numpy as np
 import yaml
-from microscopemetrics.samples import (field_illumination, numpy_to_mm_image,
-                                       psf_beads)
+from microscopemetrics.samples import (
+    field_illumination,
+    numpy_to_mm_image,
+    psf_beads,
+)
 from microscopemetrics.strategies.strategies import (
-    _gen_field_illumination_image, _gen_psf_beads_image)
+    _gen_field_illumination_image,
+    _gen_psf_beads_image,
+)
 from microscopemetrics_schema import datamodel as mm_schema
 from omero.cli import CLI
 from omero.gateway import BlitzGateway

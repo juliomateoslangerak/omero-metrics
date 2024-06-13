@@ -10,19 +10,41 @@ from typing import Union
 import numpy as np
 import pandas as pd
 from jsonasobj2._jsonobj import JsonObj
-from microscopemetrics_schema.datamodel import \
-    microscopemetrics_schema as mm_schema
+from microscopemetrics_schema.datamodel import (
+    microscopemetrics_schema as mm_schema,
+)
 from omero import grid
 from omero.constants import metadata
-from omero.gateway import (BlitzGateway, CommentAnnotationWrapper,
-                           DatasetWrapper, ExperimenterGroupWrapper,
-                           ExperimenterWrapper, FileAnnotationWrapper,
-                           ImageWrapper, MapAnnotationWrapper, ProjectWrapper,
-                           RoiWrapper, TagAnnotationWrapper)
-from omero.model import (DatasetI, DatasetImageLinkI, EllipseI, ImageI,
-                         LengthI, LineI, MaskI, OriginalFileI, PointI,
-                         PolygonI, ProjectDatasetLinkI, ProjectI, RectangleI,
-                         RoiI, enums)
+from omero.gateway import (
+    BlitzGateway,
+    CommentAnnotationWrapper,
+    DatasetWrapper,
+    ExperimenterGroupWrapper,
+    ExperimenterWrapper,
+    FileAnnotationWrapper,
+    ImageWrapper,
+    MapAnnotationWrapper,
+    ProjectWrapper,
+    RoiWrapper,
+    TagAnnotationWrapper,
+)
+from omero.model import (
+    DatasetI,
+    DatasetImageLinkI,
+    EllipseI,
+    ImageI,
+    LengthI,
+    LineI,
+    MaskI,
+    OriginalFileI,
+    PointI,
+    PolygonI,
+    ProjectDatasetLinkI,
+    ProjectI,
+    RectangleI,
+    RoiI,
+    enums,
+)
 from omero.rtypes import rdouble, rint, rlong, rstring, rtime
 from pandas import DataFrame
 
