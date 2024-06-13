@@ -50,13 +50,11 @@ $ pip install -e .
 2. Make sure you have REACT_VERSION=18.2.0 installed.
 
 ```python
-STATICFILES_FINDERS = [
-    'django.contrib.staticfiles.finders.FileSystemFinder',
+STATICFILES_FINDERS = ['django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'django_plotly_dash.finders.DashAssetFinder',
     'django_plotly_dash.finders.DashComponentFinder',
-    'django_plotly_dash.finders.DashAppDirectoryFinder',
-]
+    'django_plotly_dash.finders.DashAppDirectoryFinder']
 
 PLOTLY_COMPONENTS = ['dpd_components', 'dash_bootstrap_components', 'dash_iconify', 'dash_mantine_components', 'dpd_static_support']
 
