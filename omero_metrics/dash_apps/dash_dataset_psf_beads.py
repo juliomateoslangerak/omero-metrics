@@ -1,12 +1,13 @@
 import dash
-from dash import dcc, html, dash_table
-from django_plotly_dash import DjangoDash
-import plotly.express as px
 import dash_mantine_components as dmc
 import numpy as np
-import plotly.graph_objects as go
 import pandas as pd
-from ..tools.data_preperation import crop_bead_index, mip_graphs, fig_mip
+import plotly.express as px
+import plotly.graph_objects as go
+from dash import dash_table, dcc, html
+from django_plotly_dash import DjangoDash
+
+from ..tools.data_preperation import crop_bead_index, fig_mip, mip_graphs
 
 app = DjangoDash("PSF_Beads")
 

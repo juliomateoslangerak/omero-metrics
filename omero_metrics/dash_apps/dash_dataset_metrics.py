@@ -1,8 +1,8 @@
 import dash
-from dash import dcc, html, dash_table
-from django_plotly_dash import DjangoDash
-import plotly.express as px
 import dash_mantine_components as dmc
+import plotly.express as px
+from dash import dash_table, dcc, html
+from django_plotly_dash import DjangoDash
 
 dashboard_name = "omero_dataset_metrics"
 dash_app_dataset = DjangoDash(name=dashboard_name)

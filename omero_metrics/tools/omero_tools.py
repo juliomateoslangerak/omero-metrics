@@ -6,45 +6,23 @@ from itertools import product
 from random import choice
 from string import ascii_letters
 from typing import Union
-from jsonasobj2._jsonobj import JsonObj
+
 import numpy as np
 import pandas as pd
-from microscopemetrics_schema.datamodel import (
-    microscopemetrics_schema as mm_schema,
-)
+from jsonasobj2._jsonobj import JsonObj
+from microscopemetrics_schema.datamodel import \
+    microscopemetrics_schema as mm_schema
 from omero import grid
 from omero.constants import metadata
-from omero.gateway import (
-    BlitzGateway,
-    ExperimenterGroupWrapper,
-    ExperimenterWrapper,
-    ProjectWrapper,
-    DatasetWrapper,
-    ImageWrapper,
-    FileAnnotationWrapper,
-    MapAnnotationWrapper,
-    RoiWrapper,
-    TagAnnotationWrapper,
-    CommentAnnotationWrapper,
-)
-
-from omero.model import (
-    DatasetI,
-    DatasetImageLinkI,
-    EllipseI,
-    ImageI,
-    LengthI,
-    LineI,
-    MaskI,
-    OriginalFileI,
-    PointI,
-    PolygonI,
-    ProjectDatasetLinkI,
-    ProjectI,
-    RectangleI,
-    RoiI,
-    enums,
-)
+from omero.gateway import (BlitzGateway, CommentAnnotationWrapper,
+                           DatasetWrapper, ExperimenterGroupWrapper,
+                           ExperimenterWrapper, FileAnnotationWrapper,
+                           ImageWrapper, MapAnnotationWrapper, ProjectWrapper,
+                           RoiWrapper, TagAnnotationWrapper)
+from omero.model import (DatasetI, DatasetImageLinkI, EllipseI, ImageI,
+                         LengthI, LineI, MaskI, OriginalFileI, PointI,
+                         PolygonI, ProjectDatasetLinkI, ProjectI, RectangleI,
+                         RoiI, enums)
 from omero.rtypes import rdouble, rint, rlong, rstring, rtime
 from pandas import DataFrame
 

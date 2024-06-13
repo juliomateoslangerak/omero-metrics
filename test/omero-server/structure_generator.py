@@ -3,30 +3,26 @@
 
 import logging
 import mimetypes
-import time
-
-import yaml
-import numpy as np
-import random
-from datetime import datetime
 import os
+import random
+import time
+from datetime import datetime
 
-from omero.gateway import BlitzGateway
+import numpy as np
+import yaml
+from microscopemetrics.samples import (field_illumination, numpy_to_mm_image,
+                                       psf_beads)
+from microscopemetrics.strategies.strategies import (
+    _gen_field_illumination_image, _gen_psf_beads_image)
+from microscopemetrics_schema import datamodel as mm_schema
 from omero.cli import CLI
+from omero.gateway import BlitzGateway
 from omero.plugins.group import GroupControl
+from omero.plugins.obj import ObjControl
 from omero.plugins.sessions import SessionsControl
 from omero.plugins.user import UserControl
-from omero.plugins.obj import ObjControl
 
 from omero_metrics.tools import dump
-
-from microscopemetrics.strategies.strategies import (
-    _gen_field_illumination_image,
-    _gen_psf_beads_image,
-)
-from microscopemetrics.samples import numpy_to_mm_image
-from microscopemetrics.samples import field_illumination, psf_beads
-from microscopemetrics_schema import datamodel as mm_schema
 
 logger = logging.getLogger(__name__)
 

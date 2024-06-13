@@ -1,15 +1,16 @@
-import plotly.graph_objs as go
-import yaml
-import omero.gateway as gateway
+import collections
 from datetime import datetime, timedelta
 from random import randrange
-import collections
-import omero
-import plotly.express as px
+
 import numpy as np
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
+import omero
+import omero.gateway as gateway
 import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import plotly.graph_objs as go
+import yaml
+from plotly.subplots import make_subplots
 
 
 # This function is no longer needed
