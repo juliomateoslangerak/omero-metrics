@@ -740,7 +740,9 @@ def create_shape_rectangle(mm_rectangle: mm_schema.Rectangle):
 def create_shape_ellipse(mm_ellipse: mm_schema.Ellipse):
     ellipse = EllipseI()
     ellipse.setX(rdouble(mm_ellipse.x))
-    ellipse.setY(rdouble(mm_ellipse.y))  # TODO: setters and getters everywhere
+    ellipse.setY(
+        rdouble(mm_ellipse.y)
+    )
     ellipse.radiusX = rdouble(mm_ellipse.x_rad)
     ellipse.radiusY = rdouble(mm_ellipse.y_rad)
     ellipse.theZ = rint(mm_ellipse.z)
@@ -1003,7 +1005,9 @@ def create_table(
     columns = _create_columns(table)
 
     resources = conn.c.sf.sharedResources()
-    repository_id = resources.repositories().descriptions[0].getId().getValue()
+    repository_id = (
+        resources.repositories().descriptions[0].getId().getValue()
+    )
     table = resources.newTable(repository_id, table_name)
     table.initialize(columns)
     table.addData(columns)

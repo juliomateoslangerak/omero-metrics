@@ -113,7 +113,9 @@ def load_dataset(
                 image_wrapper = omero_tools.get_omero_obj_from_mm_obj(
                     dataset._conn, input_image
                 )
-                input_image.array_data = _load_image_intensities(image_wrapper)
+                input_image.array_data = _load_image_intensities(
+                    image_wrapper
+                )
         else:
             input_images = [
                 load_image(image) for image in dataset.listChildren()
@@ -125,7 +127,9 @@ def load_dataset(
             )
     else:
         setattr(
-            mm_dataset, INPUT_IMAGES_MAPPING[mm_dataset.__class__.__name__], []
+            mm_dataset,
+            INPUT_IMAGES_MAPPING[mm_dataset.__class__.__name__],
+            [],
         )
 
     return mm_dataset

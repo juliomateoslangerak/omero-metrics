@@ -201,7 +201,9 @@ class DatasetManager:
 
     def validate_data(self):
         if not self.mm_dataset.processed:
-            logger.error("Data has not been processed. It cannot be validated")
+            logger.error(
+                "Data has not been processed. It cannot be validated"
+            )
         if self.mm_dataset.validated:
             logger.warning("Data was already validated. Keeping unchanged.")
 
@@ -210,7 +212,9 @@ class DatasetManager:
 
     def invalidate_data(self):
         if not self.mm_dataset.validated:
-            logger.warning("Data is already not validated. Keeping unchanged.")
+            logger.warning(
+                "Data is already not validated. Keeping unchanged."
+            )
         self.mm_dataset.validated = False
         logger.info("Invalidating dataset.")
 
