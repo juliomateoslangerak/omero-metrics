@@ -43,7 +43,9 @@ from omero.rtypes import rlong, robject, rstring
 logger = logging.getLogger("metrics")
 logger.setLevel(logging.DEBUG)
 
-METRICS_GENERATED_TAG_ID = 1284  # This has to go into some installation configuration
+METRICS_GENERATED_TAG_ID = (
+    1284  # This has to go into some installation configuration
+)
 
 UNVALIDATED_NAMESPACE_PREFIX = "metrics/analyzed"
 VALIDATED_NAMESPACE_PREFIX = "metrics/validated"
@@ -186,7 +188,10 @@ def run_script():
             default="Dataset",
         ),
         scripts.List(
-            "IDs", optional=False, grouping="1", description="List of Dataset IDs"
+            "IDs",
+            optional=False,
+            grouping="1",
+            description="List of Dataset IDs",
         ).ofType(rlong(0)),
         scripts.Bool(
             "Confirm validation",
@@ -204,7 +209,9 @@ def run_script():
                 script_params[key] = client.getInput(key, unwrap=True)
 
         if script_params["Confirm validation"]:
-            logger.info(f"Validation started using parameters: \n{script_params}")
+            logger.info(
+                f"Validation started using parameters: \n{script_params}"
+            )
 
             conn = gateway.BlitzGateway(client_obj=client)
 

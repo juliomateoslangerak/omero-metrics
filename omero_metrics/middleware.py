@@ -1,5 +1,5 @@
 class OmeroAuth:
-    """ Django-plotly-dash expects request.user to be set """
+    """Django-plotly-dash expects request.user to be set"""
 
     def __init__(self, get_response):
         self.get_response = get_response

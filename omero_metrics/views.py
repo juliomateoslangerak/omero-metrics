@@ -19,7 +19,10 @@ def index(request, conn=None, **kwargs):
 
 @login_required()
 def dash_example_1_view(
-    request, conn=None, template_name="metrics/foi_key_measurement.html", **kwargs
+    request,
+    conn=None,
+    template_name="metrics/foi_key_measurement.html",
+    **kwargs
 ):
     "Example view that inserts content into the dash context passed to the dash application"
     experimenter = conn.getUser()
@@ -30,7 +33,9 @@ def dash_example_1_view(
     }
     # create some context to send over to Dash:
     dash_context = request.session.get("django_plotly_dash", dict())
-    dash_context["django_to_dash_context"] = "I am Dash receiving context from Django"
+    dash_context["django_to_dash_context"] = (
+        "I am Dash receiving context from Django"
+    )
     request.session["django_plotly_dash"] = dash_context
     return render(
         request,
@@ -72,7 +77,9 @@ def webclient_templates(request, base_template, **kwargs):
 def image_rois(request, image_id, conn=None, **kwargs):
     """Simply shows a page of ROI thumbnails for the specified image"""
     roi_ids = image_id
-    return render(request, "metrics/omero_views/image_rois.html", {"roiIds": roi_ids})
+    return render(
+        request, "metrics/omero_views/image_rois.html", {"roiIds": roi_ids}
+    )
 
 
 @login_required()
@@ -102,7 +109,9 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
     request.session["django_plotly_dash"] = dash_context
     collections_mm_p = load.load_project(conn, project_id)
     context = {"project_id": project_id, "collections_mm_p": collections_mm_p}
-    return render(request, "metrics/omero_views/center_view_project.html", context)
+    return render(
+        request, "metrics/omero_views/center_view_project.html", context
+    )
 
 
 @login_required()
@@ -116,7 +125,9 @@ def center_viewer_group(request, conn=None, **kwargs):
         "group_name": group_name,
         "group_description": group_description,
     }
-    return render(request, "metrics/omero_views/center_view_group.html", context)
+    return render(
+        request, "metrics/omero_views/center_view_group.html", context
+    )
 
 
 @login_required()
