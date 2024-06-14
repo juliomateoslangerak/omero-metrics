@@ -1,4 +1,5 @@
 from django.urls import re_path
+
 # import logging
 from django.views.generic import (
     TemplateView,
