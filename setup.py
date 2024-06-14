@@ -7,11 +7,8 @@ setup(
     packages=find_packages(),
     keywords=["omero"],
     install_requires=[
-        "django-plotly-dash==2.3.1",
-        "dpd_static_support==0.0.5",
-        "dash_mantine_components",
-        "dash-iconify",
-        "omero-py==5.19.2",
+        "django-plotly-dash",
         "microscopemetrics_schema @ git+https://github.com/juliomateoslangerak/microscopemetrics-schema.git@dev",
+        "microscopemetrics @ git+https://github.com/juliomateoslangerak/microscope-metrics.git@dev",
     ],
 )
