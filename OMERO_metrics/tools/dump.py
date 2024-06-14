@@ -18,7 +18,7 @@ from omero.gateway import (
     ProjectWrapper,
 )
 
-from omero_metrics.tools import (
+from OMERO_metrics.tools import (
     omero_tools,
 )
 

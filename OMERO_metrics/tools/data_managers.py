@@ -15,7 +15,7 @@ from omero.gateway import (
     ImageWrapper,
 )
 
-from omero_metrics.tools import (
+from OMERO_metrics.tools import (
     delete,
     dump,
     load,

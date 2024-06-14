@@ -1,4 +1,4 @@
-from omero_metrics.tools import (
+from OMERO_metrics.tools import (
     omero_tools,
 )
 from omero.gateway import BlitzGateway
