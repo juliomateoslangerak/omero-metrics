@@ -170,46 +170,46 @@ def get_omero_obj_from_mm_obj(
         )
 
 
-def get_ref_from_object(
-    obj,
-) -> mm_schema.DataReference:
-    """Get the reference information from an OMERO object"""
-    logger.debug(f"get_ref_from_object: object type is {type(obj)}")
-
-    obj_type = None
-
-    match obj:
-        case ExperimenterGroupWrapper():
-            obj_type = "GROUP"
-        case ExperimenterWrapper():
-            obj_type = "EXPERIMENTER"
-        case ProjectWrapper():
-            obj_type = "PROJECT"
-        case DatasetWrapper():
-            obj_type = "DATASET"
-        case ImageWrapper():
-            obj_type = "IMAGE"
-        case FileAnnotationWrapper():
-            obj_type = "FILEANNOTATION"
-        case MapAnnotationWrapper():
-            obj_type = "KEY_VALUES"
-        case TagAnnotationWrapper():
-            obj_type = "TAG"
-        case CommentAnnotationWrapper():
-            obj_type = "COMMENT"
-        case RoiWrapper():
-            obj_type = "ROI"
-        case _:
-            logger.error(f"Object type {type(obj)} is not supported")
-
-    return mm_schema.DataReference(
-        data_uri=f"https://{obj._conn.host}:"
-        + f"{obj._conn.port}/webclient/?show={obj_type.lower()}-{obj.getId()}",
-        omero_host=obj._conn.host,
-        omero_port=obj._conn.port,
-        omero_object_type=obj_type,
-        omero_object_id=obj.getId(),
-    )
+# def get_ref_from_object(
+#     obj,
+# ) -> mm_schema.DataReference:
+#     """Get the reference information from an OMERO object"""
+#     logger.debug(f"get_ref_from_object: object type is {type(obj)}")
+#
+#     obj_type = None
+#
+#     match obj:
+#         case ExperimenterGroupWrapper():
+#             obj_type = "GROUP"
+#         case ExperimenterWrapper():
+#             obj_type = "EXPERIMENTER"
+#         case ProjectWrapper():
+#             obj_type = "PROJECT"
+#         case DatasetWrapper():
+#             obj_type = "DATASET"
+#         case ImageWrapper():
+#             obj_type = "IMAGE"
+#         case FileAnnotationWrapper():
+#             obj_type = "FILEANNOTATION"
+#         case MapAnnotationWrapper():
+#             obj_type = "KEY_VALUES"
+#         case TagAnnotationWrapper():
+#             obj_type = "TAG"
+#         case CommentAnnotationWrapper():
+#             obj_type = "COMMENT"
+#         case RoiWrapper():
+#             obj_type = "ROI"
+#         case _:
+#             logger.error(f"Object type {type(obj)} is not supported")
+#
+#     return mm_schema.DataReference(
+#         data_uri=f"https://{obj._conn.host}:"
+#         + f"{obj._conn.port}/webclient/?show={obj_type.lower()}-{obj.getId()}",
+#         omero_host=obj._conn.host,
+#         omero_port=obj._conn.port,
+#         omero_object_type=obj_type,
+#         omero_object_id=obj.getId(),
+#     )
 
 
 def _label_channels(image: ImageWrapper, labels: list):
