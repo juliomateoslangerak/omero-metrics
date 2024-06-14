@@ -4,7 +4,7 @@ from django.views.generic import (
     TemplateView,
 )
 
-from omero_metrics.dash_apps import (
+from OMERO_metrics.dash_apps import (
     dash_apps,
     dash_dataset_metrics,
     dash_dataset_psf_beads,
