@@ -7,6 +7,7 @@ setup(
     packages=find_packages(),
     keywords=["omero"],
     install_requires=[
+        "pandas"
         "microscopemetrics_schema @ git+https://github.com/juliomateoslangerak/microscopemetrics-schema.git@dev",
     ],
 )
