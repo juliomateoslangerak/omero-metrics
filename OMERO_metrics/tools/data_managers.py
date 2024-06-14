@@ -60,15 +60,15 @@ OBJECT_TO_DUMP_FUNCTION = {
 
 TEMPLATE_MAPPINGS = {
     "FieldIlluminationDataset": [
-        "metrics/omero_views/center_view_dataset_foi.html",
-        "metrics/omero_views/center_view_image.html",
+        "OMERO_metrics/omero_views/center_view_dataset_foi.html",
+        "OMERO_metrics/omero_views/center_view_image.html",
     ],
     "PSFBeadsDataset": [
-        "metrics/omero_views/center_view_dataset_psf_beads.html",
-        "metrics/omero_views/center_view_image_psf.html",
+        "OMERO_metrics/omero_views/center_view_dataset_psf_beads.html",
+        "OMERO_metrics/omero_views/center_view_image_psf.html",
     ],
-    "unknown_analysis": "metrics/omero_views/center_view_unknown_analysis_type.html",
-    "unprocessed_analysis": "metrics/omero_views/unprocessed_dataset.html",
+    "unknown_analysis": "OMERO_metrics/omero_views/center_view_unknown_analysis_type.html",
+    "unprocessed_analysis": "OMERO_metrics/omero_views/unprocessed_dataset.html",
 }
 
 

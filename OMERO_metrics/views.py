@@ -24,7 +24,7 @@ def index(request, conn=None, **kwargs):
     }
     return render(
         request,
-        "metrics/index.html",
+        "OMERO_metrics/index.html",
         context,
     )
 
@@ -33,7 +33,7 @@ def index(request, conn=None, **kwargs):
 def dash_example_1_view(
     request,
     conn=None,
-    template_name="metrics/foi_key_measurement.html",
+    template_name="OMERO_metrics/foi_key_measurement.html",
     **kwargs
 ):
     "Example view that inserts content into the \
@@ -78,7 +78,7 @@ def web_gateway_templates(request, base_template):
     """Simply return the named template. Similar functionality to
     django.views.generic.simple.direct_to_template
     """
-    template_name = "metrics/web_gateway/%s.html" % base_template
+    template_name = "OMERO_metrics/web_gateway/%s.html" % base_template
     return render(request, template_name, {})
 
 
@@ -88,7 +88,7 @@ def webclient_templates(request, base_template, **kwargs):
     """Simply return the named template. Similar functionality to
     django.views.generic.simple.direct_to_template
     """
-    template_name = "metrics/web_gateway/%s.html" % base_template
+    template_name = "OMERO_metrics/web_gateway/%s.html" % base_template
     return {"template": template_name}
 
 
@@ -98,7 +98,7 @@ def image_rois(request, image_id, conn=None, **kwargs):
     roi_ids = image_id
     return render(
         request,
-        "metrics/omero_views/image_rois.html",
+        "OMERO_metrics/omero_views/image_rois.html",
         {"roiIds": roi_ids},
     )
 
@@ -136,7 +136,7 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
     }
     return render(
         request,
-        "metrics/omero_views/center_view_project.html",
+        "OMERO_metrics/omero_views/center_view_project.html",
         context,
     )
 
@@ -154,7 +154,7 @@ def center_viewer_group(request, conn=None, **kwargs):
     }
     return render(
         request,
-        "metrics/omero_views/center_view_group.html",
+        "OMERO_metrics/omero_views/center_view_group.html",
         context,
     )
 
