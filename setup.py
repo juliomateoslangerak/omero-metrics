@@ -15,6 +15,5 @@ setup(
         "dash-iconify",
         "omero-py==5.19.2",
         "microscopemetrics_schema @ git+https://github.com/juliomateoslangerak/microscopemetrics-schema.git@dev",
-        "microscopemetrics @ git+https://github.com/juliomateoslangerak/microscope-metrics.git@dev",
     ],
 )
