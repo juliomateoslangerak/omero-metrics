@@ -161,14 +161,13 @@ def _remove_unsupported_types(
     ]
 ):
     def _remove(_attr):
-        match _attr:
-            case mm_schema.Image():
-                _attr.array_data = None
-            case mm_schema.Table():
-                _attr.table_data = None
-            case mm_schema.Roi():
-                if _attr.masks:
-                    [_remove(m.mask) for m in _attr.masks]
+        if isinstance(_attr, mm_schema.Image):
+            _attr.array_data = None
+        elif isinstance(_attr, mm_schema.Table):
+            _attr.table_data = None
+        elif isinstance(_attr, mm_schema.Roi):
+            if _attr.masks:
+                [_remove(m.mask) for m in _attr.masks]
 
     try:
         for field in fields(data_obj):
@@ -470,50 +469,49 @@ def _dump_output_element(
     output_element,
     target_dataset: DatasetWrapper,
 ):
-    match output_element:
-        case mm_schema.Image():
-            dump_image(
-                conn=conn,
-                image=output_element,
-                target_dataset=target_dataset,
+    if isinstance(output_element, mm_schema.Image):
+        dump_image(
+            conn=conn,
+            image=output_element,
+            target_dataset=target_dataset,
+        )
+    elif isinstance(output_element, mm_schema.Roi):
+        dump_roi(
+            conn=conn,
+            roi=output_element,
+        )
+    elif isinstance(output_element, mm_schema.Tag):
+        dump_tag(
+            conn=conn,
+            tag=output_element,
+        )
+    elif isinstance(output_element, mm_schema.KeyValues):
+        dump_key_value(
+            conn=conn,
+            key_values=output_element,
+            target_object=target_dataset,
+        )
+    elif isinstance(output_element, mm_schema.Table):
+        dump_table(
+            conn=conn,
+            table=output_element,
+            target_object=target_dataset,
+        )
+    # elif isinstance(output_element, mm_schema.Comment):
+    #     dump_comment(
+    #         conn=conn,
+    #         comment=output_element,
+    #         target_object=target_dataset,
+    #     )
+    else:
+        try:
+            logger.error(
+                f"{output_element.name} output could not be dumped to OMERO"
             )
-        case mm_schema.Roi():
-            dump_roi(
-                conn=conn,
-                roi=output_element,
+        except AttributeError:
+            logger.error(
+                f"{output_element} output could not be dumped to OMERO"
             )
-        case mm_schema.Tag():
-            dump_tag(
-                conn=conn,
-                tag=output_element,
-            )
-        case mm_schema.KeyValues():
-            dump_key_value(
-                conn=conn,
-                key_values=output_element,
-                target_object=target_dataset,
-            )
-        case mm_schema.Table():
-            dump_table(
-                conn=conn,
-                table=output_element,
-                target_object=target_dataset,
-            )
-        # case mm_schema.Comment():
-        #     dump_comment(
-        #         conn=conn,
-        #         comment=output_element,
-        #         target_object=target_dataset,
-        #     )
-        case _:
-            try:
-                logger.error(
-                    f"{output_element.name} output could not be dumped to OMERO"
-                )
-            except AttributeError:
-                logger.error(
-                    f"{output_element} output could not be dumped to OMERO"
-                )
 
 
 def dump_image(
