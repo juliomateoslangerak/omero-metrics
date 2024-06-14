@@ -14,9 +14,7 @@ setup(
         "dash_mantine_components",
         "dash-iconify",
         "omero-py==5.19.2",
-    ],
-    dependency_links=[
-        "git+https://github.com/juliomateoslangerak/microscopemetrics-schema.git@dev",
-        "git+https://github.com/juliomateoslangerak/microscope-metrics.git@dev",
+        "microscopemetrics_schema @ git+https://github.com/juliomateoslangerak/microscopemetrics-schema.git@dev",
+        "microscopemetrics @ git+https://github.com/juliomateoslangerak/microscope-metrics.git@dev",
     ],
 )
