@@ -1,10 +1,10 @@
 from django.urls import re_path
-import logging
+# import logging
 from django.views.generic import (
     TemplateView,
 )
 
-from OMERO_metrics.dash_apps import (
+from .dash_apps import (
     dash_apps,
     dash_dataset_metrics,
     dash_dataset_psf_beads,
@@ -81,17 +81,17 @@ urlpatterns = [
     # re_path(r'^(?P<data_type>[a-z]+)/(?P<image_id>[0-9]+)/, \
     # session_state_view, name='session_state'),
 ]
-logger = logging.getLogger(__name__)
-
-list_test = [
-    dash_apps,
-    dash_dataset_metrics,
-    dash_dataset_psf_beads,
-    dash_image,
-    dash_image_psf_beads,
-    dash_project,
-    foi_apps,
-    plotly_apps,
-]
-
-logger.info(len(list_test))
+# logger = logging.getLogger(__name__)
+#
+# list_test = [
+#     dash_apps,
+#     dash_dataset_metrics,
+#     dash_dataset_psf_beads,
+#     dash_image,
+#     dash_image_psf_beads,
+#     dash_project,
+#     foi_apps,
+#     plotly_apps,
+# ]
+#
+# logger.info(len(list_test))
