@@ -8,6 +8,12 @@ setup(
     keywords=["omero"],
     install_requires=[
         "pandas",
+        "django-plotly-dash",
+        "dpd_static_support",
+        "dash-bootstrap-components",
+        "django-bootstrap4",
+        "dash_mantine_components",
+        "dash-iconify",
         "microscopemetrics_schema @ git+https://github.com/juliomateoslangerak/microscopemetrics-schema.git@dev",
     ],
 )
