@@ -7,10 +7,8 @@ setup(
     packages=find_packages(),
     keywords=["omero"],
     install_requires=[
-        "django-plotly-dash",
-        "dpd_static_support",
-        "dash-bootstrap-components",
-        "django-bootstrap4",
+        "django-plotly-dash==2.3.1",
+        "dpd_static_support==0.0.5",
         "dash_mantine_components",
         "dash-iconify",
         "omero-py==5.19.2",
