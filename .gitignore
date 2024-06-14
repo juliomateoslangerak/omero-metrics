@@ -17,4 +17,4 @@ credentials.json
 omero_metrics.egg-info/*
 /etc/
 /var/
-/OMERO_metrics/tools/test_code.ipynb
+/OMERO-metrics/tools/test_code.ipynb
