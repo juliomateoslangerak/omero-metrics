@@ -1,7 +1,7 @@
 OMERO.metrics with Docker
 =======================
 
-A webapp to follow microscope performance over time.
+A webapp to follow microscope performance over time. The web app has itegrated microscope metrics python library to preform analysis on images and store the data as a yaml file on Omero Server.
 
 Installation
 ============
