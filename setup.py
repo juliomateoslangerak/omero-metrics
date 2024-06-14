@@ -15,6 +15,6 @@ setup(
         "dash_mantine_components",
         "dash-iconify",
         "microscopemetrics_schema @ git+https://github.com/juliomateoslangerak/microscopemetrics-schema.git@dev",
-"microscopemetrics @ git+https://github.com/juliomateoslangerak/microscope-metrics.git@dev"
+        "microscopemetrics @ git+https://github.com/juliomateoslangerak/microscope-metrics.git@dev",
     ],
 )
