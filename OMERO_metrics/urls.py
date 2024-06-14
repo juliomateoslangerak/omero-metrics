@@ -8,14 +8,6 @@ from django.views.generic import (
 
 from .views import (
     index,
-    dash_example_1_view,
-    web_gateway_templates,
-    webclient_templates,
-    center_viewer_project,
-    center_viewer_dataset,
-    center_viewer_group,
-    center_viewer_image,
-    image_rois,
 )
 
 urlpatterns = [
