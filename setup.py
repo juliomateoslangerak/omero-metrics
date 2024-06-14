@@ -7,6 +7,6 @@ setup(
     packages=find_packages(),
     keywords=["omero"],
     install_requires=[
-        "microscopemetrics_schema @ git+https://github.com/juliomateoslangerak/microscopemetrics-schema.git@dev",
+        "microscopemetrics_schema @ git+https://github.com/juliomateoslangerak/microscopemetrics-schema.git@dev_psf_refactoring",
     ],
 )
