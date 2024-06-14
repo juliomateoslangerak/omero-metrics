@@ -4,7 +4,6 @@ from omeroweb.webclient.decorators import (
 )
 
 
-
 @login_required()
 def index(request, conn=None, **kwargs):
     experimenter = conn.getUser()
