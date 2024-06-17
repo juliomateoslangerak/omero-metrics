@@ -18,9 +18,7 @@ from omero.gateway import (
     ProjectWrapper,
 )
 
-from OMERO_metrics.tools import (
-    omero_tools,
-)
+from . import omero_tools
 
 logger = logging.getLogger(__name__)
 
