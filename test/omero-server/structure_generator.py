@@ -333,6 +333,7 @@ if __name__ == "__main__":
 
                 if project["process"]:
                     for dataset in mm_project.datasets:
+                        print(f"Processing dataset {dataset.name}")
                         DATASET_TO_ANALYSIS[project["dataset_class"]](dataset)
 
                     omero_project = dump.dump_project(
