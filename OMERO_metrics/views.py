@@ -14,4 +14,4 @@ def index(request, conn=None, **kwargs):
         "lastName": experimenter.lastName,
         "experimenterId": experimenter.id,
     }
-    return render(request, "OMERO_metrics/index.html", context)
+    return render(request, "omero_metrics/index.html", context)
