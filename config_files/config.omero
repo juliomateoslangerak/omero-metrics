@@ -1,4 +1,4 @@
-config append omero.web.apps '"omero_metrics"'
+config append omero.web.apps '"OMERO_metrics"'
 config append omero.web.apps '"dpd_static_support"'
 config append omero.web.apps '"django_plotly_dash"'
 config append omero.web.apps '"bootstrap4"'
