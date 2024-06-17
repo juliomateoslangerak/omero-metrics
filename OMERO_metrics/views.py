@@ -14,6 +14,6 @@ def index(request, conn=None, **kwargs):
     }
     return render(
         request,
-        "OMERO-metrics/index.html",
+        "OMERO_metrics/index.html",
         context,
     )

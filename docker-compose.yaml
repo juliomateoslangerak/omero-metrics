@@ -46,7 +46,7 @@ services:
       OMEROHOST: omeroserver
     volumes:
       - type: bind
-        source: ./omero_metrics
+        source: ./OMERO_metrics
         target: /opt/omero/web/venv3/lib/python3.10/site-packages/OMERO_metrics
       - type: bind
         source: ./config_files/config.omero
