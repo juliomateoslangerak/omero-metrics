@@ -29,7 +29,7 @@ class TestLoadIndexPage(IWebTest):
         conn = get_connection(user1)
         user_name = conn.getUser().getName()
         django_client = self.new_django_client(user_name, user_name)
-        index_url = reverse("metrics_index")
+        index_url = reverse("OMERO_metrics_index")
         # asserts we get a 200 response code etc
         rsp = get(django_client, index_url)
         html_str = rsp.content.decode()
