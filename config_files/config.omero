@@ -3,7 +3,7 @@ config append omero.web.apps '"dpd_static_support"'
 config append omero.web.apps '"django_plotly_dash"'
 config append omero.web.apps '"bootstrap4"'
 config append omero.web.apps '"corsheaders"'
-config append omero.web.ui.top_links '["Metrics", "metrics_index", {"title": "Open app in new tab", "target": "_blank"}]'
+config append omero.web.ui.top_links '["Metrics", "OMERO_metrics_index", {"title": "Open app in new tab", "target": "_blank"}]'
 config set omero.web.debug True
 config append omero.web.middleware '{"index": 0.5, "class": "corsheaders.middleware.CorsMiddleware"}'
 config append omero.web.middleware '{"index": 10, "class": "corsheaders.middleware.CorsPostCsrfMiddleware"}'
