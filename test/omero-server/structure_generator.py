@@ -27,7 +27,7 @@ from omero.plugins.obj import ObjControl
 from omero.plugins.sessions import SessionsControl
 from omero.plugins.user import UserControl
 
-from OMERO_metrics.tools import dump
+from OMERO-metrics.tools import dump
 
 logger = logging.getLogger(__name__)
 
