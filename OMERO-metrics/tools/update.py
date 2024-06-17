@@ -3,7 +3,7 @@ from typing import Union
 import microscopemetrics_schema.datamodel as mm_schema
 from omero.gateway import BlitzGateway, MapAnnotationWrapper
 
-from OMERO_metrics.tools import (
+from . import (
     omero_tools,
 )
 
