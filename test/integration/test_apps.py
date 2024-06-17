@@ -1,7 +1,7 @@
+from omeroweb.testlib import IWebTest, get
 import pytest
 from django.urls import reverse
 from omero.gateway import BlitzGateway
-from omeroweb.testlib import IWebTest, get
 
 
 def get_connection(user, group_id=None):
