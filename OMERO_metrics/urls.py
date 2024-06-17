@@ -1,12 +1,8 @@
-from django.urls import re_path
+from django.urls import path
 from .views import (
     index,
 )
 
 urlpatterns = [
-    re_path(
-        r"^$",
-        index,
-        name="OMERO_metrics_index",
-    ),
+    path("", index, name="OMERO_metrics_index"),
 ]
