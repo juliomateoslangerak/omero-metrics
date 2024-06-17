@@ -7,6 +7,6 @@ urlpatterns = [
     re_path(
         r"^$",
         index,
-        name="metrics_index",
+        name="OMERO_metrics_index",
     ),
 ]
