@@ -52,11 +52,7 @@ def clean_dataset(connection, dataset, namespace_like=None):
     logger.info(f"Date and time: {datetime.now()}")
 
     # Clean Dataset annotations
-    for (
-        ann
-    ) in (
-        dataset.listAnnotations()
-    ):
+    for ann in dataset.listAnnotations():
         if isinstance(
             ann,
             (
