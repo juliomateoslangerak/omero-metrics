@@ -45,7 +45,7 @@ import yaml
 from omero.rtypes import rlong, rstring
 
 # import metrics
-import OMERO_metrics.tools.process as process
+import microscopemetrics_omero.process as process
 
 # Creating logging services
 logger = logging.getLogger(__name__)
