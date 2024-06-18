@@ -20,7 +20,7 @@
 
         <!-- Include static css -->
         <link rel="stylesheet" type="text/css" href="{% static 'OMERO_metrics/app.css' %}" />
-
+        
         <script type="text/javascript">
             // Global variables, used by JavaScript code.
             window.PARAMS = {};
@@ -31,10 +31,10 @@
             window.PARAMS.API_BASE_URL = "{% url 'api_base' 0 %}";
         </script>
     </head>
-
+        
     <body>
         <h1>Welcome to Omero Metrics</h1>
-
+        
         <p>
             Logged in as:
             <!-- Django template renders values from context -->
@@ -44,8 +44,8 @@
         <p id="projects">
             Loading Projects...
         </p>
-
+        
         <!-- Include the static JavaScript -->
-        <script src="{% static 'omero_metrics/app.js' %}"></script>
+        <script src="{% static 'OMERO_metrics/app.js' %}"></script>
     </body>
 </html>
