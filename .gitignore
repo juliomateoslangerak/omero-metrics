@@ -2,4 +2,3 @@ build
 node_modules
 *.pyc
 *.DS_Store
-/OMERO_metrics.egg-info/
