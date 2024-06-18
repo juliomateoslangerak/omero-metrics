@@ -1,0 +1,30 @@
+config_version: 1.0.0
+metrics_generated_tag_id: 1284
+
+#DATASET:
+#  # Creates a user modifiable key-value pairs annotation so the user can fill measurements
+#  analyze_laser_power_measurement: true
+#  # Define which laser wavelengths you want to measure
+#  laser_power_measurement_wavelengths: [405, 488, 532, 561, 642]
+#  # What are the units of those measurements: mW, W,... User SI symbols only
+#  laser_power_measurement_units: mW
+#  # What is the method that has been used to measure the power: back_aperture, source, fiber_exit, objective_lens_exit
+#  laser_power_measurement_method: back_aperture
+
+study:  # This is the OMERO project
+  name: homogeneity
+  description: Follow the homogeneity of a microscope over time
+
+analysis:  # These are the OMERO datasets. One dataset per type of analysis
+  FieldIllumination:
+    do_analysis: true
+    sample: homogeneity
+    dataset_class: FieldIlluminationDataset
+    description: Analysis on chroma slides
+    parameters:
+      bit_depth: 16
+      saturation_threshold: 0.01
+      center_threshold: 0.9
+      corner_fraction: 0.1
+      sigma: 5.0
+      intensity_map_size: 64
