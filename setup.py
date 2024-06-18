@@ -18,13 +18,13 @@
 #
 from setuptools import setup, find_packages
 
-url = "https://github.com/ome/OMERO-metrics"
+url = "https://github.com/Wapaa/OMERO-metrics"
 version = "0.1.0.dev0"
 
 setup(
-    name="omero-metrics",
+    name="OMERO-metrics",
     version=version,
-    description="OMERO example minimal web app",
+    description="OMERO minimal web app",
     packages=find_packages(),
     keywords=["omero"],
     classifiers=[
@@ -39,8 +39,8 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],  # Get strings from
     # http://pypi.python.org/pypi?%3Aaction=list_classifiers
-    author="OME Team",
-    author_email="ome-team@openmicroscopy.org",
+    author="Oumou DHMINE",
+    author_email="oumoudhmine@gmail.com",
     license="AGPLv3",
     url="%s" % url,
     zip_safe=False,
