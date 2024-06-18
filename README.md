@@ -52,30 +52,30 @@ $ pip install -e .
 1. Add the following lines to the `omeroweb/settings.py` file:
 2. Make sure you have REACT_VERSION=18.2.0 installed.
 
-```python
-STATICFILES_FINDERS = [
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'django_plotly_dash.finders.DashAssetFinder',
-    'django_plotly_dash.finders.DashComponentFinder',
-    'django_plotly_dash.finders.DashAppDirectoryFinder',
-]
 
-PLOTLY_COMPONENTS = ['dpd_components', 'dash_bootstrap_components', 'dash_iconify', 'dash_mantine_components', 'dpd_static_support']
+    STATICFILES_FINDERS = [
+        'django.contrib.staticfiles.finders.FileSystemFinder',
+        'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+        'django_plotly_dash.finders.DashAssetFinder',
+        'django_plotly_dash.finders.DashComponentFinder',
+        'django_plotly_dash.finders.DashAppDirectoryFinder',
+    ]
+    
+    PLOTLY_COMPONENTS = ['dpd_components', 'dash_bootstrap_components', 'dash_iconify', 'dash_mantine_components', 'dpd_static_support']
+    
+    X_FRAME_OPTIONS = 'SAMEORIGIN'
+    
+    PLOTLY_DASH = {
+       'ws_route' :   'dpd/ws/channel',
+        'http_route' : 'dpd/views',
+       'http_poke_enabled' : True,
+      'insert_demo_migrations' : False,
+        'cache_timeout_initial_arguments': 60,
+       'view_decorator': None,
+      'cache_arguments': False,
+       'serve_locally': False,
+    }
 
-X_FRAME_OPTIONS = 'SAMEORIGIN'
-
-PLOTLY_DASH = {
-   'ws_route' :   'dpd/ws/channel',
-    'http_route' : 'dpd/views',
-   'http_poke_enabled' : True,
-  'insert_demo_migrations' : False,
-    'cache_timeout_initial_arguments': 60,
-   'view_decorator': None,
-  'cache_arguments': False,
-   'serve_locally': False,
-}
-```
 
 
 you need to manually add the following apps to the `INSTALLED_APPS` list in the `omeroweb/settings.py` file:
