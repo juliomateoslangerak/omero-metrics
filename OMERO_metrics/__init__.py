@@ -1,5 +1,6 @@
+#!/usr/bin/env python
 #
-# Copyright (c) 2019 University of Dundee.
+# Copyright (c) 2024 University of Dundee.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -14,4 +15,3 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-default_app_config = "OMERO_metrics.apps.MetricsAppConfig"

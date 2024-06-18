@@ -1,6 +1,7 @@
 
 
 // Construct the API projects URL
+// See https://omero.readthedocs.io/en/stable/developers/json-api.html#list-projects
 var projectsUrl = PARAMS.API_BASE_URL + 'm/projects/';
 
 // Filter projects by Owner to only show 'your' projects
