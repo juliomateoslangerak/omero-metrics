@@ -1,12 +1,4 @@
-# PyCharm files
-.idea
-
-# Credentials
-credentials.json
-
-/.venv/
-omero_metrics.egg-info/*
-/dist/
-/var/
-/omero_metrics/tools/test_code.ipynb
-/config_files/
+build
+node_modules
+*.pyc
+*.DS_Store
