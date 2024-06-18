@@ -22,7 +22,7 @@ url = "https://github.com/ome/OMERO-metrics"
 version = "0.1.0.dev0"
 
 setup(
-    name="OMERO-metrics",
+    name="omero-metrics",
     version=version,
     description="OMERO example minimal web app",
     packages=find_packages(),
