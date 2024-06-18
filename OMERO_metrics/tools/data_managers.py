@@ -59,8 +59,10 @@ TEMPLATE_MAPPINGS = {
 
 class DatasetManager:
     """
-    This class is a unit of work that processes data from a dataset or a dataset_collection (OMERO-project)
-    It contains the data (microscope-metrics_schema datasets and dataset_collections) and the necessary methods
+    This class is a unit of work that processes data from
+    a dataset or a dataset_collection (OMERO-project)
+    It contains the data (microscope-metrics_schema
+    datasets and dataset_collections) and the necessary methods
     to interact with OMERO and load and dump data.
     """
 
@@ -161,11 +163,13 @@ class DatasetManager:
         if not force_reprocess and self.is_processed():
             if self.is_validated():
                 logger.warning(
-                    "Dataset has been processed and validated. Force reprocess to process again"
+                    "Dataset has been processed and validated."
+                    " Force reprocess to process again"
                 )
             else:
                 logger.warning(
-                    "Dataset has been processed but not validated. Force reprocess to process again"
+                    "Dataset has been processed but not validated."
+                    " Force reprocess to process again"
                 )
             return False
         items_to_remove = []
