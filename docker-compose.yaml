@@ -49,6 +49,12 @@ services:
         source: ./omero_metrics
         target: /opt/omero/web/venv3/lib/python3.10/site-packages/omero_metrics
       - type: bind
+        source: ./venvs/venv/lib/python3.11/site-packages/microscopemetrics
+        target: /opt/omero/web/venv3/lib/python3.10/site-packages/microscopemetrics
+      - type: bind
+        source: ./venvs/venv/lib/python3.11/site-packages/microscopemetrics_schema
+        target: /opt/omero/web/venv3/lib/python3.10/site-packages/microscopemetrics_schema
+      - type: bind
         source: ./config_files/config.omero
         target: /opt/omero/web/config/config.omero
       - type: bind
