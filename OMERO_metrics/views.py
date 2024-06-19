@@ -73,3 +73,14 @@ def center_viewer_group(request, conn=None, **kwargs):
     return render(
         request, "OMERO_metrics/omero_views/center_view_group.html", context
     )
+
+
+@login_required()
+def image_rois(request, image_id, conn=None, **kwargs):
+    """Simply shows a page of ROI thumbnails for the specified image"""
+    roi_ids = image_id
+    return render(
+        request,
+        "OMERO_metrics/omero_views/image_rois.html",
+        {"roiIds": roi_ids},
+    )
