@@ -1,0 +1,18 @@
+.header .text {
+    font-size: 40px;
+}
+
+.header .image, 
+.header .text {
+    display: inline-block;
+    vertical-align: top;
+}
+
+.header {
+    margin-left: 20px;
+}
+
+
+.content {
+    margin-left: 20px;
+}
