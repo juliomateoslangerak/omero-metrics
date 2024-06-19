@@ -19,8 +19,20 @@
 from django.urls import path
 
 from . import views
+from django.urls import re_path
+from .views import web_gateway_templates, webclient_templates
 
 urlpatterns = [
     # index 'home page' of the app
     path("", views.index, name="OMERO_metrics_index"),
+    re_path(
+        r"^webgateway_templates/(?P<base_template>[a-z0-9_]+)/",
+        web_gateway_templates,
+        name="webgateway_templates",
+    ),
+    re_path(
+        r"^webclient_templates/(?P<base_template>[a-z0-9_]+)/",
+        webclient_templates,
+        name="webclient_templates",
+    ),
 ]

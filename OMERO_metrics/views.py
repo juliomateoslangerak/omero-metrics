@@ -17,8 +17,7 @@
 #
 
 from django.shortcuts import render
-
-from omeroweb.decorators import login_required
+from omeroweb.webclient.decorators import login_required, render_response
 
 
 # login_required: if not logged-in, will redirect to webclient
@@ -41,3 +40,20 @@ def index(request, conn=None, **kwargs):
 
     # Render the html template and return the http response
     return render(request, "OMERO_metrics/index.html", context)
+
+
+@login_required()
+def web_gateway_templates(request, base_template, **kwargs):
+    """Simply return the named template. Similar functionality to
+    django.views.generic.simple.direct_to_template"""
+    template_name = "OMERO_metrics/web_gateway/%s.html" % base_template
+    return render(request, template_name, {})
+
+
+@login_required()
+@render_response()
+def webclient_templates(request, base_template, **kwargs):
+    """Simply return the named template. Similar functionality to
+    django.views.generic.simple.direct_to_template"""
+    template_name = "OMERO_metrics/web_gateway/%s.html" % base_template
+    return {"template": template_name}
