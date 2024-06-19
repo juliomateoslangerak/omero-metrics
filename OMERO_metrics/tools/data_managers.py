@@ -16,3 +16,8 @@ SAMPLE_MAPPINGS = {
     "FieldIllumination": field_illumination,
     "PSFBeads": psf_beads,
 }
+
+DATASET_MAPPINGS = {
+    "FieldIlluminationDataset": mm_schema.FieldIlluminationDataset,
+    "PSFBeadsDataset": mm_schema.PSFBeadsDataset,
+}
