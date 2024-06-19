@@ -28,17 +28,17 @@
             load_plugin_content: function(selected, dtype, oid){  
                 var url ;
                  if (dtype=="image") {
-                    url = '{% url 'metrics_index' %}image/'+oid +'/';
+                    url = '{% url 'OMERO_metrics_index' %}image/'+oid +'/';
                 }
                 else if (dtype=="dataset") {
-                    url = '{% url 'metrics_index' %}dataset/'+oid +'/'
+                    url = '{% url 'OMERO_metrics_index' %}dataset/'+oid +'/'
                 }
                 else if (dtype=="experimenter") {
-                    url = '{% url 'metrics_index' %}group/'
+                    url = '{% url 'OMERO_metrics_index' %}group/'
                    
                 }
                 else if (dtype=="project") {
-                    url = '{% url 'metrics_index' %}project/'+oid +'/'
+                    url = '{% url 'OMERO_metrics_index' %}project/'+oid +'/'
                 }
                 else {
                     return;
