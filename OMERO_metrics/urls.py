@@ -20,7 +20,11 @@ from django.urls import path
 
 from . import views
 from django.urls import re_path
-from .views import web_gateway_templates, webclient_templates
+from .views import (
+    web_gateway_templates,
+    webclient_templates,
+    center_viewer_group,
+)
 
 urlpatterns = [
     # index 'home page' of the app
@@ -35,4 +39,5 @@ urlpatterns = [
         webclient_templates,
         name="webclient_templates",
     ),
+    re_path(r"^group/", center_viewer_group, name="group"),
 ]

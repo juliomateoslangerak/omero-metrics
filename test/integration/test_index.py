@@ -55,3 +55,14 @@ class TestLoadIndexPage(IWebTest):
         rsp = get(django_client, index_url)
         html_str = rsp.content.decode()
         assert "Welcome" in html_str
+
+    def test_load_group(self, user1):
+        """Test loading the app home page."""
+        conn = get_connection(user1)
+        user_name = conn.getUser().getName()
+        django_client = self.new_django_client(user_name, user_name)
+        index_url = reverse("group")
+        # asserts we get a 200 response code etc
+        rsp = get(django_client, index_url)
+        html_str = rsp.content.decode()
+        assert "Group" in html_str

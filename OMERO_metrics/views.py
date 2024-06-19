@@ -57,3 +57,19 @@ def webclient_templates(request, base_template, **kwargs):
     django.views.generic.simple.direct_to_template"""
     template_name = "OMERO_metrics/web_gateway/%s.html" % base_template
     return {"template": template_name}
+
+
+@login_required()
+def center_viewer_group(request, conn=None, **kwargs):
+    group = conn.getGroupFromContext()
+    group_id = group.getId()
+    group_name = group.getName()
+    group_description = group.getDescription()
+    context = {
+        "group_id": group_id,
+        "group_name": group_name,
+        "group_description": group_description,
+    }
+    return render(
+        request, "OMERO_metrics/omero_views/center_view_group.html", context
+    )
