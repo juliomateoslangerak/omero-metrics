@@ -1,10 +1,15 @@
-from django.conf import settings
+import json
+import sys
+from omeroweb.settings import process_custom_settings, report_settings
 
-settings.TOP_LINKS.append(["Metrics", "OMERO_metrics_index"])
-settings.CENTER_PLUGINS.append(
-    [
-        "Metrics View",
-        "OMERO_metrics_index/webclient_plugins/center_plugin.metricsview.js.html",
-        "metrics_view_panel",
-    ]
+METRICS_SETTINGS_MAPPING = {
+    "omero.web.OMERO_metrics.top_links": [
+        "TOP_LINKS",
+        (["metrics", "OMERO_metrics_index"]),
+    ],
+}
+
+process_custom_settings(
+    sys.modules[__name__], "OMERO_METRICS_SETTINGS_MAPPING"
 )
+report_settings(sys.modules[__name__])
