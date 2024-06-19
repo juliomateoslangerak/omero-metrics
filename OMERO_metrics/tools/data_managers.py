@@ -8,3 +8,7 @@ from . import delete, dump, load, update
 
 logger = logging.getLogger(__name__)
 DATA_TYPE_MAPPINGS = {"Dataset": 0, "Image": 1}
+ANALYSIS_MAPPINGS = {
+    "analise_field_illumination": field_illumination.analise_field_illumination,
+    "analyse_psf_beads": psf_beads.analyse_psf_beads,
+}
