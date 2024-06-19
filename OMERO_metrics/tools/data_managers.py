@@ -33,3 +33,16 @@ OBJECT_TO_DUMP_FUNCTION = {
     mm_schema.KeyValues: dump.dump_key_value,
     mm_schema.Table: dump.dump_table,
 }
+
+TEMPLATE_MAPPINGS = {
+    "FieldIlluminationDataset": [
+        "OMERO_metrics/omero_views/center_view_dataset_foi.html",
+        "OMERO_metrics/omero_views/center_view_image.html",
+    ],
+    "PSFBeadsDataset": [
+        "OMERO_metrics/omero_views/center_view_dataset_psf_beads.html",
+        "OMERO_metrics/omero_views/center_view_image_psf.html",
+    ],
+    "unknown_analysis": "OMERO_metrics/omero_views/center_view_unknown_analysis_type.html",
+    "unprocessed_analysis": "OMERO_metrics/omero_views/unprocessed_dataset.html",
+}
