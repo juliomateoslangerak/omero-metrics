@@ -15,18 +15,12 @@ from . import load, dump, update, delete
 
 logger = logging.getLogger(__name__)
 DATA_TYPE_MAPPINGS = {"Dataset": 0, "Image": 1}
-ANALYSIS_MAPPINGS = {
-}
-SAMPLE_MAPPINGS = {
-}
-DATASET_MAPPINGS = {
-}
-INPUT_MAPPINGS = {
-}
-OBJECT_TO_DUMP_FUNCTION = {
-}
-TEMPLATE_MAPPINGS = {
-}
+ANALYSIS_MAPPINGS = {}
+SAMPLE_MAPPINGS = {}
+DATASET_MAPPINGS = {}
+INPUT_MAPPINGS = {}
+OBJECT_TO_DUMP_FUNCTION = {}
+TEMPLATE_MAPPINGS = {}
 
 
 class DatasetManager:
