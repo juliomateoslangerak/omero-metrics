@@ -12,3 +12,7 @@ ANALYSIS_MAPPINGS = {
     "analise_field_illumination": field_illumination.analise_field_illumination,
     "analyse_psf_beads": psf_beads.analyse_psf_beads,
 }
+SAMPLE_MAPPINGS = {
+    "FieldIllumination": field_illumination,
+    "PSFBeads": psf_beads,
+}
