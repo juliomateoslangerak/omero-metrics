@@ -57,7 +57,7 @@ class TestLoadIndexPage(IWebTest):
         assert "Welcome" in html_str
 
     def test_load_group(self, user1):
-        """Test loading the app home page."""
+        """Test loading Group view for the center panel."""
         conn = get_connection(user1)
         user_name = conn.getUser().getName()
         django_client = self.new_django_client(user_name, user_name)
