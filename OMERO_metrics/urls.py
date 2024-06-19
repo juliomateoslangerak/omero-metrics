@@ -24,6 +24,7 @@ from .views import (
     web_gateway_templates,
     webclient_templates,
     center_viewer_group,
+    image_rois,
 )
 
 urlpatterns = [
@@ -40,4 +41,9 @@ urlpatterns = [
         name="webclient_templates",
     ),
     re_path(r"^group/", center_viewer_group, name="group"),
+    re_path(
+        r"^image_rois/(?P<image_id>[0-9]+)/",
+        image_rois,
+        name="webtest_image_rois",
+    ),
 ]
