@@ -304,15 +304,12 @@ def dump_analysis_config():
 def _get_output_metadata(
         dataset_output: mm_schema.MetricsOutput,
 ) -> dict:
+    output_fields = set(f.name for f in fields(mm_schema.MetricsOutput))
     output_elements = {}
     for output_field in fields(dataset_output):
-        output_element = getattr(dataset_output, output_field.name)
-        if isinstance(output_element, mm_schema.MetricsObject):
+        if output_field.name not in output_fields:
             continue
-        if isinstance(output_element, list) and \
-                any(isinstance(i, mm_schema.MetricsObject) for i in output_element):
-            continue
-        output_elements[output_field.name] = str(output_element)
+        output_elements[output_field.name] = str(getattr(dataset_output, output_field.name))
 
     return output_elements
 
