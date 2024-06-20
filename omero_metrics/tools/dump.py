@@ -149,7 +149,7 @@ def _remove_unsupported_types(data_obj: Union[mm_schema.MetricsInput, mm_schema.
 def _dump_mm_dataset_as_file_annotation(
     conn: BlitzGateway,
     mm_dataset: mm_schema.MetricsDataset,
-    target_omero_obj: Union[ProjectWrapper, DatasetWrapper],
+    target_omero_obj: Union[ProjectWrapper, DatasetWrapper, list[Union[ProjectWrapper, DatasetWrapper]]],
 ):
     # We need to remove the data on the numppy and pandas data objects as they cannot be serialized by linkml
     _remove_unsupported_types(mm_dataset.input)
@@ -161,13 +161,14 @@ def _dump_mm_dataset_as_file_annotation(
     with tempfile.NamedTemporaryFile(prefix=f"{mm_dataset.class_name}_", suffix=".yaml", mode="w", delete=False) as f:
         f.write(dumper.dumps(mm_dataset))
         f.close()
-        file_path = f.name
-        ns = mm_dataset.class_class_curie
-        description = mm_dataset.description
-        mimetype = "application/yaml"
-        file_ann = conn.createFileAnnfromLocalFile(
-            file_path, mimetype=mimetype, ns=ns, desc=description)
-        target_omero_obj.linkAnnotation(file_ann)
+        file_ann = omero_tools.create_file(
+            conn=conn,
+            file_path=f.name,
+            omero_object=target_omero_obj,
+            file_description=mm_dataset.description,
+            namespace=mm_dataset.class_class_curie,
+            mimetype="application/yaml",
+        )
 
     return file_ann
 
