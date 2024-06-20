@@ -990,17 +990,22 @@ def create_comment(
 def create_file(
     conn: BlitzGateway,
     file_path: str,
-    omero_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
+    omero_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper, list[Union[ImageWrapper, DatasetWrapper, ProjectWrapper]]],
     file_description: str,
     namespace: str,
+    mimetype: str = None,
 ):
     if not isinstance(file_path, str):
         raise TypeError(f'file_path {file_path} must be a string')
-
-    mimetype, _ = mimetypes.guess_type(file_path)
+    if mimetype is None:
+        mimetype, _ = mimetypes.guess_type(file_path)
     file_ann = conn.createFileAnnfromLocalFile(
         file_path, mimetype=mimetype, ns=namespace, desc=file_description)
-    _link_annotation(omero_object, file_ann)
+    if isinstance(omero_object, list):
+        for obj in omero_object:
+            _link_annotation(obj, file_ann)
+    else:
+        _link_annotation(omero_object, file_ann)
 
     return file_ann
 

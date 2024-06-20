@@ -158,7 +158,7 @@ def _dump_mm_dataset_as_file_annotation(
 
     dumper = YAMLDumper()
 
-    with tempfile.NamedTemporaryFile(prefix=f"{mm_dataset.class_name}_", mode="w", delete=False) as f:
+    with tempfile.NamedTemporaryFile(prefix=f"{mm_dataset.class_name}_", suffix=".yaml", mode="w", delete=False) as f:
         f.write(dumper.dumps(mm_dataset))
         f.close()
         file_path = f.name
