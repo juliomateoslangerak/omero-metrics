@@ -127,6 +127,8 @@ def _remove_unsupported_types(data_obj: Union[mm_schema.MetricsInput, mm_schema.
                 _attr.array_data = None
             case mm_schema.Table():
                 _attr.table_data = None
+            case mm_schema.KeyMeasurements():
+                _attr.table_data = None
             case mm_schema.Roi():
                 if _attr.masks:
                     [_remove(m.mask) for m in _attr.masks]
