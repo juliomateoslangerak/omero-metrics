@@ -290,9 +290,9 @@ def _get_input_metadata(
     for input_field in fields(input):
         input_element = getattr(input, input_field.name)
         if isinstance(input_element, mm_schema.Image):
-            continue
+            metadata[input_field.name] = input_element.name
         elif isinstance(input_element, list) and all(isinstance(i_e, mm_schema.Image) for i_e in input_element):
-            continue
+            metadata[input_field.name] = [i_e.name for i_e in input_element]
         else:
             metadata[input_field.name] = str(input_element)
 
