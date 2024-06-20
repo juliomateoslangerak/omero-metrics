@@ -960,9 +960,9 @@ def create_table(
 
     if isinstance(omero_object, list):
         for obj in omero_object:
-            _link_annotation(obj, table)
+            _link_annotation(obj, file_ann)
     else:
-        _link_annotation(omero_object, table)
+        _link_annotation(omero_object, file_ann)
 
     return file_ann
 
