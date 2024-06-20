@@ -243,18 +243,16 @@ def dump_dataset(
         else:
             logger.warning(f"Dataset {dataset.name} is not processed. Skipping output dump.")
 
+    target_objs = []
     if dump_as_dataset_file_annotation:
-        _dump_mm_dataset_as_file_annotation(
-            conn=conn,
-            mm_dataset=dataset,
-            target_omero_obj=omero_dataset
-        )
-
+        target_objs.append(omero_dataset)
     if dump_as_project_file_annotation:
+        target_objs.append(target_project)
+    if target_objs:
         _dump_mm_dataset_as_file_annotation(
             conn=conn,
             mm_dataset=dataset,
-            target_omero_obj=target_project
+            target_omero_obj=target_objs
         )
 
     return omero_dataset
