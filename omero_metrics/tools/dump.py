@@ -367,7 +367,7 @@ def _dump_output_element(
                 conn=conn,
                 key_measurement=output_element,
                 # KeyMeasurements are linked to the dataset and project
-                target_object=target_dataset.getParent(),
+                target_object=[target_dataset, target_dataset.getParent()],
             )
         else:
             return dump_key_values(
