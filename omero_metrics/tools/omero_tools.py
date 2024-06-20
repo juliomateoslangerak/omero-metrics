@@ -293,9 +293,11 @@ def get_image_intensities(
 def get_tagged_images_in_dataset(dataset, tag_id):
     images = []
     for image in dataset.listChildren():
-        for ann in image.listAnnotations():
-            if type(ann) == TagAnnotationWrapper and ann.getId() == tag_id:
-                images.append(image)
+        images.extend(
+            image
+            for ann in image.listAnnotations()
+            if type(ann) == TagAnnotationWrapper and ann.getId() == tag_id
+        )
     return images
 
 
@@ -325,7 +327,6 @@ def create_dataset(
         _link_dataset_to_project(conn, new_dataset, project)
 
     return new_dataset
-
 
 
 def _create_image_copy(
@@ -749,15 +750,18 @@ def create_tag(
     conn: BlitzGateway,
     tag_name: str,
     tag_description: str,
-    omero_objects: list[Union[ImageWrapper, DatasetWrapper, ProjectWrapper]],
+    omero_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper, list[Union[ImageWrapper, DatasetWrapper, ProjectWrapper]]],
 ):
     tag_ann = TagAnnotationWrapper(conn)
     tag_ann.setValue(tag_name)
     tag_ann.setDescription(tag_description)
     tag_ann.save()
 
-    for obj in omero_objects:
-        _link_annotation(obj, tag_ann)
+    if isinstance(omero_object, list):
+        for obj in omero_object:
+            _link_annotation(obj, tag_ann)
+    else:
+        _link_annotation(omero_object, tag_ann)
 
     return tag_ann
 
@@ -928,7 +932,7 @@ def create_table(
     conn: BlitzGateway,
     table: Union[DataFrame, list[dict[str, list]], dict[str, list]],
     table_name: str,
-    omero_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
+    omero_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper, list[Union[ImageWrapper, DatasetWrapper, ProjectWrapper]]],
     table_description: str,
     namespace: str,
 ):
@@ -954,7 +958,11 @@ def create_table(
     )  # TODO: try to get this with a wrapper
     file_ann.save()
 
-    _link_annotation(omero_object, file_ann)
+    if isinstance(omero_object, list):
+        for obj in omero_object:
+            _link_annotation(obj, table)
+    else:
+        _link_annotation(omero_object, table)
 
     return file_ann
 
@@ -995,7 +1003,6 @@ def create_file(
     _link_annotation(omero_object, file_ann)
 
     return file_ann
-
 
 
 def _link_annotation(

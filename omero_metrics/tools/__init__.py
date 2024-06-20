@@ -76,7 +76,7 @@
 #         conn.getUpdateService().saveObject(link, conn.SERVICE_OPTS)
 #         image_wrapper = dump_image(conn, var.intensity_map, new_dataset)
 #         image_wrapper = conn.getObject("Image", image_wrapper.id, opts={"datasets": [new_dataset.id]})
-#         dump_key_value(conn, var.key_values, image_wrapper)
+#         dump_key_values(conn, var.key_values, image_wrapper)
 #         r = var.roi_profiles
 #         r_c = var.roi_corners
 #         r_w = var.roi_centroids_weighted

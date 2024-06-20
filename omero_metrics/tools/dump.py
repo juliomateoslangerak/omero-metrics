@@ -4,6 +4,7 @@ import tempfile
 from dataclasses import fields
 from typing import Union
 
+import pandas as pd
 from linkml_runtime.dumpers import YAMLDumper
 from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
 from omero.gateway import BlitzGateway, DatasetWrapper, ImageWrapper, ProjectWrapper, ExperimenterGroupWrapper
@@ -19,15 +20,6 @@ SHAPE_TO_FUNCTION = {
     "Ellipse": omero_tools.create_shape_ellipse,
     "Polygon": omero_tools.create_shape_polygon,
     "Mask": omero_tools.create_shape_mask,
-}
-
-SHAPE_TYPE_TO_FUNCTION = {
-    "points": omero_tools.create_shape_point,
-    "lines": omero_tools.create_shape_line,
-    "rectangles": omero_tools.create_shape_rectangle,
-    "ellipses": omero_tools.create_shape_ellipse,
-    "polygons": omero_tools.create_shape_polygon,
-    "masks": omero_tools.create_shape_mask,
 }
 
 
@@ -73,7 +65,7 @@ def dump_microscope(
         omero_object=omero_group,
         annotation_name=microscope.name,
         annotation_description=microscope.description,
-        namespace=microscope.class_model_uri,
+        namespace=microscope.class_class_curie,
     )
     
     return omero_group
@@ -286,7 +278,7 @@ def _dump_analysis_metadata(
         omero_object=target_dataset,
         annotation_name=dataset.class_name,
         annotation_description=dataset.description,
-        namespace=dataset.class_model_uri,
+        namespace=dataset.class_class_curie,
     )
 
 
@@ -361,49 +353,57 @@ def _dump_dataset_output(
 
 def _dump_output_element(
         conn: BlitzGateway,
-        output_element,
+        output_element: mm_schema.MetricsObject,
         target_dataset: DatasetWrapper,
 ):
-    match output_element:
-        case mm_schema.Image():
-            dump_image(
+    # TODO: implement a TypeDispatchDict for the handlers
+    if isinstance(output_element, mm_schema.Image):
+        return dump_image(
+            conn=conn,
+            image=output_element,
+            target_dataset=target_dataset,
+        )
+    elif isinstance(output_element, mm_schema.KeyValues):
+        if isinstance(output_element, mm_schema.KeyMeasurements):
+            return dump_key_measurement(
                 conn=conn,
-                image=output_element,
-                target_dataset=target_dataset,
+                key_measurement=output_element,
+                # KeyMeasurements are linked to the dataset and project
+                target_object=target_dataset.getParent(),
             )
-        case mm_schema.Roi():
-            dump_roi(
-                conn=conn,
-                roi=output_element,
-            )
-        case mm_schema.Tag():
-            dump_tag(
-                conn=conn,
-                tag=output_element,
-            )
-        case mm_schema.KeyValues():
-            dump_key_value(
+        else:
+            return dump_key_values(
                 conn=conn,
                 key_values=output_element,
                 target_object=target_dataset,
             )
-        case mm_schema.Table():
-            dump_table(
-                conn=conn,
-                table=output_element,
-                target_object=target_dataset,
-            )
-        # case mm_schema.Comment():
-        #     dump_comment(
-        #         conn=conn,
-        #         comment=output_element,
-        #         target_object=target_dataset,
-        #     )
-        case _:
-            try:
-                logger.error(f"{output_element.name} output could not be dumped to OMERO")
-            except AttributeError:
-                logger.error(f"{output_element} output could not be dumped to OMERO")
+    elif isinstance(output_element, mm_schema.Tag):
+        return dump_tag(
+            conn=conn,
+            tag=output_element,
+            target_objects=target_dataset,
+        )
+    elif isinstance(output_element, mm_schema.Table):
+        return dump_table(
+            conn=conn,
+            table=output_element,
+            target_object=target_dataset,
+        )
+    elif isinstance(output_element, mm_schema.Roi):
+        return dump_roi(
+            conn=conn,
+            roi=output_element,
+        )
+    elif isinstance(output_element, mm_schema.Comment):
+        return dump_comment(
+            conn=conn,
+            comment=output_element,
+            target_object=target_dataset,
+        )
+    else:
+        logger.error(f"{output_element.name} output could not be dumped to OMERO")
+
+    return None
 
 
 def dump_image(
@@ -465,16 +465,27 @@ def dump_roi(
             )
             return None
 
-    if len(target_images) == 0:
+    if not target_images or not all(isinstance(i, ImageWrapper) for i in target_images):
         logger.error(
             f"ROI {roi.name} must be linked to an image. {target_images} object provided is not an image."
         )
         return None
+
+    handler = {
+        "points": lambda shape: omero_tools.create_shape_point(shape),
+        "lines": lambda shape: omero_tools.create_shape_line(shape),
+        "rectangles": lambda shape: omero_tools.create_shape_rectangle(shape),
+        "ellipses": lambda shape: omero_tools.create_shape_ellipse(shape),
+        "polygons": lambda shape: omero_tools.create_shape_polygon(shape),
+        "masks": lambda shape: omero_tools.create_shape_mask(shape),
+    }
+
     shapes = []
     for shape_field in fields(roi):
-        if shape_field.name in SHAPE_TYPE_TO_FUNCTION:
-            shapes += [SHAPE_TYPE_TO_FUNCTION[shape_field.name](shape)
-                       for shape in getattr(roi, shape_field.name)]
+        if shape_field.name not in handler:
+            continue
+        shape_handler = handler.get(shape_field.name, lambda shape: logger.error(f"Shape {shape} could not be dumped to OMERO"))
+        shapes += [shape_handler(shape) for shape in getattr(roi, shape_field.name)]
 
     omero_rois = []
     for target_image in target_images:
@@ -505,7 +516,7 @@ def dump_tag(
             )
         except AttributeError:
             logger.error(
-                f"ROI {tag.name} must be linked to at least one image. No image provided."
+                f"Tag {tag.name} must be linked to an OMERO object. No object provided"
             )
             return None
 
@@ -522,7 +533,7 @@ def dump_tag(
             conn=conn,
             tag_name=tag.name,
             tag_description=tag.description,
-            omero_objects=target_objects,
+            omero_object=target_objects,
         )
         tag.data_reference = omero_tools.get_ref_from_object(omero_tag)
 
@@ -531,11 +542,51 @@ def dump_tag(
     return omero_tag
 
 
-def dump_key_value(
+def dump_key_measurement(
+        conn: BlitzGateway,
+        key_measurement: mm_schema.KeyMeasurements,
+        target_object: Union[DatasetWrapper, ProjectWrapper, list[Union[DatasetWrapper, ProjectWrapper]]],
+):
+    if not isinstance(key_measurement, mm_schema.KeyMeasurements):
+        logger.error(f"Unsupported key measurement type for {key_measurement.name}: {key_measurement.class_name}")
+        return None
+
+    if target_object is None:
+        try:
+            target_object = omero_tools.get_omero_obj_from_mm_obj(
+                conn=conn,
+                mm_obj=key_measurement.linked_references
+                )
+        except AttributeError:
+            logger.error(f"Key-measurements {key_measurement.name} must be linked to an OMERO object. No object provided.")
+            return None
+
+    if key_measurement.table_data is None:
+        logger.error(f"Key-measurements {key_measurement.name} has no data. Skipping dump.")
+        return None
+
+    omero_table = omero_tools.create_table(
+        conn=conn,
+        table=key_measurement.table_data,
+        table_name=key_measurement.name,
+        omero_object=target_object,
+        table_description=key_measurement.description,
+        namespace=key_measurement.class_class_curie,
+    )
+    key_measurement.data_reference = omero_tools.get_ref_from_object(omero_table)
+
+    return omero_table
+
+
+def dump_key_values(
         conn: BlitzGateway,
         key_values: mm_schema.KeyValues,
         target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper] = None,
 ):
+    if not isinstance(key_values, mm_schema.KeyValues):
+        logger.error(f"Unsupported key values type for {key_values.name}: {key_values.class_name}")
+        return None
+
     if target_object is None:
         try:
             target_object = omero_tools.get_omero_obj_from_mm_obj(
@@ -544,7 +595,7 @@ def dump_key_value(
             )
         except AttributeError:
             logger.error(
-                f"ROI {key_values.name} must be linked to an image. No image provided."
+                f"Key-values {key_values.name} must be linked to an OMERO object. No object provided."
             )
             return None
 
@@ -554,7 +605,7 @@ def dump_key_value(
         omero_object=target_object,
         annotation_name=key_values.name,
         annotation_description=key_values.description,
-        namespace=key_values.class_model_uri,
+        namespace=key_values.class_class_curie,
     )
     key_values.data_reference = omero_tools.get_ref_from_object(omero_key_value)
 
@@ -593,7 +644,7 @@ def dump_table(
             )
         except AttributeError:
             logger.error(
-                f"ROI {table.name} must be linked to an image. No image provided."
+                f"Table {table.name} must be linked to an OMERO object. No object provided."
             )
             return None
 
@@ -603,7 +654,7 @@ def dump_table(
         table_name=table.name,
         omero_object=target_object,
         table_description=table.description,
-        namespace=table.class_model_uri,
+        namespace=table.class_class_curie,
     )
     table.data_reference = omero_tools.get_ref_from_object(omero_table)
 
@@ -623,7 +674,7 @@ def dump_comment(
             )
         except AttributeError:
             logger.error(
-                f"ROI {comment.name} must be linked to an image. No image provided."
+                f"Comment {comment.name} must be linked to an OMERO object. No object provided."
             )
             return None
 
@@ -631,5 +682,5 @@ def dump_comment(
         conn=conn,
         comment_text=comment.text,
         omero_object=target_object,
-        namespace=comment.class_model_uri,
+        namespace=comment.class_class_curie,
     )
