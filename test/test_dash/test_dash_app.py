@@ -1,4 +1,4 @@
-'''
+"""
 Test demo appliction
 
 Most of these tests are simply the loading of the individual files that
@@ -25,43 +25,53 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-'''
+"""
 
 # pylint: disable=protected-access, no-member
 import pytest
 
+
 def test_asgi_loading():
-    'Test loading of a module'
+    "Test loading of a module"
     from ..asgi import application
+
     assert application
+
 
 def test_wsgi_loading():
-    'Test loading of a module'
+    "Test loading of a module"
     from ..wsgi import application
+
     assert application
+
 
 def test_routing_loading():
-    'Test loading of a module'
+    "Test loading of a module"
     from ..routing import application
+
     assert application
 
+
 def test_url_loading():
-    'Test loading of a module'
+    "Test loading of a module"
     from ..urls import urlpatterns
+
     assert urlpatterns
 
+
 def test_demo_loading():
-    'Test the import and formation of a dash example app'
+    "Test the import and formation of a dash example app"
 
     from ..plotly_apps import app
 
-    assert app._uid == 'SimpleExample' # pylint: disable=protected-access
+    assert app._uid == "SimpleExample"  # pylint: disable=protected-access
 
     assert app.layout
 
+
 @pytest.mark.django_db
 def test_app_lookup():
-    'Test looking up an existing application'
+    "Test looking up an existing application"
     from ..plotly_apps import app
 
     from django_plotly_dash.models import get_stateless_by_name, StatelessApp
@@ -76,8 +86,9 @@ def test_app_lookup():
     assert app3
     assert app3.app_name == app2._uid
 
+
 def test_app_callbacks():
-    'Test the callbacks of the demo applications'
+    "Test the callbacks of the demo applications"
 
     from ..plotly_apps import app, a2, liveIn, liveOut
 
@@ -88,17 +99,18 @@ def test_app_callbacks():
 
     # TODO need something to trigger callbacks
 
+
 def test_stateless_lookup():
-    'Test side loading of stateless apps'
+    "Test side loading of stateless apps"
 
     from django_plotly_dash.util import stateless_app_lookup_hook
+
     lh_hook = stateless_app_lookup_hook()
 
     with pytest.raises(ImportError):
         lh_hook("not a real app name")
 
-    demo_app = lh_hook('demo_app')
+    demo_app = lh_hook("demo_app")
 
     assert demo_app is not None
-    assert demo_app._uid == 'name_of_demo_app'
-
+    assert demo_app._uid == "name_of_demo_app"

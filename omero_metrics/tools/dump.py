@@ -6,8 +6,16 @@ from typing import Union
 
 import pandas as pd
 from linkml_runtime.dumpers import YAMLDumper
-from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
-from omero.gateway import BlitzGateway, DatasetWrapper, ImageWrapper, ProjectWrapper, ExperimenterGroupWrapper
+from microscopemetrics_schema.datamodel import (
+    microscopemetrics_schema as mm_schema,
+)
+from omero.gateway import (
+    BlitzGateway,
+    DatasetWrapper,
+    ImageWrapper,
+    ProjectWrapper,
+    ExperimenterGroupWrapper,
+)
 
 from omero_metrics.tools import omero_tools
 
@@ -24,22 +32,21 @@ SHAPE_TO_FUNCTION = {
 
 
 def dump_microscope(
-        conn: BlitzGateway,
-        microscope: mm_schema.Microscope,
-        target_group: ExperimenterGroupWrapper = None,
+    conn: BlitzGateway,
+    microscope: mm_schema.Microscope,
+    target_group: ExperimenterGroupWrapper = None,
 ) -> ExperimenterGroupWrapper:
     """
     This function is dumping the microscope metadata into an existing Group in OMERO.
-    :param conn: 
-    :param microscope: 
-    :param target_group: 
-    :return: 
+    :param conn:
+    :param microscope:
+    :param target_group:
+    :return:
     """
     if target_group is None:
         if microscope.data_reference:
             omero_group = omero_tools.get_omero_obj_from_mm_obj(
-                conn=conn,
-                mm_obj=microscope
+                conn=conn, mm_obj=microscope
             )
         else:
             logger.error(
@@ -52,12 +59,18 @@ def dump_microscope(
                 f"Microscope {microscope.name} must be linked to a group. {target_group} object provided is not a group."
             )
             return None
-        if microscope.data_reference and microscope.data_reference.omero_object_id != target_group.getId():
+        if (
+            microscope.data_reference
+            and microscope.data_reference.omero_object_id
+            != target_group.getId()
+        ):
             logger.warning(
                 f"Microscope {microscope.name} is going to be linked to a different OMERO group."
             )
         omero_group = target_group
-        microscope.data_reference = omero_tools.get_ref_from_object(omero_group)
+        microscope.data_reference = omero_tools.get_ref_from_object(
+            omero_group
+        )
 
     omero_tools.create_key_value(
         conn=conn,
@@ -67,32 +80,31 @@ def dump_microscope(
         annotation_description=microscope.description,
         namespace=microscope.class_class_curie,
     )
-    
+
     return omero_group
 
 
 def dump_project(
-        conn: BlitzGateway,
-        project: mm_schema.MetricsDatasetCollection,
-        target_project: ProjectWrapper = None,
-        dump_input_images: bool = False,
-        dump_analysis: bool = True,
-        dump_as_project_file_annotation: bool = True,
-        dump_as_dataset_file_annotation: bool = False,
+    conn: BlitzGateway,
+    project: mm_schema.MetricsDatasetCollection,
+    target_project: ProjectWrapper = None,
+    dump_input_images: bool = False,
+    dump_analysis: bool = True,
+    dump_as_project_file_annotation: bool = True,
+    dump_as_dataset_file_annotation: bool = False,
 ) -> ProjectWrapper:
     if target_project is None:
         if project.data_reference:
             omero_project = omero_tools.get_omero_obj_from_mm_obj(
-                conn=conn,
-                mm_obj=project
+                conn=conn, mm_obj=project
             )
         else:
             omero_project = omero_tools.create_project(
-                conn=conn,
-                name=project.name,
-                description=project.description
+                conn=conn, name=project.name, description=project.description
             )
-            project.data_reference = omero_tools.get_ref_from_object(omero_project)
+            project.data_reference = omero_tools.get_ref_from_object(
+                omero_project
+            )
     else:
         if not isinstance(target_project, ProjectWrapper):
             logger.error(
@@ -120,7 +132,9 @@ def dump_project(
     return omero_project
 
 
-def _remove_unsupported_types(data_obj: Union[mm_schema.MetricsInput, mm_schema.MetricsOutput]):
+def _remove_unsupported_types(
+    data_obj: Union[mm_schema.MetricsInput, mm_schema.MetricsOutput]
+):
     def _remove(_attr):
         match _attr:
             case mm_schema.Image():
@@ -146,6 +160,7 @@ def _remove_unsupported_types(data_obj: Union[mm_schema.MetricsInput, mm_schema.
     except TypeError:
         pass
 
+
 def _dump_mm_dataset_as_file_annotation(
     conn: BlitzGateway,
     mm_dataset: mm_schema.MetricsDataset,
@@ -158,7 +173,9 @@ def _dump_mm_dataset_as_file_annotation(
 
     dumper = YAMLDumper()
 
-    with tempfile.NamedTemporaryFile(prefix=f"{mm_dataset.class_name}_", suffix=".yaml", mode="w", delete=False) as f:
+    with tempfile.NamedTemporaryFile(
+        prefix=f"{mm_dataset.class_name}_", suffix=".yaml", mode="w", delete=False
+    ) as f:
         f.write(dumper.dumps(mm_dataset))
         f.close()
         file_ann = omero_tools.create_file(
@@ -174,23 +191,24 @@ def _dump_mm_dataset_as_file_annotation(
 
 
 def dump_dataset(
-        conn: BlitzGateway,
-        dataset: mm_schema.MetricsDataset,
-        target_project: ProjectWrapper = None,
-        dump_input_images: bool = False,
-        dump_analysis: bool = True,
-        dump_as_project_file_annotation: bool = True,
-        dump_as_dataset_file_annotation: bool = False,
+    conn: BlitzGateway,
+    dataset: mm_schema.MetricsDataset,
+    target_project: ProjectWrapper = None,
+    dump_input_images: bool = False,
+    dump_analysis: bool = True,
+    dump_as_project_file_annotation: bool = True,
+    dump_as_dataset_file_annotation: bool = False,
 ) -> DatasetWrapper:
     if dataset.data_reference:
         try:
             omero_dataset = omero_tools.get_omero_obj_from_mm_obj(
-                conn=conn,
-                mm_obj=dataset
+                conn=conn, mm_obj=dataset
             )
             logger.info(f"Retrieving dataset {dataset.name} from OMERO")
         except Exception as e:
-            logger.error(f"Dataset {dataset.name} could not be retrieved from OMERO: {e}")
+            logger.error(
+                f"Dataset {dataset.name} could not be retrieved from OMERO: {e}"
+            )
             raise e
     else:
         if target_project is None:
@@ -223,7 +241,9 @@ def dump_dataset(
                     image=input_element,
                     target_dataset=omero_dataset,
                 )
-            elif isinstance(input_element, list) and all(isinstance(i_e, mm_schema.Image) for i_e in input_element):
+            elif isinstance(input_element, list) and all(
+                isinstance(i_e, mm_schema.Image) for i_e in input_element
+            ):
                 for image in input_element:
                     dump_image(
                         conn=conn,
@@ -239,9 +259,13 @@ def dump_dataset(
                 _dump_analysis_metadata(dataset, omero_dataset)
                 _dump_dataset_output(dataset.output, omero_dataset)
             else:
-                logger.error(f"Dataset {dataset.name} is processed but has no output. Skipping dump.")
+                logger.error(
+                    f"Dataset {dataset.name} is processed but has no output. Skipping dump."
+                )
         else:
-            logger.warning(f"Dataset {dataset.name} is not processed. Skipping output dump.")
+            logger.warning(
+                f"Dataset {dataset.name} is not processed. Skipping output dump."
+            )
 
     target_objs = []
     if dump_as_dataset_file_annotation:
@@ -250,21 +274,21 @@ def dump_dataset(
         target_objs.append(target_project)
     if target_objs:
         _dump_mm_dataset_as_file_annotation(
-            conn=conn,
-            mm_dataset=dataset,
-            target_omero_obj=target_objs
+            conn=conn, mm_dataset=dataset, target_omero_obj=target_objs
         )
 
     return omero_dataset
 
 
 def _dump_analysis_metadata(
-        dataset: mm_schema.MetricsDataset,
-        target_dataset: DatasetWrapper,
+    dataset: mm_schema.MetricsDataset,
+    target_dataset: DatasetWrapper,
 ):
     logger.info(f"Dumping {dataset.class_name} to OMERO")
     if not isinstance(dataset, mm_schema.MetricsDataset):
-        logger.error(f"Invalid dataset input object provided for {dataset}. Skipping dump.")
+        logger.error(
+            f"Invalid dataset input object provided for {dataset}. Skipping dump."
+        )
         return None
 
     input_metadata = _get_input_metadata(dataset.input)
@@ -284,14 +308,16 @@ def _dump_analysis_metadata(
 
 
 def _get_input_metadata(
-        input: mm_schema.MetricsInput,
+    input: mm_schema.MetricsInput,
 ) -> dict:
     metadata = {}
     for input_field in fields(input):
         input_element = getattr(input, input_field.name)
         if isinstance(input_element, mm_schema.Image):
             metadata[input_field.name] = input_element.name
-        elif isinstance(input_element, list) and all(isinstance(i_e, mm_schema.Image) for i_e in input_element):
+        elif isinstance(input_element, list) and all(
+            isinstance(i_e, mm_schema.Image) for i_e in input_element
+        ):
             metadata[input_field.name] = [i_e.name for i_e in input_element]
         else:
             metadata[input_field.name] = str(input_element)
@@ -302,8 +328,9 @@ def _get_input_metadata(
 def dump_analysis_config():
     pass
 
+
 def _get_output_metadata(
-        dataset_output: mm_schema.MetricsOutput,
+    dataset_output: mm_schema.MetricsOutput,
 ) -> dict:
     output_fields = set(f.name for f in fields(mm_schema.MetricsOutput))
     output_elements = {}
@@ -316,8 +343,8 @@ def _get_output_metadata(
 
 
 def _dump_dataset_output(
-        dataset_output: mm_schema.MetricsOutput,
-        target_dataset: DatasetWrapper,
+    dataset_output: mm_schema.MetricsOutput,
+    target_dataset: DatasetWrapper,
 ):
     logger.info(f"Dumping {dataset_output.class_name} to OMERO")
     if not isinstance(target_dataset, DatasetWrapper):
@@ -326,7 +353,9 @@ def _dump_dataset_output(
         )
         return None
     if not isinstance(dataset_output, mm_schema.MetricsOutput):
-        logger.error(f"Invalid dataset output object provided for {dataset_output}. Skipping dump.")
+        logger.error(
+            f"Invalid dataset output object provided for {dataset_output}. Skipping dump."
+        )
         return None
 
     conn = target_dataset._conn
@@ -339,7 +368,9 @@ def _dump_dataset_output(
                 output_element=output_element,
                 target_dataset=target_dataset,
             )
-        elif isinstance(output_element, list) and all(isinstance(i, mm_schema.MetricsObject) for i in output_element):
+        elif isinstance(output_element, list) and all(
+            isinstance(i, mm_schema.MetricsObject) for i in output_element
+        ):
             for element in output_element:
                 _dump_output_element(
                     conn=conn,
@@ -349,10 +380,11 @@ def _dump_dataset_output(
         else:
             continue
 
+
 def _dump_output_element(
-        conn: BlitzGateway,
-        output_element: mm_schema.MetricsObject,
-        target_dataset: DatasetWrapper,
+    conn: BlitzGateway,
+    output_element: mm_schema.MetricsObject,
+    target_dataset: DatasetWrapper,
 ):
     # TODO: implement a TypeDispatchDict for the handlers
     if isinstance(output_element, mm_schema.Image):
@@ -405,9 +437,9 @@ def _dump_output_element(
 
 
 def dump_image(
-        conn: BlitzGateway,
-        image: mm_schema.Image,
-        target_dataset: DatasetWrapper,
+    conn: BlitzGateway,
+    image: mm_schema.Image,
+    target_dataset: DatasetWrapper,
 ):
     if not isinstance(target_dataset, DatasetWrapper):
         logger.error(
@@ -415,7 +447,9 @@ def dump_image(
         )
         return None
     if not isinstance(image, mm_schema.Image):
-        logger.error(f"Invalid image object provided for {image}. Skipping dump.")
+        logger.error(
+            f"Invalid image object provided for {image}. Skipping dump."
+        )
         return None
 
     source_image_id = None
@@ -428,7 +462,9 @@ def dump_image(
 
     omero_image = omero_tools.create_image_from_numpy_array(
         conn=conn,
-        data=image.array_data.transpose((1, 4, 0, 2, 3)),  # microscope-metrics order TZYXC -> OMERO order zctyx
+        data=image.array_data.transpose(
+            (1, 4, 0, 2, 3)
+        ),  # microscope-metrics order TZYXC -> OMERO order zctyx
         image_name=image.name,
         image_description=image.description,
         channel_labels=[ch.name for ch in image.channel_series.channels],
@@ -444,18 +480,16 @@ def dump_image(
 
 
 def dump_roi(
-        conn: BlitzGateway,
-        roi: mm_schema.Roi,
-        target_images: Union[ImageWrapper, list[ImageWrapper]] = None,
+    conn: BlitzGateway,
+    roi: mm_schema.Roi,
+    target_images: Union[ImageWrapper, list[ImageWrapper]] = None,
 ):
     if target_images is None:
         try:
             target_images = [
-                omero_tools.get_omero_obj_from_mm_obj(
-                    conn=conn,
-                    mm_obj=ref
-                )
-                for ref in roi.linked_references if isinstance(ref, mm_schema.DataReference)
+                omero_tools.get_omero_obj_from_mm_obj(conn=conn, mm_obj=ref)
+                for ref in roi.linked_references
+                if isinstance(ref, mm_schema.DataReference)
             ]
         except AttributeError:
             logger.error(
@@ -483,7 +517,8 @@ def dump_roi(
         if shape_field.name not in handler:
             continue
         shape_handler = handler.get(shape_field.name, lambda shape: logger.error(f"Shape {shape} could not be dumped to OMERO"))
-        shapes += [shape_handler(shape) for shape in getattr(roi, shape_field.name)]
+        shapes += [shape_handler(shape) for shape in getattr(roi, shape_field.name)
+            ]
 
     omero_rois = []
     for target_image in target_images:
@@ -496,21 +531,24 @@ def dump_roi(
         )
         omero_rois.append(omero_roi)
 
-    roi.linked_references = [omero_tools.get_ref_from_object(r) for r in omero_rois]
+    roi.linked_references = [
+        omero_tools.get_ref_from_object(r) for r in omero_rois
+    ]
 
     return omero_rois
 
 
 def dump_tag(
-        conn: BlitzGateway,
-        tag: mm_schema.Tag,
-        target_objects: list[Union[ImageWrapper, DatasetWrapper, ProjectWrapper]] = None,
+    conn: BlitzGateway,
+    tag: mm_schema.Tag,
+    target_objects: list[
+        Union[ImageWrapper, DatasetWrapper, ProjectWrapper]
+    ] = None,
 ):
     if target_objects is None:
         try:
             target_objects = omero_tools.get_omero_obj_from_mm_obj(
-                conn=conn,
-                mm_obj=tag.linked_references
+                conn=conn, mm_obj=tag.linked_references
             )
         except AttributeError:
             logger.error(
@@ -521,8 +559,7 @@ def dump_tag(
     if tag.data_reference is not None:
         logger.info(f"Tag {tag.name} already exists in OMERO.")
         omero_tag = omero_tools.get_omero_obj_from_mm_obj(
-            conn=conn,
-            mm_obj=tag
+            conn=conn, mm_obj=tag
         )
         # TODO: link to objects here
     else:
@@ -577,9 +614,9 @@ def dump_key_measurement(
 
 
 def dump_key_values(
-        conn: BlitzGateway,
-        key_values: mm_schema.KeyValues,
-        target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper] = None,
+    conn: BlitzGateway,
+    key_values: mm_schema.KeyValues,
+    target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper] = None,
 ):
     if not isinstance(key_values, mm_schema.KeyValues):
         logger.error(f"Unsupported key values type for {key_values.name}: {key_values.class_name}")
@@ -588,8 +625,7 @@ def dump_key_values(
     if target_object is None:
         try:
             target_object = omero_tools.get_omero_obj_from_mm_obj(
-                conn=conn,
-                mm_obj=key_values.linked_references
+                conn=conn, mm_obj=key_values.linked_references
             )
         except AttributeError:
             logger.error(
@@ -605,7 +641,9 @@ def dump_key_values(
         annotation_description=key_values.description,
         namespace=key_values.class_class_curie,
     )
-    key_values.data_reference = omero_tools.get_ref_from_object(omero_key_value)
+    key_values.data_reference = omero_tools.get_ref_from_object(
+        omero_key_value
+    )
 
     return omero_key_value
 
@@ -626,19 +664,20 @@ def _eval_types(table: mm_schema.Table):
 
 
 def dump_table(
-        conn: BlitzGateway,
-        table: mm_schema.Table,
-        target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper] = None,
+    conn: BlitzGateway,
+    table: mm_schema.Table,
+    target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper] = None,
 ):
     if not isinstance(table, mm_schema.Table):
-        logger.error(f"Unsupported table type for {table.name}: {table.class_name}")
+        logger.error(
+            f"Unsupported table type for {table.name}: {table.class_name}"
+        )
         return None
 
     if target_object is None:
         try:
             target_object = omero_tools.get_omero_obj_from_mm_obj(
-                conn=conn,
-                mm_obj=table.linked_references
+                conn=conn, mm_obj=table.linked_references
             )
         except AttributeError:
             logger.error(
@@ -660,15 +699,14 @@ def dump_table(
 
 
 def dump_comment(
-        conn: BlitzGateway,
-        comment: mm_schema.Comment,
-        target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
+    conn: BlitzGateway,
+    comment: mm_schema.Comment,
+    target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
 ):
     if target_object is None:
         try:
             target_object = omero_tools.get_omero_obj_from_mm_obj(
-                conn=conn,
-                mm_obj=comment.linked_references
+                conn=conn, mm_obj=comment.linked_references
             )
         except AttributeError:
             logger.error(

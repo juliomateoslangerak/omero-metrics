@@ -6,10 +6,12 @@ from itertools import product
 from random import choice
 from string import ascii_letters
 from typing import Union
-from jsonasobj2._jsonobj import JsonObj 
+from jsonasobj2._jsonobj import JsonObj
 import numpy as np
 import pandas as pd
-from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
+from microscopemetrics_schema.datamodel import (
+    microscopemetrics_schema as mm_schema,
+)
 from omero import grid
 from omero.constants import metadata
 from omero.gateway import (
@@ -99,12 +101,16 @@ def get_object_ids_from_url(url: str) -> list[tuple[str, int]]:
     """
     tail = url.split("/")[-1].split("=")[-1]  # TODO: make all of this a regex
     if "|" in tail:
-        return [(x.split("-")[0], int(x.split("-")[-1])) for x in tail.split("|")]
+        return [
+            (x.split("-")[0], int(x.split("-")[-1])) for x in tail.split("|")
+        ]
     else:
         return [(tail.split("-")[0], int(tail.split("-")[-1]))]
-    
 
-def get_omero_obj_id_from_mm_obj(mm_obj: mm_schema.MetricsObject) -> Union[ImageWrapper, DatasetWrapper, ProjectWrapper]:
+
+def get_omero_obj_id_from_mm_obj(
+    mm_obj: mm_schema.MetricsObject,
+) -> Union[ImageWrapper, DatasetWrapper, ProjectWrapper]:
     if isinstance(mm_obj, mm_schema.DataReference):
         return mm_obj.omero_object_id
     elif isinstance(mm_obj, mm_schema.MetricsObject):
@@ -112,22 +118,33 @@ def get_omero_obj_id_from_mm_obj(mm_obj: mm_schema.MetricsObject) -> Union[Image
     elif isinstance(mm_obj, list):
         return [get_omero_obj_id_from_mm_obj(obj) for obj in mm_obj]
     else:
-        raise ValueError("Input should be a metrics object or a list of metrics objects")
+        raise ValueError(
+            "Input should be a metrics object or a list of metrics objects"
+        )
 
 
-def get_omero_obj_from_mm_obj(conn: BlitzGateway, mm_obj: mm_schema.MetricsObject) -> Union[ImageWrapper, DatasetWrapper, ProjectWrapper]:
+def get_omero_obj_from_mm_obj(
+    conn: BlitzGateway, mm_obj: mm_schema.MetricsObject
+) -> Union[ImageWrapper, DatasetWrapper, ProjectWrapper]:
     # if not isinstance(mm_obj.omero_object_type, tuple):
     #     return conn.getObject(str(mm_obj.omero_object_type.code.text), mm_obj.omero_object_id)
     # else:
     #     return conn.getObject(mm_obj.omero_object_type[0], mm_obj.omero_object_id)
     if isinstance(mm_obj, mm_schema.DataReference):
-        return conn.getObject(mm_obj.omero_object_type.code.text, mm_obj.omero_object_id)
+        return conn.getObject(
+            mm_obj.omero_object_type.code.text, mm_obj.omero_object_id
+        )
     elif isinstance(mm_obj, mm_schema.MetricsObject):
-        return conn.getObject(mm_obj.data_reference.omero_object_type.code.text, mm_obj.data_reference.omero_object_id)
+        return conn.getObject(
+            mm_obj.data_reference.omero_object_type.code.text,
+            mm_obj.data_reference.omero_object_id,
+        )
     elif isinstance(mm_obj, list):
         return [get_omero_obj_from_mm_obj(conn, obj) for obj in mm_obj]
     else:
-        raise ValueError("Input should be a metrics object or a list of metrics objects")
+        raise ValueError(
+            "Input should be a metrics object or a list of metrics objects"
+        )
 
 
 def get_ref_from_object(obj) -> mm_schema.DataReference:
@@ -165,7 +182,7 @@ def get_ref_from_object(obj) -> mm_schema.DataReference:
         omero_host=obj._conn.host,
         omero_port=obj._conn.port,
         omero_object_type=obj_type,
-        omero_object_id=obj.getId()
+        omero_object_id=obj.getId(),
     )
 
 
@@ -259,7 +276,9 @@ def get_image_intensities(
             raise TypeError("Range is not provided as a tuple.")
 
         if not 1 <= ranges[dim].stop <= image_shape[dim]:
-            raise IndexError("Specified range is outside of the image dimensions")
+            raise IndexError(
+                "Specified range is outside of the image dimensions"
+            )
 
     output_shape = (
         len(ranges[0]),
@@ -276,14 +295,23 @@ def get_image_intensities(
 
     # intensities = np.zeros(output_shape, dtype=data_type)
 
-    intensities = np.zeros(shape=(nr_planes, output_shape[3], output_shape[4]), dtype=data_type)
+    intensities = np.zeros(
+        shape=(nr_planes, output_shape[3], output_shape[4]), dtype=data_type
+    )
     if whole_planes:
         np.stack(list(pixels.getPlanes(zctList=zct_list)), out=intensities)
     else:
         # Tile is formatted (X, Y, Width, Heigth)
-        tile_region = (ranges[4].start, ranges[3].start, len(ranges[4]), len(ranges[3]))
+        tile_region = (
+            ranges[4].start,
+            ranges[3].start,
+            len(ranges[4]),
+            len(ranges[3]),
+        )
         zct_tile_list = [(z, c, t, tile_region) for z, c, t in zct_list]
-        np.stack(list(pixels.getTiles(zctTileList=zct_tile_list)), out=intensities)
+        np.stack(
+            list(pixels.getTiles(zctTileList=zct_tile_list)), out=intensities
+        )
 
     intensities = np.reshape(intensities, newshape=output_shape)
 
@@ -386,7 +414,9 @@ def _create_image(
     pixels_service = conn.getPixelsService()
     query_service = conn.getQueryService()
 
-    if data_type not in DTYPES_NP_TO_OMERO:  # try to look up any not named above
+    if (
+        data_type not in DTYPES_NP_TO_OMERO
+    ):  # try to look up any not named above
         pixel_type = data_type
     else:
         pixel_type = DTYPES_NP_TO_OMERO[data_type]
@@ -429,7 +459,9 @@ def _create_image_whole(
 ):
     zct_generator = (
         data[z, c, t, :, :]
-        for z, c, t in product(range(data.shape[0]), range(data.shape[1]), range(data.shape[2]))
+        for z, c, t in product(
+            range(data.shape[0]), range(data.shape[1]), range(data.shape[2])
+        )
     )
 
     return conn.createImageFromNumpySeq(
@@ -472,13 +504,18 @@ def create_image_from_numpy_array(
     :return: The new image
     """
 
-    zct_list = list(product(range(data.shape[0]), range(data.shape[1]), range(data.shape[2])))
+    zct_list = list(
+        product(
+            range(data.shape[0]), range(data.shape[1]), range(data.shape[2])
+        )
+    )
     zct_generator = (data[z, c, t, :, :] for z, c, t in zct_list)
 
     # Verify if the image must be tiled
     max_plane_size = conn.getMaxPlaneSize()
     if force_whole_planes or (
-        data.shape[-1] < max_plane_size[-1] and data.shape[-2] < max_plane_size[-2]
+        data.shape[-1] < max_plane_size[-1]
+        and data.shape[-2] < max_plane_size[-2]
     ):
         # Image is small enough to fill it with full planes
         new_image = conn.createImageFromNumpySeq(
@@ -561,9 +598,13 @@ def create_image_from_numpy_array(
     return new_image
 
 
-def _update_acquisition_datetime(conn: BlitzGateway, image: ImageWrapper, acquisition_datetime: str):
+def _update_acquisition_datetime(
+    conn: BlitzGateway, image: ImageWrapper, acquisition_datetime: str
+):
     # image = conn.getObject("Image", image_id)
-    acquisition_datetime = datetime.datetime.fromisoformat(acquisition_datetime)
+    acquisition_datetime = datetime.datetime.fromisoformat(
+        acquisition_datetime
+    )
     milli_secs = acquisition_datetime.timestamp() * 1000
     image = conn.getObject("Image", image.getId())
     image._obj.acquisitionDate = rtime(milli_secs)
@@ -582,13 +623,20 @@ def _get_tile_list(zct_list, data_shape, tile_size):
                 if tile_height + tile_offset_y > data_shape[-2]:
                     tile_height = data_shape[-2] - tile_offset_y
 
-                tile_xywh = (tile_offset_x, tile_offset_y, tile_width, tile_height)
+                tile_xywh = (
+                    tile_offset_x,
+                    tile_offset_y,
+                    tile_width,
+                    tile_height,
+                )
                 zct_tile_list.append((*p, tile_xywh))
 
     return zct_tile_list
 
 
-def create_roi(conn: BlitzGateway, image: ImageWrapper, shapes: list, name, description):
+def create_roi(
+    conn: BlitzGateway, image: ImageWrapper, shapes: list, name, description
+):
     # create an ROI, link it to Image
     roi = RoiI()  # TODO: work with wrappers
     # use the omero.model.ImageI that underlies the 'image' wrapper
@@ -712,7 +760,10 @@ def create_shape_ellipse(mm_ellipse: mm_schema.Ellipse):
 def create_shape_polygon(mm_polygon: mm_schema.Polygon):
     polygon = PolygonI()
     points_str = "".join(
-        ["".join([str(vertex.x), ",", str(vertex.y), ", "]) for vertex in mm_polygon.vertexes]
+        [
+            "".join([str(vertex.x), ",", str(vertex.y), ", "])
+            for vertex in mm_polygon.vertexes
+        ]
     )[:-2]
     polygon.points = rstring(points_str)
     polygon.theZ = rint(mm_polygon.z)
@@ -734,10 +785,16 @@ def create_shape_mask(mm_mask: mm_schema.Mask):
     mask.setTheZ(rint(mm_mask.z))
     mask.setTheT(rint(mm_mask.t))
     mask.setTheC(rint(mm_mask.c))
-    mask.setWidth(rdouble(mm_mask.mask.shape_x))  # TODO: see how to get shape if not np.array
+    mask.setWidth(
+        rdouble(mm_mask.mask.shape_x)
+    )  # TODO: see how to get shape if not np.array
     mask.setHeight(rdouble(mm_mask.mask.shape_y))
-    mask_packed = np.packbits(mm_mask.mask.array_data)  # TODO: raise error when not boolean array
-    mask.setBytes(mask_packed.tobytes())  # TODO: review how to setBytes when not a np.array
+    mask_packed = np.packbits(
+        mm_mask.mask.array_data
+    )  # TODO: raise error when not boolean array
+    mask.setBytes(
+        mask_packed.tobytes()
+    )  # TODO: review how to setBytes when not a np.array
     _set_shape_properties(
         mask,
         name=mm_mask.name,
@@ -824,8 +881,7 @@ def update_key_value(
     annotation_description=None,
     namespace=None,
 ):
-    """Update the key-value pairs on a map_annotation. If replace is True, all values will be replaced.
-    """
+    """Update the key-value pairs on a map_annotation. If replace is True, all values will be replaced."""
     curr_values = dict(annotation.getValue())
 
     if replace:
@@ -870,7 +926,9 @@ def _create_columns(
         column_names = list(table._as_dict.keys())
         values = [table[cn] for cn in column_names]
     else:
-        raise TypeError("Table must be a pandas dataframe or a list of dictionaries or a dictionary")
+        raise TypeError(
+            "Table must be a pandas dataframe or a list of dictionaries or a dictionary"
+        )
 
     columns = []
     for cn, v in zip(column_names, values):
@@ -887,7 +945,9 @@ def _create_columns(
                 columns.append(_create_column(data_type="image", kwargs=args))
             elif cn.lower() in ["datasetid", "dataset id", "dataset_id"]:
                 args = {"name": cn, "values": v}
-                columns.append(_create_column(data_type="dataset", kwargs=args))
+                columns.append(
+                    _create_column(data_type="dataset", kwargs=args)
+                )
             elif cn.lower() in ["plateid", "plate id", "plate_id"]:
                 args = {"name": cn, "values": v}
                 columns.append(_create_column(data_type="plate", kwargs=args))
@@ -918,12 +978,18 @@ def _create_columns(
         elif isinstance(v[0], (RoiWrapper, RoiI)):
             args = {"name": cn, "values": [roi.getId() for roi in v]}
             columns.append(_create_column(data_type="roi", kwargs=args))
-        elif isinstance(v_type, (list, tuple)):  # We are creating array columns
-            raise NotImplementedError(f"Array columns are not implemented. Column {cn}")
+        elif isinstance(
+            v_type, (list, tuple)
+        ):  # We are creating array columns
+            raise NotImplementedError(
+                f"Array columns are not implemented. Column {cn}"
+            )
         elif v[0] is None:
             continue
         else:
-            raise TypeError(f"Could not detect column datatype {v_type} for column {cn}")
+            raise TypeError(
+                f"Could not detect column datatype {v_type} for column {cn}"
+            )
 
     return columns
 
@@ -996,7 +1062,7 @@ def create_file(
     mimetype: str = None,
 ):
     if not isinstance(file_path, str):
-        raise TypeError(f'file_path {file_path} must be a string')
+        raise TypeError(f"file_path {file_path} must be a string")
     if mimetype is None:
         mimetype, _ = mimetypes.guess_type(file_path)
     file_ann = conn.createFileAnnfromLocalFile(
@@ -1022,7 +1088,9 @@ def _link_annotation(
     object_wrapper.linkAnnotation(annotation_wrapper)
 
 
-def _link_dataset_to_project(conn: BlitzGateway, dataset: DatasetWrapper, project: ProjectWrapper):
+def _link_dataset_to_project(
+    conn: BlitzGateway, dataset: DatasetWrapper, project: ProjectWrapper
+):
     link = ProjectDatasetLinkI()
     link.setParent(
         ProjectI(project.getId(), False)
@@ -1031,54 +1099,63 @@ def _link_dataset_to_project(conn: BlitzGateway, dataset: DatasetWrapper, projec
     conn.getUpdateService().saveObject(link)
 
 
-def _link_image_to_dataset(conn: BlitzGateway, image: ImageWrapper, dataset: DatasetWrapper):
+def _link_image_to_dataset(
+    conn: BlitzGateway, image: ImageWrapper, dataset: DatasetWrapper
+):
     link = DatasetImageLinkI()
     link.setParent(DatasetI(dataset.getId(), False))
     link.setChild(ImageI(image.getId(), False))
     conn.getUpdateService().saveObject(link)
 
 
-def del_objects(conn: BlitzGateway,
-                object_ids: list[int],
-                object_types: list,
-                delete_anns: bool = True,
-                delete_children: bool = True,
-                dry_run_first: bool = True):
+def del_objects(
+    conn: BlitzGateway,
+    object_ids: list[int],
+    object_types: list,
+    delete_anns: bool = True,
+    delete_children: bool = True,
+    dry_run_first: bool = True,
+):
     """Delete objects from OMERO"""
     if dry_run_first:
         try:
-            conn.deleteObjects(graph_spec="/".join(object_types),
-                               obj_ids=object_ids,
-                               deleteAnns=delete_anns,
-                               deleteChildren=delete_children,
-                               dryRun=True)
+            conn.deleteObjects(
+                graph_spec="/".join(object_types),
+                obj_ids=object_ids,
+                deleteAnns=delete_anns,
+                deleteChildren=delete_children,
+                dryRun=True,
+            )
         except Exception as e:
             logger.error(f"Error during dry run deletion: {e}")
             return False
     try:
-        conn.deleteObjects(graph_spec="/".join(object_types),
-                           obj_ids=object_ids,
-                           deleteAnns=delete_anns,
-                           deleteChildren=delete_children,
-                           dryRun=False)
+        conn.deleteObjects(
+            graph_spec="/".join(object_types),
+            obj_ids=object_ids,
+            deleteAnns=delete_anns,
+            deleteChildren=delete_children,
+            dryRun=False,
+        )
         return True
     except Exception as e:
         logger.error(f"Error during deletion: {e}")
         return False
 
 
-def del_object(conn: BlitzGateway,
-               object_id: int,
-               object_type: str,
-               delete_anns: bool = True,
-               delete_children: bool = True,
-               dry_run_first: bool = True):
+def del_object(
+    conn: BlitzGateway,
+    object_id: int,
+    object_type: str,
+    delete_anns: bool = True,
+    delete_children: bool = True,
+    dry_run_first: bool = True,
+):
     return del_objects(
         conn=conn,
         object_ids=[object_id],
         object_types=object_type,
         delete_anns=delete_anns,
         delete_children=delete_children,
-        dry_run_first=dry_run_first
+        dry_run_first=dry_run_first,
     )
-
