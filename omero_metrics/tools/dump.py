@@ -164,7 +164,11 @@ def _remove_unsupported_types(
 def _dump_mm_dataset_as_file_annotation(
     conn: BlitzGateway,
     mm_dataset: mm_schema.MetricsDataset,
-    target_omero_obj: Union[ProjectWrapper, DatasetWrapper, list[Union[ProjectWrapper, DatasetWrapper]]],
+    target_omero_obj: Union[
+        ProjectWrapper,
+        DatasetWrapper,
+        list[Union[ProjectWrapper, DatasetWrapper]],
+    ],
 ):
     # We need to remove the data on the numppy and pandas data objects as they cannot be serialized by linkml
     _remove_unsupported_types(mm_dataset.input)
@@ -174,7 +178,10 @@ def _dump_mm_dataset_as_file_annotation(
     dumper = YAMLDumper()
 
     with tempfile.NamedTemporaryFile(
-        prefix=f"{mm_dataset.class_name}_", suffix=".yaml", mode="w", delete=False
+        prefix=f"{mm_dataset.class_name}_",
+        suffix=".yaml",
+        mode="w",
+        delete=False,
     ) as f:
         f.write(dumper.dumps(mm_dataset))
         f.close()
@@ -337,7 +344,9 @@ def _get_output_metadata(
     for output_field in fields(dataset_output):
         if output_field.name not in output_fields:
             continue
-        output_elements[output_field.name] = str(getattr(dataset_output, output_field.name))
+        output_elements[output_field.name] = str(
+            getattr(dataset_output, output_field.name)
+        )
 
     return output_elements
 
@@ -431,7 +440,9 @@ def _dump_output_element(
             target_object=target_dataset,
         )
     else:
-        logger.error(f"{output_element.name} output could not be dumped to OMERO")
+        logger.error(
+            f"{output_element.name} output could not be dumped to OMERO"
+        )
 
     return None
 
@@ -497,7 +508,9 @@ def dump_roi(
             )
             return None
 
-    if not target_images or not all(isinstance(i, ImageWrapper) for i in target_images):
+    if not target_images or not all(
+        isinstance(i, ImageWrapper) for i in target_images
+    ):
         logger.error(
             f"ROI {roi.name} must be linked to an image. {target_images} object provided is not an image."
         )
@@ -516,9 +529,15 @@ def dump_roi(
     for shape_field in fields(roi):
         if shape_field.name not in handler:
             continue
-        shape_handler = handler.get(shape_field.name, lambda shape: logger.error(f"Shape {shape} could not be dumped to OMERO"))
-        shapes += [shape_handler(shape) for shape in getattr(roi, shape_field.name)
-            ]
+        shape_handler = handler.get(
+            shape_field.name,
+            lambda shape: logger.error(
+                f"Shape {shape} could not be dumped to OMERO"
+            ),
+        )
+        shapes += [
+            shape_handler(shape) for shape in getattr(roi, shape_field.name)
+        ]
 
     omero_rois = []
     for target_image in target_images:
@@ -578,26 +597,35 @@ def dump_tag(
 
 
 def dump_key_measurement(
-        conn: BlitzGateway,
-        key_measurement: mm_schema.KeyMeasurements,
-        target_object: Union[DatasetWrapper, ProjectWrapper, list[Union[DatasetWrapper, ProjectWrapper]]],
+    conn: BlitzGateway,
+    key_measurement: mm_schema.KeyMeasurements,
+    target_object: Union[
+        DatasetWrapper,
+        ProjectWrapper,
+        list[Union[DatasetWrapper, ProjectWrapper]],
+    ],
 ):
     if not isinstance(key_measurement, mm_schema.KeyMeasurements):
-        logger.error(f"Unsupported key measurement type for {key_measurement.name}: {key_measurement.class_name}")
+        logger.error(
+            f"Unsupported key measurement type for {key_measurement.name}: {key_measurement.class_name}"
+        )
         return None
 
     if target_object is None:
         try:
             target_object = omero_tools.get_omero_obj_from_mm_obj(
-                conn=conn,
-                mm_obj=key_measurement.linked_references
-                )
+                conn=conn, mm_obj=key_measurement.linked_references
+            )
         except AttributeError:
-            logger.error(f"Key-measurements {key_measurement.name} must be linked to an OMERO object. No object provided.")
+            logger.error(
+                f"Key-measurements {key_measurement.name} must be linked to an OMERO object. No object provided."
+            )
             return None
 
     if key_measurement.table_data is None:
-        logger.error(f"Key-measurements {key_measurement.name} has no data. Skipping dump.")
+        logger.error(
+            f"Key-measurements {key_measurement.name} has no data. Skipping dump."
+        )
         return None
 
     omero_table = omero_tools.create_table(
@@ -608,7 +636,9 @@ def dump_key_measurement(
         table_description=key_measurement.description,
         namespace=key_measurement.class_class_curie,
     )
-    key_measurement.data_reference = omero_tools.get_ref_from_object(omero_table)
+    key_measurement.data_reference = omero_tools.get_ref_from_object(
+        omero_table
+    )
 
     return omero_table
 
@@ -619,7 +649,9 @@ def dump_key_values(
     target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper] = None,
 ):
     if not isinstance(key_values, mm_schema.KeyValues):
-        logger.error(f"Unsupported key values type for {key_values.name}: {key_values.class_name}")
+        logger.error(
+            f"Unsupported key values type for {key_values.name}: {key_values.class_name}"
+        )
         return None
 
     if target_object is None:

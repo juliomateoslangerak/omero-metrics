@@ -807,7 +807,12 @@ def create_tag(
     conn: BlitzGateway,
     tag_name: str,
     tag_description: str,
-    omero_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper, list[Union[ImageWrapper, DatasetWrapper, ProjectWrapper]]],
+    omero_object: Union[
+        ImageWrapper,
+        DatasetWrapper,
+        ProjectWrapper,
+        list[Union[ImageWrapper, DatasetWrapper, ProjectWrapper]],
+    ],
 ):
     tag_ann = TagAnnotationWrapper(conn)
     tag_ann.setValue(tag_name)
@@ -998,7 +1003,12 @@ def create_table(
     conn: BlitzGateway,
     table: Union[DataFrame, list[dict[str, list]], dict[str, list]],
     table_name: str,
-    omero_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper, list[Union[ImageWrapper, DatasetWrapper, ProjectWrapper]]],
+    omero_object: Union[
+        ImageWrapper,
+        DatasetWrapper,
+        ProjectWrapper,
+        list[Union[ImageWrapper, DatasetWrapper, ProjectWrapper]],
+    ],
     table_description: str,
     namespace: str,
 ):
@@ -1056,7 +1066,12 @@ def create_comment(
 def create_file(
     conn: BlitzGateway,
     file_path: str,
-    omero_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper, list[Union[ImageWrapper, DatasetWrapper, ProjectWrapper]]],
+    omero_object: Union[
+        ImageWrapper,
+        DatasetWrapper,
+        ProjectWrapper,
+        list[Union[ImageWrapper, DatasetWrapper, ProjectWrapper]],
+    ],
     file_description: str,
     namespace: str,
     mimetype: str = None,
@@ -1066,7 +1081,8 @@ def create_file(
     if mimetype is None:
         mimetype, _ = mimetypes.guess_type(file_path)
     file_ann = conn.createFileAnnfromLocalFile(
-        file_path, mimetype=mimetype, ns=namespace, desc=file_description)
+        file_path, mimetype=mimetype, ns=namespace, desc=file_description
+    )
     if isinstance(omero_object, list):
         for obj in omero_object:
             _link_annotation(obj, file_ann)
