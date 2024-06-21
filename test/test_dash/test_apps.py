@@ -1,4 +1,4 @@
-'''
+"""
 Test demo application
 
 Most of these tests are simply the loading of the individual files that
@@ -25,48 +25,52 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-'''
+"""
 
 # pylint: disable=protected-access, no-member
 import pytest
 
 
 def mocking_connection():
-    'Mocking connection'
+    "Mocking connection"
     from unittest.mock import MagicMock
     from omero.gateway import BlitzGateway
+
     conn = MagicMock(spec=BlitzGateway)
     return conn
 
 
 def connection_mocking(host, port, user, password):
-    'Mocking connection to the server'
+    "Mocking connection to the server"
     from omero.gateway import BlitzGateway
+
     conn = BlitzGateway(user, password, host=host, port=port)
     return conn
 
 
-host='localhost'
-port=4064
-user='Asterix'
-password='abc123'
+host = "localhost"
+port = 4064
+user = "Asterix"
+password = "abc123"
 
 
 def test_url_loading():
-    'Test loading of a module'
+    "Test loading of a module"
     from omero_metrics.urls import urlpatterns
+
     assert urlpatterns
 
 
 def test_demo_loading():
-    'Test the import and formation of a dash example app'
+    "Test the import and formation of a dash example app"
 
     from omero_metrics.dash_apps.dash_dataset_metrics import dash_app_dataset
 
-    assert dash_app_dataset._uid == 'omero_dataset_metrics'  # pylint: disable=protected-access
-
+    assert (
+        dash_app_dataset._uid == "omero_dataset_metrics"
+    )  # pylint: disable=protected-access
 
 
 def test_for_the_test(client):
-    response = client.get('/metrics_index/')
+    response = client.get("/metrics_index/")
     assert response.status_code == 200

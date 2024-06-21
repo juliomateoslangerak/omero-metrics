@@ -54,7 +54,9 @@ def clean_dataset(connection, dataset, namespace_like=None):
     # Clean Dataset annotations
     for (
         ann
-    ) in dataset.listAnnotations():  # TODO: We do not remove original file annotations
+    ) in (
+        dataset.listAnnotations()
+    ):  # TODO: We do not remove original file annotations
         if isinstance(
             ann,
             (
@@ -96,9 +98,12 @@ def clean_dataset(connection, dataset, namespace_like=None):
     for image in dataset.listChildren():
         for ann in image.listAnnotations():
             if isinstance(
-                ann, (gateway.MapAnnotationWrapper, gateway.FileAnnotationWrapper)
+                ann,
+                (gateway.MapAnnotationWrapper, gateway.FileAnnotationWrapper),
             ):
-                connection.deleteObjects("Annotation", [ann.getId()], wait=True)
+                connection.deleteObjects(
+                    "Annotation", [ann.getId()], wait=True
+                )
 
     # Delete all rois
     roi_service = connection.getRoiService()
@@ -159,7 +164,10 @@ def run_script():
             default="Dataset",
         ),
         scripts.List(
-            "IDs", optional=False, grouping="1", description="List of Dataset IDs"
+            "IDs",
+            optional=False,
+            grouping="1",
+            description="List of Dataset IDs",
         ).ofType(rlong(0)),
         scripts.Bool(
             "Confirm deletion",
@@ -178,7 +186,9 @@ def run_script():
                 script_params[key] = client.getInput(key, unwrap=True)
 
         if script_params["Confirm deletion"]:
-            logger.info(f"Deletion started using parameters: \n{script_params}")
+            logger.info(
+                f"Deletion started using parameters: \n{script_params}"
+            )
 
             conn = gateway.BlitzGateway(client_obj=client)
 
