@@ -1,4 +1,4 @@
-# django stuff
+# django
 django-plotly-dash
 dpd_static_support
 dash-bootstrap-components
@@ -6,7 +6,7 @@ django-bootstrap4
 dash_mantine_components
 dash-iconify
 
-# omero stuff
+# omero
 microscopemetrics_schema @ git+https://github.com/juliomateoslangerak/microscopemetrics-schema.git@dev_psf_refactoring
 microscopemetrics @ git+https://github.com/juliomateoslangerak/microscope-metrics.git@dev_psf_refactoring
 #zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-macos-universal2/releases/download/20240131/zeroc_ice-3.6.5-cp311-cp311-macosx_11_0_universal2.whl

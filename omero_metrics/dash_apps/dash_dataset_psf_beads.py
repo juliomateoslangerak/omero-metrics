@@ -177,33 +177,17 @@ def func_psf_callback(*args, **kwargs):
     ]
     df_properties_channel = bead_properties_df[
         bead_properties_df["channel_nr"] == channel_index
-    ][
-        [
-            "bead_nr",
-            "intensity_max",
-            "min_intensity_min",
-            "intensity_std",
-            "intensity_robust_z_score",
-            "considered_intensity_outlier",
-            "z_fit_r2",
-            "y_fit_r2",
-            "x_fit_r2",
-            "z_fwhm",
-            "y_fwhm",
-            "x_fwhm",
-            "fwhm_lateral_asymmetry_ratio",
-        ]
     ].copy()
     df_beads_location = bead_properties_df[
         bead_properties_df["channel_nr"] == channel_index
     ][
         [
             "channel_nr",
-            "bead_nr",
+            "bead_id",
             "considered_axial_edge",
-            "z_centroid",
-            "y_centroid",
-            "x_centroid",
+            "center_z",
+            "center_x",
+            "center_y",
         ]
     ].copy()
     df_beads_location["considered_axial_edge"] = df_beads_location[
@@ -219,8 +203,8 @@ def func_psf_callback(*args, **kwargs):
     color_map = {"Yes": "red", "No": "yellow"}
     fig_image_z.add_trace(
         go.Scatter(
-            y=df_beads_location["y_centroid"],
-            x=df_beads_location["x_centroid"],
+            y=df_beads_location["center_y"],
+            x=df_beads_location["center_x"],
             mode="markers",
             marker=dict(
                 size=10,
@@ -232,7 +216,7 @@ def func_psf_callback(*args, **kwargs):
             text=df_beads_location["channel_nr"],
             customdata=np.stack(
                 (
-                    df_beads_location["bead_nr"],
+                    df_beads_location["bead_id"],
                     df_beads_location["considered_axial_edge"],
                 ),
                 axis=-1,
@@ -272,11 +256,11 @@ def callback_mip(*args, **kwargs):
     ][
         [
             "channel_nr",
-            "bead_nr",
+            "bead_id",
             "considered_axial_edge",
-            "z_centroid",
-            "y_centroid",
-            "x_centroid",
+            "center_z",
+            "center_x",
+            "center_y",
         ]
     ].copy()
     min_dist = 20
@@ -286,7 +270,7 @@ def callback_mip(*args, **kwargs):
             f"MIP for bead number: {bead_index} in channel: {channel_index}"
         )
         bead = df_beads_location[
-            df_beads_location["bead_nr"] == bead_index
+            df_beads_location["bead_id"] == bead_index
         ].copy()
         x0, xf, y0, yf, z = crop_bead_index(bead, min_dist, stack)
         mip_x, mip_y, mip_z = mip_graphs(x0, xf, y0, yf, z, stack)
@@ -301,25 +285,27 @@ def callback_mip(*args, **kwargs):
 
 def line_graph_axis(bead_index, channel_index, axis, kwargs):
     df_axis = kwargs["session_state"]["context"][f"bead_{axis}_profiles_df"]
+    image_id = kwargs["session_state"]["context"]["image_id"]
+    df_axis_3d = df_axis[df_axis.columns[df_axis.columns.str.startswith(str(image_id))]]
     df_meta_x = pd.DataFrame(
         data=[
             [
-                int(col.split("_")[-2]),
                 int(col.split("_")[-4]),
+                int(col.split("_")[-5]),
                 col.split("_")[-1],
                 col,
             ]
-            for col in df_axis.columns
+            for col in df_axis_3d.columns
         ],
-        columns=["bead_nb", "channel_nb", "type", "name"],
+        columns=["bead_id", "channel_nr", "type", "name"],
     )
     cols_x = df_meta_x[
         (
-            (df_meta_x["bead_nb"] == bead_index)
-            & (df_meta_x["channel_nb"] == channel_index)
+            (df_meta_x["bead_id"] == bead_index)
+            & (df_meta_x["channel_nr"] == channel_index)
         )
     ]["name"].values
-    df_x = df_axis[cols_x].copy()
+    df_x = df_axis_3d[cols_x].copy()
     df_x.columns = df_x.columns.str.split("_").str[-1]
     fig_ip_x = px.line(df_x)
     fig_ip_x.update_traces(

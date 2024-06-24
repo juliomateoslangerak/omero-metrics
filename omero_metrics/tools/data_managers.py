@@ -82,7 +82,7 @@ class DatasetManager:
             self.omero_object = omero_object
         else:
             raise ValueError(
-                "datasets must be a DatasetWrapper or a dataset id"
+                "datasets must be a DatasetWrapper or an ImageWrapper"
             )
 
         self.omero_project = self.omero_dataset.getParent()

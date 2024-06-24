@@ -74,18 +74,18 @@ def update_image(*args, **kwargs):
     ][
         [
             "channel_nr",
-            "bead_nr",
+            "bead_id",
             "considered_axial_edge",
-            "z_centroid",
-            "y_centroid",
-            "x_centroid",
+            "center_z",
+            "center_y",
+            "center_x",
         ]
     ].copy()
     bead_options = [
         {"label": f"Bead {i}", "value": f"Bead {i}"}
-        for i in df_beads_location["bead_nr"]
+        for i in df_beads_location["bead_id"]
     ]
-    bead = df_beads_location[df_beads_location["bead_nr"] == bead_index].copy()
+    bead = df_beads_location[df_beads_location["bead_id"] == bead_index].copy()
     stack = image_omero[0, :, :, :, channel_index]
     x0, xf, y0, yf, _ = crop_bead_index(bead, 20, stack)
     image_bead = stack[:, y0:yf, x0:xf]

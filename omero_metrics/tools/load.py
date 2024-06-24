@@ -81,12 +81,13 @@ def load_dataset(
             ns = ann.getNs()
             if ns.startswith("microscopemetrics_schema:samples"):
                 ds_type = ns.split("/")[-1]
-                mm_datasets.append(
-                    yaml_loader.loads(
-                        ann.getFileInChunks().__next__().decode(),
-                        target_class=getattr(mm_schema, ds_type),
+                if ds_type in DATASET_TYPES:
+                    mm_datasets.append(
+                        yaml_loader.loads(
+                            ann.getFileInChunks().__next__().decode(),
+                            target_class=getattr(mm_schema, ds_type),
+                        )
                     )
-                )
     if len(mm_datasets) == 1:
         mm_dataset = mm_datasets[0]
     elif len(mm_datasets) > 1:
@@ -180,16 +181,17 @@ def load_dash_data(
             )
             dash_context["bead_x_profiles_df"] = get_table_file_id(
                 conn,
-                dataset.output.bead_x_profiles.data_reference.omero_object_id,
+                dataset.output.bead_profiles_x.data_reference.omero_object_id,
             )
             dash_context["bead_y_profiles_df"] = get_table_file_id(
                 conn,
-                dataset.output.bead_y_profiles.data_reference.omero_object_id,
+                dataset.output.bead_profiles_y.data_reference.omero_object_id,
             )
             dash_context["bead_z_profiles_df"] = get_table_file_id(
                 conn,
-                dataset.output.bead_z_profiles.data_reference.omero_object_id,
+                dataset.output.bead_profiles_z.data_reference.omero_object_id,
             )
+            dash_context["image_id"] = dataset.input.psf_beads_images[0].data_reference.omero_object_id
         elif isinstance(omero_object, ImageWrapper):
             dash_context["image"] = load_image(omero_object).array_data
             dash_context["bead_properties_df"] = get_table_file_id(
@@ -323,8 +325,8 @@ def get_images_intensity_profiles(
 
 
 def get_key_values(var: FieldIlluminationDataset.output) -> pd.DataFrame:
-    data_dict = var.key_values.__dict__
-    col = var.key_values.channel_name
+    data_dict = var.key_measurements.__dict__
+    col = var.key_measurements.channel_name
     data_dict = [
         [key] + value
         for key, value in data_dict.items()

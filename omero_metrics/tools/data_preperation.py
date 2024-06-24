@@ -333,9 +333,9 @@ def mip_graphs(x0, xf, y0, yf, z, stack):
 
 
 def crop_bead_index(bead, min_dist, stack):
-    x = bead["x_centroid"].values[0]
-    y = bead["y_centroid"].values[0]
-    z = bead["z_centroid"].values[0]
+    x = bead["center_x"].values[0]
+    y = bead["center_y"].values[0]
+    z = bead["center_z"].values[0]
     x0 = max(0, x - min_dist)
     y0 = max(0, y - min_dist)
     xf = min(stack.shape[2], x + min_dist)
