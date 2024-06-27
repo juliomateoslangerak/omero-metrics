@@ -2,6 +2,3 @@ build
 node_modules
 *.pyc
 *.DS_Store
-/dist/
-/.venv/
-/var/
