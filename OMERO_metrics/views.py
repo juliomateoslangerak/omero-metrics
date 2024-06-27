@@ -84,5 +84,3 @@ def image_rois(request, image_id, conn=None, **kwargs):
         "OMERO_metrics/omero_views/image_rois.html",
         {"roiIds": roi_ids},
     )
-
-
