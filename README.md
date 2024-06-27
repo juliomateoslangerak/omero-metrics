@@ -9,7 +9,7 @@ A webapp to follow microscope performance over time.
 Installation
 ============
 
-Install `omero_metrics` in development mode as follows:
+Install `OMERO_metrics` in development mode as follows:
 
     # within your python venv:
     $ cd OMERO-metrics
@@ -82,9 +82,9 @@ Add these additional configurations using the terminal:
     omero config set omero.web.application_server development
     omero config set omero.web.debug True
     omero config append omero.web.server_list '["localhost", 6063, "host"]'
-    omero config append omero.web.apps '"omero_metrics"'
+    omero config append omero.web.apps '"OMERO_metrics"'
     omero config append omero.web.apps '"django_plotly_dash"'
-    omero config append omero.web.ui.top_links '["Metrics", "metrics_index", {"title": "Open app in new tab", "target": "_blank"}]'
+    omero config append omero.web.ui.top_links '["Metrics", "OMERO_metrics_index", {"title": "Open app in new tab", "target": "_blank"}]'
     omero config append omero.web.middleware '{"index": 0.5, "class": "corsheaders.middleware.CorsMiddleware"}'
     omero config append omero.web.middleware '{"index": 10, "class": "corsheaders.middleware.CorsPostCsrfMiddleware"}'
     omero config set omero.web.cors_origin_allow_all True
@@ -92,9 +92,9 @@ Add these additional configurations using the terminal:
     omero config append omero.web.middleware '{"index": 7, "class": "django_plotly_dash.middleware.ExternalRedirectionMiddleware"}'
     omero config append omero.web.middleware '{"index": 0.5, "class": "whitenoise.middleware.WhiteNoiseMiddleware"}'
     omero config append omero.web.middleware '{"index": 8, "class": "django_plotly_dash.middleware.BaseMiddleware"}'
-    omero config append omero.web.middleware '{"index":0.1, "class": "omero_metrics.middleware.OmeroAuth"}'
-    omero config append omero.web.ui.center_plugins '["Metrics View", "metrics/webclient_plugins/center_plugin.metricsview.js.html", "metrics_view_panel"]'
-    omero config append omero.web.ui.right_plugins '["ROIs", "metrics/webclient_plugins/right_plugin.rois.js.html", "image_roi_tab"]'
+    omero config append omero.web.middleware '{"index":0.1, "class": "OMERO_metrics.middleware.OmeroAuth"}'
+    omero config append omero.web.ui.center_plugins '["Metrics View", "OMERO_metrics/webclient_plugins/center_plugin.metricsview.js.html", "metrics_view_panel"]'
+    omero config append omero.web.ui.right_plugins '["ROIs", "OMERO_metrics/webclient_plugins/right_plugin.rois.js.html", "image_roi_tab"]'
 
 
 ```
