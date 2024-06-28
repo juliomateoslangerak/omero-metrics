@@ -57,7 +57,7 @@ class TestLoadIndexPage(IWebTest):
         assert "Welcome" in html_str
 
     def test_load_group(self, user1):
-        """Test loading Group view for the center panel."""
+        """Test loading the app group page."""
         conn = get_connection(user1)
         user_name = conn.getUser().getName()
         django_client = self.new_django_client(user_name, user_name)
@@ -65,4 +65,4 @@ class TestLoadIndexPage(IWebTest):
         # asserts we get a 200 response code etc
         rsp = get(django_client, index_url)
         html_str = rsp.content.decode()
-        assert "Group" in html_str
+        assert "Microscoope" in html_str
