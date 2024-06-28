@@ -321,13 +321,13 @@ def _get_input_metadata(
     for input_field in fields(input):
         input_element = getattr(input, input_field.name)
         if isinstance(input_element, mm_schema.Image):
-            metadata[f"{input_field.name}_imageId"] = input_element.data_reference.omero_object_id
-            metadata[f"{input_field.name}_imageName"] = input_element.name
+            metadata[f"{input_field.name}_id"] = input_element.data_reference.omero_object_id
+            metadata[f"{input_field.name}_name"] = input_element.name
         elif isinstance(input_element, list) and all(
             isinstance(i_e, mm_schema.Image) for i_e in input_element
         ):
-            metadata[f"{input_field.name}_imageId"] = [i_e.data_reference.omero_object_id for i_e in input_element]
-            metadata[f"{input_field.name}_imageName"] = [i_e.name for i_e in input_element]
+            metadata[f"{input_field.name}_id"] = [i_e.data_reference.omero_object_id for i_e in input_element]
+            metadata[f"{input_field.name}_name"] = [i_e.name for i_e in input_element]
         else:
             metadata[input_field.name] = str(input_element)
 
