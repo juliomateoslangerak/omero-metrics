@@ -1,0 +1,32 @@
+# How to use this presentation
+
+Press the ```right``` and ```left``` keys to move between topics.
+
+Press the ```down``` key to see the content of a topic.
+
+You may also use the navigation buttons at the bottom right corner of the screen.
+
+Zoom out and see the whole presentation by pressing the ```ESC``` key. Zoom in by pressing ```ESC``` again.
+
+# Why to monitor microscope performance?
+
+Important text here
+
+# Why a new tool to monitor microscope performance?
+
+Another important text here
+
+# Current tools
+
+Current tools are not enough to monitor microscope performance.
+
+# What is missing?
+
+- Missing feature 1
+- Missing feature 2
+
+# What is the solution?
+
+FAIR microscope performance monitoring
+
+# Recommended readings

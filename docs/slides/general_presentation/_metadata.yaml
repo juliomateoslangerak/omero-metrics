@@ -1,0 +1,6 @@
+format:
+  revealjs:
+    title: |
+      | OMERO-metrics
+      | an web-based tool for monitoring and analyzing 
+      | microscope performance

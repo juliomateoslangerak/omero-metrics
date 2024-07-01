@@ -1,0 +1,79 @@
+/*-- scss:defaults --*/
+
+// fonts
+$presentation-font-size-root: 32px;
+$font-family-monospace: 'Open Sans', sans-serif !default;
+
+// colors
+$link-color: #e7ad52 !default;
+$link-color-hover: darken($link-color, 25%) !default;
+$code-block-font-size: 0.8em !default;
+
+// headings
+
+/*-- scss:rules --*/
+
+.reveal .slide blockquote {
+  border-left: 10px solid $link-color;
+  padding-left: 1em;
+  background-color: rgba(255, 255, 255, 0.85);
+  font-family: "Courier New";
+  font-size: 0.8em;
+  color: rgb(0, 0, 0);
+}
+.reveal .slide h1 {
+  text-align: center;
+  padding-bottom: 0.3em;
+  font-size: 1.8em;
+}
+
+.reveal .slide h2 {
+  text-align: center;
+  padding-bottom: 0.25em;
+  font-size: 1.25em;
+}
+
+.reveal .slide h3 {
+  padding-bottom: 0.2em;
+  font-size: 1.0em;
+
+}
+
+.reveal .slide p{
+  padding-bottom: 0.4em;
+}
+
+.reveal .logo {
+  display: block;
+  position: fixed;
+  bottom: unset !important;
+  right: unset !important;
+  top: 1em;
+  left: 1em;
+  height: 2em !important;
+  max-width: unset !important;
+  max-height: unset !important;
+}
+
+.textcenter {
+  text-align: center;
+}
+
+.flow {
+  background-image: url(https://images.unsplash.com/photo-1532153975070-2e9ab71f1b14?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80);
+  background-attachment: fixed;
+  -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text;
+	animation: animate 40s linear infinite;
+	font-weight: 900;
+}
+
+@keyframes animate {
+	0% {
+		background-position: left 0px top 10px;
+	}
+	40% {
+		background-position: left 800px top 10px;
+	}
+}
+
