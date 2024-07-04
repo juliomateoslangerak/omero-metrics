@@ -1,0 +1,127 @@
+assays:
+  - weekly
+  - monthly
+  - yearly
+metrics_generated_tag_id: 35  # Must eventually go to the study config
+study_conf_file_name: study_config.yaml
+
+# We specify here where to link the specific outputs from the analysis done by microscope-metrics
+dump_strategy:
+  FieldIlluminationDataset:
+    key_values:
+      image:
+        source: field_illumination_image
+        link: true
+        append_to_existing: false
+        as_table: false
+      dataset:
+        link: true
+        append_to_existing: false
+        as_table: false
+      project:
+        link: true
+        append_to_existing: false
+        as_table: false
+    intensity_profiles:
+      image:
+        link: true
+        append_to_existing: false
+        as_table: true
+    intensity_map:
+      image:
+        source: field_illumination_image
+        link: false
+      dataset:
+        link: true
+        append_to_existing: false
+        as_table: false
+    profile_rois:
+      image:
+        source: field_illumination_image
+        link: true
+    corner_rois:
+      image:
+        source: field_illumination_image
+        link: true
+    center_of_illumination:
+      image:
+        source: field_illumination_image
+        link: true
+
+  ArgolightBDataset:
+    spots_labels_image:
+      dataset:
+        link: true
+    spots_centroids:
+      image:
+        source: argolight_b_image
+        link: true
+    intensity_measurements:
+      image:
+        source: argolight_b_image
+        link: true
+        append_to_existing: false
+        as_table: false
+      dataset:
+        link: true
+        append_to_existing: false
+        as_table: false
+      project:
+        link: true
+        append_to_existing: true
+        as_table: true
+    distance_measurements:
+      image:
+        source: argolight_b_image
+        link: true
+        append_to_existing: false
+        as_table: false
+      dataset:
+        link: true
+        append_to_existing: false
+        as_table: false
+      project:
+        link: true
+        append_to_existing: true
+        as_table: true
+    spots_properties:
+      image:
+        link: true
+        append_to_existing: false
+    spots_distances:
+      image:
+        link: true
+        append_to_existing: false
+    corner_rois:
+      image:
+        source: field_illumination_image
+        link: true
+    center_of_illumination:
+      image:
+        source: field_illumination_image
+        link: true
+
+
+  ArgolightEDataset:
+    peaks_rois:
+      image:
+        source: argolight_e_image
+        link: true
+    key_measurements:
+      image:
+        source: argolight_e_image
+        link: true
+        append_to_existing: false
+        as_table: false
+      dataset:
+        link: true
+        append_to_existing: false
+        as_table: false
+      project:
+        link: true
+        append_to_existing: true
+        as_table: true
+    intensity_profiles:
+      image:
+        link: true
+        append_to_existing: false
