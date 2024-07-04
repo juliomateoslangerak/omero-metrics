@@ -8,6 +8,9 @@ from: markdown+emoji
 date: today
 date-format: "MMMM YYYY"
 
+execute:
+  freeze: auto
+
 format:
   revealjs:
     theme: [night, custom.scss]
