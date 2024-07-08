@@ -71,10 +71,7 @@ class TestLoadIndexPage(IWebTest):
         "Test looking up an existing application"
         from OMERO_metrics.dash_apps.plotly_apps import app
 
-        from django_plotly_dash.models import (
-            get_stateless_by_name,
-            StatelessApp,
-        )
+        from django_plotly_dash.models import get_stateless_by_name
 
         app2 = get_stateless_by_name(app._uid)
 
