@@ -92,7 +92,9 @@ def load_dataset(
         mm_dataset = mm_datasets[0]
     elif len(mm_datasets) > 1:
         logger.warning(
-            f"More than one dataset found in dataset {dataset.getId()}. Using the first one"
+            f"More than one dataset f"
+            f"ound in dataset {dataset.getId()}."
+            f"Using the first one"
         )
         mm_dataset = mm_datasets[0]
     else:
@@ -100,7 +102,8 @@ def load_dataset(
         return None
 
     if load_images:
-        # First time loading the images the dataset does not know which images to load
+        # First time loading the images the
+        # dataset does not know which images to load
         if mm_dataset.processed:
             input_images = getattr(
                 mm_dataset.input,
@@ -222,7 +225,9 @@ def load_analysis_config(project=ProjectWrapper):
         return None, None
     if len(configs) > 1:
         logger.error(
-            f"More than one configuration in project {project.getId()}. Using the last one saved"
+            f"More than one configuration"
+            f" in project {project.getId()}."
+            f"Using the last one saved"
         )
 
     return configs[-1].getId(), dict(configs[-1].getValue())
@@ -315,7 +320,7 @@ def get_dataset_by_id(
             if i.data_reference.omero_object_id == dataset_id
         ][0]
         return dataset
-    except:
+    except IndexError:
         return None
 
 

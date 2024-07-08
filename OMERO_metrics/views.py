@@ -61,7 +61,8 @@ def dash_example_1_view(
     template_name="OMERO_metrics/foi_key_measurement.html",
     **kwargs
 ):
-    "Example view that inserts content into the dash context passed to the dash application"
+    """Example view that inserts content into the
+    dash context passed to the dash application"""
     experimenter = conn.getUser()
     context = {
         "firstName": experimenter.firstName,
@@ -104,7 +105,8 @@ def web_gateway_templates(request, base_template):
 @login_required()
 @render_response()
 def webclient_templates(request, base_template, **kwargs):
-    """Simply return the named template. Similar functionality to
+    """Simply return the named template.
+    Similar functionality to
     django.views.generic.simple.direct_to_template"""
     template_name = "OMERO_metrics/web_gateway/%s.html" % base_template
     return {"template": template_name}
@@ -112,7 +114,8 @@ def webclient_templates(request, base_template, **kwargs):
 
 @login_required()
 def image_rois(request, image_id, conn=None, **kwargs):
-    """Simply shows a page of ROI thumbnails for the specified image"""
+    """Simply shows a page of ROI
+    thumbnails for the specified image"""
     roi_ids = image_id
     return render(
         request,
@@ -186,11 +189,13 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
 
 @login_required()
 def microscope_view(request, conn=None, **kwargs):
-    """Simply shows a page of ROI thumbnails for the specified image"""
-    return render(request, "OMERO_metrics/microscope.html", {})
+    """Simply shows a page of ROI thumbnails for
+    the specified image"""
+    return render(request, "OMERO_metrics/microscope.html")
 
 
 @login_required()
 def run_analysis(request, conn=None, **kwargs):
-    """Simply shows a page of ROI thumbnails for the specified image"""
-    return render(request, "OMERO_metrics/run_analysis.html", {})
+    """Simply shows a page of ROI thumbnails
+    for the specified image"""
+    return render(request, "OMERO_metrics/run_analysis.html")
