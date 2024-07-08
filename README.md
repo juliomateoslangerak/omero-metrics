@@ -52,7 +52,7 @@ $ pip install -e .
 1. Make sure you have REACT_VERSION=18.2.0 installed.
 2. Add the following lines to the `omeroweb/settings.py` file:
 
-
+```
     STATICFILES_FINDERS = ['django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'django_plotly_dash.finders.DashAssetFinder',
@@ -68,7 +68,7 @@ $ pip install -e .
     'cache_arguments': False,
     'serve_locally': False,
     }
-
+```
 
 you need to manually add the following apps to the `INSTALLED_APPS` list in the `omeroweb/settings.py` file:
 
