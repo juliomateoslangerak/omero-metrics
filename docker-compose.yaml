@@ -46,8 +46,8 @@ services:
       OMEROHOST: omeroserver
     volumes:
       - type: bind
-        source: ./omero_metrics
-        target: /opt/omero/web/venv3/lib/python3.10/site-packages/omero_metrics
+        source: ./OMERO_metrics
+        target: /opt/omero/web/venv3/lib/python3.10/site-packages/OMERO_metrics
       - type: bind
         source: ./config_files/config.omero
         target: /opt/omero/web/config/config.omero
@@ -58,6 +58,7 @@ services:
       - omero
     ports:
       - "5080:4080"
+    command: /bin/sh -c '/opt/omero/web/venv3/bin/python /opt/omero/web/venv3/lib/python3.10/site-packages/omeroweb/manage.py migrate'
 
 networks:
   omero:

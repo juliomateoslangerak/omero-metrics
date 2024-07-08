@@ -1,0 +1,13 @@
+{%extends "OMERO_metrics/base_nav.html"%}
+{%load plotly_dash%}
+
+{%block title%}Image from Omero{%endblock%}
+
+{%block content%}
+
+    <div class="{%plotly_class name="dash_example_1"  template_type="div-direct"%}">
+      {%plotly_direct name="dash_example_1" %}
+    </div>
+
+
+{%endblock%}

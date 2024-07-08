@@ -52,11 +52,7 @@ def clean_dataset(connection, dataset, namespace_like=None):
     logger.info(f"Date and time: {datetime.now()}")
 
     # Clean Dataset annotations
-    for (
-        ann
-    ) in (
-        dataset.listAnnotations()
-    ):  # TODO: We do not remove original file annotations
+    for ann in dataset.listAnnotations():
         if isinstance(
             ann,
             (
@@ -154,7 +150,7 @@ def run_script():
         """This script is deleting all measurements made by omero.metrics from the selected datasets.
         For more information check \n
         http://www.mri.cnrs.fr\n
-        Copyright: Write here some copyright info""",  # TODO: copyright info
+        Copyright: Write here some copyright info""",
         scripts.String(
             "Data_Type",
             optional=False,
@@ -177,7 +173,6 @@ def run_script():
             description="Confirm that you want to delete metrics measurements.",
         ),
     )
-    # TODO: Implement a delete validated too?
 
     try:
         script_params = {}

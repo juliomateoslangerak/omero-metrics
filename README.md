@@ -1,12 +1,15 @@
+
+[![Actions Status](https://github.com/Wapaa/OMERO-project/workflows/OMERO/badge.svg)](https://github.com/Wapaa/OMERO-project/actions)
+
 OMERO.metrics with Docker
-=======================
+=========================
 
 A webapp to follow microscope performance over time.
 
 Installation
 ============
 
-Install `omero_metrics` in development mode as follows:
+Install `OMERO_metrics` in development mode as follows:
 
     # within your python venv:
     $ cd OMERO-metrics
@@ -49,37 +52,28 @@ $ pip install -e .
 1. Add the following lines to the `omeroweb/settings.py` file:
 2. Make sure you have REACT_VERSION=18.2.0 installed.
 
-```python
-STATICFILES_FINDERS = [
-    'django.contrib.staticfiles.finders.FileSystemFinder',
+
+    STATICFILES_FINDERS = ['django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'django_plotly_dash.finders.DashAssetFinder',
     'django_plotly_dash.finders.DashComponentFinder',
     'django_plotly_dash.finders.DashAppDirectoryFinder',
-]
-
-PLOTLY_COMPONENTS = ['dpd_components', 'dash_bootstrap_components', 'dash_iconify', 'dash_mantine_components', 'dpd_static_support']
-
-X_FRAME_OPTIONS = 'SAMEORIGIN'
-
-PLOTLY_DASH = {
-   'ws_route' :   'dpd/ws/channel',
-    'http_route' : 'dpd/views',
-   'http_poke_enabled' : True,
-  'insert_demo_migrations' : False,
+    ]
+    PLOTLY_COMPONENTS = ['dpd_components', 'dash_bootstrap_components', 'dash_iconify', 'dash_mantine_components', 'dpd_static_support']
+    X_FRAME_OPTIONS = 'SAMEORIGIN'
+    PLOTLY_DASH = {'ws_route' : 'dpd/ws/channel', 'http_route' : 'dpd/views', 'http_poke_enabled' : True,
+    'insert_demo_migrations' : False,
     'cache_timeout_initial_arguments': 60,
-   'view_decorator': None,
-  'cache_arguments': False,
-   'serve_locally': False,
-}
-```
+    'view_decorator': None,
+    'cache_arguments': False,
+    'serve_locally': False,
+    }
 
 
 you need to manually add the following apps to the `INSTALLED_APPS` list in the `omeroweb/settings.py` file:
 
-```python
-"dpd_static_support",  "bootstrap4",  "corsheaders"
-```
+    "dpd_static_support",  "bootstrap4",  "corsheaders"
+
 
 
 Add these additional configurations using the terminal:
@@ -88,9 +82,9 @@ Add these additional configurations using the terminal:
     omero config set omero.web.application_server development
     omero config set omero.web.debug True
     omero config append omero.web.server_list '["localhost", 6063, "host"]'
-    omero config append omero.web.apps '"omero_metrics"'
+    omero config append omero.web.apps '"OMERO_metrics"'
     omero config append omero.web.apps '"django_plotly_dash"'
-    omero config append omero.web.ui.top_links '["Metrics", "metrics_index", {"title": "Open app in new tab", "target": "_blank"}]'
+    omero config append omero.web.ui.top_links '["Metrics", "OMERO_metrics_index", {"title": "Open app in new tab", "target": "_blank"}]'
     omero config append omero.web.middleware '{"index": 0.5, "class": "corsheaders.middleware.CorsMiddleware"}'
     omero config append omero.web.middleware '{"index": 10, "class": "corsheaders.middleware.CorsPostCsrfMiddleware"}'
     omero config set omero.web.cors_origin_allow_all True
@@ -98,9 +92,9 @@ Add these additional configurations using the terminal:
     omero config append omero.web.middleware '{"index": 7, "class": "django_plotly_dash.middleware.ExternalRedirectionMiddleware"}'
     omero config append omero.web.middleware '{"index": 0.5, "class": "whitenoise.middleware.WhiteNoiseMiddleware"}'
     omero config append omero.web.middleware '{"index": 8, "class": "django_plotly_dash.middleware.BaseMiddleware"}'
-    omero config append omero.web.middleware '{"index":0.1, "class": "omero_metrics.middleware.OmeroAuth"}'
-    omero config append omero.web.ui.center_plugins '["Metrics View", "metrics/webclient_plugins/center_plugin.metricsview.js.html", "metrics_view_panel"]'
-    omero config append omero.web.ui.right_plugins '["ROIs", "metrics/webclient_plugins/right_plugin.rois.js.html", "image_roi_tab"]'
+    omero config append omero.web.middleware '{"index":0.1, "class": "OMERO_metrics.middleware.OmeroAuth"}'
+    omero config append omero.web.ui.center_plugins '["Metrics View", "OMERO_metrics/webclient_plugins/center_plugin.metricsview.js.html", "metrics_view_panel"]'
+    omero config append omero.web.ui.right_plugins '["ROIs", "OMERO_metrics/webclient_plugins/right_plugin.rois.js.html", "image_roi_tab"]'
 
 
 ```
@@ -114,4 +108,24 @@ Further Info
 1.  This app was derived from [cookiecutter-omero-webapp](https://github.com/ome/cookiecutter-omero-webapp).
 2.  For further info on depolyment, see [Deployment](https://docs.openmicroscopy.org/latest/omero/developers/Web/Deployment.html)
 
+
+
+Further Info
+============
+
+1. This app was derived from [cookiecutter-omero-webapp](https://github.com/ome/cookiecutter-omero-webapp).
+2. For further info on deployment, see [Deployment](https://docs.openmicroscopy.org/latest/omero/developers/Web/Deployment.html)
+
+
+License
+=======
+
+This project, similar to many Open Microscopy Environment (OME) projects, is
+licensed under the terms of the AGPL v3.
+
+
+Copyright
+=========
+
+2024 University of Dundee
 

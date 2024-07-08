@@ -45,7 +45,7 @@ import yaml
 from omero.rtypes import rlong, rstring
 
 # import metrics
-import omero_metrics.tools.process as process
+import microscopemetrics_omero.process as process
 
 # Creating logging services
 logger = logging.getLogger(__name__)
@@ -95,7 +95,7 @@ def run_script():
         """This is the main script of microscope-metrics-omero. It will run the analyses on the selected 
         dataset. For more information check \n
         http://www.mri.cnrs.fr\n  
-        Copyright: Write here some copyright info""",  # TODO: copyright info and documentation
+        Copyright: Write here some copyright info""",
         scripts.String(
             "Data_Type",
             optional=False,

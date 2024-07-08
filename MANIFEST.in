@@ -1,0 +1,5 @@
+include *.md
+include LICENSE
+prune dist
+prune build
+recursive-include OMERO_metrics *
