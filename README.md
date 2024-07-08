@@ -49,8 +49,8 @@ $ cd OMERO-metrics
 $ pip install -e .
 ```
 
-1. Add the following lines to the `omeroweb/settings.py` file:
-2. Make sure you have REACT_VERSION=18.2.0 installed.
+1. Make sure you have REACT_VERSION=18.2.0 installed.
+2. Add the following lines to the `omeroweb/settings.py` file:
 
 
     STATICFILES_FINDERS = ['django.contrib.staticfiles.finders.FileSystemFinder',
@@ -101,6 +101,9 @@ Add these additional configurations using the terminal:
 python manage.py migrate
 ```
 
+Then run omero-web:
+
+    omero web start
 
 Further Info
 ============
