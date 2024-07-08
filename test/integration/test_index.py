@@ -20,15 +20,14 @@
 import yaml
 
 """Integration tests for index page."""
-from omero.gateway import (
-    ImageWrapper
-)
+from omero.gateway import ImageWrapper
 from omeroweb.testlib import IWebTest, get
 import pytest
 from django.urls import reverse
 from omero.gateway import BlitzGateway
 from django.shortcuts import resolve_url
 from structure_generator import generate_users_groups
+
 
 def get_connection(user, group_id=None):
     """Get a BlitzGateway connection for the given user's client."""
@@ -72,16 +71,18 @@ class TestLoadIndexPage(IWebTest):
         assert "Welcome" in html_str
 
     def test_server_structure_load(self, server_structure):
-        assert server_structure["users"]["Abraracurcix"]["password"] == "abc123"
+        assert (
+            server_structure["users"]["Abraracurcix"]["password"] == "abc123"
+        )
 
     def test_image_wrapper(self, server_structure, user1):
         conn = get_connection(user1)
         user_name = conn.getUser().getName()
         django_client = self.new_django_client(user_name, user_name)
-        generate_users_groups(conn, server_structure["users"], server_structure["microscopes"])
+        generate_users_groups(
+            conn, server_structure["users"], server_structure["microscopes"]
+        )
         for g in conn.getGroupsMemberOf():
             print("   ID:", g.getName(), " Name:", g.getId())
         group = conn.getGroupFromContext()
         print("Current group: ", group.getName())
-
-
