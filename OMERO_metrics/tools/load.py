@@ -53,6 +53,7 @@ def load_project(
     try:
         for file_ann in project.listAnnotations():
             if isinstance(file_ann, FileAnnotationWrapper):
+
                 ds_type = file_ann.getFileName().split("_")[0]
                 if ds_type in DATASET_TYPES:
                     file_anns.append(file_ann)
@@ -80,12 +81,13 @@ def load_dataset(
             ns = ann.getNs()
             if ns.startswith("microscopemetrics_schema:samples"):
                 ds_type = ns.split("/")[-1]
-                mm_datasets.append(
-                    yaml_loader.loads(
-                        ann.getFileInChunks().__next__().decode(),
-                        target_class=getattr(mm_schema, ds_type),
+                if ds_type in DATASET_TYPES:
+                    mm_datasets.append(
+                        yaml_loader.loads(
+                            ann.getFileInChunks().__next__().decode(),
+                            target_class=getattr(mm_schema, ds_type),
+                        )
                     )
-                )
     if len(mm_datasets) == 1:
         mm_dataset = mm_datasets[0]
     elif len(mm_datasets) > 1:
@@ -145,9 +147,9 @@ def load_dash_data(
             )
             dash_context["key_values_df"] = get_key_values(dataset.output)
         elif isinstance(omero_object, ImageWrapper):
-            dash_context["image"] = load_image(
-                omero_object, load_array=True
-            ).array_data
+            image = load_image(omero_object, load_array=True)
+            dash_context["image"] = image.array_data
+            channel_names = image.channel_series
             ann_id = df[
                 (df["Field_illumination_image"] == int(omero_object.getId()))
             ]["Intensity_profiles"].values[0]
@@ -164,37 +166,47 @@ def load_dash_data(
             dash_context["df_lines"] = df_lines_omero
             dash_context["df_rects"] = df_rects_omero
             dash_context["df_points"] = df_points_omero
+            dash_context["channel_names"] = channel_names
             dash_context["df_intensity_profiles"] = get_table_file_id(
                 conn, ann_id
             )
     elif isinstance(dataset, PSFBeadsDataset):
         dash_context["title"] = "PSF Beads Dataset"
         if isinstance(omero_object, DatasetWrapper):
-            dash_context["image"] = dataset.input.psf_beads_images[
-                0
-            ].array_data
+            image_psf = dataset.input.psf_beads_images[0]
+            dash_context["image"] = image_psf.array_data
+            dash_context["channel_names"] = image_psf.channel_series
+
             dash_context["bead_properties_df"] = get_table_file_id(
                 conn,
                 dataset.output.bead_properties.data_reference.omero_object_id,
             )
             dash_context["bead_x_profiles_df"] = get_table_file_id(
                 conn,
-                dataset.output.bead_x_profiles.data_reference.omero_object_id,
+                dataset.output.bead_profiles_x.data_reference.omero_object_id,
             )
             dash_context["bead_y_profiles_df"] = get_table_file_id(
                 conn,
-                dataset.output.bead_y_profiles.data_reference.omero_object_id,
+                dataset.output.bead_profiles_y.data_reference.omero_object_id,
             )
             dash_context["bead_z_profiles_df"] = get_table_file_id(
                 conn,
-                dataset.output.bead_z_profiles.data_reference.omero_object_id,
+                dataset.output.bead_profiles_z.data_reference.omero_object_id,
             )
+            dash_context["image_id"] = dataset.input.psf_beads_images[
+                0
+            ].data_reference.omero_object_id
+
         elif isinstance(omero_object, ImageWrapper):
-            dash_context["image"] = load_image(omero_object).array_data
+            image = load_image(omero_object)
+            dash_context["image"] = image.array_data
+            channel_names = image.channel_series
+
             dash_context["bead_properties_df"] = get_table_file_id(
                 conn,
                 dataset.output.bead_properties.data_reference.omero_object_id,
             )
+            dash_context["channel_names"] = channel_names
     else:
         dash_context = {}
     return dash_context
@@ -221,10 +233,20 @@ def load_image(
 ) -> mm_schema.Image:
     """Load an image from OMERO and return it as a schema Image"""
     time_series = None
-    channel_series = None
+    channel_series = mm_schema.ChannelSeries(
+        channels=[
+            {
+                "name": c.getName(),
+                "description": c.getDescription(),
+                "data_reference": omero_tools.get_ref_from_object(c),
+                "emission_wavelength_nm": c.getEmissionWave(),
+                "excitation_wavelength_nm": c.getExcitationWave(),
+            }
+            for c in image.getChannels()
+        ]
+    )
     source_images = []
     array_data = _load_image_intensities(image) if load_array else None
-
     return mm_schema.Image(
         name=image.getName(),
         description=image.getDescription(),
@@ -320,8 +342,8 @@ def get_images_intensity_profiles(
 
 
 def get_key_values(var: FieldIlluminationDataset.output) -> pd.DataFrame:
-    data_dict = var.key_values.__dict__
-    col = var.key_values.channel_name
+    data_dict = var.key_measurements.__dict__
+    col = var.key_measurements.channel_name
     data_dict = [
         [key] + value
         for key, value in data_dict.items()
