@@ -54,7 +54,7 @@ setup(
         "django-bootstrap4",
         "dash_mantine_components",
         "dash-iconify",
-        'hypothesis',
+        "hypothesis",
         "microscopemetrics_schema @ git+https://github.com/juliomateoslangerak/microscopemetrics-schema.git@dev",
         "microscopemetrics @ git+https://github.com/juliomateoslangerak/microscope-metrics.git@dev",
     ],

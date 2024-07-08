@@ -1,0 +1,20 @@
+{%extends "OMERO_metrics/base_nav.html"%}
+{%load plotly_dash%}
+   {% load bootstrap4%}
+   {% bootstrap_css%}
+{%block title%} Microscope Stats{%endblock%}
+{%block content%}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="alert alert-success" role="alert">
+                <h4 class="alert-heading">Success!</h4>
+                <p>Your Image has been successfully uploaded.</p>
+                <hr>
+            </div>
+            <a href="http://localhost:5080/webclient/img_detail/{{id_image}}/?dataset={{id_dataset}}" class="btn btn-primary">View it here</a>
+        </div>
+    </div>
+</div>
+{%endblock%}

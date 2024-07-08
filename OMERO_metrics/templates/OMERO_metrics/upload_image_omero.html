@@ -1,0 +1,18 @@
+{%extends "OMERO_metrics/base_nav.html"%}
+{%load plotly_dash%}
+{% load bootstrap4%}
+{% bootstrap_css%}
+{%block title%} Upload Image{%endblock%}
+{%block content%}
+<div class="container">
+    <h1 class="text-center my-4 bg-light">Upload Image</h1>
+    <p class="text-center mb-4">We can upload only npy files at the moment</p>
+    <form method="post" enctype="multipart/form-data" class="d-flex flex-column align-items-center ">
+        {% csrf_token %}
+        <div class="form-group">
+            {{ form.as_p }}
+        </div>
+        <button type="submit" class="btn btn-primary">Upload</button>
+    </form>
+</div>
+{%endblock%}

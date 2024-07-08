@@ -1,4 +1,5 @@
 {% extends "webgateway/base/base_main.html" %}
+{%load plotly_dash%}
 {% load static %}
 
 {% block title %}Omero Metrics{% endblock %}
@@ -28,6 +29,7 @@
 <p>Group ID: {{ group_id }}</p>
 <p>Group Description: {{ group_description }}</p>
 <p> This is a global view of the group / Microscoope</p>
-
     </div>
+
+
 {% endblock %}

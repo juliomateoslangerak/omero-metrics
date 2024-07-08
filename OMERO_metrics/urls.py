@@ -1,33 +1,31 @@
-#!/usr/bin/env python
-#
-# Copyright (c) 2024 University of Dundee.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as
-# published by the Free Software Foundation, either version 3 of the
-# License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
-#
-# You should have received a copy of the GNU Affero General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-
-from . import views
-from django.urls import re_path
-from .views import (
-    web_gateway_templates,
-    webclient_templates,
-    center_viewer_group,
-    image_rois,
+from django.views.generic import TemplateView
+from .dash_apps import (
+    foi_apps,
+    plotly_apps,
+    dash_apps,
+    dash_image,
+    dash_project,
+    dash_dataset_psf_beads,
+    dash_image_psf_beads,
+    dash_dataset_metrics,
+    dash_group,
+    dash_microscope,
 )
+from .views import *
+from django.urls import re_path
 
 urlpatterns = [
-    # index 'home page' of the app
-    re_path(r"^$", views.index, name="OMERO_metrics_index"),
+    re_path(r"^$", index, name="OMERO_metrics_index"),
+    re_path(
+        r"^demo-one",
+        TemplateView.as_view(template_name="OMERO_metrics/demo_one.html"),
+        name="demo-one",
+    ),
+    re_path(
+        r"^foi_key_measurement",
+        dash_example_1_view,
+        name="foi_key_measurement",
+    ),
     re_path(
         r"^webgateway_templates/(?P<base_template>[a-z0-9_]+)/",
         web_gateway_templates,
@@ -38,10 +36,25 @@ urlpatterns = [
         webclient_templates,
         name="webclient_templates",
     ),
+    re_path(
+        r"^project/(?P<project_id>[0-9]+)/",
+        center_viewer_project,
+        name="project",
+    ),
+    re_path(
+        r"^dataset/(?P<dataset_id>[0-9]+)/",
+        center_viewer_dataset,
+        name="dataset",
+    ),
     re_path(r"^group/", center_viewer_group, name="group"),
+    re_path(
+        r"^image/(?P<image_id>[0-9]+)/", center_viewer_image, name="image"
+    ),
     re_path(
         r"^image_rois/(?P<image_id>[0-9]+)/",
         image_rois,
         name="webtest_image_rois",
     ),
+    re_path(r"^microscope", microscope_view, name="microscope"),
+    re_path(r"^upload_image", upload_image, name="upload_image"),
 ]
