@@ -4,6 +4,7 @@ import tempfile
 from dataclasses import fields
 from typing import Union
 
+import pandas as pd
 from linkml_runtime.dumpers import YAMLDumper
 from microscopemetrics_schema.datamodel import (
     microscopemetrics_schema as mm_schema,
@@ -27,15 +28,6 @@ SHAPE_TO_FUNCTION = {
     "Ellipse": omero_tools.create_shape_ellipse,
     "Polygon": omero_tools.create_shape_polygon,
     "Mask": omero_tools.create_shape_mask,
-}
-
-SHAPE_TYPE_TO_FUNCTION = {
-    "points": omero_tools.create_shape_point,
-    "lines": omero_tools.create_shape_line,
-    "rectangles": omero_tools.create_shape_rectangle,
-    "ellipses": omero_tools.create_shape_ellipse,
-    "polygons": omero_tools.create_shape_polygon,
-    "masks": omero_tools.create_shape_mask,
 }
 
 
@@ -86,7 +78,7 @@ def dump_microscope(
         omero_object=omero_group,
         annotation_name=microscope.name,
         annotation_description=microscope.description,
-        namespace=microscope.class_model_uri,
+        namespace=microscope.class_class_curie,
     )
 
     return omero_group
@@ -148,9 +140,12 @@ def _remove_unsupported_types(
             _attr.array_data = None
         elif isinstance(_attr, mm_schema.Table):
             _attr.table_data = None
+        elif isinstance(_attr, mm_schema.KeyMeasurements):
+            _attr.table_data = None
         elif isinstance(_attr, mm_schema.Roi):
             if _attr.masks:
-                [_remove(m.mask) for m in _attr.masks]
+                for m in _attr.masks:
+                    _remove(m.mask)
 
     try:
         for field in fields(data_obj):
@@ -169,9 +164,13 @@ def _remove_unsupported_types(
 def _dump_mm_dataset_as_file_annotation(
     conn: BlitzGateway,
     mm_dataset: mm_schema.MetricsDataset,
-    target_omero_obj: Union[ProjectWrapper, DatasetWrapper],
+    target_omero_obj: Union[
+        ProjectWrapper,
+        DatasetWrapper,
+        list[Union[ProjectWrapper, DatasetWrapper]],
+    ],
 ):
-    # We need to remove the data on the numppy and pandas data objects as they cannot be serialized by linkml
+    # We need to remove the data on the numpy and pandas data objects as they cannot be serialized by linkml
     _remove_unsupported_types(mm_dataset.input)
     if mm_dataset.output:
         _remove_unsupported_types(mm_dataset.output)
@@ -179,18 +178,21 @@ def _dump_mm_dataset_as_file_annotation(
     dumper = YAMLDumper()
 
     with tempfile.NamedTemporaryFile(
-        prefix=f"{mm_dataset.class_name}_", mode="w", delete=False
+        prefix=f"{mm_dataset.class_name}_",
+        suffix=".yaml",
+        mode="w",
+        delete=False,
     ) as f:
         f.write(dumper.dumps(mm_dataset))
         f.close()
-        file_path = f.name
-        ns = mm_dataset.class_class_curie
-        description = mm_dataset.description
-        mimetype = "application/yaml"
-        file_ann = conn.createFileAnnfromLocalFile(
-            file_path, mimetype=mimetype, ns=ns, desc=description
+        file_ann = omero_tools.create_file(
+            conn=conn,
+            file_path=f.name,
+            omero_object=target_omero_obj,
+            file_description=mm_dataset.description,
+            namespace=mm_dataset.class_class_curie,
+            mimetype="application/yaml",
         )
-        target_omero_obj.linkAnnotation(file_ann)
 
     return file_ann
 
@@ -272,14 +274,14 @@ def dump_dataset(
                 f"Dataset {dataset.name} is not processed. Skipping output dump."
             )
 
+    target_objs = []
     if dump_as_dataset_file_annotation:
-        _dump_mm_dataset_as_file_annotation(
-            conn=conn, mm_dataset=dataset, target_omero_obj=omero_dataset
-        )
-
+        target_objs.append(omero_dataset)
     if dump_as_project_file_annotation:
+        target_objs.append(target_project)
+    if target_objs:
         _dump_mm_dataset_as_file_annotation(
-            conn=conn, mm_dataset=dataset, target_omero_obj=target_project
+            conn=conn, mm_dataset=dataset, target_omero_obj=target_objs
         )
 
     return omero_dataset
@@ -308,7 +310,7 @@ def _dump_analysis_metadata(
         omero_object=target_dataset,
         annotation_name=dataset.class_name,
         annotation_description=dataset.description,
-        namespace=dataset.class_model_uri,
+        namespace=dataset.class_class_curie,
     )
 
 
@@ -319,11 +321,11 @@ def _get_input_metadata(
     for input_field in fields(input):
         input_element = getattr(input, input_field.name)
         if isinstance(input_element, mm_schema.Image):
-            continue
+            metadata[input_field.name] = input_element.name
         elif isinstance(input_element, list) and all(
             isinstance(i_e, mm_schema.Image) for i_e in input_element
         ):
-            continue
+            metadata[input_field.name] = [i_e.name for i_e in input_element]
         else:
             metadata[input_field.name] = str(input_element)
 
@@ -337,16 +339,14 @@ def dump_analysis_config():
 def _get_output_metadata(
     dataset_output: mm_schema.MetricsOutput,
 ) -> dict:
+    output_fields = set(f.name for f in fields(mm_schema.MetricsOutput))
     output_elements = {}
     for output_field in fields(dataset_output):
-        output_element = getattr(dataset_output, output_field.name)
-        if isinstance(output_element, mm_schema.MetricsObject):
+        if output_field.name not in output_fields:
             continue
-        if isinstance(output_element, list) and any(
-            isinstance(i, mm_schema.MetricsObject) for i in output_element
-        ):
-            continue
-        output_elements[output_field.name] = str(output_element)
+        output_elements[output_field.name] = str(
+            getattr(dataset_output, output_field.name)
+        )
 
     return output_elements
 
@@ -392,52 +392,58 @@ def _dump_dataset_output(
 
 def _dump_output_element(
     conn: BlitzGateway,
-    output_element,
+    output_element: mm_schema.MetricsObject,
     target_dataset: DatasetWrapper,
 ):
     if isinstance(output_element, mm_schema.Image):
-        dump_image(
+        return dump_image(
             conn=conn,
             image=output_element,
             target_dataset=target_dataset,
         )
-    elif isinstance(output_element, mm_schema.Roi):
-        dump_roi(
-            conn=conn,
-            roi=output_element,
-        )
+    elif isinstance(output_element, mm_schema.KeyValues):
+        if isinstance(output_element, mm_schema.KeyMeasurements):
+            return dump_key_measurement(
+                conn=conn,
+                key_measurement=output_element,
+                # KeyMeasurements are linked to the dataset and project
+                target_object=[target_dataset, target_dataset.getParent()],
+            )
+        else:
+            return dump_key_values(
+                conn=conn,
+                key_values=output_element,
+                target_object=target_dataset,
+            )
     elif isinstance(output_element, mm_schema.Tag):
-        dump_tag(
+        return dump_tag(
             conn=conn,
             tag=output_element,
-        )
-    elif isinstance(output_element, mm_schema.KeyValues):
-        dump_key_value(
-            conn=conn,
-            key_values=output_element,
-            target_object=target_dataset,
+            target_objects=target_dataset,
         )
     elif isinstance(output_element, mm_schema.Table):
-        dump_table(
+        return dump_table(
             conn=conn,
             table=output_element,
             target_object=target_dataset,
         )
-    # elif isinstance(output_element, mm_schema.Comment):
-    #     dump_comment(
-    #         conn=conn,
-    #         comment=output_element,
-    #         target_object=target_dataset,
-    #     )
+    elif isinstance(output_element, mm_schema.Roi):
+        return dump_roi(
+            conn=conn,
+            roi=output_element,
+        )
+    elif isinstance(output_element, mm_schema.Comment):
+        return dump_comment(
+            conn=conn,
+            comment=output_element,
+            target_object=target_dataset,
+        )
     else:
-        try:
-            logger.error(
-                f"{output_element.name} output could not be dumped to OMERO"
-            )
-        except AttributeError:
-            logger.error(
-                f"{output_element} output could not be dumped to OMERO"
-            )
+        logger.error(
+            f"{output_element.name} output could not be dumped to OMERO"
+        )
+
+    return None
 
 
 def dump_image(
@@ -501,18 +507,36 @@ def dump_roi(
             )
             return None
 
-    if len(target_images) == 0:
+    if not target_images or not all(
+        isinstance(i, ImageWrapper) for i in target_images
+    ):
         logger.error(
             f"ROI {roi.name} must be linked to an image. {target_images} object provided is not an image."
         )
         return None
+
+    handler = {
+        "points": lambda shape: omero_tools.create_shape_point(shape),
+        "lines": lambda shape: omero_tools.create_shape_line(shape),
+        "rectangles": lambda shape: omero_tools.create_shape_rectangle(shape),
+        "ellipses": lambda shape: omero_tools.create_shape_ellipse(shape),
+        "polygons": lambda shape: omero_tools.create_shape_polygon(shape),
+        "masks": lambda shape: omero_tools.create_shape_mask(shape),
+    }
+
     shapes = []
     for shape_field in fields(roi):
-        if shape_field.name in SHAPE_TYPE_TO_FUNCTION:
-            shapes += [
-                SHAPE_TYPE_TO_FUNCTION[shape_field.name](shape)
-                for shape in getattr(roi, shape_field.name)
-            ]
+        if shape_field.name not in handler:
+            continue
+        shape_handler = handler.get(
+            shape_field.name,
+            lambda shape: logger.error(
+                f"Shape {shape} could not be dumped to OMERO"
+            ),
+        )
+        shapes += [
+            shape_handler(shape) for shape in getattr(roi, shape_field.name)
+        ]
 
     omero_rois = []
     for target_image in target_images:
@@ -546,7 +570,7 @@ def dump_tag(
             )
         except AttributeError:
             logger.error(
-                f"ROI {tag.name} must be linked to at least one image. No image provided."
+                f"Tag {tag.name} must be linked to an OMERO object. No object provided"
             )
             return None
 
@@ -561,7 +585,7 @@ def dump_tag(
             conn=conn,
             tag_name=tag.name,
             tag_description=tag.description,
-            omero_objects=target_objects,
+            omero_object=target_objects,
         )
         tag.data_reference = omero_tools.get_ref_from_object(omero_tag)
 
@@ -570,11 +594,64 @@ def dump_tag(
     return omero_tag
 
 
-def dump_key_value(
+def dump_key_measurement(
+    conn: BlitzGateway,
+    key_measurement: mm_schema.KeyMeasurements,
+    target_object: Union[
+        DatasetWrapper,
+        ProjectWrapper,
+        list[Union[DatasetWrapper, ProjectWrapper]],
+    ],
+):
+    if not isinstance(key_measurement, mm_schema.KeyMeasurements):
+        logger.error(
+            f"Unsupported key measurement type for {key_measurement.name}: {key_measurement.class_name}"
+        )
+        return None
+
+    if target_object is None:
+        try:
+            target_object = omero_tools.get_omero_obj_from_mm_obj(
+                conn=conn, mm_obj=key_measurement.linked_references
+            )
+        except AttributeError:
+            logger.error(
+                f"Key-measurements {key_measurement.name} must be linked to an OMERO object. No object provided."
+            )
+            return None
+
+    if key_measurement.table_data is None:
+        logger.error(
+            f"Key-measurements {key_measurement.name} has no data. Skipping dump."
+        )
+        return None
+
+    omero_table = omero_tools.create_table(
+        conn=conn,
+        table=key_measurement.table_data,
+        table_name=key_measurement.name,
+        omero_object=target_object,
+        table_description=key_measurement.description,
+        namespace=key_measurement.class_class_curie,
+    )
+    key_measurement.data_reference = omero_tools.get_ref_from_object(
+        omero_table
+    )
+
+    return omero_table
+
+
+def dump_key_values(
     conn: BlitzGateway,
     key_values: mm_schema.KeyValues,
     target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper] = None,
 ):
+    if not isinstance(key_values, mm_schema.KeyValues):
+        logger.error(
+            f"Unsupported key values type for {key_values.name}: {key_values.class_name}"
+        )
+        return None
+
     if target_object is None:
         try:
             target_object = omero_tools.get_omero_obj_from_mm_obj(
@@ -582,7 +659,7 @@ def dump_key_value(
             )
         except AttributeError:
             logger.error(
-                f"ROI {key_values.name} must be linked to an image. No image provided."
+                f"Key-values {key_values.name} must be linked to an OMERO object. No object provided."
             )
             return None
 
@@ -592,7 +669,7 @@ def dump_key_value(
         omero_object=target_object,
         annotation_name=key_values.name,
         annotation_description=key_values.description,
-        namespace=key_values.class_model_uri,
+        namespace=key_values.class_class_curie,
     )
     key_values.data_reference = omero_tools.get_ref_from_object(
         omero_key_value
@@ -634,7 +711,7 @@ def dump_table(
             )
         except AttributeError:
             logger.error(
-                f"ROI {table.name} must be linked to an image. No image provided."
+                f"Table {table.name} must be linked to an OMERO object. No object provided."
             )
             return None
 
@@ -644,7 +721,7 @@ def dump_table(
         table_name=table.name,
         omero_object=target_object,
         table_description=table.description,
-        namespace=table.class_model_uri,
+        namespace=table.class_class_curie,
     )
     table.data_reference = omero_tools.get_ref_from_object(omero_table)
 
@@ -663,7 +740,7 @@ def dump_comment(
             )
         except AttributeError:
             logger.error(
-                f"ROI {comment.name} must be linked to an image. No image provided."
+                f"Comment {comment.name} must be linked to an OMERO object. No object provided."
             )
             return None
 
@@ -671,5 +748,5 @@ def dump_comment(
         conn=conn,
         comment_text=comment.text,
         omero_object=target_object,
-        namespace=comment.class_model_uri,
+        namespace=comment.class_class_curie,
     )

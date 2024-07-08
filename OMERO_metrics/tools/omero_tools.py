@@ -26,6 +26,7 @@ from omero.gateway import (
     RoiWrapper,
     TagAnnotationWrapper,
     CommentAnnotationWrapper,
+    ChannelWrapper,
 )
 
 from omero.model import (
@@ -173,8 +174,11 @@ def get_ref_from_object(obj) -> mm_schema.DataReference:
         obj_type = "COMMENT"
     elif isinstance(obj, RoiWrapper):
         obj_type = "ROI"
+    elif isinstance(obj, ChannelWrapper):
+        obj_type = "CHANNEL"
     else:
         logger.error(f"Object type {type(obj)} is not supported")
+
     return mm_schema.DataReference(
         data_uri=f"https://{obj._conn.host}:{obj._conn.port}/webclient/?show={obj_type.lower()}-{obj.getId()}",
         omero_host=obj._conn.host,
@@ -317,9 +321,11 @@ def get_image_intensities(
 def get_tagged_images_in_dataset(dataset, tag_id):
     images = []
     for image in dataset.listChildren():
-        for ann in image.listAnnotations():
-            if type(ann) == TagAnnotationWrapper and ann.getId() == tag_id:
-                images.append(image)
+        images.extend(
+            image
+            for ann in image.listAnnotations()
+            if type(ann) == TagAnnotationWrapper and ann.getId() == tag_id
+        )
     return images
 
 
@@ -794,15 +800,23 @@ def create_tag(
     conn: BlitzGateway,
     tag_name: str,
     tag_description: str,
-    omero_objects: list[Union[ImageWrapper, DatasetWrapper, ProjectWrapper]],
+    omero_object: Union[
+        ImageWrapper,
+        DatasetWrapper,
+        ProjectWrapper,
+        list[Union[ImageWrapper, DatasetWrapper, ProjectWrapper]],
+    ],
 ):
     tag_ann = TagAnnotationWrapper(conn)
     tag_ann.setValue(tag_name)
     tag_ann.setDescription(tag_description)
     tag_ann.save()
 
-    for obj in omero_objects:
-        _link_annotation(obj, tag_ann)
+    if isinstance(omero_object, list):
+        for obj in omero_object:
+            _link_annotation(obj, tag_ann)
+    else:
+        _link_annotation(omero_object, tag_ann)
 
     return tag_ann
 
@@ -980,7 +994,12 @@ def create_table(
     conn: BlitzGateway,
     table: Union[DataFrame, list[dict[str, list]], dict[str, list]],
     table_name: str,
-    omero_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
+    omero_object: Union[
+        ImageWrapper,
+        DatasetWrapper,
+        ProjectWrapper,
+        list[Union[ImageWrapper, DatasetWrapper, ProjectWrapper]],
+    ],
     table_description: str,
     namespace: str,
 ):
@@ -1004,7 +1023,11 @@ def create_table(
     file_ann.setFile(OriginalFileI(original_file.id.val, False))
     file_ann.save()
 
-    _link_annotation(omero_object, file_ann)
+    if isinstance(omero_object, list):
+        for obj in omero_object:
+            _link_annotation(obj, file_ann)
+    else:
+        _link_annotation(omero_object, file_ann)
 
     return file_ann
 
@@ -1032,18 +1055,28 @@ def create_comment(
 def create_file(
     conn: BlitzGateway,
     file_path: str,
-    omero_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
+    omero_object: Union[
+        ImageWrapper,
+        DatasetWrapper,
+        ProjectWrapper,
+        list[Union[ImageWrapper, DatasetWrapper, ProjectWrapper]],
+    ],
     file_description: str,
     namespace: str,
+    mimetype: str = None,
 ):
     if not isinstance(file_path, str):
         raise TypeError(f"file_path {file_path} must be a string")
-
-    mimetype, _ = mimetypes.guess_type(file_path)
+    if mimetype is None:
+        mimetype, _ = mimetypes.guess_type(file_path)
     file_ann = conn.createFileAnnfromLocalFile(
         file_path, mimetype=mimetype, ns=namespace, desc=file_description
     )
-    _link_annotation(omero_object, file_ann)
+    if isinstance(omero_object, list):
+        for obj in omero_object:
+            _link_annotation(obj, file_ann)
+    else:
+        _link_annotation(omero_object, file_ann)
 
     return file_ann
 
