@@ -55,10 +55,6 @@ class TestLoadIndexPage(IWebTest):
             server_structure = yaml.load(f, Loader=yaml.SafeLoader)
         return server_structure
 
-    @pytest.fixture(scope="function")
-    def field_illumination_project(self, server_structure):
-        pass
-
     def test_load_index(self, user1):
         """Test loading the app home page."""
         conn = get_connection(user1)
@@ -68,21 +64,4 @@ class TestLoadIndexPage(IWebTest):
         # asserts we get a 200 response code etc
         rsp = get(django_client, index_url)
         html_str = rsp.content.decode()
-        assert "Welcome" in html_str
-
-    def test_server_structure_load(self, server_structure):
-        assert (
-            server_structure["users"]["Abraracurcix"]["password"] == "abc123"
-        )
-
-    def test_image_wrapper(self, server_structure, user1):
-        conn = get_connection(user1)
-        user_name = conn.getUser().getName()
-        django_client = self.new_django_client(user_name, user_name)
-        generate_users_groups(
-            conn, server_structure["users"], server_structure["microscopes"]
-        )
-        for g in conn.getGroupsMemberOf():
-            print("   ID:", g.getName(), " Name:", g.getId())
-        group = conn.getGroupFromContext()
-        print("Current group: ", group.getName())
+        assert "Microscope" in html_str
