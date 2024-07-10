@@ -1,0 +1,12 @@
+{%extends "OMERO_metrics/base_nav.html"%}
+{%load plotly_dash%}
+{% load bootstrap4%}
+{% load static %}
+{% bootstrap_css%}
+{%block title%} Microscope Stats{%endblock%}
+{%block content%}
+
+<div class="{%plotly_class name="Microscope"%} w-auto h-auto mb-2">
+    {%plotly_app name="Microscope" ratio=1%}
+</div>
+{%endblock%}

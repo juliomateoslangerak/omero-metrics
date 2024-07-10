@@ -16,4 +16,3 @@ ENV REACT_VERSION=18.2.0
 RUN npm install react@${REACT_VERSION}
 USER omero-web
 #/opt/omero/web/venv3/bin/python /opt/omero/web/venv3/lib/python3.10/site-packages/omeroweb/manage.py migrate
-
