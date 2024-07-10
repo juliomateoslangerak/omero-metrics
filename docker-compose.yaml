@@ -4,7 +4,7 @@ services:
 
   database:
     image: "postgres:12"
-#    platform: linux/amd64
+    platform: linux/amd64
     environment:
       POSTGRES_USER: omero
       POSTGRES_DB: omero
@@ -20,7 +20,7 @@ services:
     depends_on:
       - database
     build: test/omero-server
-#    platform: linux/amd64
+    platform: linux/amd64
     environment:
       CONFIG_omero_db_host: database
       CONFIG_omero_db_user: omero
@@ -41,7 +41,7 @@ services:
     depends_on:
       - omeroserver
     build: test/omero-web
-    #    platform: linux/amd64
+    platform: linux/amd64
     environment:
       OMEROHOST: omeroserver
     volumes:
