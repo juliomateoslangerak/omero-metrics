@@ -13,7 +13,7 @@ execute:
 
 format:
   revealjs:
-    theme: [night, custom.scss]
+    theme: [simple, custom.scss]
     embed-resources: true
     margin: 0.15
     stretch: false
@@ -21,7 +21,7 @@ format:
     toc-depth: 2
     center-title-slide: true
     center: false
-    logo: ./media/logo-gedem_white.png
+    logo: ./media/logo_omero-metrics.png
     footer: a short guide for better data management. If you liked it, find more [here](https://a_link_to_the_website)
     transition: slide
     background-transition: fade
@@ -32,6 +32,6 @@ format:
     css: logo.css
 
     title-slide-attributes:
-      data-background-image: ./media/logo-gedem_white.png
+      data-background-image: ./media/logo_FBI.tiff
       data-background-size: contain
       data-background-opacity: "0.2"
