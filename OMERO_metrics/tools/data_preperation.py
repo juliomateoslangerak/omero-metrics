@@ -51,11 +51,28 @@ def add_rect_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
     return fig
 
 
+def add_line_rois_trace(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
+    for i, row in df.iterrows():
+        data = pd.DataFrame(
+            dict(
+                x=np.array(range(int(row.X1), int(row.X2))),
+                y=np.array(range(int(row.Y1), int(row.Y2))),
+            )
+        )
+        fig.add_trace(
+            go.Scatter(x=data.x, y=data.y, mode="lines", name=str(row.ROI))
+        )
+    return fig
+
+
 def add_line_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
     for i, row in df.iterrows():
         fig.add_shape(
             go.layout.Shape(
                 type="line",
+                name=str(row.ROI),
+                showlegend=True,
+                editable=True,
                 x0=row.X1,
                 y0=row.Y1,
                 x1=row.X2,

@@ -1,11 +1,18 @@
 import dash
+import pandas as pd
 from dash import dcc, html, dash_table
 from django_plotly_dash import DjangoDash
 import plotly.express as px
 import dash_mantine_components as dmc
 
+stylesheets = [
+    "https://unpkg.com/@mantine/charts@7/styles.css",
+]
+primary_color = "#008080"
 dashboard_name = "omero_dataset_metrics"
-dash_app_dataset = DjangoDash(name=dashboard_name)
+dash_app_dataset = DjangoDash(
+    name=dashboard_name, serve_locally=True, external_stylesheets=stylesheets
+)
 
 dash_app_dataset.layout = dmc.MantineProvider(
     [
@@ -14,17 +21,18 @@ dash_app_dataset.layout = dmc.MantineProvider(
                 dmc.Center(
                     dmc.Text(
                         id="title",
-                        c="#189A35",
+                        c=primary_color,
                         style={"fontSize": 30},
                     )
                 ),
+                dmc.Divider(variant="solid"),
                 dmc.Grid(
                     [
                         dmc.GridCol(
                             [
                                 html.H3(
                                     "Select Channel",
-                                    style={"color": "#63aa47"},
+                                    style={"color": primary_color},
                                 ),
                                 dcc.Dropdown(
                                     value="Channel 0", id="channel_ddm"
@@ -50,7 +58,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                     [
                                         dmc.Title(
                                             "Intensity Map",
-                                            c="#189A35",
+                                            c=primary_color,
                                             size="h3",
                                             mb=10,
                                         ),
@@ -70,7 +78,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                     [
                                         dmc.Title(
                                             "Key Measurements",
-                                            c="#189A35",
+                                            c=primary_color,
                                             size="h3",
                                             mb=10,
                                             mt=10,
@@ -90,13 +98,14 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                             editable=False,
                                             style_cell={
                                                 "textAlign": "left",
-                                                "fontSize": 10,
+                                                "fontSize": 14,
                                                 "font-family": "sans-serif",
                                             },
                                             style_header={
-                                                "backgroundColor": "#189A35",
+                                                "backgroundColor": primary_color,
                                                 "fontWeight": "bold",
-                                                "fontSize": 15,
+                                                "fontSize": 18,
+                                                "textAlign": "center",
                                             },
                                             style_table={
                                                 "overflowX": "auto",
@@ -108,22 +117,46 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                 ),
                             ]
                         ),
+                        dmc.Divider(variant="solid"),
                         dmc.Stack(
                             [
                                 dmc.Title(
                                     "Intensity Profile",
-                                    c="#189A35",
+                                    c=primary_color,
                                     size="h3",
                                     mb=10,
                                 ),
-                                dcc.Graph(
+                                dmc.LineChart(
                                     id="intensity_profile",
-                                    figure={},
+                                    h=300,
+                                    dataKey="Pixel",
+                                    data={},
+                                    series=[
+                                        {
+                                            "name": "Lefttop To Rightbottom",
+                                            "color": "violet.6",
+                                        },
+                                        {
+                                            "name": "Leftbottom To Righttop",
+                                            "color": "blue.6",
+                                        },
+                                        {
+                                            "name": "Center Horizontal",
+                                            "color": "teal.6",
+                                        },
+                                        {
+                                            "name": "Center Vertical",
+                                            "color": "indigo.6",
+                                        },
+                                    ],
+                                    tickLine="y",
+                                    gridAxis="y",
+                                    withXAxis=True,
+                                    withYAxis=True,
+                                    withLegend=True,
                                     style={
-                                        "display": "inline-block",
-                                        "width": "100%",
-                                        "height": "100%;",
-                                        "background-color": "#189A35",
+                                        "margin-top": "20px",
+                                        "background-color": "white",
                                     },
                                 ),
                             ]
@@ -148,7 +181,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
     dash.dependencies.Output("channel_ddm", "options"),
     dash.dependencies.Output("title", "children"),
     dash.dependencies.Output("table", "data"),
-    dash.dependencies.Output("intensity_profile", "figure"),
+    dash.dependencies.Output("intensity_profile", "data"),
     [dash.dependencies.Input("channel_ddm", "value")],
 )
 def dataset_callback_intensity_map(*args, **kwargs):
@@ -179,14 +212,28 @@ def dataset_callback_intensity_map(*args, **kwargs):
     df_profile.columns = df_profile.columns.str.replace(
         "Ch\d{2}_", "", regex=True
     )
-    df_profile.columns = df_profile.columns.str.replace("_", " ", regex=True)
-    df_profile.columns = df_profile.columns.str.title()
+    df_profile = restyle_dataframe(df_profile, "columns")
     extracted_table_cols = channel_list[int(args[0][-1])]["label"]
     table_filtered = table[["Measurements", extracted_table_cols]]
+    table_filtered = restyle_dataframe(table_filtered, "Measurements")
     fig_ip = px.line(
         df_profile,
         x=df_profile.index,
         y=df_profile.columns,
         title="Intensity Profile",
     )
-    return fig, channel_list, title, table_filtered.to_dict("records"), fig_ip
+    df_reset = df_profile.reset_index()
+    df_reset.rename(columns={"index": "Pixel"}, inplace=True)
+    return (
+        fig,
+        channel_list,
+        title,
+        table_filtered.to_dict("records"),
+        df_reset.to_dict("records"),
+    )
+
+
+def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:
+    value = getattr(df, col).str.replace("_", " ", regex=True).str.title()
+    setattr(df, col, value)
+    return df

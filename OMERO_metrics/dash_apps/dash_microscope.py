@@ -120,19 +120,19 @@ dash_app_microscope.layout = dmc.MantineProvider(
                                         ),
                                         dmc.BarChart(
                                             h=300,
-                                            dataKey="month",
-                                            data=data,
+                                            dataKey="continent",
+                                            data=df.to_dict(orient="records"),
                                             series=[
                                                 {
-                                                    "name": "Smartphones",
+                                                    "name": "pop",
                                                     "color": "violet.6",
                                                 },
                                                 {
-                                                    "name": "Laptops",
+                                                    "name": "lifeExp",
                                                     "color": "blue.6",
                                                 },
                                                 {
-                                                    "name": "Tablets",
+                                                    "name": "gdpPercap",
                                                     "color": "teal.6",
                                                 },
                                             ],
