@@ -3,7 +3,7 @@ from .tools import load
 from omeroweb.webclient.decorators import login_required, render_response
 from .tools.data_preperation import *
 from .tools.load import *
-from .tools.data_managers import DatasetManager
+from .tools.data_managers import DatasetManager, ProjectManager
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from .forms import UploadFileForm
@@ -44,7 +44,6 @@ def upload_image(request, conn=None, **kwargs):
 
 @login_required()
 def index(request, conn=None, **kwargs):
-
     experimenter = conn.getUser()
     context = {
         "firstName": experimenter.firstName,
@@ -141,16 +140,18 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
 @login_required()
 def center_viewer_project(request, project_id, conn=None, **kwargs):
     project_wrapper = conn.getObject("Project", project_id)
-    study_config = get_file_annotation_project(project_wrapper)
-    processed_datasets, unprocessed_datasets = get_dataset_ids_lists(
-        conn, project_wrapper
-    )
-    df = processed_data_project_view(processed_datasets)
-    dash_context = request.session.get("django_plotly_dash", dict())
-    dash_context["data"] = df
-    request.session["django_plotly_dash"] = dash_context
-    collections_mm_p = load.load_project(conn, project_id)
-    context = {"project_id": project_id, "collections_mm_p": collections_mm_p}
+    pm = ProjectManager(conn, project_wrapper)
+    pm.load_data()
+    pr, unpr = [], []
+    for dataset in pm.datasets:
+        if dataset.processed:
+            pr.append(dataset.omero_object.getId())
+        else:
+            unpr.append(dataset.omero_object.getId())
+    context = {
+        "unprocessed_datasets": unpr,
+        "processed_datasets": pr,
+    }
     return render(
         request, "OMERO_metrics/omero_views/center_view_project.html", context
     )

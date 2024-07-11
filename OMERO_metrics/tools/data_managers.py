@@ -1,7 +1,6 @@
 import datetime
 import logging
 from typing import Union
-
 from microscopemetrics.samples import field_illumination, psf_beads
 from microscopemetrics_schema.datamodel import (
     microscopemetrics_schema as mm_schema,
@@ -12,7 +11,6 @@ from omero.gateway import (
     ImageWrapper,
     ProjectWrapper,
 )
-
 from . import load, dump, update, delete
 
 logger = logging.getLogger(__name__)
@@ -262,7 +260,7 @@ class ProjectManager:
     def __init__(self, conn: BlitzGateway, project: ProjectWrapper):
         self._conn = conn
         self.project = project
-        self.datasets = None
+        self.datasets = []
         self.context = None
 
     def load_data(self, force_reload=True):
