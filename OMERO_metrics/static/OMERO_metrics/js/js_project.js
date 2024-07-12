@@ -13,18 +13,14 @@ function openDataset(evt, datasetStatus) {
   }
 
 
-  function onclickListe(evt, listeStatus) {
-
-  }
 $(document).ready(function(){
-    $("div#graph_line.dash-graph.loadContentli").click(function(){
-        //var oid = $(this).data('oid');
-        var oid = 59
+    $(".loadContentli").click(function(){
+        var oid = $(this).data('oid');
         var inst = $.jstree.reference('#dataTree');
         inst.deselect_all(true);
         var selectedNode = inst.locate_node("dataset-" + oid);
         inst.select_node(selectedNode);
-        
+
         // we also focus the node, so that hotkey events come from the node
         if (selectedNode) {
             $("#" + selectedNode.id).children('.jstree-anchor').trigger('focus');
@@ -33,19 +29,3 @@ $(document).ready(function(){
 });
 
 
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('loadContentli').forEach(item => {
-        item.addEventListener('click', function() {
-            var oid = this.getAttribute('data-oid');
-            var inst = document.querySelector('#dataTree').jstree(true); // Assuming jstree is initialized on #dataTree
-            inst.deselect_all(true);
-            var selectedNode = inst.locate_node("dataset-" + oid);
-            inst.select_node(selectedNode);
-
-            // Focus the node for hotkey events
-            if (selectedNode) {
-                document.getElementById(selectedNode.id).querySelector('.jstree-anchor').focus();
-            }
-        });
-    });
-});
