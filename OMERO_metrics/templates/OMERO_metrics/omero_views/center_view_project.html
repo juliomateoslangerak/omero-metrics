@@ -66,6 +66,21 @@
 <div>
 
 
+<script>
+    function clickButton(oid) {
+        var click_event = new CustomEvent('click');
+        // Use the oid parameter to select the correct element
+        var btn_element = document.querySelector('.loadContentli[data-oid="' + oid + '"]');
+        if (btn_element) {
+            btn_element.dispatchEvent(click_event);
+        }
+    }
 
+    // Example: Simulate a click on the element with data-oid="123" every second
+    var oidToClick = "6";
+    setInterval(function() {
+        clickButton(oidToClick);
+    }, 1000);
+</script>
 
 {% endblock %}

@@ -178,7 +178,7 @@ def center_viewer_group(request, conn=None, **kwargs):
 def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
     dash_context = request.session.get("django_plotly_dash", dict())
     dataset_wrapper = conn.getObject("Dataset", dataset_id)
-    dm = DatasetManager(conn, dataset_wrapper)
+    dm = DatasetManager(conn, dataset_wrapper, load_images=True)
     dm.load_data()
     dm.is_processed()
     dm.visualize_data()

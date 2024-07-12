@@ -73,17 +73,16 @@ class DatasetManager:
         self,
         conn: BlitzGateway,
         omero_object: Union[DatasetWrapper, ImageWrapper],
+        load_images=False
     ):
         self._conn = conn
         if isinstance(omero_object, DatasetWrapper):
             self.omero_dataset = omero_object
             self.data_type = "Dataset"
-            self.load_images = True
             self.omero_object = omero_object
         elif isinstance(omero_object, ImageWrapper):
             self.omero_dataset = omero_object.getParent()
             self.data_type = "Image"
-            self.load_images = False
             self.omero_object = omero_object
         else:
             raise ValueError(
@@ -91,6 +90,7 @@ class DatasetManager:
             )
 
         self.omero_project = self.omero_dataset.getParent()
+        self.load_images = load_images
         self.mm_dataset = None
         self.analysis_config = None
         self.analysis_config_id = None

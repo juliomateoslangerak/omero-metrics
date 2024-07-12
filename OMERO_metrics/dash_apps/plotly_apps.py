@@ -31,7 +31,7 @@ import pandas as pd
 from django.core.cache import cache
 from django.utils.translation import gettext, gettext_lazy
 import dash
-from dash import Dash, dcc, html, Input, Output, callback
+from dash import Dash, dcc, html, Input, Output, callback,clientside_callback
 from dash.dependencies import MATCH, ALL
 import plotly.graph_objs as go
 import dpd_components as dpd
@@ -50,60 +50,28 @@ df = pd.read_csv(
 
 app = DjangoDash("SimpleExample")
 
-app.layout = html.Div(
-    [
-        dmc.Text(
-            "Field Of Illumination Dashboard",
-            c="#189A35",
-            mb=30,
-            style={"margin-top": "20px", "fontSize": 40},
-        ),
-        dcc.Graph(
-            id="graph-with-slider",
-            figure=px.scatter(
-                df,
-                x="gdpPercap",
-                y="lifeExp",
-                size="pop",
-                color="continent",
-                hover_name="country",
-                log_x=True,
-                size_max=55,
-            ),
-        ),
-        dcc.Slider(
-            df["year"].min(),
-            df["year"].max(),
-            step=None,
-            value=df["year"].min(),
-            marks={str(year): str(year) for year in df["year"].unique()},
-            id="year-slider",
-        ),
-    ]
+app.layout = html.Div([
+    html.Div(id='blank-output'),
+    dcc.Tabs(id='tabs-example', value='tab-1', children=[
+        dcc.Tab(label='Tab one', value='tab-1'),
+        dcc.Tab(label='Tab two', value='tab-2'),
+    ]),
+])
+
+app.clientside_callback(
+    """
+    function(tab_value) {
+        if (tab_value === 'tab-1') {
+            document.title = 'Tab 1'
+        } else if (tab_value === 'tab-2') {
+            document.title = 'Tab 2'
+        }
+    }
+    """,
+    dash.dependencies.Output('blank-output', 'children'),
+    [dash.dependencies.Input('tabs-example', 'value')]
 )
 
-
-@app.callback(
-    dash.dependencies.Output("graph-with-slider", "figure"),
-    [dash.dependencies.Input("year-slider", "value")],
-)
-def update_figure(selected_year):
-    filtered_df = df[df.year == selected_year]
-
-    fig = px.scatter(
-        filtered_df,
-        x="gdpPercap",
-        y="lifeExp",
-        size="pop",
-        color="continent",
-        hover_name="country",
-        log_x=True,
-        size_max=55,
-    )
-
-    fig.update_layout(transition_duration=500)
-
-    return fig
 
 
 a2 = DjangoDash("Ex2", serve_locally=True)
