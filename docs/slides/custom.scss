@@ -37,7 +37,7 @@ $presentation-heading-font: $font-family-sans-serif;
   padding-left: 1em;
 }
 
-.reveal .logo {
+.reveal .slide-logo {
   display: block;
   position: fixed;
   bottom: unset !important;
@@ -52,24 +52,19 @@ $presentation-heading-font: $font-family-sans-serif;
 .quote_author {
   font-size: 0.9em;
   font-style: normal;
-  margin-left: 2em;
-}
-
-////.reveal .slide p{
-////  padding-bottom: 0.4em;
-////}
-//
-
-.textcenter {
-  text-align: center;
+  margin-left: 3em;
 }
 
 .flow {
   font-weight: 900;
   background-image: url("https://juliomateoslangerak.github.io/OMERO-metrics/lawera_drosophila_sperm.jpg?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80");
   background-attachment: fixed;
-  -webkit-text-fill-color: transparent;
-  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent; /* This ensures the background image is visible inside the text */
+  -webkit-background-clip: text; /* For WebKit-based browsers */
+  -webkit-text-fill-color: transparent; /* For WebKit-based browsers */
+  -moz-background-clip: text; // For Firefox
+  -moz-text-fill-color: transparent; // For Firefox
   animation: animate 40s linear infinite;
 }
 

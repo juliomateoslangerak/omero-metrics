@@ -14,7 +14,6 @@ execute:
 format:
   revealjs:
     title: OMERO Metrics slides
-    style: flow
     theme: [simple, custom.scss]
     embed-resources: true
     margin: 0.15
@@ -30,7 +29,6 @@ format:
     controls-layout: bottom-right
     controls-tutorial: true
     overview: true
-    css: logo.css
 
     title-slide-attributes:
       data-background-image: ./media/logo_omero-metrics.png
