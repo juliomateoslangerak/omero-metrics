@@ -1,16 +1,31 @@
-# Why to monitor microscope performance? {.flow}
+# Why to monitor<br>microscope condition?
 
-Important text here
+Microscopes are very sophisticated optical instruments that take extremely precise measurements on biologic samples.
+Therefore, it is essential not only to keep them in good condition but also to know what their condition is.
+
+>Every careful measurement in science is always given with the probable error ...
+>every observer admits that he is likely wrong,
+>and knows about how much wrong he is likely to be.
+>
+><span class="quote_author">Bertrand Russell</span>
+
+# When to monitor<br>microscope condition?
+The monitoring of the microscope condition should be done at different moments to ensure
+that the equipment is performing according to a predefined specifications chart.
+
+- **During the installation** of new equipment to ensure the acceptance of the installation and establish the baseline for the future.
+- **During the service life** of the system:
+  - after the periodic maintenance is carried out either by the core facility staff or by an external service provider.
+  - when there is a doubt about the performance of the equipment.
+  - when there is a change in the environment of the equipment.
 
 # Why a new tool to monitor microscope performance? {.flow}
 
 Another important text here
 
-::: {.flow}
 # Current tools
 
 Current tools are not enough to monitor microscope performance.
-:::
 
 # What is missing?
 

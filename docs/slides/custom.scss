@@ -1,46 +1,40 @@
 /*-- scss:defaults --*/
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Rasa:ital,wght@0,300..700;1,300..700&display=swap');
 
 // fonts
+$font-family-sans-serif: "Inter Tight", serif;
+$font-family-monospace: "Courier Prime", sans-serif;
+
 $presentation-font-size-root: 32px;
-$font-family-monospace: 'Open Sans', sans-serif !default;
+$presentation-heading-font: $font-family-sans-serif;
 
-// colors
-$link-color: #e7ad52 !default;
-$link-color-hover: darken($link-color, 25%) !default;
-$code-block-font-size: 0.8em !default;
-
-// headings
-
-/*-- scss:rules --*/
-
-.reveal .slide blockquote {
-  border-left: 10px solid $link-color;
-  padding-left: 1em;
-  background-color: rgba(255, 255, 255, 0.85);
-  font-family: "Courier New";
-  font-size: 0.8em;
-  color: rgb(0, 0, 0);
-}
-.reveal .slide h1 {
+.reveal .slides h1 {
   text-align: center;
-  padding-bottom: 0.3em;
   font-size: 1.8em;
+  padding-bottom: 0.3em;
+  font-weight: 700;
 }
 
 .reveal .slide h2 {
   text-align: center;
+  font-size: 1.3em;
   padding-bottom: 0.25em;
-  font-size: 1.25em;
+  font-weight: 500;
 }
 
 .reveal .slide h3 {
   padding-bottom: 0.2em;
   font-size: 1.0em;
-
+  font-weight: 400;
 }
 
-.reveal .slide p{
-  padding-bottom: 0.4em;
+.reveal .slide blockquote {
+  font-family: "Rasa", serif;
+  font-style: italic;
+  font-size: 1.2em;
+  padding-left: 1em;
 }
 
 .reveal .logo {
@@ -55,17 +49,33 @@ $code-block-font-size: 0.8em !default;
   max-height: unset !important;
 }
 
+.quote_author {
+  font-size: 0.9em;
+  font-style: normal;
+  margin-left: 2em;
+}
+
+////.reveal .slide p{
+////  padding-bottom: 0.4em;
+////}
+//
+
 .textcenter {
   text-align: center;
 }
 
 .flow {
-  background-image: url("https://github.com/juliomateoslangerak/OMERO-metrics/blob/main/docs/slides/media/lawera_drosophila_sperm.jpg");
+  font-weight: 900;
+  background-image: url("https://juliomateoslangerak.github.io/OMERO-metrics/lawera_drosophila_sperm.jpg?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80");
   background-attachment: fixed;
   -webkit-text-fill-color: transparent;
   -webkit-background-clip: text;
-	animation: animate 40s linear infinite;
-	font-weight: 900;
+  animation: animate 40s linear infinite;
+}
+
+.flow_big {
+  @extend .flow;
+  font-size: 1.3em;
 }
 
 @keyframes animate {
