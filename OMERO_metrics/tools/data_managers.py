@@ -45,7 +45,6 @@ OBJECT_TO_DUMP_FUNCTION = {
     mm_schema.Table: dump.dump_table,
 }
 
-
 TEMPLATE_MAPPINGS = {
     "FieldIlluminationDataset": [
         "OMERO_metrics/omero_views/center_view_dataset_foi.html",
@@ -60,6 +59,52 @@ TEMPLATE_MAPPINGS = {
 }
 
 
+class ImageManager:
+    """This class is a unit of work that processes
+    data from an image (OMERO-metrics).
+    """
+
+    def __init__(self, conn: BlitzGateway, omero_image: ImageWrapper):
+        self._conn = conn
+        if isinstance(omero_image, DatasetWrapper):
+            self.omero_image = omero_image
+        else:
+            raise ValueError(
+                "datasets must be a ImageWrapper"
+            )
+        self.omero_image = omero_image
+        self.omero_dataset = self.omero_image.getParent()
+        self.data = None
+        self.dataset_manager = DatasetManager(self._conn, self.omero_dataset).load_data()
+        self.context = None
+        self.image_exist = None
+
+    def load_data(self, force_reload=True):
+        if force_reload or self.dataset_manager is None:
+            self.dataset_manager.load_data()
+            self.dataset_manager.is_processed()
+        else:
+            raise NotImplementedError(
+                "partial loading of data from OMERO is not yet implemented"
+            )
+
+    def visualize_data(self):
+        if self.dataset_manager.processed:
+            if self.mm_dataset.__class__.__name__ in TEMPLATE_MAPPINGS:
+                pass
+
+            else:
+                logger.warning("Unknown analysis type. Unable to visualize")
+                self.template = TEMPLATE_MAPPINGS.get("unknown_analysis")
+                self.context = {}
+        else:
+            logger.warning(
+                "Dataset has not been processed. Unable to visualize"
+            )
+            self.template = TEMPLATE_MAPPINGS.get("unprocessed_analysis")
+            self.context = {}
+
+
 class DatasetManager:
     """
     This class is a unit of work that processes
@@ -70,23 +115,17 @@ class DatasetManager:
     """
 
     def __init__(
-        self,
-        conn: BlitzGateway,
-        omero_object: Union[DatasetWrapper, ImageWrapper],
-        load_images=False
+            self,
+            conn: BlitzGateway,
+            omero_dataset: DatasetWrapper,
+            load_images=False
     ):
         self._conn = conn
-        if isinstance(omero_object, DatasetWrapper):
-            self.omero_dataset = omero_object
-            self.data_type = "Dataset"
-            self.omero_object = omero_object
-        elif isinstance(omero_object, ImageWrapper):
-            self.omero_dataset = omero_object.getParent()
-            self.data_type = "Image"
-            self.omero_object = omero_object
+        if isinstance(omero_dataset, DatasetWrapper):
+            self.omero_dataset = omero_dataset
         else:
             raise ValueError(
-                "datasets must be a DatasetWrapper or an ImageWrapper"
+                "datasets must be a DatasetWrapper"
             )
 
         self.omero_project = self.omero_dataset.getParent()
@@ -121,9 +160,9 @@ class DatasetManager:
 
     def load_analysis_config(self, force_reload=True):
         if (
-            not force_reload
-            and self.analysis_config
-            and self.analysis_config_id
+                not force_reload
+                and self.analysis_config
+                and self.analysis_config_id
         ):
             return
         else:
@@ -224,12 +263,12 @@ class DatasetManager:
     def visualize_data(self):
         if self.processed:
             if self.mm_dataset.__class__.__name__ in TEMPLATE_MAPPINGS:
-                index = DATA_TYPE_MAPPINGS.get(self.data_type)
+                index = DATA_TYPE_MAPPINGS.get("Dataset")
                 self.template = TEMPLATE_MAPPINGS.get(
                     self.mm_dataset.__class__.__name__
                 )[index]
-                self.context = load.load_dash_data(
-                    self._conn, self.mm_dataset, self.omero_object
+                self.context = load.load_dash_data_dataset(
+                    self._conn, self.mm_dataset
                 )
             else:
                 logger.warning("Unknown analysis type. Unable to visualize")

@@ -131,85 +131,47 @@ def load_dataset(
     return mm_dataset
 
 
-def load_dash_data(
+def load_dash_data_dataset(
     conn: BlitzGateway,
     dataset: mm_schema.MetricsDataset,
-    omero_object: Union[DatasetWrapper, ImageWrapper],
 ) -> dict:
     dash_context = {}
     if isinstance(dataset, FieldIlluminationDataset):
         title = "Field Illumination Dataset"
         dash_context["title"] = title
         df = get_images_intensity_profiles(dataset)
-        if isinstance(omero_object, DatasetWrapper):
-            dash_context["image"] = concatenate_images(
-                dataset.input.field_illumination_image
-            )
-            dash_context["intensity_profiles"] = get_all_intensity_profiles(
-                conn, df
-            )
-            dash_context["key_values_df"] = get_key_values(dataset.output)
-        elif isinstance(omero_object, ImageWrapper):
-            image = load_image(omero_object, load_array=True)
-            dash_context["image"] = image.array_data
-            channel_names = image.channel_series
-            ann_id = df[
-                (df["Field_illumination_image"] == int(omero_object.getId()))
-            ]["Intensity_profiles"].values[0]
-            roi_service = conn.getRoiService()
-            result = roi_service.findByImage(
-                int(omero_object.getId()), None, conn.SERVICE_OPTS
-            )
-            shapes_rectangle, shapes_line, shapes_point = get_rois_omero(
-                result
-            )
-            df_lines_omero = get_info_roi_lines(shapes_line)
-            df_rects_omero = get_info_roi_rectangles(shapes_rectangle)
-            df_points_omero = get_info_roi_points(shapes_point)
-            dash_context["df_lines"] = df_lines_omero
-            dash_context["df_rects"] = df_rects_omero
-            dash_context["df_points"] = df_points_omero
-            dash_context["channel_names"] = channel_names
-            dash_context["df_intensity_profiles"] = get_table_file_id(
-                conn, ann_id
-            )
+        dash_context["image"] = concatenate_images(
+            dataset.input.field_illumination_image
+        )
+        dash_context["intensity_profiles"] = get_all_intensity_profiles(
+            conn, df
+        )
+        dash_context["key_values_df"] = get_key_values(dataset.output)
     elif isinstance(dataset, PSFBeadsDataset):
         dash_context["title"] = "PSF Beads Dataset"
-        if isinstance(omero_object, DatasetWrapper):
-            image_psf = dataset.input.psf_beads_images[0]
-            dash_context["image"] = image_psf.array_data
-            dash_context["channel_names"] = image_psf.channel_series
+        image_psf = dataset.input.psf_beads_images[0]
+        dash_context["image"] = image_psf.array_data
+        dash_context["channel_names"] = image_psf.channel_series
 
-            dash_context["bead_properties_df"] = get_table_file_id(
-                conn,
-                dataset.output.bead_properties.data_reference.omero_object_id,
-            )
-            dash_context["bead_x_profiles_df"] = get_table_file_id(
-                conn,
-                dataset.output.bead_profiles_x.data_reference.omero_object_id,
-            )
-            dash_context["bead_y_profiles_df"] = get_table_file_id(
-                conn,
-                dataset.output.bead_profiles_y.data_reference.omero_object_id,
-            )
-            dash_context["bead_z_profiles_df"] = get_table_file_id(
-                conn,
-                dataset.output.bead_profiles_z.data_reference.omero_object_id,
-            )
-            dash_context["image_id"] = dataset.input.psf_beads_images[
-                0
-            ].data_reference.omero_object_id
-
-        elif isinstance(omero_object, ImageWrapper):
-            image = load_image(omero_object)
-            dash_context["image"] = image.array_data
-            channel_names = image.channel_series
-
-            dash_context["bead_properties_df"] = get_table_file_id(
-                conn,
-                dataset.output.bead_properties.data_reference.omero_object_id,
-            )
-            dash_context["channel_names"] = channel_names
+        dash_context["bead_properties_df"] = get_table_file_id(
+            conn,
+            dataset.output.bead_properties.data_reference.omero_object_id,
+        )
+        dash_context["bead_x_profiles_df"] = get_table_file_id(
+            conn,
+            dataset.output.bead_profiles_x.data_reference.omero_object_id,
+        )
+        dash_context["bead_y_profiles_df"] = get_table_file_id(
+            conn,
+            dataset.output.bead_profiles_y.data_reference.omero_object_id,
+        )
+        dash_context["bead_z_profiles_df"] = get_table_file_id(
+            conn,
+            dataset.output.bead_profiles_z.data_reference.omero_object_id,
+        )
+        dash_context["image_id"] = dataset.input.psf_beads_images[
+            0
+        ].data_reference.omero_object_id
     else:
         dash_context = {}
     return dash_context
