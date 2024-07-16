@@ -15,7 +15,6 @@ from . import load, dump, update, delete
 
 logger = logging.getLogger(__name__)
 
-DATA_TYPE_MAPPINGS = {"Dataset": 0, "Image": 1}
 
 ANALYSIS_MAPPINGS = {
     "analise_field_illumination": field_illumination.analise_field_illumination,
@@ -45,17 +44,23 @@ OBJECT_TO_DUMP_FUNCTION = {
     mm_schema.Table: dump.dump_table,
 }
 
-TEMPLATE_MAPPINGS = {
-    "FieldIlluminationDataset": [
-        "OMERO_metrics/omero_views/center_view_dataset_foi.html",
-        "OMERO_metrics/omero_views/center_view_image.html",
-    ],
-    "PSFBeadsDataset": [
-        "OMERO_metrics/omero_views/center_view_dataset_psf_beads.html",
-        "OMERO_metrics/omero_views/center_view_image_psf.html",
-    ],
+TEMPLATE_MAPPINGS_DATASET = {
+    "FieldIlluminationDataset": "OMERO_metrics/omero_views/center_view_dataset_foi.html",
+    "PSFBeadsDataset": "OMERO_metrics/omero_views/center_view_dataset_psf_beads.html",
     "unknown_analysis": "OMERO_metrics/omero_views/center_view_unknown_analysis_type.html",
     "unprocessed_analysis": "OMERO_metrics/omero_views/unprocessed_dataset.html",
+    "image_not_found": "OMERO_metrics/omero_views/image_not_found_dataset.html",
+}
+
+TEMPLATE_MAPPINGS_IMAGE = {
+    "FieldIlluminationDataset": {
+        "input": "OMERO_metrics/omero_views/center_view_image.html",
+        "output": "OMERO_metrics/omero_views/unprocessed_dataset.html",
+    },
+    "PSFBeadsDataset": {
+        "input": "OMERO_metrics/omero_views/center_view_image_psf.html",
+        "output": "OMERO_metrics/omero_views/unprocessed_dataset.html",
+    },
 }
 
 
@@ -66,21 +71,23 @@ class ImageManager:
 
     def __init__(self, conn: BlitzGateway, omero_image: ImageWrapper):
         self._conn = conn
-        if isinstance(omero_image, DatasetWrapper):
+        if isinstance(omero_image, ImageWrapper):
             self.omero_image = omero_image
         else:
-            raise ValueError(
-                "datasets must be a ImageWrapper"
-            )
+            raise ValueError("the object must be an ImageWrapper")
         self.omero_image = omero_image
         self.omero_dataset = self.omero_image.getParent()
-        self.data = None
-        self.dataset_manager = DatasetManager(self._conn, self.omero_dataset).load_data()
+        self.dataset_manager = DatasetManager(self._conn, self.omero_dataset)
         self.context = None
+        self.mm_image = None
         self.image_exist = None
+        self.image_index = None
+        self.image_location = None
+        self.template = None
 
     def load_data(self, force_reload=True):
-        if force_reload or self.dataset_manager is None:
+        if force_reload or self.mm_image is None:
+            self.mm_image = load.load_image(self.omero_image)
             self.dataset_manager.load_data()
             self.dataset_manager.is_processed()
         else:
@@ -90,18 +97,49 @@ class ImageManager:
 
     def visualize_data(self):
         if self.dataset_manager.processed:
-            if self.mm_dataset.__class__.__name__ in TEMPLATE_MAPPINGS:
-                pass
-
+            if (
+                self.dataset_manager.mm_dataset.__class__.__name__
+                in TEMPLATE_MAPPINGS_DATASET
+            ):
+                (
+                    self.image_exist,
+                    self.image_location,
+                    self.image_index,
+                ) = load.image_exist(
+                    self.omero_image.getId(), self.dataset_manager.mm_dataset
+                )
+                if self.image_exist:
+                    self.template = TEMPLATE_MAPPINGS_IMAGE.get(
+                        self.dataset_manager.mm_dataset.__class__.__name__
+                    )[self.image_location]
+                    self.context = load.load_dash_data_image(
+                        self._conn,
+                        self.dataset_manager.mm_dataset,
+                        self.mm_image,
+                        self.image_index,
+                        self.image_location,
+                    )
+                else:
+                    logger.warning(
+                        "Image does not exist in the dataset yaml file. Unable to visualize"
+                    )
+                    self.template = TEMPLATE_MAPPINGS_DATASET.get(
+                        "image_not_found"
+                    )
+                    self.context = {}
             else:
                 logger.warning("Unknown analysis type. Unable to visualize")
-                self.template = TEMPLATE_MAPPINGS.get("unknown_analysis")
+                self.template = TEMPLATE_MAPPINGS_DATASET.get(
+                    "unknown_analysis"
+                )
                 self.context = {}
         else:
             logger.warning(
                 "Dataset has not been processed. Unable to visualize"
             )
-            self.template = TEMPLATE_MAPPINGS.get("unprocessed_analysis")
+            self.template = TEMPLATE_MAPPINGS_DATASET.get(
+                "unprocessed_analysis"
+            )
             self.context = {}
 
 
@@ -115,18 +153,16 @@ class DatasetManager:
     """
 
     def __init__(
-            self,
-            conn: BlitzGateway,
-            omero_dataset: DatasetWrapper,
-            load_images=False
+        self,
+        conn: BlitzGateway,
+        omero_dataset: DatasetWrapper,
+        load_images=False,
     ):
         self._conn = conn
         if isinstance(omero_dataset, DatasetWrapper):
             self.omero_dataset = omero_dataset
         else:
-            raise ValueError(
-                "datasets must be a DatasetWrapper"
-            )
+            raise ValueError("datasets must be a DatasetWrapper")
 
         self.omero_project = self.omero_dataset.getParent()
         self.load_images = load_images
@@ -160,9 +196,9 @@ class DatasetManager:
 
     def load_analysis_config(self, force_reload=True):
         if (
-                not force_reload
-                and self.analysis_config
-                and self.analysis_config_id
+            not force_reload
+            and self.analysis_config
+            and self.analysis_config_id
         ):
             return
         else:
@@ -262,23 +298,26 @@ class DatasetManager:
 
     def visualize_data(self):
         if self.processed:
-            if self.mm_dataset.__class__.__name__ in TEMPLATE_MAPPINGS:
-                index = DATA_TYPE_MAPPINGS.get("Dataset")
-                self.template = TEMPLATE_MAPPINGS.get(
+            if self.mm_dataset.__class__.__name__ in TEMPLATE_MAPPINGS_DATASET:
+                self.template = TEMPLATE_MAPPINGS_DATASET.get(
                     self.mm_dataset.__class__.__name__
-                )[index]
+                )
                 self.context = load.load_dash_data_dataset(
                     self._conn, self.mm_dataset
                 )
             else:
                 logger.warning("Unknown analysis type. Unable to visualize")
-                self.template = TEMPLATE_MAPPINGS.get("unknown_analysis")
+                self.template = TEMPLATE_MAPPINGS_DATASET.get(
+                    "unknown_analysis"
+                )
                 self.context = {}
         else:
             logger.warning(
                 "Dataset has not been processed. Unable to visualize"
             )
-            self.template = TEMPLATE_MAPPINGS.get("unprocessed_analysis")
+            self.template = TEMPLATE_MAPPINGS_DATASET.get(
+                "unprocessed_analysis"
+            )
             self.context = {}
 
     def save_settings(self):

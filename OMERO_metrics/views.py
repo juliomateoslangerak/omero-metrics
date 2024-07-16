@@ -3,7 +3,7 @@ from .tools import load
 from omeroweb.webclient.decorators import login_required, render_response
 from .tools.data_preperation import *
 from .tools.load import *
-from .tools.data_managers import DatasetManager, ProjectManager
+from .tools.data_managers import DatasetManager, ProjectManager, ImageManager
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from .forms import UploadFileForm
@@ -127,12 +127,11 @@ def image_rois(request, image_id, conn=None, **kwargs):
 def center_viewer_image(request, image_id, conn=None, **kwargs):
     dash_context = request.session.get("django_plotly_dash", dict())
     image_wrapper = conn.getObject("Image", image_id)
-    dm = DatasetManager(conn, image_wrapper)
-    dm.load_data()
-    dm.is_processed()
-    dm.visualize_data()
-    dash_context["context"] = dm.context
-    template = dm.template
+    im = ImageManager(conn, image_wrapper)
+    im.load_data()
+    im.visualize_data()
+    dash_context["context"] = im.context
+    template = im.template
     request.session["django_plotly_dash"] = dash_context
     return render(request, template_name=template)
 
@@ -145,9 +144,9 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
     pr, unpr = [], []
     for dataset in pm.datasets:
         if dataset.processed:
-            pr.append(dataset.omero_object.getId())
+            pr.append(dataset.omero_dataset.getId())
         else:
-            unpr.append(dataset.omero_object.getId())
+            unpr.append(dataset.omero_dataset.getId())
     context = {
         "unprocessed_datasets": unpr,
         "processed_datasets": pr,

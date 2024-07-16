@@ -28,7 +28,6 @@ from .data_preperation import (
 logger = logging.getLogger(__name__)
 import collections
 import omero
-from typing import Union
 
 DATASET_TYPES = ["FieldIlluminationDataset", "PSFBeadsDataset"]
 
@@ -41,6 +40,35 @@ OUTPUT_DATA = {
     "FieldIlluminationDataset": "intensity_profiles",
     "PSFBeadsDataset": "psf_beads",
 }
+
+DATASET_IMAGES = {
+    "FieldIlluminationDataset": {
+        "input": ["field_illumination_image"],
+        "output": [],
+    },
+    "PSFBeadsDataset": {
+        "input": ["psf_beads_images"],
+        "output": ["average_bead"],
+    },
+}
+
+
+def image_exist(image_id, mm_dataset):
+    image_found = False
+    image_location = None
+    index = None
+    for k, v in DATASET_IMAGES[mm_dataset.__class__.__name__].items():
+        if v:
+            images_list = getattr(mm_dataset[k], v[0])
+            if not isinstance(images_list, list):
+                images_list = [images_list]
+            for i, image in enumerate(images_list):
+                if image_id == image.data_reference.omero_object_id:
+                    image_found = True
+                    image_location = k
+                    index = i
+                    break
+    return image_found, image_location, index
 
 
 def load_project(
@@ -92,8 +120,8 @@ def load_dataset(
         mm_dataset = mm_datasets[0]
     elif len(mm_datasets) > 1:
         logger.warning(
-            f"More than one dataset f"
-            f"ound in dataset {dataset.getId()}."
+            f"More than one dataset"
+            f"found in dataset {dataset.getId()}."
             f"Using the first one"
         )
         mm_dataset = mm_datasets[0]
@@ -131,6 +159,58 @@ def load_dataset(
     return mm_dataset
 
 
+def load_dash_data_image(
+    conn: BlitzGateway,
+    mm_dataset: mm_schema.MetricsDataset,
+    image: mm_schema.Image,
+    image_index: int,
+    image_location: str,
+) -> dict:
+    dash_context = {}
+    if (
+        isinstance(mm_dataset, FieldIlluminationDataset)
+        and image_location == "input"
+    ):
+        dash_context["image"] = image.array_data
+        dash_context["channel_names"] = image.channel_series
+        ann_id = mm_dataset.output.__dict__["intensity_profiles"][
+            image_index
+        ].data_reference.omero_object_id
+        roi_service = conn.getRoiService()
+        result = roi_service.findByImage(
+            int(image.data_reference.omero_object_id), None, conn.SERVICE_OPTS
+        )
+        shapes_rectangle, shapes_line, shapes_point = get_rois_omero(result)
+        df_lines_omero = get_info_roi_lines(shapes_line)
+        df_rects_omero = get_info_roi_rectangles(shapes_rectangle)
+        df_points_omero = get_info_roi_points(shapes_point)
+        dash_context["df_lines"] = df_lines_omero
+        dash_context["df_rects"] = df_rects_omero
+        dash_context["df_points"] = df_points_omero
+        dash_context["df_intensity_profiles"] = get_table_file_id(conn, ann_id)
+    elif (
+        isinstance(mm_dataset, FieldIlluminationDataset)
+        and image_location == "output"
+    ):
+        dash_context["image"] = image.array_data
+        dash_context["channel_names"] = image.channel_series
+    elif isinstance(mm_dataset, PSFBeadsDataset) and image_location == "input":
+        dash_context["image"] = image.array_data
+        dash_context["channel_names"] = image.channel_series
+        dash_context["bead_properties_df"] = get_table_file_id(
+            conn,
+            mm_dataset.output.bead_properties.data_reference.omero_object_id,
+        )
+    elif (
+        isinstance(mm_dataset, PSFBeadsDataset) and image_location == "output"
+    ):
+        dash_context["image"] = image.array_data
+        dash_context["channel_names"] = image.channel_series
+    else:
+        dash_context = {}
+    return dash_context
+
+
 def load_dash_data_dataset(
     conn: BlitzGateway,
     dataset: mm_schema.MetricsDataset,
@@ -140,18 +220,19 @@ def load_dash_data_dataset(
         title = "Field Illumination Dataset"
         dash_context["title"] = title
         df = get_images_intensity_profiles(dataset)
-        dash_context["image"] = concatenate_images(
+        dash_context["image"], channel_series = concatenate_images(
             dataset.input.field_illumination_image
         )
+        dash_context["channel_names"] = channel_series
         dash_context["intensity_profiles"] = get_all_intensity_profiles(
             conn, df
         )
         dash_context["key_values_df"] = get_key_values(dataset.output)
     elif isinstance(dataset, PSFBeadsDataset):
         dash_context["title"] = "PSF Beads Dataset"
-        image_psf = dataset.input.psf_beads_images[0]
-        dash_context["image"] = image_psf.array_data
-        dash_context["channel_names"] = image_psf.channel_series
+        image_psf, channel_series, = concatenate_images(dataset.input.psf_beads_images)
+        dash_context["image"] = image_psf
+        dash_context["channel_names"] = channel_series
 
         dash_context["bead_properties_df"] = get_table_file_id(
             conn,
@@ -328,13 +409,23 @@ def get_key_values(var: FieldIlluminationDataset.output) -> pd.DataFrame:
     return df
 
 
-def concatenate_images(images):
-    image_array_0 = images[0].array_data
-    result = image_array_0
-    for i in range(1, len(images)):
-        image_array = images[i].array_data
-        result = np.concatenate((result, image_array), axis=-1)
-    return result
+def concatenate_images(images: list):
+    if len(images) > 1:
+        image_array_0 = images[0].array_data
+        channels = images[0].channel_series
+        result = image_array_0
+        for i in range(1, len(images)):
+            image_array = images[i].array_data
+            channels.channels.extend(images[i].channel_series.channels)
+            result = np.concatenate((result, image_array), axis=-1)
+        return result, channels
+    elif len(images) == 1:
+        return images[0].array_data, images[0].channel_series
+    else:
+        return None
+
+
+
 
 
 def get_all_intensity_profiles(conn, data_df):

@@ -35,7 +35,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                     style={"color": primary_color},
                                 ),
                                 dcc.Dropdown(
-                                    value="Channel 0", id="channel_ddm"
+                                    id="channel_ddm"
                                 ),
                             ],
                             span="auto",
@@ -191,12 +191,12 @@ def dataset_callback_intensity_map(*args, **kwargs):
     df_intensity_profiles = kwargs["session_state"]["context"][
         "intensity_profiles"
     ]
-    labels = table.columns[1:].to_list()
-    imaaa = images[0, 0, :, :, int(args[0][-1])] / 255
+    channel_names = kwargs["session_state"]["context"]["channel_names"]
     channel_list = [
-        {"label": labels[i], "value": f"channel {i}"}
-        for i in range(len(labels))
+        {"label": c.name, "value": f"channel {i}"}
+        for i, c in enumerate(channel_names.channels)
     ]
+    imaaa = images[0, 0, :, :, int(args[0][-1])] / 255
     fig = px.imshow(
         imaaa,
         zmin=imaaa.min(),
