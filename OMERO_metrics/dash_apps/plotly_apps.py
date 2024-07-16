@@ -52,7 +52,12 @@ warning_app.layout = dmc.MantineProvider(
         dmc.Container(
             [
                 html.Div(id="input_void"),
-                dmc.Alert(title="Warning!", color="yellow", id="warning_msg"),
+                dmc.Alert(
+                    title="Warning!",
+                    color="yellow",
+                    id="warning_msg",
+                    style={"margin": "10px"},
+                ),
             ]
         )
     ]
