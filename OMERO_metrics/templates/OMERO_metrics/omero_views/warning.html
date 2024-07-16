@@ -1,0 +1,20 @@
+{% extends "webgateway/base/base_main.html" %}
+{%load plotly_dash%}
+{% block title %}Omero Metrics{% endblock %}
+
+
+{% block link %}
+{% endblock %}
+
+
+{% block script %}
+{% endblock %}
+
+{% block body %}
+
+<div  class="{%plotly_class name="WarningApp"%}">
+    {%plotly_app name="WarningApp" ratio=1%}
+</div>
+
+    <h1>{{ message }}</h1>
+{% endblock %}

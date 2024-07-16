@@ -133,7 +133,7 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
     dash_context["context"] = im.context
     template = im.template
     request.session["django_plotly_dash"] = dash_context
-    return render(request, template_name=template)
+    return render(request, template_name=template, context=im.context)
 
 
 @login_required()

@@ -15,7 +15,6 @@ from . import load, dump, update, delete
 
 logger = logging.getLogger(__name__)
 
-
 ANALYSIS_MAPPINGS = {
     "analise_field_illumination": field_illumination.analise_field_illumination,
     "analyse_psf_beads": psf_beads.analyse_psf_beads,
@@ -47,9 +46,6 @@ OBJECT_TO_DUMP_FUNCTION = {
 TEMPLATE_MAPPINGS_DATASET = {
     "FieldIlluminationDataset": "OMERO_metrics/omero_views/center_view_dataset_foi.html",
     "PSFBeadsDataset": "OMERO_metrics/omero_views/center_view_dataset_psf_beads.html",
-    "unknown_analysis": "OMERO_metrics/omero_views/center_view_unknown_analysis_type.html",
-    "unprocessed_analysis": "OMERO_metrics/omero_views/unprocessed_dataset.html",
-    "image_not_found": "OMERO_metrics/omero_views/image_not_found_dataset.html",
 }
 
 TEMPLATE_MAPPINGS_IMAGE = {
@@ -62,6 +58,12 @@ TEMPLATE_MAPPINGS_IMAGE = {
         "output": "OMERO_metrics/omero_views/unprocessed_dataset.html",
     },
 }
+
+
+def warning_message(msg):
+    dash_context = {"message": msg}
+    template = "OMERO_metrics/omero_views/warning.html"
+    return dash_context, template
 
 
 class ImageManager:
@@ -120,27 +122,17 @@ class ImageManager:
                         self.image_location,
                     )
                 else:
-                    logger.warning(
-                        "Image does not exist in the dataset yaml file. Unable to visualize"
-                    )
-                    self.template = TEMPLATE_MAPPINGS_DATASET.get(
-                        "image_not_found"
-                    )
-                    self.context = {}
+                    message = "Image does not exist in the dataset yaml file. Unable to visualize"
+                    logger.warning(message)
+                    self.context, self.template = warning_message(message)
             else:
-                logger.warning("Unknown analysis type. Unable to visualize")
-                self.template = TEMPLATE_MAPPINGS_DATASET.get(
-                    "unknown_analysis"
-                )
-                self.context = {}
+                message = "Unknown analysis type. Unable to visualize"
+                logger.warning(message)
+                self.context, self.template = warning_message(message)
         else:
-            logger.warning(
-                "Dataset has not been processed. Unable to visualize"
-            )
-            self.template = TEMPLATE_MAPPINGS_DATASET.get(
-                "unprocessed_analysis"
-            )
-            self.context = {}
+            message = "Dataset has not been processed. Unable to visualize"
+            logger.warning(message)
+            self.context, self.template = warning_message(message)
 
 
 class DatasetManager:
@@ -306,19 +298,14 @@ class DatasetManager:
                     self._conn, self.mm_dataset
                 )
             else:
-                logger.warning("Unknown analysis type. Unable to visualize")
-                self.template = TEMPLATE_MAPPINGS_DATASET.get(
-                    "unknown_analysis"
-                )
-                self.context = {}
+                message = "Unknown analysis type. Unable to visualize"
+                logger.warning(message)
+                self.context, self.template = warning_message(message)
         else:
-            logger.warning(
-                "Dataset has not been processed. Unable to visualize"
-            )
-            self.template = TEMPLATE_MAPPINGS_DATASET.get(
-                "unprocessed_analysis"
-            )
-            self.context = {}
+            message = "Dataset has not been processed. Unable to visualize"
+            logger.warning(message)
+            logger.warning(message)
+            self.context, self.template = warning_message(message)
 
     def save_settings(self):
         pass

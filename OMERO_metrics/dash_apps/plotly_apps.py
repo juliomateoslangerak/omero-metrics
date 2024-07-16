@@ -44,9 +44,29 @@ import dash_mantine_components as dmc
 df = pd.read_csv(
     "https://raw.githubusercontent.com/plotly/datasets/master/gapminderDataFiveYear.csv"
 )
-# print(df)
 
-# pylint: disable=too-many-arguments, unused-argument, unused-variable
+warning_app = DjangoDash("WarningApp")
+
+warning_app.layout = dmc.MantineProvider(
+    [
+        dmc.Container(
+            [
+                html.Div(id="input_void"),
+                dmc.Alert(title="Warning!", color="yellow", id="warning_msg"),
+            ]
+        )
+    ]
+)
+
+
+@warning_app.expanded_callback(
+    dash.dependencies.Output("warning_msg", "children"),
+    [dash.dependencies.Input("input_void", "value")],
+)
+def callback_warning(*args, **kwargs):
+    message = kwargs["session_state"]["context"]["message"]
+    return [message]
+
 
 app = DjangoDash("SimpleExample")
 
@@ -77,7 +97,6 @@ app.clientside_callback(
     dash.dependencies.Output("blank-output", "children"),
     [dash.dependencies.Input("tabs-example", "value")],
 )
-
 
 a2 = DjangoDash("Ex2", serve_locally=True)
 
