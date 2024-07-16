@@ -230,7 +230,10 @@ def load_dash_data_dataset(
         dash_context["key_values_df"] = get_key_values(dataset.output)
     elif isinstance(dataset, PSFBeadsDataset):
         dash_context["title"] = "PSF Beads Dataset"
-        image_psf, channel_series, = concatenate_images(dataset.input.psf_beads_images)
+        (
+            image_psf,
+            channel_series,
+        ) = concatenate_images(dataset.input.psf_beads_images)
         dash_context["image"] = image_psf
         dash_context["channel_names"] = channel_series
 
@@ -423,9 +426,6 @@ def concatenate_images(images: list):
         return images[0].array_data, images[0].channel_series
     else:
         return None
-
-
-
 
 
 def get_all_intensity_profiles(conn, data_df):

@@ -31,7 +31,7 @@ import pandas as pd
 from django.core.cache import cache
 from django.utils.translation import gettext, gettext_lazy
 import dash
-from dash import Dash, dcc, html, Input, Output, callback,clientside_callback
+from dash import Dash, dcc, html, Input, Output, callback, clientside_callback
 from dash.dependencies import MATCH, ALL
 import plotly.graph_objs as go
 import dpd_components as dpd
@@ -50,13 +50,19 @@ df = pd.read_csv(
 
 app = DjangoDash("SimpleExample")
 
-app.layout = html.Div([
-    html.Div(id='blank-output'),
-    dcc.Tabs(id='tabs-example', value='tab-1', children=[
-        dcc.Tab(label='Tab one', value='tab-1'),
-        dcc.Tab(label='Tab two', value='tab-2'),
-    ]),
-])
+app.layout = html.Div(
+    [
+        html.Div(id="blank-output"),
+        dcc.Tabs(
+            id="tabs-example",
+            value="tab-1",
+            children=[
+                dcc.Tab(label="Tab one", value="tab-1"),
+                dcc.Tab(label="Tab two", value="tab-2"),
+            ],
+        ),
+    ]
+)
 
 app.clientside_callback(
     """
@@ -68,10 +74,9 @@ app.clientside_callback(
         }
     }
     """,
-    dash.dependencies.Output('blank-output', 'children'),
-    [dash.dependencies.Input('tabs-example', 'value')]
+    dash.dependencies.Output("blank-output", "children"),
+    [dash.dependencies.Input("tabs-example", "value")],
 )
-
 
 
 a2 = DjangoDash("Ex2", serve_locally=True)

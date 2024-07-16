@@ -35,7 +35,6 @@ dash_app_image.layout = dmc.MantineProvider(
                             ],
                             span="auto",
                         ),
-
                     ],
                     style={
                         "margin-top": "20px",
@@ -105,193 +104,260 @@ def callback_test4(*args, **kwargs):
     ]
     fig = go.Figure()
     fig.add_trace(go.Surface(z=imaaa.tolist(), colorscale="hot"))
-    fig.update_scenes(
-        aspectratio=dict(x=1, y=1, z=0.7),
-        aspectmode="manual"
-    )
+    fig.update_scenes(aspectratio=dict(x=1, y=1, z=0.7), aspectmode="manual")
     # Add dropdowns
     fig.update_layout(
         height=imaaa.shape[0] + 150,
         autosize=False,
         margin=dict(t=30, b=30, l=0, r=0),
     )
-    corners = [dict(
-        type="rect",
-        x0=row.X,
-        y0=row.Y,
-        x1=row.X + row.W,
-        y1=row.Y + row.H,
-        xref="x",
-        yref="y",
-        line=dict(
-            color="RoyalBlue",
-            width=3,
-        ))
+    corners = [
+        dict(
+            type="rect",
+            x0=row.X,
+            y0=row.Y,
+            x1=row.X + row.W,
+            y1=row.Y + row.H,
+            xref="x",
+            yref="y",
+            line=dict(
+                color="RoyalBlue",
+                width=3,
+            ),
+        )
         for i, row in df_rects.iterrows()
     ]
-    lines = [dict(type="line",
-                  name=str(row.ROI),
-                  showlegend=True,
-                  editable=True,
-                  x0=row.X1,
-                  y0=row.Y1,
-                  x1=row.X2,
-                  y1=row.Y2,
-                  xref="x",
-                  yref="y",
-                  line=dict(
-                      color="Green",
-                      width=1,
-                      dash="dot",
-                  ), ) for i, row in df_lines.iterrows()]
+    lines = [
+        dict(
+            type="line",
+            name=str(row.ROI),
+            showlegend=True,
+            editable=True,
+            x0=row.X1,
+            y0=row.Y1,
+            x1=row.X2,
+            y1=row.Y2,
+            xref="x",
+            yref="y",
+            line=dict(
+                color="Green",
+                width=1,
+                dash="dot",
+            ),
+        )
+        for i, row in df_lines.iterrows()
+    ]
     button_layer_1_height = 1.08
     fig.update_layout(
         updatemenus=[
             dict(
-                buttons=list([
-                    dict(
-                        args=["colorscale", "Hot"],
-                        label="Hot",
-                        method="restyle"
-                    ),
-                    dict(
-                        args=["colorscale", "Viridis"],
-                        label="Viridis",
-                        method="restyle"
-                    ),
-                    dict(
-                        args=["colorscale", "Cividis"],
-                        label="Cividis",
-                        method="restyle"
-                    ),
-                    dict(
-                        args=["colorscale", "Blues"],
-                        label="Blues",
-                        method="restyle"
-                    ),
-                    dict(
-                        args=["colorscale", "Greens"],
-                        label="Greens",
-                        method="restyle"
-                    ),
-                ]),
+                buttons=list(
+                    [
+                        dict(
+                            args=["colorscale", "Hot"],
+                            label="Hot",
+                            method="restyle",
+                        ),
+                        dict(
+                            args=["colorscale", "Viridis"],
+                            label="Viridis",
+                            method="restyle",
+                        ),
+                        dict(
+                            args=["colorscale", "Cividis"],
+                            label="Cividis",
+                            method="restyle",
+                        ),
+                        dict(
+                            args=["colorscale", "Blues"],
+                            label="Blues",
+                            method="restyle",
+                        ),
+                        dict(
+                            args=["colorscale", "Greens"],
+                            label="Greens",
+                            method="restyle",
+                        ),
+                    ]
+                ),
                 direction="down",
                 pad={"r": 10, "t": 10},
                 showactive=True,
                 x=0.1,
                 xanchor="left",
                 y=button_layer_1_height,
-                yanchor="top"
+                yanchor="top",
             ),
             dict(
-                buttons=list([
-                    dict(
-                        args=["reversescale", False],
-                        label="False",
-                        method="restyle"
-                    ),
-                    dict(
-                        args=["reversescale", True],
-                        label="True",
-                        method="restyle"
-                    )
-                ]),
+                buttons=list(
+                    [
+                        dict(
+                            args=["reversescale", False],
+                            label="False",
+                            method="restyle",
+                        ),
+                        dict(
+                            args=["reversescale", True],
+                            label="True",
+                            method="restyle",
+                        ),
+                    ]
+                ),
                 direction="down",
                 pad={"r": 10, "t": 10},
                 showactive=True,
                 x=0.30,
                 xanchor="left",
                 y=button_layer_1_height,
-                yanchor="top"
+                yanchor="top",
             ),
             dict(
-                buttons=list([
-                    dict(
-                        args=[{"contours.showlines": False, "type": "contour"}],
-                        label="Hide lines",
-                        method="restyle"
-                    ),
-                    dict(
-                        args=[{"contours.showlines": True, "type": "contour", "contours.showlabels": True,
-                               "contours.labelfont.size": 12, "contours.labelfont.color": "white"}],
-                        label="Show lines",
-                        method="restyle"
-                    ),
-                    dict(
-                        args=[{"type": "heatmap"}],
-                        label="Heatmap",
-                        method="restyle"
-                    ),
-                ]),
+                buttons=list(
+                    [
+                        dict(
+                            args=[
+                                {
+                                    "contours.showlines": False,
+                                    "type": "contour",
+                                }
+                            ],
+                            label="Hide lines",
+                            method="restyle",
+                        ),
+                        dict(
+                            args=[
+                                {
+                                    "contours.showlines": True,
+                                    "type": "contour",
+                                    "contours.showlabels": True,
+                                    "contours.labelfont.size": 12,
+                                    "contours.labelfont.color": "white",
+                                }
+                            ],
+                            label="Show lines",
+                            method="restyle",
+                        ),
+                        dict(
+                            args=[{"type": "heatmap"}],
+                            label="Heatmap",
+                            method="restyle",
+                        ),
+                    ]
+                ),
                 direction="down",
                 pad={"r": 10, "t": 10},
                 showactive=True,
                 x=0.50,
                 xanchor="left",
                 y=button_layer_1_height,
-                yanchor="top"
+                yanchor="top",
             ),
-            dict(buttons=list([
-                dict(label="None",
-                     method="relayout",
-                     args=["shapes", []]),
-
-                dict(label="Corners",
-                     method="relayout",
-                     args=["shapes", corners]),
-                dict(label="Lines",
-                        method="relayout",
-                        args=["shapes", lines]),
-
-                dict(label="All",
-                     method="relayout",
-                     args=["shapes", corners + lines
-                           ]),
-            ]),
+            dict(
+                buttons=list(
+                    [
+                        dict(
+                            label="None",
+                            method="relayout",
+                            args=["shapes", []],
+                        ),
+                        dict(
+                            label="Corners",
+                            method="relayout",
+                            args=["shapes", corners],
+                        ),
+                        dict(
+                            label="Lines",
+                            method="relayout",
+                            args=["shapes", lines],
+                        ),
+                        dict(
+                            label="All",
+                            method="relayout",
+                            args=["shapes", corners + lines],
+                        ),
+                    ]
+                ),
                 direction="down",
-                pad={"r": 10, "t": 10,},
+                pad={
+                    "r": 10,
+                    "t": 10,
+                },
                 showactive=True,
                 x=0.70,
                 xanchor="left",
                 y=button_layer_1_height,
-                yanchor="top"
+                yanchor="top",
             ),
             dict(
-                buttons=list([
-
-                    dict(
-                        args=["type", "heatmap"],
-                        label="Heatmap",
-                        method="restyle"
-                    ),
-                    dict(
-                        args=["type", "surface"],
-                        label="3D Surface",
-                        method="restyle"
-                    ),
-                ]),
+                buttons=list(
+                    [
+                        dict(
+                            args=["type", "heatmap"],
+                            label="Heatmap",
+                            method="restyle",
+                        ),
+                        dict(
+                            args=["type", "surface"],
+                            label="3D Surface",
+                            method="restyle",
+                        ),
+                    ]
+                ),
                 direction="down",
                 pad={"r": 10, "t": 10},
                 showactive=True,
                 x=0.87,
                 xanchor="left",
                 y=button_layer_1_height,
-                yanchor="top"
+                yanchor="top",
             ),
-
         ]
     )
     fig.update_layout(
         annotations=[
-            dict(text="colorscale", x=0, xref="paper", y=1.06, yref="paper",
-                 align="left", showarrow=False),
-            dict(text="Reverse<br>Colorscale", x=0.23, xref="paper", y=1.07,
-                 yref="paper", showarrow=False),
-            dict(text="Lines", x=0.46, xref="paper", y=1.06, yref="paper",
-                 showarrow=False),
-            dict(text='Shapes', x=0.64, xref='paper', y=1.06, yref='paper',showarrow=False),
-            dict(text="Type", x=0.85, xref="paper", y=1.06, yref="paper",showarrow=False)
-        ])
+            dict(
+                text="colorscale",
+                x=0,
+                xref="paper",
+                y=1.06,
+                yref="paper",
+                align="left",
+                showarrow=False,
+            ),
+            dict(
+                text="Reverse<br>Colorscale",
+                x=0.23,
+                xref="paper",
+                y=1.07,
+                yref="paper",
+                showarrow=False,
+            ),
+            dict(
+                text="Lines",
+                x=0.46,
+                xref="paper",
+                y=1.06,
+                yref="paper",
+                showarrow=False,
+            ),
+            dict(
+                text="Shapes",
+                x=0.64,
+                xref="paper",
+                y=1.06,
+                yref="paper",
+                showarrow=False,
+            ),
+            dict(
+                text="Type",
+                x=0.85,
+                xref="paper",
+                y=1.06,
+                yref="paper",
+                showarrow=False,
+            ),
+        ]
+    )
 
     return fig, channel_list
 
