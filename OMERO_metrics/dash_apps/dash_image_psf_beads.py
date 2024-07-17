@@ -4,6 +4,8 @@ from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 from ..tools.data_preperation import crop_bead_index, image_3d_chart
 import plotly.express as px
+from .utilities.dash_utilities import image_heatmap_setup
+import numpy as np
 
 app = DjangoDash("PSF_Beads_image")
 
@@ -21,8 +23,7 @@ app.layout = dmc.MantineProvider(
                                 style={"margin-top": "20px", "fontSize": 40},
                             ),
                         ),
-                        dcc.Dropdown(value="Channel 0", id="channel_ddm_psf"),
-                        dcc.Dropdown(value="Bead 0", id="bead_ddm_psf"),
+                        dcc.Dropdown(value="channel 0", id="channel_ddm_psf", clearable=False),
                         dcc.Graph(
                             id="image",
                             figure={},
@@ -51,22 +52,19 @@ app.layout = dmc.MantineProvider(
 @app.expanded_callback(
     dash.dependencies.Output("image", "figure"),
     dash.dependencies.Output("channel_ddm_psf", "options"),
-    dash.dependencies.Output("bead_ddm_psf", "options"),
     [
         dash.dependencies.Input("channel_ddm_psf", "value"),
-        dash.dependencies.Input("bead_ddm_psf", "value"),
     ],
 )
 def update_image(*args, **kwargs):
-    global image_bead
     image_omero = kwargs["session_state"]["context"]["image"]
     channel_index = int(args[0].split(" ")[-1])
+    min_distance = kwargs["session_state"]["context"]["min_distance"]
     channel_names = kwargs["session_state"]["context"]["channel_names"]
     channel_options = [
         {"label": c.name, "value": f"channel {i}"}
         for i, c in enumerate(channel_names.channels)
     ]
-    bead_index = int(args[1].split(" ")[-1])
     bead_properties_df = kwargs["session_state"]["context"][
         "bead_properties_df"
     ]
@@ -82,29 +80,9 @@ def update_image(*args, **kwargs):
             "center_x",
         ]
     ].copy()
-    bead_options = [
-        {"label": f"Bead {i}", "value": f"Bead {i}"}
-        for i in df_beads_location["bead_id"]
-    ]
-    bead = df_beads_location[df_beads_location["bead_id"] == bead_index].copy()
+
     stack = image_omero[0, :, :, :, channel_index]
-    x0, xf, y0, yf, _ = crop_bead_index(bead, 20, stack)
-    image_bead = stack[:, y0:yf, x0:xf]
-    fig = image_3d_chart(image_bead)
-    fig = fig.update_layout(scene=dict(xaxis_showspikes=False))
-    return fig, channel_options, bead_options
+    stack_z = np.max(stack, axis=0)
+    fig = image_heatmap_setup(stack_z, df_beads_location, min_distance=min_distance)
+    return fig, channel_options
 
-
-@app.expanded_callback(
-    dash.dependencies.Output("projection_graph", "figure"),
-    [
-        dash.dependencies.Input("image", "clickData"),
-    ],
-    prevent_initial_call=True,
-)
-def projection_callback(*args, **kwargs):
-    points = args[0]["points"][0]
-    proj_click = px.imshow(
-        image_bead[int(points["x"]), : int(points["y"]), : int(points["z"])]
-    )
-    return proj_click

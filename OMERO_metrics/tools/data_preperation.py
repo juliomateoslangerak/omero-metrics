@@ -11,6 +11,12 @@ from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import pandas as pd
 
+PROFILES_COLORS = {
+    "center_vertival": "red",
+    "center_horizontal": "blue",
+    "leftBottom_to_rightTop" : "green",
+    "leftTop_to_rightBottom" :  "yellow",
+}
 
 # This function is no longer needed
 def get_intensity_profile(imaaa):
@@ -133,6 +139,11 @@ def get_rois_omero(result):
     return shapes_rectangle, shapes_line, shapes_point
 
 
+def add_colors_intensity_profile(df: pd.DataFrame) -> pd.DataFrame:
+    df.loc[:, "color"] = [PROFILES_COLORS[i] for i in df.NAME]
+    return df
+
+
 def get_info_roi_points(shape_dict):
     data = [
         [key, int(value["x"]), int(value["y"]), int(value["channel"])]
@@ -144,19 +155,19 @@ def get_info_roi_points(shape_dict):
 
 def get_info_roi_lines(shape_dict):
     data = [
-        [key, value["x1"], value["y1"], value["x2"], value["y2"]]
+        [key, value["x1"], value["y1"], value["x2"], value["y2"], value["textValue"]]
         for key, value in shape_dict.items()
     ]
-    df = pd.DataFrame(data, columns=["ROI", "X1", "Y1", "X2", "Y2"])
+    df = pd.DataFrame(data, columns=["ROI", "X1", "Y1", "X2", "Y2", "NAME"])
     return df
 
 
 def get_info_roi_rectangles(shape_dict):
     data = [
-        [key, value["x"], value["y"], value["w"], value["h"]]
+        [key, value["x"], value["y"], value["w"], value["h"], value["textValue"]]
         for key, value in shape_dict.items()
     ]
-    df = pd.DataFrame(data, columns=["ROI", "X", "Y", "W", "H"])
+    df = pd.DataFrame(data, columns=["ROI", "X", "Y", "W", "H", "NAME"])
     return df
 
 

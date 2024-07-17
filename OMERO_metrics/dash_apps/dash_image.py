@@ -140,7 +140,7 @@ def callback_test4(*args, **kwargs):
             xref="x",
             yref="y",
             line=dict(
-                color="Green",
+                color="RoyalBlue",
                 width=1,
                 dash="dot",
             ),
@@ -381,5 +381,5 @@ def callback_test5(*args, **kwargs):
     )
     df_profile.columns = df_profile.columns.str.replace("_", " ", regex=True)
     df_profile.columns = df_profile.columns.str.title()
-    fig = px.line(df_profile)
+    fig = px.line(df_profile, x=df_profile.index, y=df_profile.columns, title="Intensity Profile", labels={"index": "Pixel"})
     return fig

@@ -29,8 +29,7 @@ app.layout = dmc.MantineProvider(
                                     "Select Channel",
                                     style={"color": "#63aa47"},
                                 ),
-                                dcc.Dropdown(
-                                    value="Channel 0", id="channel_psf"
+                                dcc.Dropdown(id="channel_psf", value="channel 0", clearable=False
                                 ),
                             ],
                             span="auto",
@@ -67,7 +66,7 @@ app.layout = dmc.MantineProvider(
                         dmc.GridCol(
                             [
                                 dmc.Title(
-                                    "Key Values", c="#189A35", size="h3", mb=10
+                                    "Key Measurements", c="#189A35", size="h3", mb=10
                                 ),
                                 dash_table.DataTable(
                                     id="key_values_psf",
@@ -170,6 +169,12 @@ app.layout = dmc.MantineProvider(
 def func_psf_callback(*args, **kwargs):
     channel_index = int(args[0].split(" ")[-1])
     image_o = kwargs["session_state"]["context"]["image"]
+    km = kwargs["session_state"]["context"]["bead_km_df"]
+    km = km.sort_values(by='channel_nr', ascending=
+    True).reset_index(drop=True)
+    km = km.pivot_table(columns='channel_name')
+    km = km.reset_index(drop=False, names='Measurement')
+
     channel_names = kwargs["session_state"]["context"]["channel_names"]
     channel_list_psf = [
         {"label": c.name, "value": f"channel {i}"}
@@ -179,6 +184,9 @@ def func_psf_callback(*args, **kwargs):
     bead_properties_df = kwargs["session_state"]["context"][
         "bead_properties_df"
     ]
+    channel_name = channel_names.channels[channel_index].name
+    if channel_name in km.columns:
+       km = km[['Measurement', channel_name]]
     df_properties_channel = bead_properties_df[
         bead_properties_df["channel_nr"] == channel_index
     ].copy()
@@ -233,7 +241,7 @@ def func_psf_callback(*args, **kwargs):
     return (
         fig_image_z,
         channel_list_psf,
-        df_properties_channel.to_dict("records"),
+        km.to_dict("records"),
     )
 
 
@@ -271,7 +279,7 @@ def callback_mip(*args, **kwargs):
             "center_y",
         ]
     ].copy()
-    min_dist = 20
+    min_dist = kwargs["session_state"]["context"]["min_distance"]
     if point["curveNumber"] == 1:
         bead_index = point["pointNumber"]
         title = (
