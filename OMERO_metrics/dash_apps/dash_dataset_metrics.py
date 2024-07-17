@@ -34,9 +34,11 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                     "Select Channel",
                                     style={"color": primary_color},
                                 ),
-                                dcc.Dropdown(id="channel_ddm", value="channel 0", clearable=False
-),
-
+                                dcc.Dropdown(
+                                    id="channel_ddm",
+                                    value="channel 0",
+                                    clearable=False,
+                                ),
                             ],
                             span="auto",
                         ),

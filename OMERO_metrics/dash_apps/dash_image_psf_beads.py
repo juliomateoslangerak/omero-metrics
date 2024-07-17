@@ -23,7 +23,11 @@ app.layout = dmc.MantineProvider(
                                 style={"margin-top": "20px", "fontSize": 40},
                             ),
                         ),
-                        dcc.Dropdown(value="channel 0", id="channel_ddm_psf", clearable=False),
+                        dcc.Dropdown(
+                            value="channel 0",
+                            id="channel_ddm_psf",
+                            clearable=False,
+                        ),
                         dcc.Graph(
                             id="image",
                             figure={},
@@ -83,6 +87,7 @@ def update_image(*args, **kwargs):
 
     stack = image_omero[0, :, :, :, channel_index]
     stack_z = np.max(stack, axis=0)
-    fig = image_heatmap_setup(stack_z, df_beads_location, min_distance=min_distance)
+    fig = image_heatmap_setup(
+        stack_z, df_beads_location, min_distance=min_distance
+    )
     return fig, channel_options
-

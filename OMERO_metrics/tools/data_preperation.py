@@ -14,9 +14,10 @@ import pandas as pd
 PROFILES_COLORS = {
     "center_vertival": "red",
     "center_horizontal": "blue",
-    "leftBottom_to_rightTop" : "green",
-    "leftTop_to_rightBottom" :  "yellow",
+    "leftBottom_to_rightTop": "green",
+    "leftTop_to_rightBottom": "yellow",
 }
+
 
 # This function is no longer needed
 def get_intensity_profile(imaaa):
@@ -155,7 +156,14 @@ def get_info_roi_points(shape_dict):
 
 def get_info_roi_lines(shape_dict):
     data = [
-        [key, value["x1"], value["y1"], value["x2"], value["y2"], value["textValue"]]
+        [
+            key,
+            value["x1"],
+            value["y1"],
+            value["x2"],
+            value["y2"],
+            value["textValue"],
+        ]
         for key, value in shape_dict.items()
     ]
     df = pd.DataFrame(data, columns=["ROI", "X1", "Y1", "X2", "Y2", "NAME"])
@@ -164,7 +172,14 @@ def get_info_roi_lines(shape_dict):
 
 def get_info_roi_rectangles(shape_dict):
     data = [
-        [key, value["x"], value["y"], value["w"], value["h"], value["textValue"]]
+        [
+            key,
+            value["x"],
+            value["y"],
+            value["w"],
+            value["h"],
+            value["textValue"],
+        ]
         for key, value in shape_dict.items()
     ]
     df = pd.DataFrame(data, columns=["ROI", "X", "Y", "W", "H", "NAME"])

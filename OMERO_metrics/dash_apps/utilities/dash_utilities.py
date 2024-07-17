@@ -6,7 +6,11 @@ import numpy as np
 
 def image_heatmap_setup(image, df, min_distance):
     fig = go.Figure()
-    fig.add_trace(go.Heatmap(z=image.tolist(), colorscale="hot", hovertemplate="<extra></extra>"))
+    fig.add_trace(
+        go.Heatmap(
+            z=image.tolist(), colorscale="hot", hovertemplate="<extra></extra>"
+        )
+    )
 
     # Add dropdowns
     fig.update_layout(
@@ -15,30 +19,30 @@ def image_heatmap_setup(image, df, min_distance):
         margin=dict(t=30, b=30, l=0, r=0),
     )
     color_map = {"Yes": "red", "No": "yellow"}
-    fig.add_trace(go.Scatter(
-        y=df["center_y"],
-        x=df["center_x"],
-        mode="markers",
-        name="Beads Locations",
-        marker=dict(
-            size=10,
-            color=df["considered_axial_edge"].map(
-                color_map
+    fig.add_trace(
+        go.Scatter(
+            y=df["center_y"],
+            x=df["center_x"],
+            mode="markers",
+            name="Beads Locations",
+            marker=dict(
+                size=10,
+                color=df["considered_axial_edge"].map(color_map),
+                opacity=0.3,
             ),
-            opacity=0.3,
-        ),
-        text=df["channel_nr"],
-        customdata=np.stack(
-            (
-                df["bead_id"],
-                df["considered_axial_edge"],
+            text=df["channel_nr"],
+            customdata=np.stack(
+                (
+                    df["bead_id"],
+                    df["considered_axial_edge"],
+                ),
+                axis=-1,
             ),
-            axis=-1,
-        ),
-        hovertemplate="<b>Bead Number:</b>  %{customdata[0]} <br>"
-                      + "<b>Channel Number:</b>  %{text} <br>"
-                      + "<b>Considered Axial Edge:</b> %{customdata[1]} <br><extra></extra>",
-    ))
+            hovertemplate="<b>Bead Number:</b>  %{customdata[0]} <br>"
+            + "<b>Channel Number:</b>  %{text} <br>"
+            + "<b>Considered Axial Edge:</b> %{customdata[1]} <br><extra></extra>",
+        )
+    )
     corners = [
         dict(
             type="rect",
@@ -173,7 +177,7 @@ def image_heatmap_setup(image, df, min_distance):
                             label="Corners",
                             method="relayout",
                             args=["shapes", corners],
-                        )
+                        ),
                     ]
                 ),
                 direction="down",
@@ -212,19 +216,31 @@ def image_heatmap_setup(image, df, min_distance):
             ),
             dict(
                 active=0,
-                buttons=list([
-                    dict(label="Beads Location",
-                         method="update",
-                         args=[{"visible": [True, True]},
-                               "type", "heatmap"]),
-                    dict(label="None",
-                         method="update",
-                         args=[{"visible": [True, False]},
-                               {"title": "Beads Location Off",
-                                "annotations": []}]),
-
-                ]),
-            )
+                buttons=list(
+                    [
+                        dict(
+                            label="Beads Location",
+                            method="update",
+                            args=[
+                                {"visible": [True, True]},
+                                "type",
+                                "heatmap",
+                            ],
+                        ),
+                        dict(
+                            label="None",
+                            method="update",
+                            args=[
+                                {"visible": [True, False]},
+                                {
+                                    "title": "Beads Location Off",
+                                    "annotations": [],
+                                },
+                            ],
+                        ),
+                    ]
+                ),
+            ),
         ]
     )
     fig.update_layout(

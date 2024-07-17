@@ -22,7 +22,7 @@ from .data_preperation import (
     get_info_roi_rectangles,
     get_info_roi_points,
     get_rois_omero,
-    add_colors_intensity_profile
+    add_colors_intensity_profile,
 )
 
 # Creating logging services
@@ -195,10 +195,14 @@ def load_dash_data_image(
     ):
         dash_context["image"] = image.array_data
         dash_context["channel_names"] = image.channel_series
-        dash_context["message"] = "No visualization available for output images."
+        dash_context["message"] = (
+            "No visualization available for output images."
+        )
     elif isinstance(mm_dataset, PSFBeadsDataset) and image_location == "input":
         dash_context["image"] = image.array_data
-        dash_context["min_distance"] = mm_dataset.input.min_lateral_distance_factor
+        dash_context["min_distance"] = (
+            mm_dataset.input.min_lateral_distance_factor
+        )
         dash_context["channel_names"] = image.channel_series
         dash_context["bead_properties_df"] = get_table_file_id(
             conn,
@@ -209,7 +213,9 @@ def load_dash_data_image(
     ):
         dash_context["image"] = image.array_data
         dash_context["channel_names"] = image.channel_series
-        dash_context["message"] = "No visualization available for output images."
+        dash_context["message"] = (
+            "No visualization available for output images."
+        )
 
     else:
         dash_context = {}
@@ -241,7 +247,9 @@ def load_dash_data_dataset(
         ) = concatenate_images(dataset.input.psf_beads_images)
         dash_context["image"] = image_psf
         dash_context["channel_names"] = channel_series
-        dash_context["min_distance"] = dataset.input.min_lateral_distance_factor
+        dash_context["min_distance"] = (
+            dataset.input.min_lateral_distance_factor
+        )
         dash_context["bead_properties_df"] = get_table_file_id(
             conn,
             dataset.output.bead_properties.data_reference.omero_object_id,

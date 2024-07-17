@@ -381,5 +381,11 @@ def callback_test5(*args, **kwargs):
     )
     df_profile.columns = df_profile.columns.str.replace("_", " ", regex=True)
     df_profile.columns = df_profile.columns.str.title()
-    fig = px.line(df_profile, x=df_profile.index, y=df_profile.columns, title="Intensity Profile", labels={"index": "Pixel"})
+    fig = px.line(
+        df_profile,
+        x=df_profile.index,
+        y=df_profile.columns,
+        title="Intensity Profile",
+        labels={"index": "Pixel"},
+    )
     return fig

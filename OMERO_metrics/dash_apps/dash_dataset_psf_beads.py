@@ -29,7 +29,10 @@ app.layout = dmc.MantineProvider(
                                     "Select Channel",
                                     style={"color": "#63aa47"},
                                 ),
-                                dcc.Dropdown(id="channel_psf", value="channel 0", clearable=False
+                                dcc.Dropdown(
+                                    id="channel_psf",
+                                    value="channel 0",
+                                    clearable=False,
                                 ),
                             ],
                             span="auto",
@@ -66,7 +69,10 @@ app.layout = dmc.MantineProvider(
                         dmc.GridCol(
                             [
                                 dmc.Title(
-                                    "Key Measurements", c="#189A35", size="h3", mb=10
+                                    "Key Measurements",
+                                    c="#189A35",
+                                    size="h3",
+                                    mb=10,
                                 ),
                                 dash_table.DataTable(
                                     id="key_values_psf",
@@ -170,10 +176,9 @@ def func_psf_callback(*args, **kwargs):
     channel_index = int(args[0].split(" ")[-1])
     image_o = kwargs["session_state"]["context"]["image"]
     km = kwargs["session_state"]["context"]["bead_km_df"]
-    km = km.sort_values(by='channel_nr', ascending=
-    True).reset_index(drop=True)
-    km = km.pivot_table(columns='channel_name')
-    km = km.reset_index(drop=False, names='Measurement')
+    km = km.sort_values(by="channel_nr", ascending=True).reset_index(drop=True)
+    km = km.pivot_table(columns="channel_name")
+    km = km.reset_index(drop=False, names="Measurement")
 
     channel_names = kwargs["session_state"]["context"]["channel_names"]
     channel_list_psf = [
@@ -186,7 +191,7 @@ def func_psf_callback(*args, **kwargs):
     ]
     channel_name = channel_names.channels[channel_index].name
     if channel_name in km.columns:
-       km = km[['Measurement', channel_name]]
+        km = km[["Measurement", channel_name]]
     df_properties_channel = bead_properties_df[
         bead_properties_df["channel_nr"] == channel_index
     ].copy()
