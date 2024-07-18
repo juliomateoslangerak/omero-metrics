@@ -56,6 +56,7 @@ app.layout = dmc.MantineProvider(
 @app.expanded_callback(
     dash.dependencies.Output("image", "figure"),
     dash.dependencies.Output("channel_ddm_psf", "options"),
+    dash.dependencies.Output("projection_graph", "figure"),
     [
         dash.dependencies.Input("channel_ddm_psf", "value"),
     ],
@@ -74,7 +75,7 @@ def update_image(*args, **kwargs):
     ]
     df_beads_location = bead_properties_df[
         bead_properties_df["channel_nr"] == channel_index
-    ][
+        ][
         [
             "channel_nr",
             "bead_id",
@@ -84,10 +85,50 @@ def update_image(*args, **kwargs):
             "center_x",
         ]
     ].copy()
-
+    ima = image_omero[0, :, :, :, :]
+    list_chan = [c.name for c in channel_names.channels]
     stack = image_omero[0, :, :, :, channel_index]
     stack_z = np.max(stack, axis=0)
-    fig = image_heatmap_setup(
-        stack_z, df_beads_location, min_distance=min_distance
+    fig, f = image_heatmap_setup(list_chan,
+                              ima, df_beads_location, min_distance=min_distance
+                              )
+    return fig, channel_options, f
+
+
+@app.expanded_callback(
+    dash.dependencies.Output("projection_graph", "figure"),
+    [
+        dash.dependencies.Input("image", "clickData"),
+    ],
+    prevent_initial_call=True,
+)
+def updatemip(*args, **kwargs):
+    image_omero = kwargs["session_state"]["context"]["image"]
+    min_distance = kwargs["session_state"]["context"]["min_distance"]
+    bead_properties_df = kwargs["session_state"]["context"][
+        "bead_properties_df"
+    ]
+    df_beads_location = bead_properties_df[
+        bead_properties_df["channel_nr"] == channel_index
+        ][
+        [
+            "channel_nr",
+            "bead_id",
+            "considered_axial_edge",
+            "center_z",
+            "center_y",
+            "center_x",
+        ]
+    ].copy()
+    ima = image_omero[0, :, :, :, :]
+    list_chan = [c.name for c in kwargs["session_state"]["context"]["channel_names"].channels]
+    stack = image_omero[0, :, :, :, channel_index]
+    stack_z = np.max(stack, axis=0)
+    fig = image_3d_chart(
+        list_chan,
+        ima,
+        df_beads_location,
+        min_distance=min_distance,
+        clickData=args[0],
     )
-    return fig, channel_options
+    return fig

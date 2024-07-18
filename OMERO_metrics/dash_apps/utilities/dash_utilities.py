@@ -3,31 +3,55 @@ from dash import dcc, html
 import plotly.graph_objs as go
 import numpy as np
 
+# np.max(stack, axis=0)
+# go.Heatmap(z=image.tolist(), colorscale="hot", hovertemplate=None)
 
-def image_heatmap_setup(image, df, min_distance):
-    fig = go.Figure()
-    fig.add_trace(
-        go.Heatmap(
-            z=image.tolist(), colorscale="hot", hovertemplate="<extra></extra>"
-        )
-    )
 
+def update_visibility(i, n):
+    bool_list = [False] * (n+1)
+    bool_list[i] = True
+    return bool_list
+
+
+def image_heatmap_setup(channels, image, df, min_distance):
+    fig = go.FigureWidget()
+    fig_mip = go.FigureWidget()
+    def mip_function(trace, points, selector):
+            c = list(trace.marker.color)
+            s = list(trace.marker.size)
+            for i in points.point_inds:
+                c[i] = '#bae2be'
+                s[i] = 20
+                trace.marker.color = c
+                trace.marker.size = s
+                heatmap_trace = go.Heatmap(z=image[0, :, :, 0].tolist(), colorscale="hot")
+                fig_mip.add_trace(heatmap_trace)
     # Add dropdowns
+    for i, chan in enumerate(channels):
+        ima_z = np.max(image[:, :, :, i], axis=0)
+        fig.add_trace(
+            go.Heatmap(
+                z=ima_z.tolist(),
+                colorscale="hot",
+                name=chan,
+
+            )
+        )
     fig.update_layout(
-        height=image.shape[0] + 150,
+        height=image[0, :, :, 0].shape[0] + 150,
         autosize=False,
         margin=dict(t=30, b=30, l=0, r=0),
     )
+
     color_map = {"Yes": "red", "No": "yellow"}
-    fig.add_trace(
-        go.Scatter(
+    sc = go.Scatter(
             y=df["center_y"],
             x=df["center_x"],
             mode="markers",
             name="Beads Locations",
             marker=dict(
                 size=10,
-                color=df["considered_axial_edge"].map(color_map),
+                color='red',
                 opacity=0.3,
             ),
             text=df["channel_nr"],
@@ -42,7 +66,12 @@ def image_heatmap_setup(image, df, min_distance):
             + "<b>Channel Number:</b>  %{text} <br>"
             + "<b>Considered Axial Edge:</b> %{customdata[1]} <br><extra></extra>",
         )
+    fig.add_trace(
+        sc
     )
+    sc.on_click(mip_function)
+    scatter = fig.data[-1]
+    scatter.on_click(mip_function)
     corners = [
         dict(
             type="rect",
@@ -192,18 +221,20 @@ def image_heatmap_setup(image, df, min_distance):
                 yanchor="top",
             ),
             dict(
+                active=0,
                 buttons=list(
                     [
-                        dict(
-                            args=["type", "heatmap"],
-                            label="Heatmap",
-                            method="restyle",
-                        ),
-                        dict(
-                            args=["type", "surface"],
-                            label="3D Surface",
-                            method="restyle",
-                        ),
+
+                            dict(
+                                label=chan,
+                                method="update",
+                                args=[
+                                 {"visible": update_visibility(i, len(channels))},
+                                ],
+                            )
+                            for i, chan in enumerate(channels)
+
+
                     ]
                 ),
                 direction="down",
@@ -222,9 +253,7 @@ def image_heatmap_setup(image, df, min_distance):
                             label="Beads Location",
                             method="update",
                             args=[
-                                {"visible": [True, True]},
-                                "type",
-                                "heatmap",
+                                {"visible": update_visibility(-1, len(channels))},
                             ],
                         ),
                         dict(
@@ -288,4 +317,5 @@ def image_heatmap_setup(image, df, min_distance):
             ),
         ]
     )
-    return fig
+
+    return fig, fig_mip
