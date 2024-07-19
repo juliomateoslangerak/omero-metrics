@@ -3,12 +3,13 @@ from dash import dcc, html
 import plotly.graph_objs as go
 import numpy as np
 
+
 # np.max(stack, axis=0)
 # go.Heatmap(z=image.tolist(), colorscale="hot", hovertemplate=None)
 
 
 def update_visibility(i, n):
-    bool_list = [False] * (n+1)
+    bool_list = [False] * (n + 1)
     bool_list[i] = True
     return bool_list
 
@@ -16,16 +17,18 @@ def update_visibility(i, n):
 def image_heatmap_setup(channels, image, df, min_distance):
     fig = go.FigureWidget()
     fig_mip = go.FigureWidget()
+
     def mip_function(trace, points, selector):
-            c = list(trace.marker.color)
-            s = list(trace.marker.size)
-            for i in points.point_inds:
-                c[i] = '#bae2be'
-                s[i] = 20
-                trace.marker.color = c
-                trace.marker.size = s
-                heatmap_trace = go.Heatmap(z=image[0, :, :, 0].tolist(), colorscale="hot")
-                fig_mip.add_trace(heatmap_trace)
+        c = list(sc.marker.color)
+        s = list(sc.marker.size)
+        for i in points.point_inds:
+            c[i] = '#bae2be'
+            s[i] = 20
+            sc.marker.color = c
+            sc.marker.size = s
+            heatmap_trace = go.Heatmap(z=image[0, :, :, 0].tolist(), colorscale="hot")
+            fig_mip.add_trace(heatmap_trace)
+
     # Add dropdowns
     for i, chan in enumerate(channels):
         ima_z = np.max(image[:, :, :, i], axis=0)
@@ -45,27 +48,27 @@ def image_heatmap_setup(channels, image, df, min_distance):
 
     color_map = {"Yes": "red", "No": "yellow"}
     sc = go.Scatter(
-            y=df["center_y"],
-            x=df["center_x"],
-            mode="markers",
-            name="Beads Locations",
-            marker=dict(
-                size=10,
-                color='red',
-                opacity=0.3,
+        y=df["center_y"],
+        x=df["center_x"],
+        mode="markers",
+        name="Beads Locations",
+        marker=dict(
+            size=10,
+            color='red',
+            opacity=0.3,
+        ),
+        text=df["channel_nr"],
+        customdata=np.stack(
+            (
+                df["bead_id"],
+                df["considered_axial_edge"],
             ),
-            text=df["channel_nr"],
-            customdata=np.stack(
-                (
-                    df["bead_id"],
-                    df["considered_axial_edge"],
-                ),
-                axis=-1,
-            ),
-            hovertemplate="<b>Bead Number:</b>  %{customdata[0]} <br>"
-            + "<b>Channel Number:</b>  %{text} <br>"
-            + "<b>Considered Axial Edge:</b> %{customdata[1]} <br><extra></extra>",
-        )
+            axis=-1,
+        ),
+        hovertemplate="<b>Bead Number:</b>  %{customdata[0]} <br>"
+                      + "<b>Channel Number:</b>  %{text} <br>"
+                      + "<b>Considered Axial Edge:</b> %{customdata[1]} <br><extra></extra>",
+    )
     fig.add_trace(
         sc
     )
@@ -225,15 +228,14 @@ def image_heatmap_setup(channels, image, df, min_distance):
                 buttons=list(
                     [
 
-                            dict(
-                                label=chan,
-                                method="update",
-                                args=[
-                                 {"visible": update_visibility(i, len(channels))},
-                                ],
-                            )
-                            for i, chan in enumerate(channels)
-
+                        dict(
+                            label=chan,
+                            method="update",
+                            args=[
+                                {"visible": update_visibility(i, len(channels))},
+                            ],
+                        )
+                        for i, chan in enumerate(channels)
 
                     ]
                 ),
@@ -253,14 +255,14 @@ def image_heatmap_setup(channels, image, df, min_distance):
                             label="Beads Location",
                             method="update",
                             args=[
-                                {"visible": update_visibility(-1, len(channels))},
+                                {"visible": False},
                             ],
                         ),
                         dict(
                             label="None",
                             method="update",
                             args=[
-                                {"visible": [True, False]},
+                                {"visible": True},
                                 {
                                     "title": "Beads Location Off",
                                     "annotations": [],
