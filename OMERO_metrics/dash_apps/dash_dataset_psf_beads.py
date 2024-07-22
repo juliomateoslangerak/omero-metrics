@@ -168,9 +168,7 @@ app.layout = dmc.MantineProvider(
     dash.dependencies.Output("image", "figure"),
     dash.dependencies.Output("channel_psf", "options"),
     dash.dependencies.Output("key_values_psf", "data"),
-    [
-        dash.dependencies.Input("channel_psf", "value"),
-    ],
+    [dash.dependencies.Input("channel_psf", "value")],
 )
 def func_psf_callback(*args, **kwargs):
     channel_index = int(args[0].split(" ")[-1])
