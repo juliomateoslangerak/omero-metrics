@@ -11,23 +11,15 @@ import numpy as np
 def update_visibility(i, n):
     bool_list = [False] * (n + 1)
     bool_list[i] = True
+    bool_list[-1] = True
     return bool_list
 
 
 def image_heatmap_setup(channels, image, df, min_distance):
     fig = go.FigureWidget()
     fig_mip = go.FigureWidget()
+    min = 0
 
-    def mip_function(trace, points, selector):
-        c = list(sc.marker.color)
-        s = list(sc.marker.size)
-        for i in points.point_inds:
-            c[i] = '#bae2be'
-            s[i] = 20
-            sc.marker.color = c
-            sc.marker.size = s
-            heatmap_trace = go.Heatmap(z=image[0, :, :, 0].tolist(), colorscale="hot")
-            fig_mip.add_trace(heatmap_trace)
 
     # Add dropdowns
     for i, chan in enumerate(channels):
@@ -72,6 +64,17 @@ def image_heatmap_setup(channels, image, df, min_distance):
     fig.add_trace(
         sc
     )
+    def mip_function(trace, points, selector):
+        c = list(sc.marker.color)
+        s = list(sc.marker.size)
+        for i in points.point_inds:
+            c[i] = '#bae2be'
+            s[i] = 20
+            sc.marker.color = c
+            sc.marker.size = s
+            heatmap_trace = go.Heatmap(z=image[0, :, :, 0].tolist(), colorscale="hot")
+            fig_mip.add_trace(heatmap_trace)
+
     sc.on_click(mip_function)
     scatter = fig.data[-1]
     scatter.on_click(mip_function)
@@ -230,9 +233,11 @@ def image_heatmap_setup(channels, image, df, min_distance):
 
                         dict(
                             label=chan,
-                            method="update",
+                            method="restyle",
                             args=[
-                                {"visible": update_visibility(i, len(channels))},
+                                {"visible": update_visibility(i, len(channels)),
+                                 "value_test": i,
+                                 },
                             ],
                         )
                         for i, chan in enumerate(channels)
@@ -253,16 +258,22 @@ def image_heatmap_setup(channels, image, df, min_distance):
                     [
                         dict(
                             label="Beads Location",
-                            method="update",
+                            method="restyle",
                             args=[
-                                {"visible": False},
+                                {"visible": [True]},
+                                [4],
+                                {
+                                    "title": "Beads Location On",
+                                    "annotations": [],
+                                },
                             ],
                         ),
                         dict(
                             label="None",
-                            method="update",
+                            method="restyle",
+                            trace=[4],
                             args=[
-                                {"visible": True},
+                                {"visible": [True]},
                                 {
                                     "title": "Beads Location Off",
                                     "annotations": [],

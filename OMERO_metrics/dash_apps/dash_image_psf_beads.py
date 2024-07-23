@@ -7,6 +7,7 @@ import plotly.express as px
 from .utilities.dash_utilities import image_heatmap_setup
 import numpy as np
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,8 @@ app.layout = dmc.MantineProvider(
                             },
                         ),
                         dcc.Graph(id="projection_graph", figure={}),
-                        html.Div(id="test15")
+                        html.Div(id="test15"),
+                        html.Div(id="test16"),
                     ]
                 ),
             ],
@@ -101,8 +103,11 @@ def update_image(*args, **kwargs):
 
 @app.expanded_callback(
     dash.dependencies.Output("test15", "children"),
+    dash.dependencies.Output("test16", "children"),
+
     [
         dash.dependencies.Input("image", "clickData"),
+        dash.dependencies.Input("image", "restyleData"),
     ],
     prevent_initial_call=True,
 )
@@ -111,5 +116,5 @@ def updatemip(*args, **kwargs):
     logger.warning(
         f"Project {args[0]} is going to be linked to a different OMERO project."
     )
-    return point['curveNumber']
+    return json.dumps(args[0], indent=2), json.dumps(args[1], indent=2)
 
