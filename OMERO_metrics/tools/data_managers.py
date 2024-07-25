@@ -166,6 +166,7 @@ class DatasetManager:
         self.context = None
         self.processed = False
         self.microscope = mm_schema.Microscope()
+        self.kkm = None
 
     def is_processed(self):
         if self.mm_dataset:

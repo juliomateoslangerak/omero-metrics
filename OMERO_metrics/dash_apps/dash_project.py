@@ -10,11 +10,14 @@ primary_color = "#008080"
 df = pd.read_csv(
     "https://raw.githubusercontent.com/plotly/datasets/master/gapminder2007.csv"
 )
-
+stylesheets = [
+    "https://unpkg.com/@mantine/charts@7/styles.css",
+]
 dashboard_name = "omero_project_dash"
 dash_app_project = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
+    external_stylesheets=stylesheets
 )
 
 dash_app_project.layout = dmc.MantineProvider(
@@ -41,7 +44,9 @@ dash_app_project.layout = dmc.MantineProvider(
 )
 def update_table(*args, **kwargs):
     df_list = kwargs["session_state"]["context"]["key_measurements_list"]
+    kkm = kwargs["session_state"]["context"]["kkm"]
     measurement = int(args[0])
+    dates = kwargs["session_state"]["context"]["dates"]
     grid = dmc.SimpleGrid(
         cols=len(df_list),
         children=[
@@ -78,8 +83,20 @@ def update_table(*args, **kwargs):
         ],
     )
     options = [
-        {"label": f"Measurement {i}", "value": f"{i}"}
-        for i in range(len(df_list))
+        {"label": f"Measurement {k}", "value": f"{i}"}
+        for i, k in enumerate(kkm)
     ]
+    data = [{"Date": dates[i], "Name": f"Dataset {i}"} | df[[kkm]].copy().mean() for i, df in enumerate(df_list)]
+    line = dmc.LineChart(
+        h=300,
+        dataKey="Date",
+        data=data,
 
-    return [grid]
+        withLegend=True,
+        legendProps={'verticalAlign': 'bottom', 'height': 50},
+        series=[
+            {"name": k, 'color': 'indigo.6'} for k in kkm
+        ],
+    )
+
+    return [grid], line, options
