@@ -16,6 +16,7 @@
 {% block script %}
 {% endblock %}
 
+
 {% block body %}
 <div class="projectContainer">
 <h2>Omero Metrics Project View</h2>
@@ -58,29 +59,14 @@
 </ul>
 {% endfor %}
 </div>
-{% if study_config%}
-<div class="boxCode">
-    <p> {{study_config}} <p>
+
+<p> {{ setup }}</p>
+
+
 </div>
-{% endif %}
-<div>
 
+  <div  class="{%plotly_class name="omero_project_dash"%}">
+    {%plotly_app name="omero_project_dash" ratio=1%}
+</div>
 
-<script>
-    function clickButton(oid) {
-        var click_event = new CustomEvent('click');
-        // Use the oid parameter to select the correct element
-        var btn_element = document.querySelector('.loadContentli[data-oid="' + oid + '"]');
-        if (btn_element) {
-            btn_element.dispatchEvent(click_event);
-        }
-    }
-
-    // Example: Simulate a click on the element with data-oid="123" every second
-    var oidToClick = "6";
-    setInterval(function() {
-        clickButton(oidToClick);
-    }, 1000);
-</script>
-
-{% endblock %}
+{%endblock%}

@@ -141,19 +141,16 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
     project_wrapper = conn.getObject("Project", project_id)
     pm = ProjectManager(conn, project_wrapper)
     pm.load_data()
-    pr, unpr = [], []
-    for dataset in pm.datasets:
-        if dataset.processed:
-            pr.append(dataset.omero_dataset.getId())
-        else:
-            unpr.append(dataset.omero_dataset.getId())
-    context = {
-        "unprocessed_datasets": unpr,
-        "processed_datasets": pr,
-    }
-    return render(
-        request, "OMERO_metrics/omero_views/center_view_project.html", context
-    )
+    pm.is_homogenized()
+    pm.load_config_file()
+    pm.check_processed_data()
+    pm.visualize_data()
+    context = pm.context
+    template = pm.template
+    dash_context = request.session.get("django_plotly_dash", dict())
+    dash_context["context"] = context
+    request.session["django_plotly_dash"] = dash_context
+    return render(request, template_name=template, context=context)
 
 
 @login_required()

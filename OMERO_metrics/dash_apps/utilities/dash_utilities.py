@@ -20,7 +20,6 @@ def image_heatmap_setup(channels, image, df, min_distance):
     fig_mip = go.FigureWidget()
     min = 0
 
-
     # Add dropdowns
     for i, chan in enumerate(channels):
         ima_z = np.max(image[:, :, :, i], axis=0)
@@ -29,7 +28,6 @@ def image_heatmap_setup(channels, image, df, min_distance):
                 z=ima_z.tolist(),
                 colorscale="hot",
                 name=chan,
-
             )
         )
     fig.update_layout(
@@ -46,7 +44,7 @@ def image_heatmap_setup(channels, image, df, min_distance):
         name="Beads Locations",
         marker=dict(
             size=10,
-            color='red',
+            color="red",
             opacity=0.3,
         ),
         text=df["channel_nr"],
@@ -58,21 +56,22 @@ def image_heatmap_setup(channels, image, df, min_distance):
             axis=-1,
         ),
         hovertemplate="<b>Bead Number:</b>  %{customdata[0]} <br>"
-                      + "<b>Channel Number:</b>  %{text} <br>"
-                      + "<b>Considered Axial Edge:</b> %{customdata[1]} <br><extra></extra>",
+        + "<b>Channel Number:</b>  %{text} <br>"
+        + "<b>Considered Axial Edge:</b> %{customdata[1]} <br><extra></extra>",
     )
-    fig.add_trace(
-        sc
-    )
+    fig.add_trace(sc)
+
     def mip_function(trace, points, selector):
         c = list(sc.marker.color)
         s = list(sc.marker.size)
         for i in points.point_inds:
-            c[i] = '#bae2be'
+            c[i] = "#bae2be"
             s[i] = 20
             sc.marker.color = c
             sc.marker.size = s
-            heatmap_trace = go.Heatmap(z=image[0, :, :, 0].tolist(), colorscale="hot")
+            heatmap_trace = go.Heatmap(
+                z=image[0, :, :, 0].tolist(), colorscale="hot"
+            )
             fig_mip.add_trace(heatmap_trace)
 
     sc.on_click(mip_function)
@@ -230,18 +229,19 @@ def image_heatmap_setup(channels, image, df, min_distance):
                 active=0,
                 buttons=list(
                     [
-
                         dict(
                             label=chan,
                             method="restyle",
                             args=[
-                                {"visible": update_visibility(i, len(channels)),
-                                 "value_test": i,
-                                 },
+                                {
+                                    "visible": update_visibility(
+                                        i, len(channels)
+                                    ),
+                                    "value_test": i,
+                                },
                             ],
                         )
                         for i, chan in enumerate(channels)
-
                     ]
                 ),
                 direction="down",

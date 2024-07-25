@@ -3,6 +3,7 @@ from microscopemetrics_schema.datamodel.microscopemetrics_schema import (
     FieldIlluminationDataset,
     PSFBeadsDataset,
 )
+import yaml
 import numpy as np
 from omero.gateway import (
     BlitzGateway,
@@ -70,6 +71,23 @@ def image_exist(image_id, mm_dataset):
                     index = i
                     break
     return image_found, image_location, index
+
+
+def load_config_file_data(conn, project):
+    exist = False
+    for ann in project.listAnnotations():
+        if isinstance(ann, FileAnnotationWrapper):
+            ns = ann.getFile().getName()
+            if ns.startswith("study_config.yaml"):
+                exist = True
+                setup = yaml.load(
+                    ann.getFileInChunks().__next__().decode(),
+                    Loader=yaml.SafeLoader,
+                )
+    if exist:
+        return setup
+    else:
+        return None
 
 
 def load_project(
@@ -276,6 +294,23 @@ def load_dash_data_dataset(
     else:
         dash_context = {}
     return dash_context
+
+
+def load_dash_data_project(
+    conn: BlitzGateway,
+    processed_datasets: dict,
+) -> (dict, str):
+    dash_context = {}
+    template = "OMERO_metrics/omero_views/center_view_project.html"
+    df_list = []
+    for k, v in processed_datasets.items():
+        df = get_table_file_id(
+            conn,
+            v.mm_dataset.output.key_measurements.data_reference.omero_object_id,
+        )
+        df_list.append(df)
+    dash_context["key_measurements_list"] = df_list
+    return dash_context, template
 
 
 def load_analysis_config(project=ProjectWrapper):

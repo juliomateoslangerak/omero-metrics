@@ -81,7 +81,7 @@ def update_image(*args, **kwargs):
     ]
     df_beads_location = bead_properties_df[
         bead_properties_df["channel_nr"] == channel_index
-        ][
+    ][
         [
             "channel_nr",
             "bead_id",
@@ -95,16 +95,15 @@ def update_image(*args, **kwargs):
     list_chan = [c.name for c in channel_names.channels]
     stack = image_omero[0, :, :, :, channel_index]
     stack_z = np.max(stack, axis=0)
-    fig, f = image_heatmap_setup(list_chan,
-                              ima, df_beads_location, min_distance=min_distance
-                              )
+    fig, f = image_heatmap_setup(
+        list_chan, ima, df_beads_location, min_distance=min_distance
+    )
     return fig, channel_options
 
 
 @app.expanded_callback(
     dash.dependencies.Output("test15", "children"),
     dash.dependencies.Output("test16", "children"),
-
     [
         dash.dependencies.Input("image", "clickData"),
         dash.dependencies.Input("image", "restyleData"),
@@ -117,4 +116,3 @@ def updatemip(*args, **kwargs):
         f"Project {args[0]} is going to be linked to a different OMERO project."
     )
     return json.dumps(args[0], indent=2), json.dumps(args[1], indent=2)
-

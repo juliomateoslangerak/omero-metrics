@@ -304,7 +304,6 @@ class DatasetManager:
         else:
             message = "Dataset has not been processed. Unable to visualize"
             logger.warning(message)
-            logger.warning(message)
             self.context, self.template = warning_message(message)
 
     def save_settings(self):
@@ -327,6 +326,12 @@ class ProjectManager:
         self.project = project
         self.datasets = []
         self.context = None
+        self.setup = None
+        self.datasets_types = []
+        self.processed_datasets = {}
+        self.unprocessed_datasets = {}
+        self.template = None
+        self.homogenize = None
 
     def load_data(self, force_reload=True):
         if force_reload or self.datasets is None:
@@ -334,20 +339,82 @@ class ProjectManager:
                 dm = DatasetManager(self._conn, dataset)
                 dm.load_data()
                 dm.is_processed()
+                self.datasets_types.append(dm.mm_dataset.__class__.__name__)
                 self.datasets.append(dm)
         else:
             raise NotImplementedError(
                 "partial loading of data from OMERO is not yet implemented"
             )
 
+    def check_processed_data(self):
+        for dataset in self.datasets:
+            if dataset.processed:
+                self.processed_datasets[dataset.omero_dataset.getId()] = (
+                    dataset
+                )
+            else:
+                self.unprocessed_datasets[dataset.omero_dataset.getId()] = (
+                    dataset
+                )
+
+    def is_homogenized(self):
+        # unique = set(self.datasets_types)
+        unique = set(
+            [
+                dataset.mm_dataset.__class__.__name__
+                for dataset in self.processed_datasets.values()
+            ]
+        )
+        if len(unique) == 1:
+            self.homogenize = True
+        else:
+            self.homogenize = False
+        return self.homogenize
+
     def visualize_data(self):
-        pass
+        if self.processed_datasets:
+            if self.is_homogenized():
+                if (
+                    list(self.processed_datasets.values())[
+                        0
+                    ].mm_dataset.__class__.__name__
+                    in TEMPLATE_MAPPINGS_DATASET
+                ):
+                    self.context, self.template = load.load_dash_data_project(
+                        self._conn, self.processed_datasets
+                    )
+                    self.context["unprocessed_datasets"] = list(
+                        self.unprocessed_datasets.keys()
+                    )
+                    self.context["datasets_types"] = self.datasets_types
+                    self.context["processed_datasets"] = list(
+                        self.processed_datasets.keys()
+                    )
+                    self.context["setup"] = self.setup
+                else:
+                    message = "This project contains unsupported analysis type. Unable to visualize"
+                    logger.warning(message)
+                    self.context, self.template = warning_message(message)
+
+            else:
+                message = "This project contains different types of datasets. Unable to visualize"
+                logger.warning(message)
+                self.context, self.template = warning_message(message)
+
+        else:
+            message = "This project doesn't contain a processed dataset. Unable to visualize"
+            logger.warning(message)
+            self.context, self.template = warning_message(message)
 
     def save_settings(self):
         pass
 
     def delete_data(self):
         pass
+
+    def load_config_file(self):
+        if self.setup is None:
+            self.setup = load.load_config_file_data(self._conn, self.project)
 
 
 class MicroscopeManager:

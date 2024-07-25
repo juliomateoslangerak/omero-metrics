@@ -1,7 +1,15 @@
 import dash
-from dash import dcc, html
+from dash import dcc, html, dash_table
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
+import pandas as pd
+import plotly.express as px
+
+primary_color = "#008080"
+
+df = pd.read_csv(
+    "https://raw.githubusercontent.com/plotly/datasets/master/gapminder2007.csv"
+)
 
 dashboard_name = "omero_project_dash"
 dash_app_project = DjangoDash(
@@ -11,52 +19,67 @@ dash_app_project = DjangoDash(
 
 dash_app_project.layout = dmc.MantineProvider(
     [
-        html.Div(id="blank-output"),
-        html.Div(
+        dmc.Container(
             [
-                dcc.Tabs(
-                    id="tabs-example-1",
-                    value="tab-1",
-                    children=[
-                        dcc.Tab(label="Tab one", value="tab-1"),
-                        dcc.Tab(label="Tab two", value="tab-2"),
-                    ],
-                ),
-                html.Div(id="tabs-example-content-1"),
-                dmc.Title("Plot Over Time", c="#63aa47", size="h3", mb=10),
+                html.Div(id="blank-input"),
+                html.Div(id="blank-output"),
+                dcc.Dropdown(id="project-dropdown", value="0"),
                 dcc.Graph(
-                    id="graph_line", className="loadContentli", figure={}
+                    id="graph-project",
                 ),
             ]
-        ),
+        )
     ]
 )
 
 
 @dash_app_project.expanded_callback(
-    dash.dependencies.Output("tabs-example-content-1", "children"),
-    dash.dependencies.Input("tabs-example-1", "value"),
+    dash.dependencies.Output("blank-output", "children"),
+    dash.dependencies.Output("graph-project", "figure"),
+    dash.dependencies.Output("project-dropdown", "options"),
+    [dash.dependencies.Input("project-dropdown", "value")],
 )
-def render_content(tab):
-    if tab == "tab-1":
-        return html.Div(
-            [
-                html.H3("Tab content 1"),
-                dcc.Graph(
-                    figure=dict(
-                        data=[dict(x=[1, 2, 3], y=[3, 1, 2], type="bar")]
-                    )
-                ),
-            ]
-        )
-    elif tab == "tab-2":
-        return html.Div(
-            [
-                html.H3("Tab content 2"),
-                dcc.Graph(
-                    figure=dict(
-                        data=[dict(x=[1, 2, 3], y=[5, 10, 6], type="bar")]
-                    )
-                ),
-            ]
-        )
+def update_table(*args, **kwargs):
+    df_list = kwargs["session_state"]["context"]["key_measurements_list"]
+    measurement = int(args[0])
+    grid = dmc.SimpleGrid(
+        cols=len(df_list),
+        children=[
+            dmc.Card(
+                children=[
+                    dmc.Text("Key Measurements", size="h3"),
+                    dash_table.DataTable(
+                        id="table",
+                        data=df.to_dict("records"),
+                        page_size=10,
+                        sort_action="native",
+                        sort_mode="multi",
+                        sort_as_null=["", "No"],
+                        editable=False,
+                        style_cell={
+                            "textAlign": "left",
+                            "fontSize": 14,
+                            "font-family": "sans-serif",
+                        },
+                        style_header={
+                            "backgroundColor": primary_color,
+                            "fontWeight": "bold",
+                            "fontSize": 18,
+                            "textAlign": "center",
+                        },
+                        style_table={
+                            "overflowX": "auto",
+                            "border-radius": "0.5rem",
+                        },
+                    ),
+                ]
+            )
+            for df in df_list
+        ],
+    )
+    options = [
+        {"label": f"Measurement {i}", "value": f"{i}"}
+        for i in range(len(df_list))
+    ]
+
+    return [grid]

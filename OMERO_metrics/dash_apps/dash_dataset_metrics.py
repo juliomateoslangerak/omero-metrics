@@ -237,5 +237,7 @@ def dataset_callback_intensity_map(*args, **kwargs):
 
 def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:
     value = getattr(df, col).str.replace("_", " ", regex=True).str.title()
-    setattr(df, col, value)
+    setattr(
+        df, col, value
+    )  # TODO: replace setattr with df.loc[:, col] = value
     return df
