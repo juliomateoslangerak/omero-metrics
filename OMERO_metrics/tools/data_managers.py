@@ -36,10 +36,21 @@ INPUT_MAPPINGS = {
 }
 
 KKM_MAPPINGS = {
-    "FieldIlluminationDataset":  ["center_region_intensity_fraction", "center_region_area_fraction", "max_intensity"],
-    "PSFBeadsDataset": ['intensity_max_median', 'intensity_max_std', 'intensity_min_mean',
-       'intensity_min_median', 'intensity_min_std', 'intensity_std_mean',
-       'intensity_std_median', 'intensity_std_std', ],
+    "FieldIlluminationDataset": [
+        "center_region_intensity_fraction",
+        "center_region_area_fraction",
+        "max_intensity",
+    ],
+    "PSFBeadsDataset": [
+        "intensity_max_median",
+        "intensity_max_std",
+        "intensity_min_mean",
+        "intensity_min_median",
+        "intensity_min_std",
+        "intensity_std_mean",
+        "intensity_std_median",
+        "intensity_std_std",
+    ],
 }
 
 OBJECT_TO_DUMP_FUNCTION = {

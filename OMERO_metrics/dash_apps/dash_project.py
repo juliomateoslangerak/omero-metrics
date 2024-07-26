@@ -15,9 +15,7 @@ stylesheets = [
 ]
 dashboard_name = "omero_project_dash"
 dash_app_project = DjangoDash(
-    name=dashboard_name,
-    serve_locally=True,
-    external_stylesheets=stylesheets
+    name=dashboard_name, serve_locally=True, external_stylesheets=stylesheets
 )
 
 dash_app_project.layout = dmc.MantineProvider(
@@ -86,20 +84,24 @@ def update_table(*args, **kwargs):
         {"label": f"Measurement {k}", "value": f"{i}"}
         for i, k in enumerate(kkm)
     ]
-    data = [{"Date": dates[i], "Name": f"Dataset {i}"} |
-            df[kkm].copy().mean().reset_index(name="Mean").rename(columns={'index': 'Measurement'}).pivot_table(
-                columns='Measurement').to_dict('records')[0]
-            for i, df in enumerate(df_list)]
+    data = [
+        {"Date": dates[i], "Name": f"Dataset {i}"}
+        | df[kkm]
+        .copy()
+        .mean()
+        .reset_index(name="Mean")
+        .rename(columns={"index": "Measurement"})
+        .pivot_table(columns="Measurement")
+        .to_dict("records")[0]
+        for i, df in enumerate(df_list)
+    ]
     line = dmc.LineChart(
         h=300,
         dataKey="Date",
         data=data,
-
         withLegend=True,
-        legendProps={'verticalAlign': 'bottom', 'height': 50},
-        series=[
-            {"name": k, 'color': 'indigo.6'} for k in kkm
-        ],
+        legendProps={"verticalAlign": "bottom", "height": 50},
+        series=[{"name": k, "color": "indigo.6"} for k in kkm],
         curveType="natural",
     )
 
