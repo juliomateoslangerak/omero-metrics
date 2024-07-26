@@ -130,7 +130,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                 ),
                                 dmc.LineChart(
                                     id="intensity_profile",
-                                    h=500,
+                                    h=400,
                                     dataKey="Pixel",
                                     data={},
                                     series=[
@@ -151,11 +151,16 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                             "color": "indigo.6",
                                         },
                                     ],
+                                    xAxisLabel="Pixel",
+                                    yAxisLabel="Pixel Intensity",
                                     tickLine="y",
                                     gridAxis="y",
                                     withXAxis=True,
                                     withYAxis=True,
                                     withLegend=True,
+                                    strokeWidth=3,
+                                    withDots=False,
+                                    curveType="natural",
                                     style={
                                         "margin-top": "20px",
                                         "background-color": "white",
