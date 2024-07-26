@@ -30,6 +30,8 @@ from .data_preperation import (
 logger = logging.getLogger(__name__)
 import collections
 import omero
+from datetime import datetime
+
 
 DATASET_TYPES = ["FieldIlluminationDataset", "PSFBeadsDataset"]
 
@@ -248,7 +250,7 @@ def load_dash_data_dataset(
 
     if isinstance(dataset, FieldIlluminationDataset):
         title = "Field Illumination Dataset"
-        kkm = ["center_region_intensity_fraction", "center_region_area_fraction", "max_intensity"]
+
         dash_context["title"] = title
         df = get_images_intensity_profiles(dataset)
         dash_context["image"], channel_series = concatenate_images(
@@ -259,7 +261,6 @@ def load_dash_data_dataset(
             conn, df
         )
         dash_context["key_values_df"] = get_key_values(dataset.output)
-        dash_context["kkm"] = kkm
 
     elif isinstance(dataset, PSFBeadsDataset):
         dash_context["title"] = "PSF Beads Dataset"
@@ -267,9 +268,7 @@ def load_dash_data_dataset(
             image_psf,
             channel_series,
         ) = concatenate_images(dataset.input.psf_beads_images)
-        kkm = ['intensity_max_median', 'intensity_max_std', 'intensity_min_mean',
-               'intensity_min_median', 'intensity_min_std', 'intensity_std_mean',
-               'intensity_std_median', 'intensity_std_std', ]
+
         dash_context["image"] = image_psf
         dash_context["channel_names"] = channel_series
         dash_context["min_distance"] = (
@@ -298,7 +297,6 @@ def load_dash_data_dataset(
         dash_context["image_id"] = dataset.input.psf_beads_images[
             0
         ].data_reference.omero_object_id
-        dash_context["kkm"] = kkm
     else:
         dash_context = {}
     return dash_context
@@ -311,15 +309,17 @@ def load_dash_data_project(
     dash_context = {}
     template = "OMERO_metrics/omero_views/center_view_project.html"
     df_list = []
-    list(processed_datasets.values())[0].visualize_data()
-    kkm = list(processed_datasets.values())[0].context["kkm"]
+    kkm = list(processed_datasets.values())[0].kkm
     dates = []
-    for k, v in processed_datasets.items():
+    for key, value in processed_datasets.items():
         df = get_table_file_id(
             conn,
-            v.mm_dataset.output.key_measurements.data_reference.omero_object_id,
+            value.mm_dataset.output.key_measurements.data_reference.omero_object_id,
         )
-        dates.append(v.mm_dataset.acquisition_datetime)
+        date = datetime.strptime(
+            value.mm_dataset.acquisition_datetime, "%Y-%m-%dT%H:%M:%S"
+        )
+        dates.append(date.date())
         df_list.append(df)
     dash_context["key_measurements_list"] = df_list
     dash_context["kkm"] = kkm

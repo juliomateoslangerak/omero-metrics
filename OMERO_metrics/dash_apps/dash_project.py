@@ -27,7 +27,7 @@ dash_app_project.layout = dmc.MantineProvider(
                 html.Div(id="blank-input"),
                 html.Div(id="blank-output"),
                 dcc.Dropdown(id="project-dropdown", value="0"),
-                dcc.Graph(
+                html.Div(
                     id="graph-project",
                 ),
             ]
@@ -38,7 +38,7 @@ dash_app_project.layout = dmc.MantineProvider(
 
 @dash_app_project.expanded_callback(
     dash.dependencies.Output("blank-output", "children"),
-    dash.dependencies.Output("graph-project", "figure"),
+    dash.dependencies.Output("graph-project", "children"),
     dash.dependencies.Output("project-dropdown", "options"),
     [dash.dependencies.Input("project-dropdown", "value")],
 )
@@ -86,7 +86,10 @@ def update_table(*args, **kwargs):
         {"label": f"Measurement {k}", "value": f"{i}"}
         for i, k in enumerate(kkm)
     ]
-    data = [{"Date": dates[i], "Name": f"Dataset {i}"} | df[[kkm]].copy().mean() for i, df in enumerate(df_list)]
+    data = [{"Date": dates[i], "Name": f"Dataset {i}"} |
+            df[kkm].copy().mean().reset_index(name="Mean").rename(columns={'index': 'Measurement'}).pivot_table(
+                columns='Measurement').to_dict('records')[0]
+            for i, df in enumerate(df_list)]
     line = dmc.LineChart(
         h=300,
         dataKey="Date",
@@ -97,6 +100,7 @@ def update_table(*args, **kwargs):
         series=[
             {"name": k, 'color': 'indigo.6'} for k in kkm
         ],
+        curveType="natural",
     )
 
     return [grid], line, options

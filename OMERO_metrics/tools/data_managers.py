@@ -35,6 +35,13 @@ INPUT_MAPPINGS = {
     "PSFBeadsInput": mm_schema.PSFBeadsInput,
 }
 
+KKM_MAPPINGS = {
+    "FieldIlluminationDataset":  ["center_region_intensity_fraction", "center_region_area_fraction", "max_intensity"],
+    "PSFBeadsDataset": ['intensity_max_median', 'intensity_max_std', 'intensity_min_mean',
+       'intensity_min_median', 'intensity_min_std', 'intensity_std_mean',
+       'intensity_std_median', 'intensity_std_std', ],
+}
+
 OBJECT_TO_DUMP_FUNCTION = {
     mm_schema.Image: dump.dump_image,
     mm_schema.Roi: dump.dump_roi,
@@ -182,6 +189,8 @@ class DatasetManager:
             self.mm_dataset = load.load_dataset(
                 self.omero_dataset, self.load_images
             )
+            self.kkm = KKM_MAPPINGS.get(self.mm_dataset.__class__.__name__)
+
         else:
             raise NotImplementedError(
                 "partial loading of data from OMERO is not yet implemented"
