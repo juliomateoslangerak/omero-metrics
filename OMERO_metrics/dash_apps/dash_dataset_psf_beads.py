@@ -284,7 +284,7 @@ def callback_mip(*args, **kwargs):
             "center_y",
         ]
     ].copy()
-    min_dist = kwargs["session_state"]["context"]["min_distance"]
+    min_dist = int(kwargs["session_state"]["context"]["min_distance"])
     if point["curveNumber"] == 1:
         bead_index = point["pointNumber"]
         title = (

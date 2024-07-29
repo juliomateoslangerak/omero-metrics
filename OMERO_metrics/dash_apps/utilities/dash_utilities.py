@@ -8,18 +8,15 @@ import numpy as np
 # go.Heatmap(z=image.tolist(), colorscale="hot", hovertemplate=None)
 
 
+global bool_list
 def update_visibility(i, n):
-    bool_list = [False] * (n + 1)
+    bool_list = [False] * n
     bool_list[i] = True
-    bool_list[-1] = True
     return bool_list
 
 
 def image_heatmap_setup(channels, image, df, min_distance):
-    fig = go.FigureWidget()
-    fig_mip = go.FigureWidget()
-    min = 0
-
+    fig = go.Figure()
     # Add dropdowns
     for i, chan in enumerate(channels):
         ima_z = np.max(image[:, :, :, i], axis=0)
@@ -60,23 +57,6 @@ def image_heatmap_setup(channels, image, df, min_distance):
         + "<b>Considered Axial Edge:</b> %{customdata[1]} <br><extra></extra>",
     )
     fig.add_trace(sc)
-
-    def mip_function(trace, points, selector):
-        c = list(sc.marker.color)
-        s = list(sc.marker.size)
-        for i in points.point_inds:
-            c[i] = "#bae2be"
-            s[i] = 20
-            sc.marker.color = c
-            sc.marker.size = s
-            heatmap_trace = go.Heatmap(
-                z=image[0, :, :, 0].tolist(), colorscale="hot"
-            )
-            fig_mip.add_trace(heatmap_trace)
-
-    sc.on_click(mip_function)
-    scatter = fig.data[-1]
-    scatter.on_click(mip_function)
     corners = [
         dict(
             type="rect",
@@ -166,7 +146,9 @@ def image_heatmap_setup(channels, image, df, min_distance):
                                 {
                                     "contours.showlines": False,
                                     "type": "contour",
-                                }
+
+                                },
+                                [0, 1, 2, 3]
                             ],
                             label="Hide lines",
                             method="restyle",
@@ -179,13 +161,15 @@ def image_heatmap_setup(channels, image, df, min_distance):
                                     "contours.showlabels": True,
                                     "contours.labelfont.size": 12,
                                     "contours.labelfont.color": "white",
-                                }
+                                },
+                                [0, 1, 2, 3]
+
                             ],
                             label="Show lines",
                             method="restyle",
                         ),
                         dict(
-                            args=[{"type": "heatmap"}],
+                            args=[{"type": "heatmap"}, [0, 1, 2, 3]],
                             label="Heatmap",
                             method="restyle",
                         ),
@@ -239,7 +223,8 @@ def image_heatmap_setup(channels, image, df, min_distance):
                                     ),
                                     "value_test": i,
                                 },
-                            ],
+                             [0, 1, 2, 3, 4]
+                    ],
                         )
                         for i, chan in enumerate(channels)
                     ]
@@ -260,24 +245,16 @@ def image_heatmap_setup(channels, image, df, min_distance):
                             label="Beads Location",
                             method="restyle",
                             args=[
-                                {"visible": [True]},
+                                {"visible": True},
                                 [4],
-                                {
-                                    "title": "Beads Location On",
-                                    "annotations": [],
-                                },
                             ],
                         ),
                         dict(
                             label="None",
                             method="restyle",
-                            trace=[4],
                             args=[
-                                {"visible": [True]},
-                                {
-                                    "title": "Beads Location Off",
-                                    "annotations": [],
-                                },
+                                {"visible": False},
+                                [4],
                             ],
                         ),
                     ]
@@ -331,4 +308,4 @@ def image_heatmap_setup(channels, image, df, min_distance):
         ]
     )
 
-    return fig, fig_mip
+    return fig

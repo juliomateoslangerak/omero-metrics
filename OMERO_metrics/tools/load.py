@@ -228,6 +228,24 @@ def load_dash_data_image(
             conn,
             mm_dataset.output.bead_properties.data_reference.omero_object_id,
         )
+
+        dash_context["bead_km_df"] = get_table_file_id(
+            conn,
+            mm_dataset.output.key_measurements.data_reference.omero_object_id,
+        )
+        dash_context["bead_x_profiles_df"] = get_table_file_id(
+            conn,
+            mm_dataset.output.bead_profiles_x.data_reference.omero_object_id,
+        )
+        dash_context["bead_y_profiles_df"] = get_table_file_id(
+            conn,
+            mm_dataset.output.bead_profiles_y.data_reference.omero_object_id,
+        )
+        dash_context["bead_z_profiles_df"] = get_table_file_id(
+            conn,
+            mm_dataset.output.bead_profiles_z.data_reference.omero_object_id,
+        )
+        dash_context["image_id"] = image.data_reference.omero_object_id
     elif (
         isinstance(mm_dataset, PSFBeadsDataset) and image_location == "output"
     ):

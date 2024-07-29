@@ -236,12 +236,7 @@ def callback_test4(*args, **kwargs):
                             ],
                             label="Show lines",
                             method="restyle",
-                        ),
-                        dict(
-                            args=[{"type": "heatmap"}],
-                            label="Heatmap",
-                            method="restyle",
-                        ),
+                        )
                     ]
                 ),
                 direction="down",
@@ -294,6 +289,11 @@ def callback_test4(*args, **kwargs):
                         dict(
                             args=["type", "heatmap"],
                             label="Heatmap",
+                            method="restyle",
+                        ),
+                        dict(
+                            args=["type", "contour"],
+                            label="Contour",
                             method="restyle",
                         ),
                         dict(
