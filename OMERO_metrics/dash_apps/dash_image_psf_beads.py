@@ -133,6 +133,7 @@ def update_image(*args, **kwargs):
             "channel_nr",
             "bead_id",
             "considered_axial_edge",
+            "considered_valid",
             "center_z",
             "center_y",
             "center_x",

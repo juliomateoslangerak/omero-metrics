@@ -32,11 +32,13 @@ def layout_utility(channels, image, df, min_distance):
             (
                 df["bead_id"],
                 df["considered_axial_edge"],
+                df["considered_valid"],
             ),
             axis=-1,
         ),
         hovertemplate="<b>Bead Number:</b>  %{customdata[0]} <br>"
         + "<b>Channel Number:</b>  %{text} <br>"
+        + "<b>Considered valid:</b>  %{customdata[2]}<br>"
         + "<b>Considered Axial Edge:</b> %{customdata[1]} <br><extra></extra>",
     )
     fig.add_trace(beads_location_plot)
