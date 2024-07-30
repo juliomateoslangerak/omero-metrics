@@ -24,13 +24,7 @@ app.layout = dmc.MantineProvider(
                 html.Div(id="blank-input", children=[]),
                 dmc.Stack(
                     [
-                        dmc.Center(
-                            dmc.Text(
-                                "PSF Beads Dashboard for Image",
-                                mb=30,
-                                style={"margin-top": "20px", "fontSize": 40},
-                            ),
-                        ),
+
                         dcc.Dropdown(
                             value="channel 0",
                             id="channel_ddm_psf",
@@ -45,8 +39,7 @@ app.layout = dmc.MantineProvider(
                                 "height": "100%;",
                             },
                         ),
-                        html.Div(id="testOutput"),
-                        html.Div(id="click-data"),
+
                         dmc.Grid(
                             [
                                 dmc.GridCol(
@@ -134,6 +127,7 @@ def update_image(*args, **kwargs):
             "bead_id",
             "considered_axial_edge",
             "considered_valid",
+            "considered_self_proximity", "considered_lateral_edge", "considered_intensity_outlier",
             "center_z",
             "center_y",
             "center_x",
@@ -151,12 +145,6 @@ def update_image(*args, **kwargs):
 
 
 
-@app.expanded_callback(
-    dash.dependencies.Output('click-data', 'children'),
-    [dash.dependencies.Input('image', 'restyleData')])
-def display_click_data(*args, **kwargs):
-    cli = args[0]
-    return json.dumps(cli, indent=2)
 
 @app.expanded_callback(
     dash.dependencies.Output("mip_image", "figure"),

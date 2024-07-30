@@ -9,12 +9,19 @@ def layout_utility(channels, image, df, min_distance):
     fig.add_trace(go.Heatmap(z=image.tolist(), colorscale="hot", name="Heatmap"))
     # Add dropdowns
     fig.update_layout(
-        height=image.shape[0] + 150,
+        height=image.shape[0] + 100,
         autosize=False,
-        margin=dict(t=0, b=0, l=0, r=0),
+        margin=dict(t=0, b=0, l=10, r=0),
         template="plotly_white",
     )
-    color_map = {"Yes": "red", "No": "yellow"}
+    color_map = {"Yes": "green", "No": "red"}
+    df["considered_axial_edge"] = df[
+        "considered_axial_edge"
+    ].map({0: "No", 1: "Yes"})
+    df["considered_valid"] = df["considered_valid"].map({0: "No", 1: "Yes"})
+    df["considered_self_proximity"] = df["considered_self_proximity"].map({0: "No", 1: "Yes"})
+    df["considered_lateral_edge"] = df["considered_lateral_edge"].map({0: "No", 1: "Yes"})
+    df["considered_intensity_outlier"] = df["considered_intensity_outlier"].map({0: "No", 1: "Yes"})
 
     beads_location_plot = go.Scatter(
         y=df["center_y"],
@@ -24,8 +31,8 @@ def layout_utility(channels, image, df, min_distance):
         visible=True,
         marker=dict(
             size=10,
-            color="red",
             opacity=0.3,
+            color=df["considered_valid"].map(color_map)
         ),
         text=df["channel_nr"],
         customdata=np.stack(
@@ -33,12 +40,18 @@ def layout_utility(channels, image, df, min_distance):
                 df["bead_id"],
                 df["considered_axial_edge"],
                 df["considered_valid"],
+                df["considered_self_proximity"],
+                df["considered_lateral_edge"],
+                df["considered_intensity_outlier"],
             ),
             axis=-1,
         ),
         hovertemplate="<b>Bead Number:</b>  %{customdata[0]} <br>"
         + "<b>Channel Number:</b>  %{text} <br>"
         + "<b>Considered valid:</b>  %{customdata[2]}<br>"
+        + "<b>Considered self proximity:</b>  %{customdata[3]}<br>"
+        + "<b>Considered lateral edge:</b>  %{customdata[4]}<br>"
+        + "<b>Considered intensity outlier:</b>  %{customdata[5]}<br>"
         + "<b>Considered Axial Edge:</b> %{customdata[1]} <br><extra></extra>",
     )
     fig.add_trace(beads_location_plot)
@@ -58,7 +71,7 @@ def layout_utility(channels, image, df, min_distance):
         )
         for i, row in df.iterrows()
     ]
-    button_layer_1_height = 1.08
+    button_layer_1_height = 1.14
     fig.update_layout(
         updatemenus=[
             dict(
@@ -94,7 +107,7 @@ def layout_utility(channels, image, df, min_distance):
                 direction="down",
                 pad={"r": 10, "t": 10},
                 showactive=True,
-                x=0.1,
+                x=0,
                 xanchor="left",
                 y=button_layer_1_height,
                 yanchor="top",
@@ -117,7 +130,7 @@ def layout_utility(channels, image, df, min_distance):
                 direction="down",
                 pad={"r": 10, "t": 10},
                 showactive=True,
-                x=0.30,
+                x=0.15,
                 xanchor="left",
                 y=button_layer_1_height,
                 yanchor="top",
@@ -153,7 +166,7 @@ def layout_utility(channels, image, df, min_distance):
                 direction="down",
                 pad={"r": 10, "t": 10},
                 showactive=True,
-                x=0.50,
+                x=0.30,
                 xanchor="left",
                 y=button_layer_1_height,
                 yanchor="top",
@@ -162,15 +175,16 @@ def layout_utility(channels, image, df, min_distance):
                 buttons=list(
                     [
                         dict(
-                            label="None",
-                            method="relayout",
-                            args=["shapes", []],
-                        ),
-                        dict(
                             label="Beads ROI",
                             method="relayout",
                             args=["shapes", corners],
                         ),
+                        dict(
+                            label="None",
+                            method="relayout",
+                            args=["shapes", []],
+                        ),
+
                     ]
                 ),
                 direction="down",
@@ -179,7 +193,7 @@ def layout_utility(channels, image, df, min_distance):
                     "t": 10,
                 },
                 showactive=True,
-                x=0.70,
+                x=0.45,
                 xanchor="left",
                 y=button_layer_1_height,
                 yanchor="top",
@@ -203,7 +217,7 @@ def layout_utility(channels, image, df, min_distance):
                 direction="down",
                 pad={"r": 10, "t": 10},
                 showactive=True,
-                x=0.87,
+                x=0.6,
                 xanchor="left",
                 y=button_layer_1_height,
                 yanchor="top",
@@ -238,6 +252,13 @@ def layout_utility(channels, image, df, min_distance):
                     ),
                 ]
             ),
+               direction="down",
+               pad={"r": 10, "t": 10},
+               showactive=True,
+               x=0.75,
+               xanchor="left",
+               y=button_layer_1_height,
+               yanchor="top",
         ),
 
         ]
@@ -248,48 +269,48 @@ def layout_utility(channels, image, df, min_distance):
                 text="colorscale",
                 x=0,
                 xref="paper",
-                y=1.06,
+                y=1.05,
                 yref="paper",
                 align="left",
                 showarrow=False,
             ),
             dict(
-                text="Reverse<br>Colorscale",
-                x=0.23,
+                text="Reverse Colorscale",
+                x=0.15,
                 xref="paper",
-                y=1.07,
+                y=1.05,
                 yref="paper",
                 showarrow=False,
             ),
             dict(
                 text="Lines",
-                x=0.46,
+                x=0.3,
                 xref="paper",
-                y=1.06,
+                y=1.05,
                 yref="paper",
                 showarrow=False,
             ),
             dict(
                 text="Shapes",
-                x=0.64,
+                x=0.47,
                 xref="paper",
-                y=1.06,
+                y=1.05,
                 yref="paper",
                 showarrow=False,
             ),
             dict(
                 text="Type",
-                x=0.85,
+                x=0.615,
                 xref="paper",
-                y=1.06,
+                y=1.05,
                 yref="paper",
                 showarrow=False,
             ),
             dict(
                 text="Show",
-                x=0,
+                x=0.79,
                 xref="paper",
-                y=2.06,
+                y=1.05,
                 yref="paper",
                 showarrow=False,
 

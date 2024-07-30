@@ -4,6 +4,8 @@ from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 import pandas as pd
 import plotly.express as px
+from dash_iconify import DashIconify
+from datetime import date
 
 primary_color = "#008080"
 
@@ -22,9 +24,15 @@ dash_app_project.layout = dmc.MantineProvider(
     [
         dmc.Container(
             [
+
                 html.Div(id="blank-input"),
                 html.Div(id="blank-output"),
-                dcc.Dropdown(id="project-dropdown", value="0"),
+
+                dmc.Divider(variant="solid", style={"marginBottom": 20}),
+                dmc.Group([dcc.Dropdown(id="project-dropdown", value="0"),
+                                   dmc.DatePicker(value=date.today(),
+                                               leftSection=DashIconify(icon="clarity:date-line"))], gap=50, style={"marginBottom": 20}),
+
                 html.Div(
                     id="graph-project",
                 ),
@@ -81,7 +89,7 @@ def update_table(*args, **kwargs):
         ],
     )
     options = [
-        {"label": f"Measurement {k}", "value": f"{i}"}
+        {"label": f"{k}", "value": f"{i}"}
         for i, k in enumerate(kkm)
     ]
     data = [
