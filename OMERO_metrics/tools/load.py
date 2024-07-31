@@ -278,13 +278,18 @@ def load_dash_data_dataset(
         dash_context["intensity_profiles"] = get_all_intensity_profiles(
             conn, df
         )
-        dash_context["key_values_df"] =  get_table_file_id(
+        dash_context["key_values_df"] = get_table_file_id(
             conn,
             dataset.output.key_measurements.data_reference.omero_object_id,
         )
-        dash_context["timeline_data"] = [{"name": i.name, "description": i.description,
-                                          "acquisition_datetime": i.acquisition_datetime}
-                                         for i in dataset.input.field_illumination_image]
+        dash_context["timeline_data"] = [
+            {
+                "name": i.name,
+                "description": i.description,
+                "acquisition_datetime": i.acquisition_datetime,
+            }
+            for i in dataset.input.field_illumination_image
+        ]
 
     elif isinstance(dataset, PSFBeadsDataset):
         dash_context["title"] = "PSF Beads Dataset"

@@ -9,6 +9,8 @@ import numpy as np
 
 
 global bool_list
+
+
 def update_visibility(i, n):
     bool_list = [False] * n
     bool_list[i] = True
@@ -146,9 +148,8 @@ def image_heatmap_setup(channels, image, df, min_distance):
                                 {
                                     "contours.showlines": False,
                                     "type": "contour",
-
                                 },
-                                [0, 1, 2, 3]
+                                [0, 1, 2, 3],
                             ],
                             label="Hide lines",
                             method="restyle",
@@ -162,8 +163,7 @@ def image_heatmap_setup(channels, image, df, min_distance):
                                     "contours.labelfont.size": 12,
                                     "contours.labelfont.color": "white",
                                 },
-                                [0, 1, 2, 3]
-
+                                [0, 1, 2, 3],
                             ],
                             label="Show lines",
                             method="restyle",
@@ -223,8 +223,8 @@ def image_heatmap_setup(channels, image, df, min_distance):
                                     ),
                                     "value_test": i,
                                 },
-                             [0, 1, 2, 3, 4]
-                    ],
+                                [0, 1, 2, 3, 4],
+                            ],
                         )
                         for i, chan in enumerate(channels)
                     ]

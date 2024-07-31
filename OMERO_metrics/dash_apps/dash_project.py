@@ -24,15 +24,20 @@ dash_app_project.layout = dmc.MantineProvider(
     [
         dmc.Container(
             [
-
                 html.Div(id="blank-input"),
                 html.Div(id="blank-output"),
-
                 dmc.Divider(variant="solid", style={"marginBottom": 20}),
-                dmc.Group([dcc.Dropdown(id="project-dropdown", value="0"),
-                                   dmc.DatePicker(value=date.today(),
-                                               leftSection=DashIconify(icon="clarity:date-line"))], gap=50, style={"marginBottom": 20}),
-
+                dmc.Group(
+                    [
+                        dcc.Dropdown(id="project-dropdown", value="0"),
+                        dmc.DatePicker(
+                            value=date.today(),
+                            leftSection=DashIconify(icon="clarity:date-line"),
+                        ),
+                    ],
+                    gap=50,
+                    style={"marginBottom": 20},
+                ),
                 html.Div(
                     id="graph-project",
                 ),
@@ -88,10 +93,7 @@ def update_table(*args, **kwargs):
             for df in df_list
         ],
     )
-    options = [
-        {"label": f"{k}", "value": f"{i}"}
-        for i, k in enumerate(kkm)
-    ]
+    options = [{"label": f"{k}", "value": f"{i}"} for i, k in enumerate(kkm)]
     data = [
         {"Date": dates[i], "Name": f"Dataset {i}"}
         | df[kkm]

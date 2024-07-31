@@ -17,10 +17,8 @@ app.layout = dmc.MantineProvider(
                         style={"fontSize": 20},
                     )
                 ),
-
                 dmc.Grid(
                     [
-
                         dmc.GridCol(
                             [
                                 dmc.Title(
@@ -59,7 +57,6 @@ app.layout = dmc.MantineProvider(
                         ),
                     ]
                 ),
-
             ],
             fluid=True,
             style={
@@ -74,8 +71,8 @@ app.layout = dmc.MantineProvider(
 
 
 @app.expanded_callback(
-dash.dependencies.Output("channel_psf", "options"),
-       dash.dependencies.Output("key_values_psf", "data"),
+    dash.dependencies.Output("channel_psf", "options"),
+    dash.dependencies.Output("key_values_psf", "data"),
     [
         dash.dependencies.Input("channel_psf", "value"),
     ],
@@ -96,9 +93,7 @@ def func_psf_callback(*args, **kwargs):
         "bead_properties_df"
     ]
 
-
     return (
         channel_list_psf,
         bead_properties_df.to_dict("records"),
     )
-

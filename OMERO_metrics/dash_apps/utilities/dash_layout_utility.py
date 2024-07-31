@@ -6,7 +6,9 @@ import numpy as np
 
 def layout_utility(channels, image, df, min_distance):
     fig = go.Figure()
-    fig.add_trace(go.Heatmap(z=image.tolist(), colorscale="hot", name="Heatmap"))
+    fig.add_trace(
+        go.Heatmap(z=image.tolist(), colorscale="hot", name="Heatmap")
+    )
     # Add dropdowns
     fig.update_layout(
         height=image.shape[0] + 100,
@@ -15,13 +17,19 @@ def layout_utility(channels, image, df, min_distance):
         template="plotly_white",
     )
     color_map = {"Yes": "green", "No": "red"}
-    df["considered_axial_edge"] = df[
-        "considered_axial_edge"
-    ].map({0: "No", 1: "Yes"})
+    df["considered_axial_edge"] = df["considered_axial_edge"].map(
+        {0: "No", 1: "Yes"}
+    )
     df["considered_valid"] = df["considered_valid"].map({0: "No", 1: "Yes"})
-    df["considered_self_proximity"] = df["considered_self_proximity"].map({0: "No", 1: "Yes"})
-    df["considered_lateral_edge"] = df["considered_lateral_edge"].map({0: "No", 1: "Yes"})
-    df["considered_intensity_outlier"] = df["considered_intensity_outlier"].map({0: "No", 1: "Yes"})
+    df["considered_self_proximity"] = df["considered_self_proximity"].map(
+        {0: "No", 1: "Yes"}
+    )
+    df["considered_lateral_edge"] = df["considered_lateral_edge"].map(
+        {0: "No", 1: "Yes"}
+    )
+    df["considered_intensity_outlier"] = df[
+        "considered_intensity_outlier"
+    ].map({0: "No", 1: "Yes"})
 
     beads_location_plot = go.Scatter(
         y=df["center_y"],
@@ -30,9 +38,7 @@ def layout_utility(channels, image, df, min_distance):
         name="Beads Locations",
         visible=True,
         marker=dict(
-            size=10,
-            opacity=0.3,
-            color=df["considered_valid"].map(color_map)
+            size=10, opacity=0.3, color=df["considered_valid"].map(color_map)
         ),
         text=df["channel_nr"],
         customdata=np.stack(
@@ -143,8 +149,9 @@ def layout_utility(channels, image, df, min_distance):
                                 {
                                     "contours.showlines": False,
                                     "type": "contour",
-
-                                }, [0]],
+                                },
+                                [0],
+                            ],
                             label="Hide lines",
                             method="restyle",
                         ),
@@ -156,11 +163,12 @@ def layout_utility(channels, image, df, min_distance):
                                     "contours.showlabels": True,
                                     "contours.labelfont.size": 12,
                                     "contours.labelfont.color": "white",
-                                }, [0]],
+                                },
+                                [0],
+                            ],
                             label="Show lines",
                             method="restyle",
-                        )
-
+                        ),
                     ]
                 ),
                 direction="down",
@@ -184,7 +192,6 @@ def layout_utility(channels, image, df, min_distance):
                             method="relayout",
                             args=["shapes", []],
                         ),
-
                     ]
                 ),
                 direction="down",
@@ -206,7 +213,6 @@ def layout_utility(channels, image, df, min_distance):
                             label="Heatmap",
                             method="restyle",
                         ),
-
                         dict(
                             args=[{"type": "contour"}, [0]],
                             label="Contour",
@@ -222,45 +228,44 @@ def layout_utility(channels, image, df, min_distance):
                 y=button_layer_1_height,
                 yanchor="top",
             ),
-           dict(
-            active=0,
-            buttons=list(
-                [
-                    dict(
-                        label="Beads Location",
-                        method="restyle",
-                        args=[
-                            {"visible": True},
-                            {
-                                "title": "Beads Location On",
-                                "annotations": [],
-                            },
-                            [1]
-                        ],
-                    ),
-                    dict(
-                        label="None",
-                        method="restyle",
-                        args=[
-                            {"visible": False},
-                            {
-                                "title": "Beads Location Off",
-                                "annotations": [],
-                            },
-                            [1]
-                        ],
-                    ),
-                ]
+            dict(
+                active=0,
+                buttons=list(
+                    [
+                        dict(
+                            label="Beads Location",
+                            method="restyle",
+                            args=[
+                                {"visible": True},
+                                {
+                                    "title": "Beads Location On",
+                                    "annotations": [],
+                                },
+                                [1],
+                            ],
+                        ),
+                        dict(
+                            label="None",
+                            method="restyle",
+                            args=[
+                                {"visible": False},
+                                {
+                                    "title": "Beads Location Off",
+                                    "annotations": [],
+                                },
+                                [1],
+                            ],
+                        ),
+                    ]
+                ),
+                direction="down",
+                pad={"r": 10, "t": 10},
+                showactive=True,
+                x=0.75,
+                xanchor="left",
+                y=button_layer_1_height,
+                yanchor="top",
             ),
-               direction="down",
-               pad={"r": 10, "t": 10},
-               showactive=True,
-               x=0.75,
-               xanchor="left",
-               y=button_layer_1_height,
-               yanchor="top",
-        ),
-
         ]
     )
     fig.update_layout(
@@ -313,9 +318,7 @@ def layout_utility(channels, image, df, min_distance):
                 y=1.05,
                 yref="paper",
                 showarrow=False,
-
             ),
-
         ]
     )
     return fig
