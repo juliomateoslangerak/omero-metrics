@@ -4,14 +4,17 @@ from dash import dcc, html, dash_table
 from django_plotly_dash import DjangoDash
 import plotly.express as px
 import dash_mantine_components as dmc
+from datetime import datetime
+import plotly.graph_objects as go
 
 stylesheets = [
     "https://unpkg.com/@mantine/charts@7/styles.css",
+    "./assets/omero_metrics.css",
 ]
-primary_color = "#008080"
+primary_color = "#63aa47"
 dashboard_name = "omero_dataset_metrics"
 dash_app_dataset = DjangoDash(
-    name=dashboard_name, serve_locally=True, external_stylesheets=stylesheets
+    name=dashboard_name, serve_locally=True, external_stylesheets=stylesheets,
 )
 
 dash_app_dataset.layout = dmc.MantineProvider(
@@ -19,13 +22,21 @@ dash_app_dataset.layout = dmc.MantineProvider(
         dmc.Container(
             [
                 dmc.Center(
-                    dmc.Text(
+                    [dmc.Text(
                         id="title",
                         c=primary_color,
                         style={"fontSize": 30},
-                    )
+                    ),
+                    dmc.Group([html.Img(src="./assets/images/logo.png", style={"width": "100px"}),
+                               dmc.Text("OMERO Metrics Dashboard", c=primary_color,
+                           style={"fontSize": 15},)])
+
+                    ]
                 ),
-                dmc.Divider(variant="solid"),
+                dmc.Divider(variant="solid", mb=20),
+                html.Div(id='timeline'),
+                html.Div(id='input_timeline'),
+                dmc.Divider(variant="solid", mb=20, mt=20),
                 dmc.Grid(
                     [
                         dmc.GridCol(
@@ -178,10 +189,61 @@ dash_app_dataset.layout = dmc.MantineProvider(
                 "border-radius": "0.5rem",
                 "padding": "10px",
             },
-        )
-    ]
+        ),
+    ],
+    theme={"colorScheme": "mild"},
+
 )
 
+
+@dash_app_dataset.expanded_callback(
+    dash.dependencies.Output("timeline", "children"),
+    dash.dependencies.Input("input_timeline", "children"), )
+def timeline_function(*args, **kwargs):
+    timeline_items = kwargs["session_state"]["context"]["timeline_data"]
+    table = kwargs["session_state"]["context"]["key_values_df"]
+    table = table[["image_name", "channel_name","center_region_intensity_fraction" , "center_region_area_fraction"]].copy()
+    timeline = dmc.Timeline(
+        active=len(timeline_items),
+        bulletSize=15,
+        lineWidth=2,
+        children=[
+            dmc.TimelineItem(
+                title=item['name'],
+                children=[
+                    dmc.Text([
+                        item['description'],
+                        "\n",
+                        "( Acquisition date: ",
+                        dmc.Anchor(datetime.strptime(item["acquisition_datetime"], "%Y-%m-%dT%H:%M:%S").date(), href="#", size="sm"), " )"],
+                        c="dimmed",
+                        size="sm",
+                    )
+                ],
+               )
+            for item in timeline_items
+        ],
+        style={"background-color": "white", "border-radius": "0.5rem", "padding": "10px"},
+    )
+    return [dmc.Group(
+        [
+            timeline,
+            dcc.Graph(
+                figure=go.Figure(
+                    data=[
+                        go.Table(
+                            header=dict(values=list(table.columns)),
+                            cells=dict(values=[table[col] for col in table.columns])
+                        )
+                    ]
+                )
+            )
+        ],
+        gap="md",
+        grow=True,
+        justify="space-around",
+        style={"margin-top": "20px"}
+    )]
 
 @dash_app_dataset.expanded_callback(
     dash.dependencies.Output("dataset_image_graph", "figure"),
