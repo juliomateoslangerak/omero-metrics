@@ -29,27 +29,12 @@ This script is generating a number of copies of a dataset introducing some noise
 </small>
 @since 3.0-Beta4.3
 """
-
-# import logging
-import logging
 import random
-from datetime import datetime
 from itertools import product
-
 import numpy as np
-
-# import omero dependencies
-# import omero.scripts as scripts
 import omero.gateway as gateway
 from metrics.interface import omero as ome
-
-# import configuration parser
-from metrics.utils.utils import MetricsConfig
-from skimage import img_as_float
 from skimage.filters import gaussian
-from skimage.util import random_noise
-
-# from omero.rtypes import rlong, rstring
 
 
 def Run_script_locally():
@@ -101,7 +86,9 @@ def Run_script_locally():
             for image, image_data in zip(images, images_data):
                 new_image_data = np.squeeze(np.copy(image_data))
                 noise_image = np.ones_like(new_image_data, dtype="float64")
-                for c in range(new_image_data.shape[1]):  # dimensions are zctxy
+                for c in range(
+                    new_image_data.shape[1]
+                ):  # dimensions are zctxy
                     # adding gaussian blur
                     new_image_data[:, c, ...] = gaussian(
                         np.squeeze(new_image_data[:, c, ...]),
@@ -128,7 +115,9 @@ def Run_script_locally():
                         range(new_image_data.shape[1]),
                     )
                 )
-                zct_generator = (new_image_data[z, c, :, :] for z, c in zct_list)
+                zct_generator = (
+                    new_image_data[z, c, :, :] for z, c in zct_list
+                )
 
                 new_image = conn.createImageFromNumpySeq(
                     zctPlanes=zct_generator,

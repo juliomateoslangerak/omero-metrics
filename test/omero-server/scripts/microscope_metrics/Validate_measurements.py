@@ -43,7 +43,9 @@ from omero.rtypes import rlong, robject, rstring
 logger = logging.getLogger("metrics")
 logger.setLevel(logging.DEBUG)
 
-METRICS_GENERATED_TAG_ID = 1284  # This has to go into some installation configuration
+METRICS_GENERATED_TAG_ID = (
+    1284  # This has to go into some installation configuration
+)
 
 UNVALIDATED_NAMESPACE_PREFIX = "metrics/analyzed"
 VALIDATED_NAMESPACE_PREFIX = "metrics/validated"
@@ -70,7 +72,6 @@ def validate_dataset(dataset):
     # Dataset power measurement map annotations.
     # This is a special case as they must be modifiable by the user we cannot assign a metrics namespace
     # Currently namespace is annotated in the description
-    # TODO: Fix storing laser power measurements without namespace
     for ann in dataset.listAnnotations():
         if isinstance(
             ann, gateway.MapAnnotationWrapper
@@ -101,7 +102,6 @@ def validate_dataset(dataset):
         ):
             changes_count = _replace_namespace(ann, changes_count)
 
-    # TODO: Decide if we are creating a validated tag
     # # Clean new images tagged as metrics
     # for image in dataset.listChildren():
     #     for ann in image.listAnnotations():
@@ -125,7 +125,6 @@ def validate_dataset(dataset):
             ):
                 changes_count = _replace_namespace(ann, changes_count)
 
-    # TODO: Rois are not having a namespace. Is there another possibility to secure them?
     # # Delete all rois
     # roi_service = conn.getRoiService()
     # for image in dataset.listChildren():
@@ -176,7 +175,7 @@ def run_script():
         """This script is deleting all measurements made by omero.metrics from the selected datasets.
         For more information check \n
         http://www.mri.cnrs.fr\n
-        Copyright: Write here some copyright info""",  # TODO: copyright info
+        Copyright: Write here some copyright info""",
         scripts.String(
             "Data_Type",
             optional=False,
@@ -186,7 +185,10 @@ def run_script():
             default="Dataset",
         ),
         scripts.List(
-            "IDs", optional=False, grouping="1", description="List of Dataset IDs"
+            "IDs",
+            optional=False,
+            grouping="1",
+            description="List of Dataset IDs",
         ).ofType(rlong(0)),
         scripts.Bool(
             "Confirm validation",
@@ -204,7 +206,9 @@ def run_script():
                 script_params[key] = client.getInput(key, unwrap=True)
 
         if script_params["Confirm validation"]:
-            logger.info(f"Validation started using parameters: \n{script_params}")
+            logger.info(
+                f"Validation started using parameters: \n{script_params}"
+            )
 
             conn = gateway.BlitzGateway(client_obj=client)
 

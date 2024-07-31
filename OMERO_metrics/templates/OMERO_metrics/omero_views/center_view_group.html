@@ -1,0 +1,35 @@
+{% extends "webgateway/base/base_main.html" %}
+{%load plotly_dash%}
+{% load static %}
+
+{% block title %}Omero Metrics{% endblock %}
+{% block header %} {% endblock %}
+
+{% block link %}
+<!-- Add our styles or css links here. **NB**: Don't forget to include the parent content of this block -->
+{{ block.super }}
+
+<link rel="stylesheet" type="text/css" href="{% static 'OMERO_metrics/css/style_group.css' %}">
+
+{% endblock %}
+
+{% block script %}
+{% endblock %}
+
+{% block body %}
+
+
+<div class="header">
+    <div class="image"> <img src="{% static 'OMERO_metrics/images/logo.png' %}" width='125px' height="100px" alt="Omero metrics image"> </div>
+    <div class="text">Omero Metrics Dashboards</div>
+</div>
+
+<div class="content">
+<p>Group: {{ group_name }}</p>
+<p>Group ID: {{ group_id }}</p>
+<p>Group Description: {{ group_description }}</p>
+<p> This is a global view of the group / Microscoope</p>
+    </div>
+
+
+{% endblock %}

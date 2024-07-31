@@ -52,9 +52,7 @@ def clean_dataset(connection, dataset, namespace_like=None):
     logger.info(f"Date and time: {datetime.now()}")
 
     # Clean Dataset annotations
-    for (
-        ann
-    ) in dataset.listAnnotations():  # TODO: We do not remove original file annotations
+    for ann in dataset.listAnnotations():
         if isinstance(
             ann,
             (
@@ -96,9 +94,12 @@ def clean_dataset(connection, dataset, namespace_like=None):
     for image in dataset.listChildren():
         for ann in image.listAnnotations():
             if isinstance(
-                ann, (gateway.MapAnnotationWrapper, gateway.FileAnnotationWrapper)
+                ann,
+                (gateway.MapAnnotationWrapper, gateway.FileAnnotationWrapper),
             ):
-                connection.deleteObjects("Annotation", [ann.getId()], wait=True)
+                connection.deleteObjects(
+                    "Annotation", [ann.getId()], wait=True
+                )
 
     # Delete all rois
     roi_service = connection.getRoiService()
@@ -149,7 +150,7 @@ def run_script():
         """This script is deleting all measurements made by omero.metrics from the selected datasets.
         For more information check \n
         http://www.mri.cnrs.fr\n
-        Copyright: Write here some copyright info""",  # TODO: copyright info
+        Copyright: Write here some copyright info""",
         scripts.String(
             "Data_Type",
             optional=False,
@@ -159,7 +160,10 @@ def run_script():
             default="Dataset",
         ),
         scripts.List(
-            "IDs", optional=False, grouping="1", description="List of Dataset IDs"
+            "IDs",
+            optional=False,
+            grouping="1",
+            description="List of Dataset IDs",
         ).ofType(rlong(0)),
         scripts.Bool(
             "Confirm deletion",
@@ -169,7 +173,6 @@ def run_script():
             description="Confirm that you want to delete metrics measurements.",
         ),
     )
-    # TODO: Implement a delete validated too?
 
     try:
         script_params = {}
@@ -178,7 +181,9 @@ def run_script():
                 script_params[key] = client.getInput(key, unwrap=True)
 
         if script_params["Confirm deletion"]:
-            logger.info(f"Deletion started using parameters: \n{script_params}")
+            logger.info(
+                f"Deletion started using parameters: \n{script_params}"
+            )
 
             conn = gateway.BlitzGateway(client_obj=client)
 
