@@ -270,6 +270,7 @@ def load_dash_data_dataset(
         title = "Field Illumination Dataset"
 
         dash_context["title"] = title
+
         df = get_images_intensity_profiles(dataset)
         dash_context["image"], channel_series = concatenate_images(
             dataset.input.field_illumination_image
