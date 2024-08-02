@@ -37,13 +37,15 @@ INPUT_MAPPINGS = {
 
 KKM_MAPPINGS = {
     "FieldIlluminationDataset": [
+
+        "max_intensity",
         "center_region_intensity_fraction",
         "center_region_area_fraction",
-        "channel_name",
-        "image_name",
-        "max_intensity",
+
     ],
     "PSFBeadsDataset": [
+
+
         "intensity_max_median",
         "intensity_max_std",
         "intensity_min_mean",
@@ -109,9 +111,12 @@ class ImageManager:
 
     def load_data(self, force_reload=True):
         if force_reload or self.mm_image is None:
-            self.mm_image = load.load_image(self.omero_image)
             self.dataset_manager.load_data()
             self.dataset_manager.is_processed()
+            if self.dataset_manager.processed:
+                self.mm_image = load.load_image(self.omero_image)
+            else:
+                self.mm_image = None
         else:
             raise NotImplementedError(
                 "partial loading of data from OMERO is not yet implemented"

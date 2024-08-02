@@ -293,14 +293,7 @@ def load_dash_data_dataset(
         ]
 
     elif isinstance(dataset, PSFBeadsDataset):
-        dash_context["title"] = "PSF Beads Dataset"
-        (
-            image_psf,
-            channel_series,
-        ) = concatenate_images(dataset.input.psf_beads_images)
 
-        dash_context["image"] = image_psf
-        dash_context["channel_names"] = channel_series
         dash_context["min_distance"] = (
             dataset.input.min_lateral_distance_factor
         )

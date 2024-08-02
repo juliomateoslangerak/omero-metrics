@@ -337,7 +337,6 @@ def fig_mip(mip_X, mip_Y, mip_Z, title):
     fig = make_subplots(
         rows=2,
         cols=2,
-        specs=[[{}, {}], [{"colspan": 2}, None]],
         subplot_titles=("MIP X axis", "MIP Y axis", "MIP Z axis"),
     )
     fig = fig.add_trace(mip_X.data[0], row=1, col=1)
