@@ -3,7 +3,7 @@ from .tools import load
 from omeroweb.webclient.decorators import login_required, render_response
 from .tools.data_preperation import *
 from .tools.load import *
-from .tools.data_managers import DatasetManager
+from .tools.data_managers import DatasetManager, ProjectManager, ImageManager
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from .forms import UploadFileForm
@@ -44,7 +44,6 @@ def upload_image(request, conn=None, **kwargs):
 
 @login_required()
 def index(request, conn=None, **kwargs):
-
     experimenter = conn.getUser()
     context = {
         "firstName": experimenter.firstName,
@@ -128,12 +127,11 @@ def image_rois(request, image_id, conn=None, **kwargs):
 def center_viewer_image(request, image_id, conn=None, **kwargs):
     dash_context = request.session.get("django_plotly_dash", dict())
     image_wrapper = conn.getObject("Image", image_id)
-    dm = DatasetManager(conn, image_wrapper)
-    dm.load_data()
-    dm.is_processed()
-    dm.visualize_data()
-    dash_context["context"] = dm.context
-    template = dm.template
+    im = ImageManager(conn, image_wrapper)
+    im.load_data()
+    im.visualize_data()
+    dash_context["context"] = im.context
+    template = im.template
     request.session["django_plotly_dash"] = dash_context
     return render(request, template_name=template)
 
@@ -141,19 +139,18 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
 @login_required()
 def center_viewer_project(request, project_id, conn=None, **kwargs):
     project_wrapper = conn.getObject("Project", project_id)
-    study_config = get_file_annotation_project(project_wrapper)
-    processed_datasets, unprocessed_datasets = get_dataset_ids_lists(
-        conn, project_wrapper
-    )
-    df = processed_data_project_view(processed_datasets)
+    pm = ProjectManager(conn, project_wrapper)
+    pm.load_data()
+    pm.is_homogenized()
+    pm.load_config_file()
+    pm.check_processed_data()
+    pm.visualize_data()
+    context = pm.context
+    template = pm.template
     dash_context = request.session.get("django_plotly_dash", dict())
-    dash_context["data"] = df
+    dash_context["context"] = context
     request.session["django_plotly_dash"] = dash_context
-    collections_mm_p = load.load_project(conn, project_id)
-    context = {"project_id": project_id, "collections_mm_p": collections_mm_p}
-    return render(
-        request, "OMERO_metrics/omero_views/center_view_project.html", context
-    )
+    return render(request, template_name=template, context=context)
 
 
 @login_required()
@@ -177,7 +174,7 @@ def center_viewer_group(request, conn=None, **kwargs):
 def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
     dash_context = request.session.get("django_plotly_dash", dict())
     dataset_wrapper = conn.getObject("Dataset", dataset_id)
-    dm = DatasetManager(conn, dataset_wrapper)
+    dm = DatasetManager(conn, dataset_wrapper, load_images=True)
     dm.load_data()
     dm.is_processed()
     dm.visualize_data()

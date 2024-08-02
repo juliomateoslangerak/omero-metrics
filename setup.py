@@ -39,7 +39,7 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],  # Get strings from
     # http://pypi.python.org/pypi?%3Aaction=list_classifiers
-    author="Oumou DHMINE",
+    author="Julio Mateos Langerak & Oumou DHMINE",
     author_email="oumoudhmine@gmail.com",
     license="AGPLv3",
     url="%s" % url,

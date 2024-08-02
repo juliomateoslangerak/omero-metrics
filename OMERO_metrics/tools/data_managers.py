@@ -1,7 +1,6 @@
 import datetime
 import logging
 from typing import Union
-
 from microscopemetrics.samples import field_illumination, psf_beads
 from microscopemetrics_schema.datamodel import (
     microscopemetrics_schema as mm_schema,
@@ -12,12 +11,9 @@ from omero.gateway import (
     ImageWrapper,
     ProjectWrapper,
 )
-
 from . import load, dump, update, delete
 
 logger = logging.getLogger(__name__)
-
-DATA_TYPE_MAPPINGS = {"Dataset": 0, "Image": 1}
 
 ANALYSIS_MAPPINGS = {
     "analise_field_illumination": field_illumination.analise_field_illumination,
@@ -39,6 +35,24 @@ INPUT_MAPPINGS = {
     "PSFBeadsInput": mm_schema.PSFBeadsInput,
 }
 
+KKM_MAPPINGS = {
+    "FieldIlluminationDataset": [
+        "max_intensity",
+        "center_region_intensity_fraction",
+        "center_region_area_fraction",
+    ],
+    "PSFBeadsDataset": [
+        "intensity_max_median",
+        "intensity_max_std",
+        "intensity_min_mean",
+        "intensity_min_median",
+        "intensity_min_std",
+        "intensity_std_mean",
+        "intensity_std_median",
+        "intensity_std_std",
+    ],
+}
+
 OBJECT_TO_DUMP_FUNCTION = {
     mm_schema.Image: dump.dump_image,
     mm_schema.Roi: dump.dump_roi,
@@ -47,19 +61,99 @@ OBJECT_TO_DUMP_FUNCTION = {
     mm_schema.Table: dump.dump_table,
 }
 
-
-TEMPLATE_MAPPINGS = {
-    "FieldIlluminationDataset": [
-        "OMERO_metrics/omero_views/center_view_dataset_foi.html",
-        "OMERO_metrics/omero_views/center_view_image.html",
-    ],
-    "PSFBeadsDataset": [
-        "OMERO_metrics/omero_views/center_view_dataset_psf_beads.html",
-        "OMERO_metrics/omero_views/center_view_image_psf.html",
-    ],
-    "unknown_analysis": "OMERO_metrics/omero_views/center_view_unknown_analysis_type.html",
-    "unprocessed_analysis": "OMERO_metrics/omero_views/unprocessed_dataset.html",
+TEMPLATE_MAPPINGS_DATASET = {
+    "FieldIlluminationDataset": "OMERO_metrics/omero_views/center_view_dataset_foi.html",
+    "PSFBeadsDataset": "OMERO_metrics/omero_views/center_view_dataset_psf_beads.html",
 }
+
+TEMPLATE_MAPPINGS_IMAGE = {
+    "FieldIlluminationDataset": {
+        "input": "OMERO_metrics/omero_views/center_view_image.html",
+        "output": "OMERO_metrics/omero_views/warning.html",
+    },
+    "PSFBeadsDataset": {
+        "input": "OMERO_metrics/omero_views/center_view_image_psf.html",
+        "output": "OMERO_metrics/omero_views/warning.html",
+    },
+}
+
+
+def warning_message(msg):
+    dash_context = {"message": msg}
+    template = "OMERO_metrics/omero_views/warning.html"
+    return dash_context, template
+
+
+class ImageManager:
+    """This class is a unit of work that processes
+    data from an image (OMERO-metrics).
+    """
+
+    def __init__(self, conn: BlitzGateway, omero_image: ImageWrapper):
+        self._conn = conn
+        if isinstance(omero_image, ImageWrapper):
+            self.omero_image = omero_image
+        else:
+            raise ValueError("the object must be an ImageWrapper")
+        self.omero_image = omero_image
+        self.omero_dataset = self.omero_image.getParent()
+        self.dataset_manager = DatasetManager(self._conn, self.omero_dataset)
+        self.context = None
+        self.mm_image = None
+        self.image_exist = None
+        self.image_index = None
+        self.image_location = None
+        self.template = None
+
+    def load_data(self, force_reload=True):
+        if force_reload or self.mm_image is None:
+            self.dataset_manager.load_data()
+            self.dataset_manager.is_processed()
+            if self.dataset_manager.processed:
+                self.mm_image = load.load_image(self.omero_image)
+            else:
+                self.mm_image = None
+        else:
+            raise NotImplementedError(
+                "partial loading of data from OMERO is not yet implemented"
+            )
+
+    def visualize_data(self):
+        if self.dataset_manager.processed:
+            if (
+                self.dataset_manager.mm_dataset.__class__.__name__
+                in TEMPLATE_MAPPINGS_DATASET
+            ):
+                (
+                    self.image_exist,
+                    self.image_location,
+                    self.image_index,
+                ) = load.image_exist(
+                    self.omero_image.getId(), self.dataset_manager.mm_dataset
+                )
+                if self.image_exist:
+                    self.template = TEMPLATE_MAPPINGS_IMAGE.get(
+                        self.dataset_manager.mm_dataset.__class__.__name__
+                    )[self.image_location]
+                    self.context = load.load_dash_data_image(
+                        self._conn,
+                        self.dataset_manager.mm_dataset,
+                        self.mm_image,
+                        self.image_index,
+                        self.image_location,
+                    )
+                else:
+                    message = "Image does not exist in the dataset yaml file. Unable to visualize"
+                    logger.warning(message)
+                    self.context, self.template = warning_message(message)
+            else:
+                message = "Unknown analysis type. Unable to visualize"
+                logger.warning(message)
+                self.context, self.template = warning_message(message)
+        else:
+            message = "Dataset has not been processed. Unable to visualize"
+            logger.warning(message)
+            self.context, self.template = warning_message(message)
 
 
 class DatasetManager:
@@ -74,25 +168,17 @@ class DatasetManager:
     def __init__(
         self,
         conn: BlitzGateway,
-        omero_object: Union[DatasetWrapper, ImageWrapper],
+        omero_dataset: DatasetWrapper,
+        load_images=False,
     ):
         self._conn = conn
-        if isinstance(omero_object, DatasetWrapper):
-            self.omero_dataset = omero_object
-            self.data_type = "Dataset"
-            self.load_images = True
-            self.omero_object = omero_object
-        elif isinstance(omero_object, ImageWrapper):
-            self.omero_dataset = omero_object.getParent()
-            self.data_type = "Image"
-            self.load_images = False
-            self.omero_object = omero_object
+        if isinstance(omero_dataset, DatasetWrapper):
+            self.omero_dataset = omero_dataset
         else:
-            raise ValueError(
-                "datasets must be a DatasetWrapper or an ImageWrapper"
-            )
+            raise ValueError("datasets must be a DatasetWrapper")
 
         self.omero_project = self.omero_dataset.getParent()
+        self.load_images = load_images
         self.mm_dataset = None
         self.analysis_config = None
         self.analysis_config_id = None
@@ -101,6 +187,7 @@ class DatasetManager:
         self.context = None
         self.processed = False
         self.microscope = mm_schema.Microscope()
+        self.kkm = None
 
     def is_processed(self):
         if self.mm_dataset:
@@ -116,6 +203,8 @@ class DatasetManager:
             self.mm_dataset = load.load_dataset(
                 self.omero_dataset, self.load_images
             )
+            self.kkm = KKM_MAPPINGS.get(self.mm_dataset.__class__.__name__)
+
         else:
             raise NotImplementedError(
                 "partial loading of data from OMERO is not yet implemented"
@@ -225,24 +314,21 @@ class DatasetManager:
 
     def visualize_data(self):
         if self.processed:
-            if self.mm_dataset.__class__.__name__ in TEMPLATE_MAPPINGS:
-                index = DATA_TYPE_MAPPINGS.get(self.data_type)
-                self.template = TEMPLATE_MAPPINGS.get(
+            if self.mm_dataset.__class__.__name__ in TEMPLATE_MAPPINGS_DATASET:
+                self.template = TEMPLATE_MAPPINGS_DATASET.get(
                     self.mm_dataset.__class__.__name__
-                )[index]
-                self.context = load.load_dash_data(
-                    self._conn, self.mm_dataset, self.omero_object
+                )
+                self.context = load.load_dash_data_dataset(
+                    self._conn, self.mm_dataset
                 )
             else:
-                logger.warning("Unknown analysis type. Unable to visualize")
-                self.template = TEMPLATE_MAPPINGS.get("unknown_analysis")
-                self.context = {}
+                message = "Unknown analysis type. Unable to visualize"
+                logger.warning(message)
+                self.context, self.template = warning_message(message)
         else:
-            logger.warning(
-                "Dataset has not been processed. Unable to visualize"
-            )
-            self.template = TEMPLATE_MAPPINGS.get("unprocessed_analysis")
-            self.context = {}
+            message = "Dataset has not been processed. Unable to visualize"
+            logger.warning(message)
+            self.context, self.template = warning_message(message)
 
     def save_settings(self):
         pass
@@ -262,8 +348,14 @@ class ProjectManager:
     def __init__(self, conn: BlitzGateway, project: ProjectWrapper):
         self._conn = conn
         self.project = project
-        self.datasets = None
+        self.datasets = []
         self.context = None
+        self.setup = None
+        self.datasets_types = []
+        self.processed_datasets = {}
+        self.unprocessed_datasets = {}
+        self.template = None
+        self.homogenize = None
 
     def load_data(self, force_reload=True):
         if force_reload or self.datasets is None:
@@ -271,20 +363,82 @@ class ProjectManager:
                 dm = DatasetManager(self._conn, dataset)
                 dm.load_data()
                 dm.is_processed()
+                self.datasets_types.append(dm.mm_dataset.__class__.__name__)
                 self.datasets.append(dm)
         else:
             raise NotImplementedError(
                 "partial loading of data from OMERO is not yet implemented"
             )
 
+    def check_processed_data(self):
+        for dataset in self.datasets:
+            if dataset.processed:
+                self.processed_datasets[dataset.omero_dataset.getId()] = (
+                    dataset
+                )
+            else:
+                self.unprocessed_datasets[dataset.omero_dataset.getId()] = (
+                    dataset
+                )
+
+    def is_homogenized(self):
+        # unique = set(self.datasets_types)
+        unique = set(
+            [
+                dataset.mm_dataset.__class__.__name__
+                for dataset in self.processed_datasets.values()
+            ]
+        )
+        if len(unique) == 1:
+            self.homogenize = True
+        else:
+            self.homogenize = False
+        return self.homogenize
+
     def visualize_data(self):
-        pass
+        if self.processed_datasets:
+            if self.is_homogenized():
+                if (
+                    list(self.processed_datasets.values())[
+                        0
+                    ].mm_dataset.__class__.__name__
+                    in TEMPLATE_MAPPINGS_DATASET
+                ):
+                    self.context, self.template = load.load_dash_data_project(
+                        self._conn, self.processed_datasets
+                    )
+                    self.context["unprocessed_datasets"] = list(
+                        self.unprocessed_datasets.keys()
+                    )
+                    self.context["datasets_types"] = self.datasets_types
+                    self.context["processed_datasets"] = list(
+                        self.processed_datasets.keys()
+                    )
+                    self.context["setup"] = self.setup
+                else:
+                    message = "This project contains unsupported analysis type. Unable to visualize"
+                    logger.warning(message)
+                    self.context, self.template = warning_message(message)
+
+            else:
+                message = "This project contains different types of datasets. Unable to visualize"
+                logger.warning(message)
+                self.context, self.template = warning_message(message)
+
+        else:
+            message = "This project doesn't contain a processed dataset. Unable to visualize"
+            logger.warning(message)
+            self.context, self.template = warning_message(message)
 
     def save_settings(self):
         pass
 
     def delete_data(self):
         pass
+
+    def load_config_file(self):
+        if self.setup is None:
+            self.setup = load.load_config_file_data(self._conn, self.project)
 
 
 class MicroscopeManager:
