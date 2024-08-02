@@ -39,6 +39,8 @@ KKM_MAPPINGS = {
     "FieldIlluminationDataset": [
         "center_region_intensity_fraction",
         "center_region_area_fraction",
+        "channel_name",
+        "image_name",
         "max_intensity",
     ],
     "PSFBeadsDataset": [

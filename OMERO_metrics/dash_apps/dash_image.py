@@ -236,7 +236,7 @@ def callback_test4(*args, **kwargs):
                             ],
                             label="Show lines",
                             method="restyle",
-                        )
+                        ),
                     ]
                 ),
                 direction="down",

@@ -24,7 +24,6 @@ app.layout = dmc.MantineProvider(
                 html.Div(id="blank-input", children=[]),
                 dmc.Stack(
                     [
-
                         dcc.Dropdown(
                             value="channel 0",
                             id="channel_ddm_psf",
@@ -39,7 +38,6 @@ app.layout = dmc.MantineProvider(
                                 "height": "100%;",
                             },
                         ),
-
                         dmc.Grid(
                             [
                                 dmc.GridCol(
@@ -65,10 +63,14 @@ app.layout = dmc.MantineProvider(
                                 dmc.GridCol(
                                     [
                                         dmc.Title(
-                                            "Chart", c="#189A35", size="h3", mb=10
+                                            "Chart",
+                                            c="#189A35",
+                                            size="h3",
+                                            mb=10,
                                         ),
                                         dcc.Dropdown(
-                                            value="Axis: X", id="axis_image_psf"
+                                            value="Axis: X",
+                                            id="axis_image_psf",
                                         ),
                                         dcc.Graph(
                                             id="mip_chart_image",
@@ -84,7 +86,6 @@ app.layout = dmc.MantineProvider(
                                 ),
                             ]
                         ),
-
                     ]
                 ),
             ],
@@ -127,7 +128,9 @@ def update_image(*args, **kwargs):
             "bead_id",
             "considered_axial_edge",
             "considered_valid",
-            "considered_self_proximity", "considered_lateral_edge", "considered_intensity_outlier",
+            "considered_self_proximity",
+            "considered_lateral_edge",
+            "considered_intensity_outlier",
             "center_z",
             "center_y",
             "center_x",
@@ -137,13 +140,11 @@ def update_image(*args, **kwargs):
     list_chan = [c.name for c in channel_names.channels]
     stack = image_omero[0, :, :, :, channel_index]
     stack_z = np.max(stack, axis=0)
-    #stack_z = 255*stack_z / np.max(stack_z)
+    # stack_z = 255*stack_z / np.max(stack_z)
     fig = layout_utility(
         list_chan, stack_z, df_beads_location, min_distance=min_distance
     )
     return fig, channel_options
-
-
 
 
 @app.expanded_callback(
@@ -231,7 +232,3 @@ def line_graph_axis(bead_index, channel_index, axis, kwargs):
         patch={"line": {"dash": "dot"}}, selector={"name": "fitted"}
     )
     return fig_ip_x
-
-
-
-
