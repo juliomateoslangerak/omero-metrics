@@ -2,12 +2,15 @@ import dash_mantine_components as dmc
 from dash import dcc, html
 import plotly.graph_objs as go
 import numpy as np
+import plotly.express as px
 
 
 def layout_utility(channels, image, df, min_distance):
-    fig = go.Figure()
-    fig.add_trace(
-        go.Heatmap(z=image.tolist(), colorscale="hot", name="Heatmap")
+    fig = px.imshow(
+        image,
+        zmin=image.min(),
+        zmax=image.max(),
+        color_continuous_scale="hot",
     )
     # Add dropdowns
     fig.update_layout(
@@ -84,27 +87,27 @@ def layout_utility(channels, image, df, min_distance):
                 buttons=list(
                     [
                         dict(
-                            args=["colorscale", "Hot"],
+                            args=["color_continuous_scale", "Hot"],
                             label="Hot",
                             method="restyle",
                         ),
                         dict(
-                            args=["colorscale", "Viridis"],
+                            args=["color_continuous_scale", "Viridis"],
                             label="Viridis",
                             method="restyle",
                         ),
                         dict(
-                            args=["colorscale", "Cividis"],
+                            args=["color_continuous_scale", "Cividis"],
                             label="Cividis",
                             method="restyle",
                         ),
                         dict(
-                            args=["colorscale", "Blues"],
+                            args=["color_continuous_scale", "Blues"],
                             label="Blues",
                             method="restyle",
                         ),
                         dict(
-                            args=["colorscale", "Greens"],
+                            args=["color_continuous_scale", "Greens"],
                             label="Greens",
                             method="restyle",
                         ),

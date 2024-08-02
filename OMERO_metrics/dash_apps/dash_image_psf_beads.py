@@ -13,15 +13,37 @@ import pandas as pd
 from ..tools.data_preperation import crop_bead_index, mip_graphs, fig_mip
 
 logger = logging.getLogger(__name__)
-
-
+primary_color = "#63aa47"
 app = DjangoDash("PSF_Beads_image")
 
 app.layout = dmc.MantineProvider(
     children=[
         dmc.Container(
             [
-                html.Div(id="blank-input", children=[]),
+                dmc.Center(
+                    [
+                        dmc.Text(
+                            id="title",
+                            c=primary_color,
+                            style={"fontSize": 30},
+                        ),
+                        dmc.Group(
+                            [
+                                html.Img(
+                                    src="./assets/images/logo.png",
+                                    style={"width": "100px"},
+                                ),
+                                dmc.Text(
+                                    "OMERO Metrics Dashboard",
+                                    c=primary_color,
+                                    style={"fontSize": 15},
+                                ),
+                            ]
+                        ),
+                    ]
+                ),
+                dmc.Divider(variant="solid"),
+                html.Div(id="blank-input"),
                 dmc.Stack(
                     [
                         dcc.Dropdown(
@@ -122,7 +144,7 @@ def update_image(*args, **kwargs):
     ]
     df_beads_location = bead_properties_df[
         bead_properties_df["channel_nr"] == channel_index
-    ][
+        ][
         [
             "channel_nr",
             "bead_id",
@@ -164,14 +186,14 @@ def callback_mip(*args, **kwargs):
     channel_index = int(args[2].split(" ")[-1])
     options = ["Axis: X", "Axis: Y", "Axis: Z"]
     stack = kwargs["session_state"]["context"]["image"][
-        0, :, :, :, channel_index
-    ]
+            0, :, :, :, channel_index
+            ]
     bead_properties_df = kwargs["session_state"]["context"][
         "bead_properties_df"
     ]
     df_beads_location = bead_properties_df[
         bead_properties_df["channel_nr"] == channel_index
-    ][
+        ][
         [
             "channel_nr",
             "bead_id",
@@ -189,7 +211,7 @@ def callback_mip(*args, **kwargs):
         )
         bead = df_beads_location[
             df_beads_location["bead_id"] == bead_index
-        ].copy()
+            ].copy()
         x0, xf, y0, yf, z = crop_bead_index(bead, min_dist, stack)
         mip_x, mip_y, mip_z = mip_graphs(x0, xf, y0, yf, z, stack)
         return (
@@ -221,8 +243,8 @@ def line_graph_axis(bead_index, channel_index, axis, kwargs):
     )
     cols_x = df_meta_x[
         (
-            (df_meta_x["bead_id"] == bead_index)
-            & (df_meta_x["channel_nr"] == channel_index)
+                (df_meta_x["bead_id"] == bead_index)
+                & (df_meta_x["channel_nr"] == channel_index)
         )
     ]["name"].values
     df_x = df_axis_3d[cols_x].copy()
