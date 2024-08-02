@@ -10,10 +10,8 @@ from datetime import datetime
 import plotly.graph_objects as go
 
 external_scripts = [
-
     # add the tailwind cdn url hosting the files with the utility classes
-    {'src': 'https://cdn.tailwindcss.com'}
-
+    {"src": "https://cdn.tailwindcss.com"}
 ]
 stylesheets = [
     "https://unpkg.com/@mantine/dates@7/styles.css",
@@ -23,7 +21,6 @@ stylesheets = [
     "https://unpkg.com/@mantine/notifications@7/styles.css",
     "https://unpkg.com/@mantine/nprogress@7/styles.css",
     "./assets/omero_metrics.css",
-
 ]
 primary_color = "#63aa47"
 dashboard_name = "omero_dataset_metrics"
@@ -31,127 +28,173 @@ dash_app_dataset = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
     external_stylesheets=stylesheets,
-    external_scripts=external_scripts
-
+    external_scripts=external_scripts,
 )
 
 dash_app_dataset.layout = dmc.MantineProvider(
-    [dmc.Container(
-        [
-            dmc.Center(
-                [
-                    dmc.Text(
-                        id="title",
-                        c=primary_color,
-                        style={"fontSize": 30},
-                    ),
-                    dmc.Group(
-                        [
-                            html.Img(
-                                src="./assets/images/logo.png",
-                                style={"width": "100px"},
-                            ),
+    [
+        dmc.Container(
+            [
+                dmc.Center(
+                    [
+                        dmc.Text(
+                            id="title",
+                            c=primary_color,
+                            style={"fontSize": 30},
+                        ),
+                        dmc.Group(
+                            [
+                                html.Img(
+                                    src="./assets/images/logo.png",
+                                    style={"width": "100px"},
+                                ),
+                                dmc.Text(
+                                    "OMERO Metrics Dashboard",
+                                    c=primary_color,
+                                    style={"fontSize": 15},
+                                ),
+                            ]
+                        ),
+                    ]
+                ),
+                dmc.Divider(variant="solid"),
+                dmc.Grid(
+                    id="group_image",
+                    justify="space-between",
+                    align="center",
+                    style={
+                        "margin-top": "10px",
+                        "background-color": "white",
+                        "border-radius": "0.5rem",
+                        "padding": "10px",
+                    },
+                    children=[
+                        dmc.GridCol(
+                            [
+                                dmc.Text("Select Channel", size="sm"),
+                                dcc.Dropdown(
+                                    id="channel_dropdown_foi",
+                                    clearable=False,
+                                    className="bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700",
+                                    value="channel 0",
+                                ),
+                                dmc.Center(
+                                    [
+                                        dmc.Text(
+                                            "Intensity Map",
+                                            size="md",
+                                            c="#2A65B1",
+                                            style={
+                                                "margin-bottom": "20px",
+                                                "margin-left": "20px",
+                                            },
+                                        )
+                                    ]
+                                ),
+                                dcc.Graph(
+                                    id="intensity_map",
+                                    style={
+                                        "display": "inline-block",
+                                        "width": "100%",
+                                        "height": "100%",
+                                    },
+                                ),
+                            ],
+                            span="6",
+                        ),
+                        dmc.GridCol(
+                            [
+                                dmc.Center(
+                                    [
+                                        dmc.Text(
+                                            "Key Measurements",
+                                            size="md",
+                                            c="#2A65B1",
+                                            style={
+                                                "margin-bottom": "20px",
+                                                "margin-left": "20px",
+                                            },
+                                        )
+                                    ]
+                                ),
+                                dmc.Table(
+                                    id="km_table",
+                                    striped=True,
+                                    highlightOnHover=True,
+                                    className="table table-striped table-bordered",
+                                ),
+                            ],
+                            span="6",
+                        ),
+                    ],
+                ),
+                html.Div(id="blank-input"),
+                dmc.Grid(
+                    id="table",
+                    children=[
+                        dmc.Center(
                             dmc.Text(
-                                "OMERO Metrics Dashboard",
-                                c=primary_color,
-                                style={"fontSize": 15},
-                            ),
-                        ]
-                    ),
-                ]
-            ),
-            dmc.Divider(variant="solid"),
-            dmc.Grid(id="group_image",
-                     justify="space-between",
-                     align="center",
-                     style={"margin-top": "10px", "background-color": "white",
-                            "border-radius": "0.5rem", "padding": "10px"},
-                     children=[dmc.GridCol([dmc.Text("Select Channel", size="sm"),
-                                            dcc.Dropdown(
-                                                id='channel_dropdown_foi',
-                                                clearable=False,
-                                                className="bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700",
-                                                value='channel 0'), dmc.Center([dmc.Text("Intensity Map",
-                                                                                         size="md",
-                                                                                         c="#2A65B1",
-                                                                                         style={"margin-bottom": "20px",
-                                                                                                "margin-left": "20px"})
-                                                                                ]),
-                                            dcc.Graph(id='intensity_map',
-                                                      style={"display": "inline-block", "width": "100%",
-                                                             "height": "100%"})
-                                            ], span="6"),
-                               dmc.GridCol([dmc.Center([dmc.Text("Key Measurements",
-                                                                 size="md",
-                                                                 c="#2A65B1",
-                                                                 style={"margin-bottom": "20px", "margin-left": "20px"})
-                                                        ]),
-                                            dmc.Table(
-                                                id='km_table',
-                                                striped=True,
-                                                highlightOnHover=True,
-                                                className="table table-striped table-bordered",
-
-                                            )
-                                            ], span="6")],
-
-                     ),
-            html.Div(id="blank-input"),
-            dmc.Grid(id='table',
-                     children=[
-                         dmc.Center(
-                             dmc.Text("Intensity Profiles", size="md", c="#2A65B1", style={"margin-bottom": "20px"})),
-                         dmc.LineChart(
-                             id="intensity_profile",
-                             h=400,
-                             dataKey="Pixel",
-                             data={},
-                             series=[
-                                 {
-                                     "name": "Lefttop To Rightbottom",
-                                     "color": "violet.9",
-                                 },
-                                 {
-                                     "name": "Leftbottom To Righttop",
-                                     "color": "blue.9",
-                                 },
-                                 {
-                                     "name": "Center Horizontal",
-                                     "color": "pink.9",
-                                 },
-                                 {
-                                     "name": "Center Vertical",
-                                     "color": "teal.9",
-                                 },
-                             ],
-                             xAxisLabel="Pixel",
-                             yAxisLabel="Pixel Intensity",
-                             tickLine="y",
-                             gridAxis="x",
-                             withXAxis=False,
-                             withYAxis=True,
-                             withLegend=True,
-                             strokeWidth=3,
-                             withDots=False,
-                             curveType="natural",
-
-                             style={
-                                 "margin-top": "20px",
-                                 "background-color": "white",
-                             },
-                         )],
-                     style={"margin-top": "10px", "background-color": "white",
-                            "border-radius": "0.5rem", "padding": "10px", })
-
-        ],
-        fluid=True,
-        style={
-            "background-color": "#eceff1",
-            "margin": "10px",
-            "border-radius": "0.5rem",
-            "padding": "10px",
-        },
-    )
+                                "Intensity Profiles",
+                                size="md",
+                                c="#2A65B1",
+                                style={"margin-bottom": "20px"},
+                            )
+                        ),
+                        dmc.LineChart(
+                            id="intensity_profile",
+                            h=400,
+                            dataKey="Pixel",
+                            data={},
+                            series=[
+                                {
+                                    "name": "Lefttop To Rightbottom",
+                                    "color": "violet.9",
+                                },
+                                {
+                                    "name": "Leftbottom To Righttop",
+                                    "color": "blue.9",
+                                },
+                                {
+                                    "name": "Center Horizontal",
+                                    "color": "pink.9",
+                                },
+                                {
+                                    "name": "Center Vertical",
+                                    "color": "teal.9",
+                                },
+                            ],
+                            xAxisLabel="Pixel",
+                            yAxisLabel="Pixel Intensity",
+                            tickLine="y",
+                            gridAxis="x",
+                            withXAxis=False,
+                            withYAxis=True,
+                            withLegend=True,
+                            strokeWidth=3,
+                            withDots=False,
+                            curveType="natural",
+                            style={
+                                "margin-top": "20px",
+                                "background-color": "white",
+                            },
+                        ),
+                    ],
+                    style={
+                        "margin-top": "10px",
+                        "background-color": "white",
+                        "border-radius": "0.5rem",
+                        "padding": "10px",
+                    },
+                ),
+            ],
+            fluid=True,
+            style={
+                "background-color": "#eceff1",
+                "margin": "10px",
+                "border-radius": "0.5rem",
+                "padding": "10px",
+            },
+        )
     ]
 )
 
@@ -175,19 +218,22 @@ def update_dropdow_menu(*args, **kwargs):
 )
 def update_km_table(*args, **kwargs):
     table = kwargs["session_state"]["context"]["key_values_df"]
-    table_kkm = table[[
-        "channel_name",
-        "image_name",
-        "center_region_intensity_fraction",
-        "center_region_area_fraction",
-        "max_intensity"
-    ]].copy()
+    table_kkm = table[
+        [
+            "channel_name",
+            "image_name",
+            "center_region_intensity_fraction",
+            "center_region_area_fraction",
+            "max_intensity",
+        ]
+    ].copy()
     table_kkm = table_kkm.round(3)
     table_kkm.columns = table_kkm.columns.str.replace("_", " ").str.title()
     data = {
         "head": table_kkm.columns.tolist(),
         "body": table_kkm.values.tolist(),
-        "caption": "Key Measurements for the selected dataset"}
+        "caption": "Key Measurements for the selected dataset",
+    }
     return data
 
 
@@ -228,11 +274,8 @@ def dataset_callback_intensity_map(*args, **kwargs):
         yaxis_showgrid=False,
         xaxis_zeroline=False,
         yaxis_zeroline=False,
-
     )
-    return (
-        fig,
-        df_new.to_dict("records"))
+    return (fig, df_new.to_dict("records"))
 
 
 def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:
@@ -241,6 +284,7 @@ def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:
         df, col, value
     )  # TODO: replace setattr with df.loc[:, col] = value
     return df
+
 
 # dmc.GridCol([dmc.Center([dmc.Text("Key Measurements", size="md")]),
 #                          table2, dmc.Center([dmc.Text("Key Measurements for Field of Illumination", c="dimmed",

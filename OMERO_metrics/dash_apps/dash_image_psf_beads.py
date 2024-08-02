@@ -144,7 +144,7 @@ def update_image(*args, **kwargs):
     ]
     df_beads_location = bead_properties_df[
         bead_properties_df["channel_nr"] == channel_index
-        ][
+    ][
         [
             "channel_nr",
             "bead_id",
@@ -186,14 +186,14 @@ def callback_mip(*args, **kwargs):
     channel_index = int(args[2].split(" ")[-1])
     options = ["Axis: X", "Axis: Y", "Axis: Z"]
     stack = kwargs["session_state"]["context"]["image"][
-            0, :, :, :, channel_index
-            ]
+        0, :, :, :, channel_index
+    ]
     bead_properties_df = kwargs["session_state"]["context"][
         "bead_properties_df"
     ]
     df_beads_location = bead_properties_df[
         bead_properties_df["channel_nr"] == channel_index
-        ][
+    ][
         [
             "channel_nr",
             "bead_id",
@@ -211,7 +211,7 @@ def callback_mip(*args, **kwargs):
         )
         bead = df_beads_location[
             df_beads_location["bead_id"] == bead_index
-            ].copy()
+        ].copy()
         x0, xf, y0, yf, z = crop_bead_index(bead, min_dist, stack)
         mip_x, mip_y, mip_z = mip_graphs(x0, xf, y0, yf, z, stack)
         return (
@@ -243,8 +243,8 @@ def line_graph_axis(bead_index, channel_index, axis, kwargs):
     )
     cols_x = df_meta_x[
         (
-                (df_meta_x["bead_id"] == bead_index)
-                & (df_meta_x["channel_nr"] == channel_index)
+            (df_meta_x["bead_id"] == bead_index)
+            & (df_meta_x["channel_nr"] == channel_index)
         )
     ]["name"].values
     df_x = df_axis_3d[cols_x].copy()

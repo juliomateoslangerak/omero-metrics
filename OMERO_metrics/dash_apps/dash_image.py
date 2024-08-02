@@ -31,7 +31,7 @@ dash_app_image.layout = dmc.MantineProvider(
                                     id="my-dropdown1",
                                     options={},
                                     value="channel 0",
-                                       clearable=False,
+                                    clearable=False,
                                 ),
                             ],
                             span="auto",

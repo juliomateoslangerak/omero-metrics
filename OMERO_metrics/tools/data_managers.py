@@ -37,15 +37,11 @@ INPUT_MAPPINGS = {
 
 KKM_MAPPINGS = {
     "FieldIlluminationDataset": [
-
         "max_intensity",
         "center_region_intensity_fraction",
         "center_region_area_fraction",
-
     ],
     "PSFBeadsDataset": [
-
-
         "intensity_max_median",
         "intensity_max_std",
         "intensity_min_mean",

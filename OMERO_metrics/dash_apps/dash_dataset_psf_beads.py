@@ -4,10 +4,8 @@ from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 
 external_scripts = [
-
     # add the tailwind cdn url hosting the files with the utility classes
-    {'src': 'https://cdn.tailwindcss.com'}
-
+    {"src": "https://cdn.tailwindcss.com"}
 ]
 stylesheets = [
     "https://unpkg.com/@mantine/dates@7/styles.css",
@@ -17,57 +15,64 @@ stylesheets = [
     "https://unpkg.com/@mantine/notifications@7/styles.css",
     "https://unpkg.com/@mantine/nprogress@7/styles.css",
     "./assets/omero_metrics.css",
-
 ]
 primary_color = "#63aa47"
 
-app = DjangoDash("PSF_Beads",
-                 external_stylesheets=stylesheets,
-                 external_scripts=external_scripts)
+app = DjangoDash(
+    "PSF_Beads",
+    external_stylesheets=stylesheets,
+    external_scripts=external_scripts,
+)
 
 
 app.layout = dmc.MantineProvider(
     [
         dmc.Container(
-            [dmc.Center(
-                [
-                    dmc.Text(
-                        id="title",
-                        c=primary_color,
-                        style={"fontSize": 30},
-                    ),
-                    dmc.Group(
-                        [
-                            html.Img(
-                                src="./assets/images/logo.png",
-                                style={"width": "100px"},
-                            ),
-                            dmc.Text(
-                                "OMERO Metrics Dashboard",
-                                c=primary_color,
-                                style={"fontSize": 15},
-                            ),
-                        ]
-                    ),
-                ]
-            ),
+            [
+                dmc.Center(
+                    [
+                        dmc.Text(
+                            id="title",
+                            c=primary_color,
+                            style={"fontSize": 30},
+                        ),
+                        dmc.Group(
+                            [
+                                html.Img(
+                                    src="./assets/images/logo.png",
+                                    style={"width": "100px"},
+                                ),
+                                dmc.Text(
+                                    "OMERO Metrics Dashboard",
+                                    c=primary_color,
+                                    style={"fontSize": 15},
+                                ),
+                            ]
+                        ),
+                    ]
+                ),
                 dmc.Divider(variant="solid"),
-
-                dmc.Stack([
-                    dmc.Center([dmc.Title(
+                dmc.Stack(
+                    [
+                        dmc.Center(
+                            [
+                                dmc.Title(
                                     "Key Measurements",
                                     c="#189A35",
                                     size="h3",
                                     mb=10,
                                 ),
-                    dmc.Table(
+                                dmc.Table(
                                     id="key_values_psf",
                                     striped=True,
                                     highlightOnHover=True,
                                     className="table table-striped table-bordered",
-                                )]),]),
+                                ),
+                            ]
+                        ),
+                    ]
+                ),
                 dmc.Divider(variant="solid"),
-
                 html.Div(id="blank-input"),
             ],
             fluid=True,
@@ -91,8 +96,8 @@ app.layout = dmc.MantineProvider(
 def func_psf_callback(*args, **kwargs):
     table_km = kwargs["session_state"]["context"]["bead_km_df"]
     kkm = [
-        'channel_name',
-        'considered_valid_count',
+        "channel_name",
+        "considered_valid_count",
         "intensity_max_median",
         "intensity_max_std",
         "intensity_min_mean",
@@ -108,5 +113,6 @@ def func_psf_callback(*args, **kwargs):
     data = {
         "head": table_kkm.columns.tolist(),
         "body": table_kkm.values.tolist(),
-        "caption": "Key Measurements for the selected dataset"}
+        "caption": "Key Measurements for the selected dataset",
+    }
     return data
