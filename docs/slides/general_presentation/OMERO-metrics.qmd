@@ -1,6 +1,6 @@
 # Why to monitor<br>microscope condition?
 
-Microscopes are very sophisticated optical instruments that take extremely precise measurements on biologic samples.
+Microscopes are sophisticated optical instruments that take extremely precise measurements on biologic samples.
 Therefore, it is essential not only to keep them in good condition but also to know what their condition is.
 
 >Every careful measurement in science is always given with the probable error ...
@@ -9,23 +9,39 @@ Therefore, it is essential not only to keep them in good condition but also to k
 >
 ><span class="quote_author">Bertrand Russell</span>
 
+## Key objectives of monitoring microscope condition
+
+1. Ensure that performance degradation is detected as soon as possible
+2. Help the core staff to diagnose the problem and react accordingly
+3. Provide evidence serving in the dialogue with microscope manufacturers and service providers
+4. Calibrate hardware
+5. Provide quality assurance and analysis data and meta-data to the users of the facility
+
+
 # When to monitor<br>microscope condition?
 The monitoring of the microscope condition should be done at different moments to ensure
 that the equipment is performing according to a predefined specifications chart.
 
-- **During the installation** of new equipment to ensure the acceptance of the installation and establish the baseline for the future.
+- **During the installation** of new equipment to ensure the acceptance of the installation
+and establish the baseline for the future.
 - **During the service life** of the system:
-  - after the periodic maintenance is carried out either by the core facility staff or by an external service provider.
+  - after the periodic maintenance is carried out either by the core facility staff or by an
+  external service provider.
   - when there is a doubt about the performance of the equipment.
   - when there is a change in the environment of the equipment.
 
-# Why a new tool to monitor microscope performance? {.flow}
+# Why a new tool to monitor microscope performance?
 
 Another important text here
 
 # Current tools
 
-Current tools are not enough to monitor microscope performance.
+There are existing tools \[1, 2, 3\] that are focused in producing measurements on optical standards
+to evaluate the performance of the equipment. However these tools are either proprietary or tightly
+bound to a specific GUI (ImageJ) which limits their implementation with external tools.
+
+In this project we want to profit from the great advantages that Python offers to produce a library that
+integrates well with modern data analysis and management and visualization tools.
 
 # What is missing?
 
@@ -36,25 +52,36 @@ Current tools are not enough to monitor microscope performance.
 
 FAIR microscope performance monitoring
 
+# How does it work?
+
+1. **Import image data into OMERO** in a well defined structure
+2. **Run the analysis** using predefined parameters
+3. **Visualize the results** in a dashboard
+
+# 1. Import image data into OMERO
+
+OMERO is a server-client platform for managing, visualizing, and analyzing microscope images and metadata.
+
+## 1.1. Importing images
+
+Acquired images are imported into OMERO following a well defined structure.
+
+::: {.r-stack}
+![](./media/import_image_data_full)
+![](./media/import_image_data_group){.fragment}
+![](./media/import_image_data_project){.fragment}
+![](./media/import_image_data_dataset){.fragment}
+![](./media/import_image_data_images){.fragment}
+:::
+
+# 2. Run the analysis
+
+# 3. Visualize the results
+
 # Recommended readings
-Project description
--------------------
 
 
-1. Ensure that performance degradation is detected as soon as possible
-2. Help the core staff to diagnose the problem and react accordingly
-3. Provide evidence serving in the dialogue with microscope manufacturers
-4. Calibrate hardware
-5. Provide quality assurance and analysis data and meta-data to the users of the facility
 
-At MRI we have previously developed a set of Python libraries that, based on previous work \[1\] will perform that analysis (microscope-metrics) following a well defined schema (microscope-metrics-schema) and manage the input and output data in an OMERO database (microscope-metrics-omero).
-
-This project aims at producing a Python library, named _microscopemetrics-dashboard_, providing visualization tools to explore the analyzed data.
-
-Pre-existing work and tools
----------------------------
-
-To the best of our knowledge there are existing software tools \[1, 2, 3\] that are focused in producing measurements on optical standards to evaluate the performance of the equipment. However these tools are either proprietary or tightly bound to a specific GUI (ImageJ) which limits their implementation with external tools. In this project we want to profit from the great advantages that Python offers to produce a library that integrates well with modern data analysis and management and visualization tools.
 
 We are otherwise strongly basing our work on pre-existing work by the OME consortium and the QUAREP-LiMi and, on the national level, the GT-metrologie of the RT-mfm.
 
