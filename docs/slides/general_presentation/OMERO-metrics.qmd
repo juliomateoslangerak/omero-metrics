@@ -67,11 +67,11 @@ OMERO is a server-client platform for managing, visualizing, and analyzing micro
 Acquired images are imported into OMERO following a well defined structure.
 
 ::: {.r-stack}
-![](./media/import_image_data_full)
-![](./media/import_image_data_group){.fragment}
-![](./media/import_image_data_project){.fragment}
-![](./media/import_image_data_dataset){.fragment}
-![](./media/import_image_data_images){.fragment}
+![](./media/import_image_data_full){.fragment style="position: absolute; left: 0; z-index: 1;"}
+![](./media/import_image_data_group){.fragment style="position: absolute; left: 0; z-index: 2;"}
+![](./media/import_image_data_project){.fragment style="position: absolute; left: 0; z-index: 3;"}
+![](./media/import_image_data_dataset){.fragment style="position: absolute; left: 0; z-index: 4;"}
+![](./media/import_image_data_images){.fragment style="position: absolute; left: 0; z-index: 5;"}
 :::
 
 # 2. Run the analysis
