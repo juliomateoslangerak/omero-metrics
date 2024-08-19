@@ -12,6 +12,8 @@
 
 {% block body %}
 
-<h1>The selected Analysis is not processed yet.</h1>
+<div  class="{%plotly_class name="WarningApp"%}">
+    {%plotly_app name="WarningApp" ratio=1%}
+</div>
 
 {% endblock %}

@@ -10,6 +10,14 @@ import numpy as np
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import pandas as pd
+from typing import Union
+
+PROFILES_COLORS = {
+    "center_vertival": "red",
+    "center_horizontal": "blue",
+    "leftBottom_to_rightTop": "green",
+    "leftTop_to_rightBottom": "yellow",
+}
 
 
 # This function is no longer needed
@@ -51,11 +59,28 @@ def add_rect_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
     return fig
 
 
+def add_line_rois_trace(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
+    for i, row in df.iterrows():
+        data = pd.DataFrame(
+            dict(
+                x=np.array(range(int(row.X1), int(row.X2))),
+                y=np.array(range(int(row.Y1), int(row.Y2))),
+            )
+        )
+        fig.add_trace(
+            go.Scatter(x=data.x, y=data.y, mode="lines", name=str(row.ROI))
+        )
+    return fig
+
+
 def add_line_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
     for i, row in df.iterrows():
         fig.add_shape(
             go.layout.Shape(
                 type="line",
+                name=str(row.ROI),
+                showlegend=True,
+                editable=True,
                 x0=row.X1,
                 y0=row.Y1,
                 x1=row.X2,
@@ -116,6 +141,11 @@ def get_rois_omero(result):
     return shapes_rectangle, shapes_line, shapes_point
 
 
+def add_colors_intensity_profile(df: pd.DataFrame) -> pd.DataFrame:
+    df.loc[:, "color"] = [PROFILES_COLORS[i] for i in df.NAME]
+    return df
+
+
 def get_info_roi_points(shape_dict):
     data = [
         [key, int(value["x"]), int(value["y"]), int(value["channel"])]
@@ -127,19 +157,33 @@ def get_info_roi_points(shape_dict):
 
 def get_info_roi_lines(shape_dict):
     data = [
-        [key, value["x1"], value["y1"], value["x2"], value["y2"]]
+        [
+            key,
+            value["x1"],
+            value["y1"],
+            value["x2"],
+            value["y2"],
+            value["textValue"],
+        ]
         for key, value in shape_dict.items()
     ]
-    df = pd.DataFrame(data, columns=["ROI", "X1", "Y1", "X2", "Y2"])
+    df = pd.DataFrame(data, columns=["ROI", "X1", "Y1", "X2", "Y2", "NAME"])
     return df
 
 
 def get_info_roi_rectangles(shape_dict):
     data = [
-        [key, value["x"], value["y"], value["w"], value["h"]]
+        [
+            key,
+            value["x"],
+            value["y"],
+            value["w"],
+            value["h"],
+            value["textValue"],
+        ]
         for key, value in shape_dict.items()
     ]
-    df = pd.DataFrame(data, columns=["ROI", "X", "Y", "W", "H"])
+    df = pd.DataFrame(data, columns=["ROI", "X", "Y", "W", "H", "NAME"])
     return df
 
 
@@ -293,7 +337,6 @@ def fig_mip(mip_X, mip_Y, mip_Z, title):
     fig = make_subplots(
         rows=2,
         cols=2,
-        specs=[[{}, {}], [{"colspan": 2}, None]],
         subplot_titles=("MIP X axis", "MIP Y axis", "MIP Z axis"),
     )
     fig = fig.add_trace(mip_X.data[0], row=1, col=1)
@@ -303,33 +346,35 @@ def fig_mip(mip_X, mip_Y, mip_Z, title):
     return fig
 
 
-def mip_graphs(x0, xf, y0, yf, z, stack):
+def mip_graphs(
+    x0: int, xf: int, y0: int, yf: int, z: int, stack: Union[np.array, list]
+):
     image_bead = stack[:, y0:yf, x0:xf]
     z_ima = stack[z, y0:yf, x0:xf]
-    image_X = np.max(image_bead, axis=2)
-    image_Y = np.max(image_bead, axis=1)
-    image_X = image_X / image_X.max()
-    image_Y = image_Y / image_Y.max()
-    image_Z = z_ima / z_ima.max()
-    mip_X = px.imshow(
-        image_X,
-        zmin=image_X.min(),
-        zmax=image_X.max(),
+    image_x = np.max(image_bead, axis=2)
+    image_y = np.max(image_bead, axis=1)
+    image_x = image_x / image_x.max()
+    image_y = image_y / image_y.max()
+    image_z = z_ima / z_ima.max()
+    mip_x = px.imshow(
+        image_x,
+        zmin=image_x.min(),
+        zmax=image_x.max(),
         color_continuous_scale="hot",
     )
-    mip_Y = px.imshow(
-        image_Y,
-        zmin=image_Y.min(),
-        zmax=image_Y.max(),
+    mip_y = px.imshow(
+        image_y,
+        zmin=image_y.min(),
+        zmax=image_y.max(),
         color_continuous_scale="hot",
     )
-    mip_Z = px.imshow(
-        image_Z,
-        zmin=image_Z.min(),
-        zmax=image_Z.max(),
+    mip_z = px.imshow(
+        image_z,
+        zmin=image_z.min(),
+        zmax=image_z.max(),
         color_continuous_scale="hot",
     )
-    return mip_X, mip_Y, mip_Z
+    return mip_x, mip_y, mip_z
 
 
 def crop_bead_index(bead, min_dist, stack):

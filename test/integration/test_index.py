@@ -65,3 +65,15 @@ class TestLoadIndexPage(IWebTest):
         rsp = get(django_client, index_url)
         html_str = rsp.content.decode()
         assert "Microscope" in html_str
+
+    @pytest.mark.django_db
+    def test_app_lookup(self, user1):
+        "Test looking up an existing application"
+        from OMERO_metrics.dash_apps.plotly_apps import app
+
+        from django_plotly_dash.models import get_stateless_by_name
+
+        app2 = get_stateless_by_name(app._uid)
+
+        assert app2
+        assert app._uid == app2._uid

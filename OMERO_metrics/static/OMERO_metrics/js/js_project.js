@@ -12,15 +12,15 @@ function openDataset(evt, datasetStatus) {
     evt.currentTarget.className += " active";
   }
 
+
 $(document).ready(function(){
-    $("div#graph_line.dash-graph.loadContentli").click(function(){
-        //var oid = $(this).data('oid');
-        var oid = 59
+    $(".loadContentli").click(function(){
+        var oid = $(this).data('oid');
         var inst = $.jstree.reference('#dataTree');
         inst.deselect_all(true);
         var selectedNode = inst.locate_node("dataset-" + oid);
         inst.select_node(selectedNode);
-        
+
         // we also focus the node, so that hotkey events come from the node
         if (selectedNode) {
             $("#" + selectedNode.id).children('.jstree-anchor').trigger('focus');
@@ -28,20 +28,4 @@ $(document).ready(function(){
     });
 });
 
-
-$(document).ready(function(){
-  $("div.dash-graph.loadContentli").click(function(){
-      //var oid = $(this).data('oid');
-      var oid = 59
-      var inst = $.jstree.reference('#dataTree');
-      inst.deselect_all(true);
-      var selectedNode = inst.locate_node("dataset-" + oid);
-      inst.select_node(selectedNode);
-      
-      // we also focus the node, so that hotkey events come from the node
-      if (selectedNode) {
-          $("#" + selectedNode.id).children('.jstree-anchor').trigger('focus');
-      }
-  });
-});
 
