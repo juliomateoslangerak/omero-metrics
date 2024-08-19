@@ -9,7 +9,7 @@ Therefore, it is essential not only to keep them in good condition but also to k
 >
 ><span class="quote_author">Bertrand Russell</span>
 
-## Key objectives of monitoring microscope condition
+## Key objectives<br>when monitoring microscope condition
 
 1. Ensure that performance degradation is detected as soon as possible
 2. Help the core staff to diagnose the problem and react accordingly
@@ -28,235 +28,103 @@ and establish the baseline for the future.
   - after the periodic maintenance is carried out either by the core facility staff or by an
   external service provider.
   - when there is a doubt about the performance of the equipment.
-  - when there is a change in the environment of the equipment.
+  - when there is a change in the equipment or its environment.
 
-# Why a new tool to monitor microscope performance?
+# *OMERO-metrics* is a new web tool<br>for microscope performance monitoring
 
-Another important text here
+OMERO-metrics aims to provide a comprehensive solution for monitoring the performance of microscopes.
 
-# Current tools
-
-There are existing tools \[1, 2, 3\] that are focused in producing measurements on optical standards
-to evaluate the performance of the equipment. However these tools are either proprietary or tightly
-bound to a specific GUI (ImageJ) which limits their implementation with external tools.
-
-In this project we want to profit from the great advantages that Python offers to produce a library that
-integrates well with modern data analysis and management and visualization tools.
-
-# What is missing?
-
-- Missing feature 1
-- Missing feature 2
-
-# What is the solution?
-
-FAIR microscope performance monitoring
+- It draws on the experience of MetroloJ-QC: it is tested
+- uses the OMERO platform to store and manage metrology data: it is FAIR
+- uses OMERO-web's visualization capabilities to provide an interface: it is user-friendly
 
 # How does it work?
 
-1. **Import image data into OMERO** in a well defined structure
-2. **Run the analysis** using predefined parameters
-3. **Visualize the results** in a dashboard
+1. First time **configuration** of the analysis you want to perform
+2. **Import images** into OMERO in a well defined structure
+3. **Run** the analysis using predefined parameters
+4. **Visualize** the results in a dashboard
 
-# 1. Import image data into OMERO
+# 1. Configure the analysis
+
+The first step, and only to be the first time, is to configure the analysis that you plan to run.
+- Create a new OMERO Project for every analysis you want to perform
+- For each Project/Analysis define its type type
+- Once the analysis type is chosen, define the parameters that will be used to run the analysis using a form
+- Save the parameters
+
+# 2. Import image data into OMERO
 
 OMERO is a server-client platform for managing, visualizing, and analyzing microscope images and metadata.
 
-## 1.1. Importing images
+## 2.1. Importing images
 
 Acquired images are imported into OMERO following a well defined structure.
 
 ::: {.r-stack}
-![](./media/import_image_data_full){.fragment style="position: absolute; left: 0; z-index: 1;"}
-![](./media/import_image_data_group){.fragment style="position: absolute; left: 0; z-index: 2;"}
-![](./media/import_image_data_project){.fragment style="position: absolute; left: 0; z-index: 3;"}
-![](./media/import_image_data_dataset){.fragment style="position: absolute; left: 0; z-index: 4;"}
-![](./media/import_image_data_images){.fragment style="position: absolute; left: 0; z-index: 5;"}
+![](./media/import_image_data_full){.fragment}
+
+![](./media/import_image_data_group){.fragment}
+
+![](./media/import_image_data_project){.fragment}
+
+![](./media/import_image_data_dataset){.fragment}
+
+![](./media/import_image_data_images){.fragment}
 :::
 
-# 2. Run the analysis
+# 3. Run the analysis
 
-# 3. Visualize the results
+Now that the images are imported into OMERO, the next step is to run the analysis.
 
-# Recommended readings
+## 3.1. Run the analysis
+If a dataset has not been analyzed yet, the user will have the possibility to trigger the analysis.
 
+## 3.2. Parametrize the analysis
+The user will be able to parametrize the analysis defaulting to the parameters defined in the configuration step.
 
+# 4. Visualize the results
 
+OMERO-metrics provides a dashboard to visualize the results of the analysis at different levels.
 
-We are otherwise strongly basing our work on pre-existing work by the OME consortium and the QUAREP-LiMi and, on the national level, the GT-metrologie of the RT-mfm.
+## 4.1. Group level
+At the group level, the user will be able to see a summary of the status of the microscope.
 
-Functional requirements
------------------------
+## 4.2. Project level
+At the project level, the user will be able to see the results of the analysis for all the datasets in the project.
+The user will be able to browse, across time, the results of the analysis.
 
-### Visualization features
+## 4.3. Dataset level
+At the dataset level, the user will be able to see the results of the analysis for all the images in the dataset,
+providing a more detailed view of the state of the microscope at that time.
 
-_microscopemetrics-dashboard_ should provide the possibility to implement different interfaces depending on the "access level", in decreasing order of access privileges:
+## 4.4. Image level
+At the image level, the user will be able to see the results of the analysis for a single image.
 
-Core facility staff
+# Attributions
 
-Core facility QC processus
+* FBI-core facility integration Cedric
+* FBI-data: Guillaume
+* Project responsible: Julio
+* Project developer: Oumou
+* WG-microscope-metrics: WGMM
+    * Dauphin Aurelien
+    * Sylvain Derossi
+    * Audrey Salles
+    * Erwan GRANDGIRARD
 
-Node of National infrastructure
+# Documentation
 
-Core facility user
+Further documentation will come soon at [https://microscopemetrics.readthedocs.io](https://microscopemetrics.readthedocs.io)
 
-A very simple view for the user. Green-Yellow-Red
-In the principle it is a good thing to be transparent but difficult to report the general state of the microscope without oversimplifying. A solution might be to provide data without judgement.
-
-Provide a configurable way to provide information. Configurable by the responsible of the core facility.
-Adding thresholds should be configurable too.
-
-Handle diversity is key.
-
-_microscopemetrics-dashboard_ should provide, and depending on the access level, these visualization posibilities:
-
-Display one set of key metrics over time or given period for:
-
-One single device, including different imaging settings (objective, filter set...).
-
-Multiple devices
-
-Display the state of one particular device and analysis type at a point in time in a very detailed view
-
-Comparing different machines (?).
-
-Other features to discuss and to rank:
-
-* Filtering of data dans le temps. Find the timepoint where a certain value was out of specs.
-* Adding in each visualization the day 1, best, nominal, manufacturer spec measurement.
-* Adding comments in the dashboard - saved in OMERO. Standardize the format of the comments with
-* predefined key
-* date
-* human readable message
-* Save user custom layouts allowing the core staff to follow, for example: a number of limited metrics of interest to her/him, or create a custom layout of advanced metrics (more difficult to achieve). There is a training cost.
-* Alternativelly to the customizable layout, propose several models (eg. simple, detail, very detailed).
-* Quality threshold system: threshold max, min. Lists of references (industry, rt-mfm, my own threshold).
-* Color coding when values are outside of thresholds. Visual alert
-* Alerting system: e-mail... Not priority
-* Reports generation (PDF, yaml, csv).
-* Annotation of user images with QC measurements in OMERO. Low priority
-* Design a meta indicator cumulating several measurement (WGMM). To think about
-* Perfomance indicator linkable with OpenIris. Identify URI for QC data.
-* allow users to implement own measurements as reference of quality. The example of the CV measurement by each user could be used (program validj) or other metrics to be defined by users. Same kind of interface to follow laser power measurements
-
-### Deployment
-
-The tool will be deployed by the FBI infrastructure for our use case. Docker?
-
-### Documentation
-
-Provide developer and user documentation. Formats to define
-
-Tools and methods
------------------
-
-### Programmatic tools
-
-Python (Cpython) is the language of choice for developing microscope-metrics and so it will be for microscopemetrics-dashboard.
-A number of options ara available for developing a dashboard:
-
-* Custom django app
-* Dash: [https://dash.plotly.com/](https://dash.plotly.com/)
-* Panel: [https://panel.holoviz.org/](https://panel.holoviz.org/)
-* Holoviz: [https://holoviz.org/](https://holoviz.org/)
-* Redash: [https://redash.io/](https://redash.io/)
-* Streamlit: [streamlit.io](https://streamlit.io/)
-* Shiny: [shiny.posit.co/py](https://shiny.posit.co/py/)
-
-A few choices of development tools:
-
-* pytest for testing framework
-* black for code formatting
-* Installation using poetry
-
-Attribution of responsibilities
--------------------------------
-
-FBI-core facility integration Cedric
-FBI-data: Guillaume
-Project responsible: Julio
-Project developer: Oumou
-WG-microscope-metrics: WGMM
-
-* Dauphin Aurelien
-* Sylvain Derossi
-* Audrey Salles
-* Erwan GRANDGIRARD
-
-The development team will meet at least once every three months to discuss about the evolution of the project.
-
-The WGMM will be the initial test group for every release.
-
-Project start conditions
-------------------------
-
-### Financial
-
-Not applicable at this point in time. A 12 month salary has been obtained from FBI.
-
-### Human Resources
-
-The estimated human resources available during the length of the project are 12 months full time.
-
-Environmental conditions
-------------------------
-
-No special environmental conditions are identified.
-
-Suspensive conditions
----------------------
-
-No special suspensive conditions are identified
-
-Validation criteria
--------------------
-
-Provided by the code testing framework of the software. Yet to identify a test suite to test the GUI.
-
-A test group will be put in place to test the GUI. This group must validate the development.
-
-Development in phases
----------------------
-
-Milestones to define :
-1) finalizing specifications / january
-2) writing code and validation / 02-06
-3) Carry out unit tests (per measure and per instrument) and integration tests (on one or more instrumental parks of a node) to ensure the proper functioning of the dashboard.
-4) Validate compatibility with different OMERO databases within the perimeter of a node.
-parallelization of the work to design several specificities like metaparameters or custom layout
-
-Data storage conditions
------------------------
-
-Code base is stored in GitHub. All other documentation is stored in Taiga.
-Code related issue tracking is managed in GitHub.
-Project management is done in Taiga.
-
-Documentation
--------------
-
-The project should be accompanied by documentation for the user and for the developer.
-
-Licensing
----------
+# Licensing
 
 The code is distributed as open source under GPL 3.0. The main reason being that it is the license used by the OME consortium.
 
-Dissemination & communication
------------------------------
-
-All tools are disseminated as open-source GPL3. Available on github.
-
-The public interested in this tool is core facility staff.
-The tool will be promoted and communicated through the regular routes:
-meetings, work-groups, presentations,...
-It is foreseeable to write a paper when a stable version is released.
-
-References
-----------
+# References
 
 \[1\] Cédric Matthews and Fabrice P. Cordelieres, MetroloJ : an ImageJ plugin to help monitor microscopes' health, in ImageJ User & Developer Conference 2010 proceedings.
+
 \[2\] Theer, P., Mongis, C. & Knop, M. PSFj: know your fluorescence microscope. Nat Methods 11, 981–982 (2014). [doi.org/10.1038/nmeth.3102](https://doi.org/10.1038/nmeth.3102)
+
 \[3\] [argolight.com/measure-microscopes-performances-detect-issues-with-daybook](http://argolight.com/measure-microscopes-performances-detect-issues-with-daybook/)
-\[4\] [https://stackoverflow.blog/2020/05/27/2020-stack-overflow-developer-survey-results/](https://stackoverflow.blog/2020/05/27/2020-stack-overflow-developer-survey-results/)
-\[5\] [https://insights.stackoverflow.com/survey/2020](https://insights.stackoverflow.com/survey/2020)
