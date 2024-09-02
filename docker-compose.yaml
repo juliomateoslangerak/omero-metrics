@@ -1,5 +1,3 @@
-version: "4"
-
 services:
 
   database:
@@ -52,7 +50,7 @@ services:
         source: ./config_files/config.omero
         target: /opt/omero/web/config/config.omero
       - type: bind
-        source: logs
+        source: ./logs
         target: /opt/omero/web/OMERO.web/var/logs
     networks:
       - omero
