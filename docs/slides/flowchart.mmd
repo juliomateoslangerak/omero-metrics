@@ -1,0 +1,22 @@
+flowchart LR
+    C0[Create project]
+    T1[Select project]
+    T2{has config?}
+    C1[Create config]
+    V3[Render timecourse view]
+    V4[Render add datasets view]
+    T1 --> T2
+    T2 -- no --> C1
+    T2 -- yes --> V2
+    subgraph CONFIGURATION
+    C1 --> T2
+    end
+    subgraph IMPORT
+    end
+    subgraph RUN
+    end
+    subgraph VISUALIZE
+    V2{has datasets?}
+    V2 -- yes --> V3
+    V2 -- no --> V4
+    end
