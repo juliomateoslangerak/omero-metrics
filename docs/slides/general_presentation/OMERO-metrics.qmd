@@ -45,6 +45,19 @@ OMERO-metrics aims to provide a comprehensive solution for monitoring the perfor
 3. **Run** the analysis using the pre-configured parameters
 4. **Visualize** the results in a dashboard
 
+## UML diagram
+
+If you whish to see the UML diagram, here it is:
+
+```mermaid
+flowchart TD
+    A[Christmas] -->|Get money| B(Go shopping)
+    B --> C{Let me think}
+    C -->|One| D[Laptop]
+    C -->|Two| E[iPhone]
+    C -->|Three| F[fa:fa-car Car]
+```
+
 # 1. Configure the analysis
 
 The first step, and only to be the first time, is to configure the analysis that you plan to run.
