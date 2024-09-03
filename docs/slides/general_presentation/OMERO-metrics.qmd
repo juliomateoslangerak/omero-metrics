@@ -49,7 +49,7 @@ OMERO-metrics aims to provide a comprehensive solution for monitoring the perfor
 
 If you whish to see the UML diagram, here it is:
 
-```mermaid
+```{mermaid}
 flowchart TD
     A[Christmas] -->|Get money| B(Go shopping)
     B --> C{Let me think}
