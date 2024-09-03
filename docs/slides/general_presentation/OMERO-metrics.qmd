@@ -48,6 +48,7 @@ OMERO-metrics aims to provide a comprehensive solution for monitoring the perfor
 # 1. Configure the analysis
 
 The first step, and only to be the first time, is to configure the analysis that you plan to run.
+
 - Create a new OMERO Project for every analysis you want to perform
 - For each Project/Analysis define its type type
 - Once the analysis type is chosen, define the parameters that will be used to run the analysis using a form
