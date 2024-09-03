@@ -42,7 +42,7 @@ OMERO-metrics aims to provide a comprehensive solution for monitoring the perfor
 
 1. First time **configuration** of the analysis you want to perform
 2. **Import images** into OMERO in a well defined structure
-3. **Run** the analysis using predefined parameters
+3. **Run** the analysis using the pre-configured parameters
 4. **Visualize** the results in a dashboard
 
 # 1. Configure the analysis
@@ -50,7 +50,7 @@ OMERO-metrics aims to provide a comprehensive solution for monitoring the perfor
 The first step, and only to be the first time, is to configure the analysis that you plan to run.
 
 - Create a new OMERO Project for every analysis you want to perform
-- For each Project/Analysis define its type type
+- For each Project/Analysis define its type
 - Once the analysis type is chosen, define the parameters that will be used to run the analysis using a form
 - Save the parameters
 
