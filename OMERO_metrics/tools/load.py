@@ -150,7 +150,7 @@ def load_dataset(
         logger.info(f"No dataset found in dataset {dataset.getId()}")
         return None
 
-    if load_images:
+    if load_images and mm_dataset.__class__.__name__ != "PSFBeadsDataset":
         # First time loading the images the
         # dataset does not know which images to load
         if mm_dataset.processed:
@@ -270,7 +270,7 @@ def load_dash_data_dataset(
         title = "Field Illumination Dataset"
 
         dash_context["title"] = title
-
+        dash_context['dm'] = dataset
         df = get_images_intensity_profiles(dataset)
         dash_context["image"], channel_series = concatenate_images(
             dataset.input.field_illumination_image
@@ -294,32 +294,11 @@ def load_dash_data_dataset(
 
     elif isinstance(dataset, PSFBeadsDataset):
 
-        dash_context["min_distance"] = (
-            dataset.input.min_lateral_distance_factor
-        )
-        dash_context["bead_properties_df"] = get_table_file_id(
-            conn,
-            dataset.output.bead_properties.data_reference.omero_object_id,
-        )
         dash_context["bead_km_df"] = get_table_file_id(
             conn,
             dataset.output.key_measurements.data_reference.omero_object_id,
         )
-        dash_context["bead_x_profiles_df"] = get_table_file_id(
-            conn,
-            dataset.output.bead_profiles_x.data_reference.omero_object_id,
-        )
-        dash_context["bead_y_profiles_df"] = get_table_file_id(
-            conn,
-            dataset.output.bead_profiles_y.data_reference.omero_object_id,
-        )
-        dash_context["bead_z_profiles_df"] = get_table_file_id(
-            conn,
-            dataset.output.bead_profiles_z.data_reference.omero_object_id,
-        )
-        dash_context["image_id"] = dataset.input.psf_beads_images[
-            0
-        ].data_reference.omero_object_id
+
     else:
         dash_context = {}
     return dash_context

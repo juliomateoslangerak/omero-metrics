@@ -87,27 +87,27 @@ def layout_utility(channels, image, df, min_distance):
                 buttons=list(
                     [
                         dict(
-                            args=["color_continuous_scale", "Hot"],
+                            args=["colorscale", "Hot"],
                             label="Hot",
                             method="restyle",
                         ),
                         dict(
-                            args=["color_continuous_scale", "Viridis"],
+                            args=["colorscale", "Viridis"],
                             label="Viridis",
                             method="restyle",
                         ),
                         dict(
-                            args=["color_continuous_scale", "Cividis"],
+                            args=["colorscale", "Cividis"],
                             label="Cividis",
                             method="restyle",
                         ),
                         dict(
-                            args=["color_continuous_scale", "Blues"],
+                            args=["colorscale", "Blues"],
                             label="Blues",
                             method="restyle",
                         ),
                         dict(
-                            args=["color_continuous_scale", "Greens"],
+                            args=["colorscale", "Greens"],
                             label="Greens",
                             method="restyle",
                         ),
@@ -144,44 +144,7 @@ def layout_utility(channels, image, df, min_distance):
                 y=button_layer_1_height,
                 yanchor="top",
             ),
-            dict(
-                buttons=list(
-                    [
-                        dict(
-                            args=[
-                                {
-                                    "contours.showlines": False,
-                                    "type": "contour",
-                                },
-                                [0],
-                            ],
-                            label="Hide lines",
-                            method="restyle",
-                        ),
-                        dict(
-                            args=[
-                                {
-                                    "contours.showlines": True,
-                                    "type": "contour",
-                                    "contours.showlabels": True,
-                                    "contours.labelfont.size": 12,
-                                    "contours.labelfont.color": "white",
-                                },
-                                [0],
-                            ],
-                            label="Show lines",
-                            method="restyle",
-                        ),
-                    ]
-                ),
-                direction="down",
-                pad={"r": 10, "t": 10},
-                showactive=True,
-                x=0.30,
-                xanchor="left",
-                y=button_layer_1_height,
-                yanchor="top",
-            ),
+
             dict(
                 buttons=list(
                     [
@@ -203,34 +166,12 @@ def layout_utility(channels, image, df, min_distance):
                     "t": 10,
                 },
                 showactive=True,
-                x=0.45,
+                x=0.3,
                 xanchor="left",
                 y=button_layer_1_height,
                 yanchor="top",
             ),
-            dict(
-                buttons=list(
-                    [
-                        dict(
-                            args=[{"type": "heatmap"}, [0]],
-                            label="Heatmap",
-                            method="restyle",
-                        ),
-                        dict(
-                            args=[{"type": "contour"}, [0]],
-                            label="Contour",
-                            method="restyle",
-                        ),
-                    ]
-                ),
-                direction="down",
-                pad={"r": 10, "t": 10},
-                showactive=True,
-                x=0.6,
-                xanchor="left",
-                y=button_layer_1_height,
-                yanchor="top",
-            ),
+
             dict(
                 active=0,
                 buttons=list(
@@ -264,7 +205,7 @@ def layout_utility(channels, image, df, min_distance):
                 direction="down",
                 pad={"r": 10, "t": 10},
                 showactive=True,
-                x=0.75,
+                x=0.55,
                 xanchor="left",
                 y=button_layer_1_height,
                 yanchor="top",
@@ -291,7 +232,7 @@ def layout_utility(channels, image, df, min_distance):
                 showarrow=False,
             ),
             dict(
-                text="Lines",
+                text="Beads ROI",
                 x=0.3,
                 xref="paper",
                 y=1.05,
@@ -299,29 +240,17 @@ def layout_utility(channels, image, df, min_distance):
                 showarrow=False,
             ),
             dict(
-                text="Shapes",
-                x=0.47,
+                text="Beads Location",
+                x=0.55,
                 xref="paper",
                 y=1.05,
                 yref="paper",
                 showarrow=False,
             ),
-            dict(
-                text="Type",
-                x=0.615,
-                xref="paper",
-                y=1.05,
-                yref="paper",
-                showarrow=False,
-            ),
-            dict(
-                text="Show",
-                x=0.79,
-                xref="paper",
-                y=1.05,
-                yref="paper",
-                showarrow=False,
-            ),
+
+
         ]
     )
+
+
     return fig

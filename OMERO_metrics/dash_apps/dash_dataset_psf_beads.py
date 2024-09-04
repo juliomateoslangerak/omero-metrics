@@ -17,7 +17,26 @@ stylesheets = [
     "./assets/omero_metrics.css",
 ]
 primary_color = "#63aa47"
+content = dmc.Card(
+    children=[
+        dmc.Group(
+            [
+                dmc.Badge("Filled badge", variant="filled", color='lime'),
 
+                dmc.Text("Total Number of Beads", fw=800),
+            ],
+            justify="space-between",
+            mt="md",
+            mb="xs",
+        ),
+        dmc.Center(dmc.Badge(1, size="xl", circle=True)),
+
+    ],
+    withBorder=True,
+    shadow="sm",
+    radius="md",
+    w="auto",
+)
 app = DjangoDash(
     "PSF_Beads",
     external_stylesheets=stylesheets,
@@ -54,6 +73,19 @@ app.layout = dmc.MantineProvider(
                 dmc.Divider(variant="solid"),
                 dmc.Stack(
                     [
+dmc.Flex(
+                            children=[content, content, content],
+                            direction={"base": "column", "sm": "row"},
+                            gap={"base": "sm", "sm": "lg"},
+                            justify={"sm": "space-between"},
+                            align={"sm": "center"},
+                            style={
+                                "margin-top": "20px",
+                                "margin-bottom": "10px",
+                            },
+                        ),
+                        dmc.Divider(variant="solid"),
+
                         dmc.Center(
                             [
                                 dmc.Title(
@@ -62,14 +94,17 @@ app.layout = dmc.MantineProvider(
                                     size="h3",
                                     mb=10,
                                 ),
-                                dmc.Table(
+
+                            ]
+
+                        ),
+                        dmc.Table(
                                     id="key_values_psf",
                                     striped=True,
                                     highlightOnHover=True,
                                     className="table table-striped table-bordered",
+                            styles={"background-color": "white"},
                                 ),
-                            ]
-                        ),
                     ]
                 ),
                 dmc.Divider(variant="solid"),

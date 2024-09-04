@@ -1,13 +1,10 @@
 import dash
-from dash import dcc, html, dash_table
+from dash import html
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 import pandas as pd
-import plotly.express as px
 from dash_iconify import DashIconify
-from datetime import date
-import json
-from datetime import datetime, date, timedelta
+from datetime import datetime
 
 primary_color = "#008080"
 
@@ -76,8 +73,7 @@ dash_app_project.layout = dmc.MantineProvider(
                                     ),
                                 )
                             ],
-                            span="auto",
-                            style={"margin-right": "10px"},
+                            span="content",
                         ),
                         dmc.GridCol(
                             [
@@ -91,13 +87,13 @@ dash_app_project.layout = dmc.MantineProvider(
                                     w="300",
                                 ),
                             ],
-                            span="auto",
+                            span="content",
                         ),
                     ],
-                    justify="center",
-                    align="center",
+                    justify="space-between",
                     style={"marginBottom": "20px"},
                 ),
+
                 html.Div(
                     id="graph-project",
                     style={"background-color": "white"},
@@ -105,7 +101,6 @@ dash_app_project.layout = dmc.MantineProvider(
                 html.Div(id="blank-input"),
                 html.Div(id="blank-output"),
                 html.Div(id="clickdata"),
-                html.Div(id="dates_test"),
             ],
             fluid=True,
             style={
@@ -182,8 +177,12 @@ def update_table(*args, **kwargs):
         data=data,
         withLegend=True,
         legendProps={"horizontalAlign": "top", "height": 50},
-        series=[{"name": kkm[measurement], "color": "orange.7"}],
+        series=[{"name": kkm[measurement], "color": "green.7"}],
         curveType="natural",
+        style={"padding": 20},
+        xAxisLabel="Processed Date",
+        #yAxisLabel=str(kkm[measurement]).replace("_", " ").title(),
+
     )
 
     return line
@@ -206,25 +205,23 @@ def update_project_view(*args, **kwargs):
         table_kkm.columns = table_kkm.columns.str.replace("_", " ").str.title()
         date = dates[selected_dataset]
         grid = dmc.Stack(
-            [
+            [   dmc.Divider(variant="solid", style={"marginTop": 50, "marginBottom": 20}),
                 dmc.Center(
                     [
-                        dmc.Text(
-                            [
-                                "Key Measurements for Dataset processed at "
-                                + str(selected_dataset),
-                                " Date: " + str(date),
+                        dmc.Text([
+                                "Key Measurements for Dataset Number: "
+                                +  str(selected_dataset),
+                                 " processed at Date: "
+                                +  str(date),
                             ],
+                            c="#189A35",
                             size="md",
-                            c="#2A65B1",
-                            style={
-                                "margin-bottom": "20px",
-                                "margin-top": "20px",
-                            },
+
                         )
                     ]
                 ),
-                dmc.Table(
+
+                 dmc.Table(
                     striped=True,
                     data={
                         "head": table_kkm.columns.tolist(),
@@ -232,6 +229,7 @@ def update_project_view(*args, **kwargs):
                         "caption": "Key Measurements for the selected dataset",
                     },
                     highlightOnHover=True,
+                     style={"background-color": "white",}
                 ),
             ]
         )

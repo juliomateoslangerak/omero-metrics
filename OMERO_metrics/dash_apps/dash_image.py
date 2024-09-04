@@ -1,14 +1,33 @@
 import dash
 from dash import dcc, html
+from dash_iconify import DashIconify
 from django_plotly_dash import DjangoDash
+from plotly.express.imshow_utils import rescale_intensity
+
 from ..tools.data_preperation import *
 import dash_mantine_components as dmc
 
+
+external_scripts = [
+    # add the tailwind cdn url hosting the files with the utility classes
+    {"src": "https://cdn.tailwindcss.com"}
+]
+stylesheets = [
+    "https://unpkg.com/@mantine/dates@7/styles.css",
+    "https://unpkg.com/@mantine/code-highlight@7/styles.css",
+    "https://unpkg.com/@mantine/charts@7/styles.css",
+    "https://unpkg.com/@mantine/carousel@7/styles.css",
+    "https://unpkg.com/@mantine/notifications@7/styles.css",
+    "https://unpkg.com/@mantine/nprogress@7/styles.css",
+    "./assets/omero_metrics.css",
+]
+primary_color = "#63aa47"
 
 dashboard_name = "omero_image_dash"
 dash_app_image = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
+    external_stylesheets=stylesheets,
 )
 
 dash_app_image.layout = dmc.MantineProvider(
@@ -17,34 +36,39 @@ dash_app_image.layout = dmc.MantineProvider(
             id="main",
             children=[
                 dmc.Center(
-                    dmc.Title("Dashboard For Image", c="#63aa47", size="h3")
-                ),
-                dmc.Grid(
                     [
-                        dmc.GridCol(
-                            [
-                                html.H3(
-                                    "Select Channel",
-                                    style={"color": "#63aa47"},
-                                ),
-                                dcc.Dropdown(
-                                    id="my-dropdown1",
-                                    options={},
-                                    value="channel 0",
-                                    clearable=False,
-                                ),
-                            ],
-                            span="auto",
+                        dmc.Text(
+                            id="title",
+                            c=primary_color,
+                            style={"fontSize": 30},
                         ),
-                    ],
-                    style={
-                        "margin-top": "20px",
-                        "margin-bottom": "20px",
-                        "border": "1px solid #63aa47",
-                        "padding": "10px",
-                        "border-radius": "0.5rem",
-                        "background-color": "white",
-                    },
+                        dmc.Group(
+                            [
+                                html.Img(
+                                    src="./assets/images/logo.png",
+                                    style={"width": "100px"},
+                                ),
+                                dmc.Text(
+                                    "OMERO Metrics Dashboard",
+                                    c=primary_color,
+                                    style={"fontSize": 15},
+                                ),
+                            ]
+                        ),
+                    ]
+                ),
+                dmc.Divider(variant="solid"),
+                dmc.Select(
+                    id="my-dropdown1",
+                    label="Select Channel",
+                    w="300",
+                    value="channel 0",
+                    leftSection=DashIconify(
+                        icon="radix-icons:magnifying-glass"
+                    ),
+                    rightSection=DashIconify(
+                        icon="radix-icons:chevron-down"
+                    ),
                 ),
                 dcc.Graph(
                     figure={},
@@ -53,6 +77,9 @@ dash_app_image.layout = dmc.MantineProvider(
                         "margin-top": "20px",
                         "margin-bottom": "20px",
                         "border-radius": "0.5rem",
+                        "padding": "20px",
+                        "background-color": "white",
+
                     },
                 ),
                 html.Div(
@@ -60,13 +87,42 @@ dash_app_image.layout = dmc.MantineProvider(
                         dmc.Title(
                             "Intensity Profiles", c="#63aa47", size="h3"
                         ),
-                        dcc.Graph(
-                            id="intensity_profiles",
-                            figure={},
+                        dmc.LineChart(
+                            id="intensity_profile",
+                            h=400,
+                            dataKey="Pixel",
+                            data={},
+                            series=[
+                                {
+                                    "name": "Lefttop To Rightbottom",
+                                    "color": "violet.9",
+                                },
+                                {
+                                    "name": "Leftbottom To Righttop",
+                                    "color": "blue.9",
+                                },
+                                {
+                                    "name": "Center Horizontal",
+                                    "color": "pink.9",
+                                },
+                                {
+                                    "name": "Center Vertical",
+                                    "color": "teal.9",
+                                },
+                            ],
+                            xAxisLabel="Pixel",
+                            yAxisLabel="Pixel Intensity",
+                            tickLine="y",
+                            gridAxis="x",
+                            withXAxis=False,
+                            withYAxis=True,
+                            withLegend=True,
+                            strokeWidth=3,
+                            withDots=False,
+                            curveType="natural",
                             style={
-                                "margin-top": "20px",
-                                "margin-bottom": "20px",
-                                "border-radius": "0.5rem",
+                                "background-color": "white",
+                                "padding": "20px",
                             },
                         ),
                     ]
@@ -86,14 +142,15 @@ dash_app_image.layout = dmc.MantineProvider(
 
 @dash_app_image.expanded_callback(
     dash.dependencies.Output("rois-graph", "figure"),
-    dash.dependencies.Output("my-dropdown1", "options"),
+    dash.dependencies.Output("my-dropdown1", "data"),
     [
         dash.dependencies.Input("my-dropdown1", "value"),
     ],
 )
 def callback_test4(*args, **kwargs):
     image_omero = kwargs["session_state"]["context"]["image"]
-    imaaa = image_omero[0, 0, :, :, int(args[0][-1])] / 255
+    imaaa = image_omero[0, 0, :, :, int(args[0][-1])]
+    imaaa = rescale_intensity(imaaa, in_range='image', out_range=(0.0, 1.0))
     df_rects = kwargs["session_state"]["context"]["df_rects"]
     df_lines = kwargs["session_state"]["context"]["df_lines"]
     df_points = kwargs["session_state"]["context"]["df_points"]
@@ -103,9 +160,9 @@ def callback_test4(*args, **kwargs):
         {"label": c.name, "value": f"channel {i}"}
         for i, c in enumerate(channel_names.channels)
     ]
-    fig = go.Figure()
-    fig.add_trace(go.Surface(z=imaaa.tolist(), colorscale="hot"))
-    fig.update_scenes(aspectratio=dict(x=1, y=1, z=0.7), aspectmode="manual")
+    data = [{"group": "Channels", "items": channel_list}]
+    #imaaa_reversed = np.flipud(imaaa)
+    fig=px.imshow(imaaa, zmin=imaaa.min(), zmax=imaaa.max(), color_continuous_scale="Hot", origin='lower')
     # Add dropdowns
     fig.update_layout(
         height=imaaa.shape[0] + 150,
@@ -288,20 +345,17 @@ def callback_test4(*args, **kwargs):
                 buttons=list(
                     [
                         dict(
-                            args=["type", "heatmap"],
+                            args=[{"type":"heatmap"}],
                             label="Heatmap",
                             method="restyle",
+
                         ),
                         dict(
-                            args=["type", "contour"],
+                            args=[{"type": "contour"}],
                             label="Contour",
                             method="restyle",
                         ),
-                        dict(
-                            args=["type", "surface"],
-                            label="3D Surface",
-                            method="restyle",
-                        ),
+
                     ]
                 ),
                 direction="down",
@@ -314,6 +368,7 @@ def callback_test4(*args, **kwargs):
             ),
         ]
     )
+
     fig.update_layout(
         annotations=[
             dict(
@@ -360,11 +415,11 @@ def callback_test4(*args, **kwargs):
         ]
     )
 
-    return fig, channel_list
+    return fig, data
 
 
 @dash_app_image.expanded_callback(
-    dash.dependencies.Output("intensity_profiles", "figure"),
+    dash.dependencies.Output("intensity_profile", "data"),
     [dash.dependencies.Input("my-dropdown1", "value")],
 )
 def callback_test5(*args, **kwargs):
@@ -382,11 +437,5 @@ def callback_test5(*args, **kwargs):
     )
     df_profile.columns = df_profile.columns.str.replace("_", " ", regex=True)
     df_profile.columns = df_profile.columns.str.title()
-    fig = px.line(
-        df_profile,
-        x=df_profile.index,
-        y=df_profile.columns,
-        title="Intensity Profile",
-        labels={"index": "Pixel"},
-    )
-    return fig
+
+    return df_profile.to_dict("records")
