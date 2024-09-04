@@ -212,27 +212,27 @@ def callback_test4(*args, **kwargs):
                 buttons=list(
                     [
                         dict(
-                            args=["colorscale", "Hot"],
+                            args=["coloraxis.colorscale", "Hot"],
                             label="Hot",
                             method="restyle",
                         ),
                         dict(
-                            args=["colorscale", "Viridis"],
+                            args=["coloraxis.colorscale", "Viridis"],
                             label="Viridis",
                             method="restyle",
                         ),
                         dict(
-                            args=["colorscale", "Cividis"],
+                            args=["coloraxis.colorscale", "Cividis"],
                             label="Cividis",
                             method="restyle",
                         ),
                         dict(
-                            args=["colorscale", "Blues"],
+                            args=["coloraxis.colorscale", "Blues"],
                             label="Blues",
                             method="restyle",
                         ),
                         dict(
-                            args=["colorscale", "Greens"],
+                            args=["coloraxis.colorscale", "Greens"],
                             label="Greens",
                             method="restyle",
                         ),
@@ -250,12 +250,12 @@ def callback_test4(*args, **kwargs):
                 buttons=list(
                     [
                         dict(
-                            args=["reversescale", False],
+                            args=["coloraxis.reversescale", False],
                             label="False",
                             method="restyle",
                         ),
                         dict(
-                            args=["reversescale", True],
+                            args=["coloraxis.reversescale", True],
                             label="True",
                             method="restyle",
                         ),
