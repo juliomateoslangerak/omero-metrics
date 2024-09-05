@@ -34,6 +34,8 @@ def image_heatmap_setup(channels, image, df, min_distance):
         autosize=False,
         margin=dict(t=30, b=30, l=0, r=0),
     )
+    traces_list = list(range(len(channels)))
+    beads_index = [len(channels)]
 
     color_map = {"Yes": "red", "No": "yellow"}
     sc = go.Scatter(
@@ -149,7 +151,7 @@ def image_heatmap_setup(channels, image, df, min_distance):
                                     "contours.showlines": False,
                                     "type": "contour",
                                 },
-                                [0, 1, 2, 3],
+                                traces_list,
                             ],
                             label="Hide lines",
                             method="restyle",
@@ -163,13 +165,13 @@ def image_heatmap_setup(channels, image, df, min_distance):
                                     "contours.labelfont.size": 12,
                                     "contours.labelfont.color": "white",
                                 },
-                                [0, 1, 2, 3],
+                                traces_list,
                             ],
                             label="Show lines",
                             method="restyle",
                         ),
                         dict(
-                            args=[{"type": "heatmap"}, [0, 1, 2, 3]],
+                            args=[{"type": "heatmap"}, traces_list],
                             label="Heatmap",
                             method="restyle",
                         ),
@@ -246,7 +248,7 @@ def image_heatmap_setup(channels, image, df, min_distance):
                             method="restyle",
                             args=[
                                 {"visible": True},
-                                [4],
+                                beads_index,
                             ],
                         ),
                         dict(
@@ -254,7 +256,7 @@ def image_heatmap_setup(channels, image, df, min_distance):
                             method="restyle",
                             args=[
                                 {"visible": False},
-                                [4],
+                                beads_index,
                             ],
                         ),
                     ]

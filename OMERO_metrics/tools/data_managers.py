@@ -37,11 +37,9 @@ INPUT_MAPPINGS = {
 
 KKM_MAPPINGS = {
     "FieldIlluminationDataset": [
+        "max_intensity",
         "center_region_intensity_fraction",
         "center_region_area_fraction",
-        "channel_name",
-        "image_name",
-        "max_intensity",
     ],
     "PSFBeadsDataset": [
         "intensity_max_median",
@@ -108,10 +106,14 @@ class ImageManager:
         self.template = None
 
     def load_data(self, force_reload=True):
+        logger.info("Loading data CALL")
         if force_reload or self.mm_image is None:
-            self.mm_image = load.load_image(self.omero_image)
             self.dataset_manager.load_data()
             self.dataset_manager.is_processed()
+            if self.dataset_manager.processed:
+                self.mm_image = load.load_image(self.omero_image)
+            else:
+                self.mm_image = None
         else:
             raise NotImplementedError(
                 "partial loading of data from OMERO is not yet implemented"
@@ -188,7 +190,7 @@ class DatasetManager:
         self.microscope = mm_schema.Microscope()
         self.kkm = None
 
-    def is_processed(self):
+    def is_processed(self): #TODO: Naming and logic behind the function
         if self.mm_dataset:
             self.processed = self.mm_dataset.processed
         else:
@@ -203,7 +205,6 @@ class DatasetManager:
                 self.omero_dataset, self.load_images
             )
             self.kkm = KKM_MAPPINGS.get(self.mm_dataset.__class__.__name__)
-
         else:
             raise NotImplementedError(
                 "partial loading of data from OMERO is not yet implemented"
@@ -311,7 +312,7 @@ class DatasetManager:
         self.mm_dataset.validated = False
         logger.info("Invalidating dataset.")
 
-    def visualize_data(self):
+    def visualize_data(self): #TODO refactore and naming logic
         if self.processed:
             if self.mm_dataset.__class__.__name__ in TEMPLATE_MAPPINGS_DATASET:
                 self.template = TEMPLATE_MAPPINGS_DATASET.get(

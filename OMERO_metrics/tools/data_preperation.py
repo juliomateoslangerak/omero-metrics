@@ -7,6 +7,7 @@ import collections
 import omero
 import plotly.express as px
 import numpy as np
+from matplotlib.pyplot import autoscale
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import pandas as pd
@@ -337,13 +338,13 @@ def fig_mip(mip_X, mip_Y, mip_Z, title):
     fig = make_subplots(
         rows=2,
         cols=2,
-        specs=[[{}, {}], [{"colspan": 2}, None]],
+        specs=[[{"type": "heatmap"}, {"type": "heatmap"}], [{"type": "heatmap"}, {"type": "heatmap"}]],
         subplot_titles=("MIP X axis", "MIP Y axis", "MIP Z axis"),
     )
     fig = fig.add_trace(mip_X.data[0], row=1, col=1)
     fig = fig.add_trace(mip_Y.data[0], row=1, col=2)
     fig = fig.add_trace(mip_Z.data[0], row=2, col=1)
-    fig = fig.update_layout(title_text=title, coloraxis=dict(colorscale="hot"))
+    fig = fig.update_layout(title_text=title, coloraxis=dict(colorscale="hot"), autosize=False)
     return fig
 
 

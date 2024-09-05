@@ -1,5 +1,8 @@
 
 [![Actions Status](https://github.com/Wapaa/OMERO-project/workflows/OMERO/badge.svg)](https://github.com/Wapaa/OMERO-project/actions)
+[![GPLv2 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
+
+<img alt="Logo" height="150" src="https://raw.githubusercontent.com/Wapaa/OMERO-metrics/dev/OMERO_metrics/static/OMERO_metrics/images/logo.png" width="150"/>
 
 OMERO.metrics with Docker
 =========================

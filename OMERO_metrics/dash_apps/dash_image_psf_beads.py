@@ -13,15 +13,37 @@ import pandas as pd
 from ..tools.data_preperation import crop_bead_index, mip_graphs, fig_mip
 
 logger = logging.getLogger(__name__)
-
-
+primary_color = "#63aa47"
 app = DjangoDash("PSF_Beads_image")
 
 app.layout = dmc.MantineProvider(
     children=[
         dmc.Container(
             [
-                html.Div(id="blank-input", children=[]),
+                dmc.Center(
+                    [
+                        dmc.Text(
+                            id="title",
+                            c=primary_color,
+                            style={"fontSize": 30},
+                        ),
+                        dmc.Group(
+                            [
+                                html.Img(
+                                    src="./assets/images/logo.png",
+                                    style={"width": "100px"},
+                                ),
+                                dmc.Text(
+                                    "OMERO Metrics Dashboard",
+                                    c=primary_color,
+                                    style={"fontSize": 15},
+                                ),
+                            ]
+                        ),
+                    ]
+                ),
+                dmc.Divider(variant="solid"),
+                html.Div(id="blank-input"),
                 dmc.Stack(
                     [
                         dcc.Dropdown(
