@@ -1,35 +1,37 @@
 flowchart TB
     select_project[select project]
-    trigger_visualization[trigger\nvisualization]
     has_config{has config?}
     has_limits{has limits?}
     show_add_config_button[show\nadd config\nbutton]
     add_config_button_clicked{add config\nbutton clicked}
     show_edit_config_button[show\nedit config\nbutton]
     edit_config_button_clicked{edit config\nbutton clicked}
+    select_analysis_type[select\nanalysis type]
+    modify_default_parameters[modify\ndefault parameters]
+    save_default_parameters[save\ndefault parameters]
     show_add_limits_button[show\nadd limits\nbutton]
     add_limits_button_clicked{add limits\nbutton clicked}
     show_edit_limits_button[show\nedit limits\nbutton]
     edit_limits_button_clicked{edit limits\nbutton clicked}
-    configure_limits[configure limits]
+    modify_limits[modify limits]
     save_limits[save limits]
+    done[done]
 
     select_project --> has_config
     has_config -- no --> show_add_config_button
     has_config -- yes --> show_edit_config_button
     show_edit_config_button --> has_limits
-    show_edit_config_button --> trigger_visualization
     has_limits -- yes --> show_edit_limits_button
     has_limits -- no --> show_add_limits_button
     show_add_config_button --> add_config_button_clicked
-    add_config_button_clicked -- yes --> select_analysis_type
-    add_config_button_clicked -- no --> edit_config
+    add_config_button_clicked -- yes --> edit_config
+    add_config_button_clicked -- no --> add_config_button_clicked
     subgraph edit_config
-        select_analysis_type[select\nanalysis type]
-        modify_default_parameters[modify\ndefault parameters]
-        save_default_parameters[save\ndefault parameters]
         select_analysis_type --> modify_default_parameters
         modify_default_parameters --> save_default_parameters
+    end
+    subgraph configure_limits
+        modify_limits --> save_limits
     end
     show_add_limits_button --> add_limits_button_clicked
     show_edit_limits_button --> edit_limits_button_clicked
@@ -38,7 +40,7 @@ flowchart TB
     edit_limits_button_clicked -- yes --> configure_limits
     edit_limits_button_clicked -- no --> edit_config_button_clicked
     edit_config_button_clicked -- yes --> edit_config
-    configure_limits --> save_limits
-    edit_config --> select_project
+    edit_config_button_clicked -- no --> edit_config_button_clicked
 
-    save_limits --> select_project
+    configure_limits --> has_config
+    edit_config --> has_config
