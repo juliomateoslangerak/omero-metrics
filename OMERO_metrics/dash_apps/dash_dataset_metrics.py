@@ -72,7 +72,6 @@ dash_app_dataset.layout = dmc.MantineProvider(
                     children=[
                         dmc.GridCol(
                             [
-
                                 dmc.Select(
                                     id="channel_dropdown_foi",
                                     label="Select Channel",
@@ -85,7 +84,6 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                         icon="radix-icons:chevron-down"
                                     ),
                                 ),
-
                                 dcc.Graph(
                                     id="intensity_map",
                                     style={
@@ -95,7 +93,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                     },
                                 ),
                             ],
-                            span="6",
+                            span="auto",
                         ),
                         dmc.GridCol(
                             [
@@ -119,7 +117,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                     className="table table-striped table-bordered",
                                 ),
                             ],
-                            span="6",
+                            span="auto",
                         ),
                     ],
                 ),
@@ -245,7 +243,9 @@ def dataset_callback_intensity_map(*args, **kwargs):
     ]
     channel = int(args[0][-1])
     image_channel = images[0, 0, :, :, channel]
-    image_channel = rescale_intensity(image_channel, in_range='image', out_range=(0.0, 1.0))
+    image_channel = rescale_intensity(
+        image_channel, in_range=(0, image_channel.max()), out_range=(0.0, 1.0)
+    )
     channel_regx = "Ch0" + str(channel)
     df_profile = df_intensity_profiles[
         df_intensity_profiles.columns[
@@ -271,8 +271,14 @@ def dataset_callback_intensity_map(*args, **kwargs):
         xaxis_zeroline=False,
         yaxis_zeroline=False,
     )
-    fig.update_layout(title={'text':"Intensity Map", 'x': 0.5, 'xanchor': 'center',
-                             'font': {"family" :"Arial", "size": 18, 'color': '#63aa47'}})
+    fig.update_layout(
+        title={
+            "text": "Intensity Map",
+            "x": 0.5,
+            "xanchor": "center",
+            "font": {"family": "Arial", "size": 18, "color": "#63aa47"},
+        }
+    )
     return (fig, df_new.to_dict("records"))
 
 
