@@ -258,7 +258,9 @@ def callback_test4(*args, **kwargs):
 
     image_omero = kwargs["session_state"]["context"]["image"]
     imaaa = image_omero[0, 0, :, :, int(args[0][-1])]
-    imaaa = rescale_intensity(imaaa, in_range=(0, imaaa.max()), out_range=(0.0, 1.0))
+    imaaa = rescale_intensity(
+        imaaa, in_range=(0, imaaa.max()), out_range=(0.0, 1.0)
+    )
     df_rects = kwargs["session_state"]["context"]["df_rects"]
     df_lines = kwargs["session_state"]["context"]["df_lines"]
     df_points = kwargs["session_state"]["context"]["df_points"]
@@ -291,9 +293,9 @@ def callback_test4(*args, **kwargs):
             )
         )
         fig1.update_layout(
-        height=imaaa.shape[0] + 150,
-        autosize=False,
-        margin=dict(t=30, b=30, l=0, r=0),
+            height=imaaa.shape[0] + 150,
+            autosize=False,
+            margin=dict(t=30, b=30, l=0, r=0),
         )
         fig = fig1
         fig.update_yaxes(autorange="reversed")
@@ -345,7 +347,9 @@ def callback_test4(*args, **kwargs):
     if roi == "All":
         fig2 = go.Figure(fig)
         fig2.update_layout(shapes=corners + lines)
-        fig2.add_trace(go.Scatter(x=df_points.X, y=df_points.Y, mode="markers"))
+        fig2.add_trace(
+            go.Scatter(x=df_points.X, y=df_points.Y, mode="markers")
+        )
 
     elif roi == "Line":
         fig2 = go.Figure(fig)
@@ -355,7 +359,9 @@ def callback_test4(*args, **kwargs):
         fig2.update_layout(shapes=corners)
     elif roi == "Center":
         fig2 = go.Figure(fig)
-        fig2.add_trace(go.Scatter(x=df_points.X, y=df_points.Y, mode="markers"))
+        fig2.add_trace(
+            go.Scatter(x=df_points.X, y=df_points.Y, mode="markers")
+        )
     fig = fig2
     return fig, data
 

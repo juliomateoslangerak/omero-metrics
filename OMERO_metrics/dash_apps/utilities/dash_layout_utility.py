@@ -144,7 +144,6 @@ def layout_utility(channels, image, df, min_distance):
                 y=button_layer_1_height,
                 yanchor="top",
             ),
-
             dict(
                 buttons=list(
                     [
@@ -171,7 +170,6 @@ def layout_utility(channels, image, df, min_distance):
                 y=button_layer_1_height,
                 yanchor="top",
             ),
-
             dict(
                 active=0,
                 buttons=list(
@@ -247,10 +245,7 @@ def layout_utility(channels, image, df, min_distance):
                 yref="paper",
                 showarrow=False,
             ),
-
-
         ]
     )
-
 
     return fig

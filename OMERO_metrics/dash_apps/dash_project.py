@@ -93,7 +93,6 @@ dash_app_project.layout = dmc.MantineProvider(
                     justify="space-between",
                     style={"marginBottom": "20px"},
                 ),
-
                 html.Div(
                     id="graph-project",
                     style={"background-color": "white"},
@@ -181,8 +180,7 @@ def update_table(*args, **kwargs):
         curveType="natural",
         style={"padding": 20},
         xAxisLabel="Processed Date",
-        #yAxisLabel=str(kkm[measurement]).replace("_", " ").title(),
-
+        # yAxisLabel=str(kkm[measurement]).replace("_", " ").title(),
     )
 
     return line
@@ -205,23 +203,25 @@ def update_project_view(*args, **kwargs):
         table_kkm.columns = table_kkm.columns.str.replace("_", " ").str.title()
         date = dates[selected_dataset]
         grid = dmc.Stack(
-            [   dmc.Divider(variant="solid", style={"marginTop": 50, "marginBottom": 20}),
+            [
+                dmc.Divider(
+                    variant="solid",
+                    style={"marginTop": 50, "marginBottom": 20},
+                ),
                 dmc.Center(
                     [
-                        dmc.Text([
+                        dmc.Text(
+                            [
                                 "Key Measurements for Dataset Number: "
-                                +  str(selected_dataset),
-                                 " processed at Date: "
-                                +  str(date),
+                                + str(selected_dataset),
+                                " processed at Date: " + str(date),
                             ],
                             c="#189A35",
                             size="md",
-
                         )
                     ]
                 ),
-
-                 dmc.Table(
+                dmc.Table(
                     striped=True,
                     data={
                         "head": table_kkm.columns.tolist(),
@@ -229,7 +229,9 @@ def update_project_view(*args, **kwargs):
                         "caption": "Key Measurements for the selected dataset",
                     },
                     highlightOnHover=True,
-                     style={"background-color": "white",}
+                    style={
+                        "background-color": "white",
+                    },
                 ),
             ]
         )

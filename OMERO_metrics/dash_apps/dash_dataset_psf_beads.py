@@ -21,8 +21,7 @@ content = dmc.Card(
     children=[
         dmc.Group(
             [
-                dmc.Badge("Filled badge", variant="filled", color='lime'),
-
+                dmc.Badge("Filled badge", variant="filled", color="lime"),
                 dmc.Text("Total Number of Beads", fw=800),
             ],
             justify="space-between",
@@ -30,7 +29,6 @@ content = dmc.Card(
             mb="xs",
         ),
         dmc.Center(dmc.Badge(1, size="xl", circle=True)),
-
     ],
     withBorder=True,
     shadow="sm",
@@ -73,7 +71,7 @@ app.layout = dmc.MantineProvider(
                 dmc.Divider(variant="solid"),
                 dmc.Stack(
                     [
-dmc.Flex(
+                        dmc.Flex(
                             children=[content, content, content],
                             direction={"base": "column", "sm": "row"},
                             gap={"base": "sm", "sm": "lg"},
@@ -85,7 +83,6 @@ dmc.Flex(
                             },
                         ),
                         dmc.Divider(variant="solid"),
-
                         dmc.Center(
                             [
                                 dmc.Title(
@@ -94,17 +91,15 @@ dmc.Flex(
                                     size="h3",
                                     mb=10,
                                 ),
-
                             ]
-
                         ),
                         dmc.Table(
-                                    id="key_values_psf",
-                                    striped=True,
-                                    highlightOnHover=True,
-                                    className="table table-striped table-bordered",
+                            id="key_values_psf",
+                            striped=True,
+                            highlightOnHover=True,
+                            className="table table-striped table-bordered",
                             styles={"background-color": "white"},
-                                ),
+                        ),
                     ]
                 ),
                 dmc.Divider(variant="solid"),
