@@ -2,7 +2,6 @@ import dash
 from dash import dcc, html
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
-from ..tools.data_preperation import crop_bead_index, image_3d_chart
 import plotly.express as px
 from .utilities.dash_utilities import image_heatmap_setup
 from .utilities.dash_layout_utility import layout_utility
@@ -212,8 +211,8 @@ def callback_mip(*args, **kwargs):
         bead = df_beads_location[
             df_beads_location["bead_id"] == bead_index
         ].copy()
-        x0, xf, y0, yf, z = crop_bead_index(bead, min_dist, stack)
-        mip_x, mip_y, mip_z = mip_graphs(x0, xf, y0, yf, z, stack)
+        x0, xf, y0, yf = crop_bead_index(bead, min_dist, stack)
+        mip_x, mip_y, mip_z = mip_graphs(x0, xf, y0, yf, stack)
         return (
             fig_mip(mip_x, mip_y, mip_z, title),
             line_graph_axis(bead_index, channel_index, axis, kwargs),
