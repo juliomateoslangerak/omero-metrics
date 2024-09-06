@@ -190,7 +190,7 @@ class DatasetManager:
         self.microscope = mm_schema.Microscope()
         self.kkm = None
 
-    def is_processed(self): #TODO: Naming and logic behind the function
+    def is_processed(self):
         if self.mm_dataset:
             self.processed = self.mm_dataset.processed
         else:
@@ -312,7 +312,7 @@ class DatasetManager:
         self.mm_dataset.validated = False
         logger.info("Invalidating dataset.")
 
-    def visualize_data(self): #TODO refactore and naming logic
+    def visualize_data(self):
         if self.processed:
             if self.mm_dataset.__class__.__name__ in TEMPLATE_MAPPINGS_DATASET:
                 self.template = TEMPLATE_MAPPINGS_DATASET.get(

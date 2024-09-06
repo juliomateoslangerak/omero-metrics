@@ -58,7 +58,9 @@ dash_app_image.layout = dmc.MantineProvider(
                     ]
                 ),
                 dmc.Divider(variant="solid"),
-                dmc.Text("Intensity Map", c=primary_color, style={"fontSize": 30}),
+                dmc.Text(
+                    "Intensity Map", c=primary_color, style={"fontSize": 30}
+                ),
                 dmc.Grid(
                     [
                         dmc.GridCol(
@@ -75,7 +77,7 @@ dash_app_image.layout = dmc.MantineProvider(
                                     },
                                 ),
                             ],
-                            span="auto",
+                            span="8",
                         ),
                         dmc.GridCol(
                             [
@@ -92,6 +94,10 @@ dash_app_image.layout = dmc.MantineProvider(
                                                     id="segmented",
                                                     value="All",
                                                     data=[
+                                                        {
+                                                            "value": "Center",
+                                                            "label": "Center",
+                                                        },
                                                         {
                                                             "value": "Line",
                                                             "label": "Line",
@@ -156,9 +162,9 @@ dash_app_image.layout = dmc.MantineProvider(
                                         dmc.Switch(
                                             id="switch-invert-colors",
                                             label="Invert Color",
-                                            checked=True,
+                                            checked=False,
                                         ),
-                                    ]
+                                    ],
                                 )
                             ],
                             span=2,
@@ -239,7 +245,7 @@ dash_app_image.layout = dmc.MantineProvider(
         dash.dependencies.Input("my-dropdown2", "value"),
         dash.dependencies.Input("checkbox-state", "checked"),
         dash.dependencies.Input("switch-invert-colors", "checked"),
-        dash.dependencies.Input("segmented", "value")
+        dash.dependencies.Input("segmented", "value"),
     ],
 )
 def callback_test4(*args, **kwargs):
@@ -252,7 +258,9 @@ def callback_test4(*args, **kwargs):
 
     image_omero = kwargs["session_state"]["context"]["image"]
     imaaa = image_omero[0, 0, :, :, int(args[0][-1])]
-    imaaa = rescale_intensity(imaaa, in_range="image", out_range=(0.0, 1.0))
+    imaaa = rescale_intensity(
+        imaaa, in_range=(0, imaaa.max()), out_range=(0.0, 1.0)
+    )
     df_rects = kwargs["session_state"]["context"]["df_rects"]
     df_lines = kwargs["session_state"]["context"]["df_lines"]
     df_points = kwargs["session_state"]["context"]["df_points"]
@@ -270,27 +278,27 @@ def callback_test4(*args, **kwargs):
         color_continuous_scale="Hot",
     )
     if checked_contour:
-        # Get x and y coordinates
         img_array = np.array(imaaa)
-        min_intensity = np.min(img_array)
-        max_intensity = np.max(img_array)
-
-        # Create the contour plot
-        fig1 = go.Figure(data=go.Contour(
-            z=img_array,
-            colorscale=color,
-            colorbar=dict(
-                title='Pixel Intensity',
-                titleside='right',
-                x=-0.15,  # Move colorbar slightly to the right
-                xanchor='left'
-            ),
-            hoverinfo='z'
-        ))
-        fig1.update_layout(autosize=True, margin={"t": 0, "l": 0, "r": 0, "b": 0})
+        fig1 = go.Figure(
+            data=go.Contour(
+                z=img_array,
+                colorscale=color,
+                colorbar=dict(
+                    title="Pixel Intensity",
+                    titleside="right",
+                    x=-0.15,
+                    xanchor="left",
+                ),
+                hoverinfo="z",
+            )
+        )
+        fig1.update_layout(
+            height=imaaa.shape[0] + 150,
+            autosize=False,
+            margin=dict(t=30, b=30, l=0, r=0),
+        )
         fig = fig1
         fig.update_yaxes(autorange="reversed")
-
 
     # Add dropdowns
     fig.update_layout(
@@ -336,15 +344,24 @@ def callback_test4(*args, **kwargs):
     ]
     fig.update_layout(coloraxis_colorbar_x=-0.15)
     fig.update_layout(coloraxis={"colorscale": color})
-    if roi == 'All':
+    if roi == "All":
         fig2 = go.Figure(fig)
-        fig2.update_layout(shapes=corners+lines)
-    elif roi == 'Line':
+        fig2.update_layout(shapes=corners + lines)
+        fig2.add_trace(
+            go.Scatter(x=df_points.X, y=df_points.Y, mode="markers")
+        )
+
+    elif roi == "Line":
         fig2 = go.Figure(fig)
         fig2.update_layout(shapes=lines)
-    elif roi == 'Square':
+    elif roi == "Square":
         fig2 = go.Figure(fig)
         fig2.update_layout(shapes=corners)
+    elif roi == "Center":
+        fig2 = go.Figure(fig)
+        fig2.add_trace(
+            go.Scatter(x=df_points.X, y=df_points.Y, mode="markers")
+        )
     fig = fig2
     return fig, data
 

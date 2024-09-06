@@ -57,6 +57,8 @@ setup(
         "hypothesis",
         "microscopemetrics_schema @ git+https://github.com/juliomateoslangerak/microscopemetrics-schema.git@dev",
         "microscopemetrics @ git+https://github.com/juliomateoslangerak/microscope-metrics.git@dev",
+        "pytest-django",
+        "pytest",
     ],
     tests_require=["pytest", "pytest-django"],
 )
