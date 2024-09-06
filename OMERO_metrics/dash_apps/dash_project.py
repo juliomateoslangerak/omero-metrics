@@ -1,13 +1,10 @@
 import dash
-from dash import dcc, html, dash_table
+from dash import html
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 import pandas as pd
-import plotly.express as px
 from dash_iconify import DashIconify
-from datetime import date
-import json
-from datetime import datetime, date, timedelta
+from datetime import datetime
 
 primary_color = "#008080"
 
@@ -63,37 +60,37 @@ dash_app_project.layout = dmc.MantineProvider(
                     [
                         dmc.GridCol(
                             [
-                                dmc.Text(
-                                    "Select Measurement",
-                                    style={"fontSize": 14},
-                                ),
-                                dcc.Dropdown(
+                                dmc.Select(
                                     id="project-dropdown",
+                                    label="Select Measurement",
+                                    w="300",
                                     value="0",
-                                    clearable=False,
-                                    style={"width": "250px"},
-                                ),
+                                    leftSection=DashIconify(
+                                        icon="radix-icons:magnifying-glass"
+                                    ),
+                                    rightSection=DashIconify(
+                                        icon="radix-icons:chevron-down"
+                                    ),
+                                )
                             ],
-                            span="auto",
-                            style={"margin-right": "10px"},
+                            span="content",
                         ),
                         dmc.GridCol(
                             [
                                 dmc.DatePicker(
                                     id="date-picker",
                                     label="Select Date",
-                                    value=datetime.now().date(),
                                     leftSection=DashIconify(
                                         icon="clarity:date-line"
                                     ),
-                                    w="250",
+                                    type="range",
+                                    w="300",
                                 ),
                             ],
-                            span="auto",
+                            span="content",
                         ),
                     ],
-                    justify="center",
-                    align="center",
+                    justify="space-between",
                     style={"marginBottom": "20px"},
                 ),
                 html.Div(
@@ -103,7 +100,6 @@ dash_app_project.layout = dmc.MantineProvider(
                 html.Div(id="blank-input"),
                 html.Div(id="blank-output"),
                 html.Div(id="clickdata"),
-                html.Div(id="dates_test"),
             ],
             fluid=True,
             style={
@@ -118,41 +114,60 @@ dash_app_project.layout = dmc.MantineProvider(
 
 
 @dash_app_project.expanded_callback(
-    dash.dependencies.Output("project-dropdown", "options"),
+    dash.dependencies.Output("project-dropdown", "data"),
     dash.dependencies.Output("date-picker", "minDate"),
     dash.dependencies.Output("date-picker", "maxDate"),
+    dash.dependencies.Output("date-picker", "value"),
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_dropdown(*args, **kwargs):
     kkm = kwargs["session_state"]["context"]["kkm"]
     kkm = [k.replace("_", " ").title() for k in kkm]
     dates = kwargs["session_state"]["context"]["dates"]
-    options = [{"label": f"{k}", "value": f"{i}"} for i, k in enumerate(kkm)]
+    options = [{"value": f"{i}", "label": f"{k}"} for i, k in enumerate(kkm)]
     min_date = min(dates)
     max_date = max(dates)
-    return options, min_date, max_date
+    data = [{"group": "Channels", "items": options}]
+    value_date = [min_date, max_date]
+    return data, min_date, max_date, value_date
 
 
 @dash_app_project.expanded_callback(
     dash.dependencies.Output("graph-project", "children"),
-    [dash.dependencies.Input("project-dropdown", "value")],
+    [
+        dash.dependencies.Input("project-dropdown", "value"),
+        dash.dependencies.Input("date-picker", "value"),
+    ],
 )
 def update_table(*args, **kwargs):
     df_list = kwargs["session_state"]["context"]["key_measurements_list"]
     kkm = kwargs["session_state"]["context"]["kkm"]
     measurement = int(args[0])
+    dates_range = args[1]
     dates = kwargs["session_state"]["context"]["dates"]
-    kkm = [k.replace("_", " ").title() for k in kkm]
+    df_filtering = pd.DataFrame(dates, columns=["Date"])
+    df_dates = df_filtering[
+        (
+            df_filtering["Date"]
+            >= datetime.strptime(dates_range[0], "%Y-%m-%d").date()
+        )
+        & (
+            df_filtering["Date"]
+            <= datetime.strptime(dates_range[1], "%Y-%m-%d").date()
+        )
+    ].index.to_list()
+    # kkm = [k.replace("_", " ").title() for k in kkm]
+    df_list_filtered = [df_list[i] for i in df_dates]
     data = [
         {"Date": dates[i], "Name": f"Dataset {i}"}
-        | df[kkm]
+        | df[[kkm[measurement]]]
         .copy()
         .mean()
         .reset_index(name="Mean")
         .rename(columns={"index": "Measurement"})
         .pivot_table(columns="Measurement")
         .to_dict("records")[0]
-        for i, df in enumerate(df_list)
+        for i, df in enumerate(df_list_filtered)
     ]
     line = dmc.LineChart(
         id="line-chart",
@@ -161,8 +176,11 @@ def update_table(*args, **kwargs):
         data=data,
         withLegend=True,
         legendProps={"horizontalAlign": "top", "height": 50},
-        series=[{"name": k, "color": "indigo.6"} for k in kkm],
+        series=[{"name": kkm[measurement], "color": "green.7"}],
         curveType="natural",
+        style={"padding": 20},
+        xAxisLabel="Processed Date",
+        # yAxisLabel=str(kkm[measurement]).replace("_", " ").title(),
     )
 
     return line
@@ -178,30 +196,28 @@ def update_project_view(*args, **kwargs):
         table = kwargs["session_state"]["context"]["key_measurements_list"]
         dates = kwargs["session_state"]["context"]["dates"]
         kkm = kwargs["session_state"]["context"]["kkm"]
-        kkm = kkm.insert(0, "channel_name")
         selected_dataset = int(args[0]["Name"].split(" ")[-1])
         df_selected = table[selected_dataset]
         table_kkm = df_selected[kkm].copy()
         table_kkm = table_kkm.round(3)
         table_kkm.columns = table_kkm.columns.str.replace("_", " ").str.title()
         date = dates[selected_dataset]
-
         grid = dmc.Stack(
             [
+                dmc.Divider(
+                    variant="solid",
+                    style={"marginTop": 50, "marginBottom": 20},
+                ),
                 dmc.Center(
                     [
                         dmc.Text(
                             [
-                                "Key Measurements for Dataset processed at"
+                                "Key Measurements for Dataset Number: "
                                 + str(selected_dataset),
-                                "Date: " + str(date),
+                                " processed at Date: " + str(date),
                             ],
+                            c="#189A35",
                             size="md",
-                            c="#2A65B1",
-                            style={
-                                "margin-bottom": "20px",
-                                "margin-top": "20px",
-                            },
                         )
                     ]
                 ),
@@ -213,6 +229,9 @@ def update_project_view(*args, **kwargs):
                         "caption": "Key Measurements for the selected dataset",
                     },
                     highlightOnHover=True,
+                    style={
+                        "background-color": "white",
+                    },
                 ),
             ]
         )

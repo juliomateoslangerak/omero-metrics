@@ -8,6 +8,7 @@ from dash_iconify import DashIconify
 
 from datetime import datetime
 import plotly.graph_objects as go
+from skimage.exposure import rescale_intensity
 
 external_scripts = [
     # add the tailwind cdn url hosting the files with the utility classes
@@ -71,25 +72,17 @@ dash_app_dataset.layout = dmc.MantineProvider(
                     children=[
                         dmc.GridCol(
                             [
-                                dmc.Text("Select Channel", size="sm"),
-                                dcc.Dropdown(
+                                dmc.Select(
                                     id="channel_dropdown_foi",
-                                    clearable=False,
-                                    className="bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700",
+                                    label="Select Channel",
+                                    w="300",
                                     value="channel 0",
-                                ),
-                                dmc.Center(
-                                    [
-                                        dmc.Text(
-                                            "Intensity Map",
-                                            size="md",
-                                            c="#2A65B1",
-                                            style={
-                                                "margin-bottom": "20px",
-                                                "margin-left": "20px",
-                                            },
-                                        )
-                                    ]
+                                    leftSection=DashIconify(
+                                        icon="radix-icons:magnifying-glass"
+                                    ),
+                                    rightSection=DashIconify(
+                                        icon="radix-icons:chevron-down"
+                                    ),
                                 ),
                                 dcc.Graph(
                                     id="intensity_map",
@@ -100,7 +93,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                     },
                                 ),
                             ],
-                            span="6",
+                            span="auto",
                         ),
                         dmc.GridCol(
                             [
@@ -109,9 +102,9 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                         dmc.Text(
                                             "Key Measurements",
                                             size="md",
-                                            c="#2A65B1",
+                                            c="#63aa47",
                                             style={
-                                                "margin-bottom": "20px",
+                                                "margin-bottom": "30px",
                                                 "margin-left": "20px",
                                             },
                                         )
@@ -124,20 +117,19 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                     className="table table-striped table-bordered",
                                 ),
                             ],
-                            span="6",
+                            span="auto",
                         ),
                     ],
                 ),
                 html.Div(id="blank-input"),
-                dmc.Grid(
+                dmc.Stack(
                     id="table",
                     children=[
                         dmc.Center(
                             dmc.Text(
                                 "Intensity Profiles",
                                 size="md",
-                                c="#2A65B1",
-                                style={"margin-bottom": "20px"},
+                                c="#63aa47",
                             )
                         ),
                         dmc.LineChart(
@@ -174,8 +166,8 @@ dash_app_dataset.layout = dmc.MantineProvider(
                             withDots=False,
                             curveType="natural",
                             style={
-                                "margin-top": "20px",
                                 "background-color": "white",
+                                "padding": "20px",
                             },
                         ),
                     ],
@@ -200,16 +192,18 @@ dash_app_dataset.layout = dmc.MantineProvider(
 
 
 @dash_app_dataset.expanded_callback(
-    dash.dependencies.Output("channel_dropdown_foi", "options"),
+    dash.dependencies.Output("channel_dropdown_foi", "data"),
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_dropdow_menu(*args, **kwargs):
     channel = kwargs["session_state"]["context"]["channel_names"]
+
     channel_list = [
         {"label": c.name, "value": f"channel {i}"}
         for i, c in enumerate(channel.channels)
     ]
-    return channel_list
+    data = [{"group": "Channels", "items": channel_list}]
+    return data
 
 
 @dash_app_dataset.expanded_callback(
@@ -249,7 +243,9 @@ def dataset_callback_intensity_map(*args, **kwargs):
     ]
     channel = int(args[0][-1])
     image_channel = images[0, 0, :, :, channel]
-    image_channel = 255 * image_channel / image_channel.max()
+    image_channel = rescale_intensity(
+        image_channel, in_range=(0, image_channel.max()), out_range=(0.0, 1.0)
+    )
     channel_regx = "Ch0" + str(channel)
     df_profile = df_intensity_profiles[
         df_intensity_profiles.columns[
@@ -274,6 +270,14 @@ def dataset_callback_intensity_map(*args, **kwargs):
         yaxis_showgrid=False,
         xaxis_zeroline=False,
         yaxis_zeroline=False,
+    )
+    fig.update_layout(
+        title={
+            "text": "Intensity Map",
+            "x": 0.5,
+            "xanchor": "center",
+            "font": {"family": "Arial", "size": 18, "color": "#63aa47"},
+        }
     )
     return (fig, df_new.to_dict("records"))
 

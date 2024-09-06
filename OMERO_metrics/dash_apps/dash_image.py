@@ -1,14 +1,33 @@
 import dash
 from dash import dcc, html
+from dash_iconify import DashIconify
 from django_plotly_dash import DjangoDash
+from plotly.express.imshow_utils import rescale_intensity
+
 from ..tools.data_preperation import *
 import dash_mantine_components as dmc
 
+
+external_scripts = [
+    # add the tailwind cdn url hosting the files with the utility classes
+    {"src": "https://cdn.tailwindcss.com"}
+]
+stylesheets = [
+    "https://unpkg.com/@mantine/dates@7/styles.css",
+    "https://unpkg.com/@mantine/code-highlight@7/styles.css",
+    "https://unpkg.com/@mantine/charts@7/styles.css",
+    "https://unpkg.com/@mantine/carousel@7/styles.css",
+    "https://unpkg.com/@mantine/notifications@7/styles.css",
+    "https://unpkg.com/@mantine/nprogress@7/styles.css",
+    "./assets/omero_metrics.css",
+]
+primary_color = "#63aa47"
 
 dashboard_name = "omero_image_dash"
 dash_app_image = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
+    external_stylesheets=stylesheets,
 )
 
 dash_app_image.layout = dmc.MantineProvider(
@@ -17,42 +36,147 @@ dash_app_image.layout = dmc.MantineProvider(
             id="main",
             children=[
                 dmc.Center(
-                    dmc.Title("Dashboard For Image", c="#63aa47", size="h3")
+                    [
+                        dmc.Text(
+                            id="title",
+                            c=primary_color,
+                            style={"fontSize": 30},
+                        ),
+                        dmc.Group(
+                            [
+                                html.Img(
+                                    src="./assets/images/logo.png",
+                                    style={"width": "100px"},
+                                ),
+                                dmc.Text(
+                                    "OMERO Metrics Dashboard",
+                                    c=primary_color,
+                                    style={"fontSize": 15},
+                                ),
+                            ]
+                        ),
+                    ]
+                ),
+                dmc.Divider(variant="solid"),
+                dmc.Text(
+                    "Intensity Map", c=primary_color, style={"fontSize": 30}
                 ),
                 dmc.Grid(
                     [
                         dmc.GridCol(
                             [
-                                html.H3(
-                                    "Select Channel",
-                                    style={"color": "#63aa47"},
-                                ),
-                                dcc.Dropdown(
-                                    id="my-dropdown1",
-                                    options={},
-                                    value="channel 0",
-                                    clearable=False,
+                                dcc.Graph(
+                                    figure={},
+                                    id="rois-graph",
+                                    style={
+                                        "margin-top": "20px",
+                                        "margin-bottom": "20px",
+                                        "border-radius": "0.5rem",
+                                        "padding": "20px",
+                                        "background-color": "white",
+                                    },
                                 ),
                             ],
-                            span="auto",
+                            span="8",
+                        ),
+                        dmc.GridCol(
+                            [
+                                dmc.Stack(
+                                    [
+                                        html.Div(
+                                            [
+                                                dmc.Text(
+                                                    "Select ROI",
+                                                    size="sm",
+                                                    fw=500,
+                                                ),
+                                                dmc.SegmentedControl(
+                                                    id="segmented",
+                                                    value="All",
+                                                    data=[
+                                                        {
+                                                            "value": "Center",
+                                                            "label": "Center",
+                                                        },
+                                                        {
+                                                            "value": "Line",
+                                                            "label": "Line",
+                                                        },
+                                                        {
+                                                            "value": "Square",
+                                                            "label": "Square",
+                                                        },
+                                                        {
+                                                            "value": "All",
+                                                            "label": "All",
+                                                        },
+                                                    ],
+                                                    mb=10,
+                                                ),
+                                            ]
+                                        ),
+                                        dmc.Checkbox(
+                                            id="checkbox-state",
+                                            label="Contour Image",
+                                            checked=False,
+                                            mb=10,
+                                        ),
+                                        dmc.Select(
+                                            id="my-dropdown1",
+                                            label="Select Channel",
+                                            w="auto",
+                                            value="channel 0",
+                                            leftSection=DashIconify(
+                                                icon="radix-icons:magnifying-glass"
+                                            ),
+                                            rightSection=DashIconify(
+                                                icon="radix-icons:chevron-down"
+                                            ),
+                                        ),
+                                        dmc.Select(
+                                            id="my-dropdown2",
+                                            label="Select Color",
+                                            data=[
+                                                {
+                                                    "value": "Hot",
+                                                    "label": "Hot",
+                                                },
+                                                {
+                                                    "value": "Viridis",
+                                                    "label": "Viridis",
+                                                },
+                                                {
+                                                    "value": "Inferno",
+                                                    "label": "Inferno",
+                                                },
+                                            ],
+                                            w="auto",
+                                            value="Hot",
+                                            leftSection=DashIconify(
+                                                icon="radix-icons:color-wheel"
+                                            ),
+                                            rightSection=DashIconify(
+                                                icon="radix-icons:chevron-down"
+                                            ),
+                                        ),
+                                        dmc.Switch(
+                                            id="switch-invert-colors",
+                                            label="Invert Color",
+                                            checked=False,
+                                        ),
+                                    ],
+                                )
+                            ],
+                            span=2,
                         ),
                     ],
+                    justify="space-between",
+                    align="center",
                     style={
-                        "margin-top": "20px",
-                        "margin-bottom": "20px",
-                        "border": "1px solid #63aa47",
-                        "padding": "10px",
-                        "border-radius": "0.5rem",
+                        "margin-top": "10px",
                         "background-color": "white",
-                    },
-                ),
-                dcc.Graph(
-                    figure={},
-                    id="rois-graph",
-                    style={
-                        "margin-top": "20px",
-                        "margin-bottom": "20px",
                         "border-radius": "0.5rem",
+                        "padding": "10px",
                     },
                 ),
                 html.Div(
@@ -60,13 +184,42 @@ dash_app_image.layout = dmc.MantineProvider(
                         dmc.Title(
                             "Intensity Profiles", c="#63aa47", size="h3"
                         ),
-                        dcc.Graph(
-                            id="intensity_profiles",
-                            figure={},
+                        dmc.LineChart(
+                            id="intensity_profile",
+                            h=400,
+                            dataKey="Pixel",
+                            data={},
+                            series=[
+                                {
+                                    "name": "Lefttop To Rightbottom",
+                                    "color": "violet.9",
+                                },
+                                {
+                                    "name": "Leftbottom To Righttop",
+                                    "color": "blue.9",
+                                },
+                                {
+                                    "name": "Center Horizontal",
+                                    "color": "pink.9",
+                                },
+                                {
+                                    "name": "Center Vertical",
+                                    "color": "teal.9",
+                                },
+                            ],
+                            xAxisLabel="Pixel",
+                            yAxisLabel="Pixel Intensity",
+                            tickLine="y",
+                            gridAxis="x",
+                            withXAxis=False,
+                            withYAxis=True,
+                            withLegend=True,
+                            strokeWidth=3,
+                            withDots=False,
+                            curveType="natural",
                             style={
-                                "margin-top": "20px",
-                                "margin-bottom": "20px",
-                                "border-radius": "0.5rem",
+                                "background-color": "white",
+                                "padding": "20px",
                             },
                         ),
                     ]
@@ -86,14 +239,28 @@ dash_app_image.layout = dmc.MantineProvider(
 
 @dash_app_image.expanded_callback(
     dash.dependencies.Output("rois-graph", "figure"),
-    dash.dependencies.Output("my-dropdown1", "options"),
+    dash.dependencies.Output("my-dropdown1", "data"),
     [
         dash.dependencies.Input("my-dropdown1", "value"),
+        dash.dependencies.Input("my-dropdown2", "value"),
+        dash.dependencies.Input("checkbox-state", "checked"),
+        dash.dependencies.Input("switch-invert-colors", "checked"),
+        dash.dependencies.Input("segmented", "value"),
     ],
 )
 def callback_test4(*args, **kwargs):
+    color = args[1]
+    checked_contour = args[2]
+    inverted_color = args[3]
+    roi = args[4]
+    if inverted_color:
+        color = color + "_r"
+
     image_omero = kwargs["session_state"]["context"]["image"]
-    imaaa = image_omero[0, 0, :, :, int(args[0][-1])] / 255
+    imaaa = image_omero[0, 0, :, :, int(args[0][-1])]
+    imaaa = rescale_intensity(
+        imaaa, in_range=(0, imaaa.max()), out_range=(0.0, 1.0)
+    )
     df_rects = kwargs["session_state"]["context"]["df_rects"]
     df_lines = kwargs["session_state"]["context"]["df_lines"]
     df_points = kwargs["session_state"]["context"]["df_points"]
@@ -103,9 +270,36 @@ def callback_test4(*args, **kwargs):
         {"label": c.name, "value": f"channel {i}"}
         for i, c in enumerate(channel_names.channels)
     ]
-    fig = go.Figure()
-    fig.add_trace(go.Surface(z=imaaa.tolist(), colorscale="hot"))
-    fig.update_scenes(aspectratio=dict(x=1, y=1, z=0.7), aspectmode="manual")
+    data = [{"group": "Channels", "items": channel_list}]
+    fig = px.imshow(
+        imaaa,
+        zmin=imaaa.min(),
+        zmax=imaaa.max(),
+        color_continuous_scale="Hot",
+    )
+    if checked_contour:
+        img_array = np.array(imaaa)
+        fig1 = go.Figure(
+            data=go.Contour(
+                z=img_array,
+                colorscale=color,
+                colorbar=dict(
+                    title="Pixel Intensity",
+                    titleside="right",
+                    x=-0.15,
+                    xanchor="left",
+                ),
+                hoverinfo="z",
+            )
+        )
+        fig1.update_layout(
+            height=imaaa.shape[0] + 150,
+            autosize=False,
+            margin=dict(t=30, b=30, l=0, r=0),
+        )
+        fig = fig1
+        fig.update_yaxes(autorange="reversed")
+
     # Add dropdowns
     fig.update_layout(
         height=imaaa.shape[0] + 150,
@@ -148,223 +342,32 @@ def callback_test4(*args, **kwargs):
         )
         for i, row in df_lines.iterrows()
     ]
-    button_layer_1_height = 1.08
-    fig.update_layout(
-        updatemenus=[
-            dict(
-                buttons=list(
-                    [
-                        dict(
-                            args=["colorscale", "Hot"],
-                            label="Hot",
-                            method="restyle",
-                        ),
-                        dict(
-                            args=["colorscale", "Viridis"],
-                            label="Viridis",
-                            method="restyle",
-                        ),
-                        dict(
-                            args=["colorscale", "Cividis"],
-                            label="Cividis",
-                            method="restyle",
-                        ),
-                        dict(
-                            args=["colorscale", "Blues"],
-                            label="Blues",
-                            method="restyle",
-                        ),
-                        dict(
-                            args=["colorscale", "Greens"],
-                            label="Greens",
-                            method="restyle",
-                        ),
-                    ]
-                ),
-                direction="down",
-                pad={"r": 10, "t": 10},
-                showactive=True,
-                x=0.1,
-                xanchor="left",
-                y=button_layer_1_height,
-                yanchor="top",
-            ),
-            dict(
-                buttons=list(
-                    [
-                        dict(
-                            args=["reversescale", False],
-                            label="False",
-                            method="restyle",
-                        ),
-                        dict(
-                            args=["reversescale", True],
-                            label="True",
-                            method="restyle",
-                        ),
-                    ]
-                ),
-                direction="down",
-                pad={"r": 10, "t": 10},
-                showactive=True,
-                x=0.30,
-                xanchor="left",
-                y=button_layer_1_height,
-                yanchor="top",
-            ),
-            dict(
-                buttons=list(
-                    [
-                        dict(
-                            args=[
-                                {
-                                    "contours.showlines": False,
-                                    "type": "contour",
-                                }
-                            ],
-                            label="Hide lines",
-                            method="restyle",
-                        ),
-                        dict(
-                            args=[
-                                {
-                                    "contours.showlines": True,
-                                    "type": "contour",
-                                    "contours.showlabels": True,
-                                    "contours.labelfont.size": 12,
-                                    "contours.labelfont.color": "white",
-                                }
-                            ],
-                            label="Show lines",
-                            method="restyle",
-                        ),
-                    ]
-                ),
-                direction="down",
-                pad={"r": 10, "t": 10},
-                showactive=True,
-                x=0.50,
-                xanchor="left",
-                y=button_layer_1_height,
-                yanchor="top",
-            ),
-            dict(
-                buttons=list(
-                    [
-                        dict(
-                            label="None",
-                            method="relayout",
-                            args=["shapes", []],
-                        ),
-                        dict(
-                            label="Corners",
-                            method="relayout",
-                            args=["shapes", corners],
-                        ),
-                        dict(
-                            label="Lines",
-                            method="relayout",
-                            args=["shapes", lines],
-                        ),
-                        dict(
-                            label="All",
-                            method="relayout",
-                            args=["shapes", corners + lines],
-                        ),
-                    ]
-                ),
-                direction="down",
-                pad={
-                    "r": 10,
-                    "t": 10,
-                },
-                showactive=True,
-                x=0.70,
-                xanchor="left",
-                y=button_layer_1_height,
-                yanchor="top",
-            ),
-            dict(
-                buttons=list(
-                    [
-                        dict(
-                            args=["type", "heatmap"],
-                            label="Heatmap",
-                            method="restyle",
-                        ),
-                        dict(
-                            args=["type", "contour"],
-                            label="Contour",
-                            method="restyle",
-                        ),
-                        dict(
-                            args=["type", "surface"],
-                            label="3D Surface",
-                            method="restyle",
-                        ),
-                    ]
-                ),
-                direction="down",
-                pad={"r": 10, "t": 10},
-                showactive=True,
-                x=0.87,
-                xanchor="left",
-                y=button_layer_1_height,
-                yanchor="top",
-            ),
-        ]
-    )
-    fig.update_layout(
-        annotations=[
-            dict(
-                text="colorscale",
-                x=0,
-                xref="paper",
-                y=1.06,
-                yref="paper",
-                align="left",
-                showarrow=False,
-            ),
-            dict(
-                text="Reverse<br>Colorscale",
-                x=0.23,
-                xref="paper",
-                y=1.07,
-                yref="paper",
-                showarrow=False,
-            ),
-            dict(
-                text="Lines",
-                x=0.46,
-                xref="paper",
-                y=1.06,
-                yref="paper",
-                showarrow=False,
-            ),
-            dict(
-                text="Shapes",
-                x=0.64,
-                xref="paper",
-                y=1.06,
-                yref="paper",
-                showarrow=False,
-            ),
-            dict(
-                text="Type",
-                x=0.85,
-                xref="paper",
-                y=1.06,
-                yref="paper",
-                showarrow=False,
-            ),
-        ]
-    )
+    fig.update_layout(coloraxis_colorbar_x=-0.15)
+    fig.update_layout(coloraxis={"colorscale": color})
+    if roi == "All":
+        fig2 = go.Figure(fig)
+        fig2.update_layout(shapes=corners + lines)
+        fig2.add_trace(
+            go.Scatter(x=df_points.X, y=df_points.Y, mode="markers")
+        )
 
-    return fig, channel_list
+    elif roi == "Line":
+        fig2 = go.Figure(fig)
+        fig2.update_layout(shapes=lines)
+    elif roi == "Square":
+        fig2 = go.Figure(fig)
+        fig2.update_layout(shapes=corners)
+    elif roi == "Center":
+        fig2 = go.Figure(fig)
+        fig2.add_trace(
+            go.Scatter(x=df_points.X, y=df_points.Y, mode="markers")
+        )
+    fig = fig2
+    return fig, data
 
 
 @dash_app_image.expanded_callback(
-    dash.dependencies.Output("intensity_profiles", "figure"),
+    dash.dependencies.Output("intensity_profile", "data"),
     [dash.dependencies.Input("my-dropdown1", "value")],
 )
 def callback_test5(*args, **kwargs):
@@ -382,11 +385,5 @@ def callback_test5(*args, **kwargs):
     )
     df_profile.columns = df_profile.columns.str.replace("_", " ", regex=True)
     df_profile.columns = df_profile.columns.str.title()
-    fig = px.line(
-        df_profile,
-        x=df_profile.index,
-        y=df_profile.columns,
-        title="Intensity Profile",
-        labels={"index": "Pixel"},
-    )
-    return fig
+
+    return df_profile.to_dict("records")
