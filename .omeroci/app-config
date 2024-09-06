@@ -11,13 +11,11 @@ value=$(get_app_name)
 
 # Configuration commands
 config_commands=(
-    "config append omero.web.apps '\"OMERO_metrics\"'"
     "config append omero.web.apps '\"dpd_static_support\"'"
     "config append omero.web.apps '\"django_plotly_dash\"'"
     "config append omero.web.apps '\"bootstrap4\"'"
     "config append omero.web.apps '\"corsheaders\"'"
     "config append omero.web.ui.top_links '[\"Metrics\", \"OMERO_metrics_index\", {\"title\": \"Open app in new tab\", \"target\": \"_blank\"}]'"
-    "config set omero.web.debug True"
     "config append omero.web.middleware '{\"index\": 0.5, \"class\": \"corsheaders.middleware.CorsMiddleware\"}'"
     "config append omero.web.middleware '{\"index\": 10, \"class\": \"corsheaders.middleware.CorsPostCsrfMiddleware\"}'"
     "config set omero.web.cors_origin_allow_all True"
@@ -29,7 +27,7 @@ config_commands=(
     "config append omero.web.ui.center_plugins '[\"Metrics View\", \"OMERO_metrics/webclient_plugins/center_plugin.metricsview.js.html\", \"metrics_view_panel\"]'"
     "config append omero.web.ui.right_plugins '[\"ROIs\", \"OMERO_metrics/webclient_plugins/right_plugin.rois.js.html\", \"image_roi_tab\"]'"
 )
-
+su - omero-web -c "env OMERODIR=$OMERODIR /opt/omero/web/venv3/bin/omero config set omero.web.apps '[\"$value\"]'"
 # Execute each configuration command
 for cmd in "${config_commands[@]}"; do
     su - omero-web -c "env OMERODIR=$OMERODIR /opt/omero/web/venv3/bin/omero $cmd"
