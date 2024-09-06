@@ -1,13 +1,10 @@
 import dash
 import pandas as pd
-from dash import dcc, html, dash_table
+from dash import dcc, html
 from django_plotly_dash import DjangoDash
 import plotly.express as px
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
-
-from datetime import datetime
-import plotly.graph_objects as go
 from skimage.exposure import rescale_intensity
 
 external_scripts = [
@@ -50,7 +47,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                     style={"width": "100px"},
                                 ),
                                 dmc.Text(
-                                    "OMERO Metrics Dashboard",
+                                    "OMERO Metrics test2 Dashboard",
                                     c=primary_color,
                                     style={"fontSize": 15},
                                 ),

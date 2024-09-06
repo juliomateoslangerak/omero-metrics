@@ -1,10 +1,7 @@
-import dash
-from dash import dcc, html, dash_table
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
-import dash_bootstrap_components as dbc
 import pandas as pd
-import plotly.express as px
+from dash import html,dash_table
 
 stylesheets = [
     "https://unpkg.com/@mantine/charts@7/styles.css",

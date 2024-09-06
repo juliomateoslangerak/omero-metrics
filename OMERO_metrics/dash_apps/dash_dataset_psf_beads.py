@@ -71,17 +71,7 @@ app.layout = dmc.MantineProvider(
                 dmc.Divider(variant="solid"),
                 dmc.Stack(
                     [
-                        dmc.Flex(
-                            children=[content, content, content],
-                            direction={"base": "column", "sm": "row"},
-                            gap={"base": "sm", "sm": "lg"},
-                            justify={"sm": "space-between"},
-                            align={"sm": "center"},
-                            style={
-                                "margin-top": "20px",
-                                "margin-bottom": "10px",
-                            },
-                        ),
+
                         dmc.Divider(variant="solid"),
                         dmc.Center(
                             [

@@ -61,11 +61,9 @@ dash_app_image.layout = dmc.MantineProvider(
                 dmc.Text(
                     "Intensity Map", c=primary_color, style={"fontSize": 30}
                 ),
-                dmc.Grid(
-                    [
-                        dmc.GridCol(
-                            [
-                                dcc.Graph(
+                dmc.Flex(
+                    children=[
+                        dcc.Graph(
                                     figure={},
                                     id="rois-graph",
                                     style={
@@ -75,13 +73,7 @@ dash_app_image.layout = dmc.MantineProvider(
                                         "padding": "20px",
                                         "background-color": "white",
                                     },
-                                ),
-                            ],
-                            span="8",
-                        ),
-                        dmc.GridCol(
-                            [
-                                dmc.Stack(
+                                ),   dmc.Stack(
                                     [
                                         html.Div(
                                             [
@@ -165,20 +157,18 @@ dash_app_image.layout = dmc.MantineProvider(
                                             checked=False,
                                         ),
                                     ],
-                                )
-                            ],
-                            span=2,
-                        ),
-                    ],
-                    justify="space-between",
-                    align="center",
+                                )],
+                    direction={"base": "column", "sm": "row"},
+                    gap={"base": "sm", "sm": "lg"},
+                    justify={"sm": "space-between"},
+                    align={"sm": "center"},
                     style={
                         "margin-top": "10px",
-                        "background-color": "white",
-                        "border-radius": "0.5rem",
-                        "padding": "10px",
+                        "margin-bottom": "10px",
+                        'background-color': 'white',
                     },
                 ),
+
                 html.Div(
                     [
                         dmc.Title(
@@ -278,33 +268,12 @@ def callback_test4(*args, **kwargs):
         color_continuous_scale="Hot",
     )
     if checked_contour:
-        img_array = np.array(imaaa)
-        fig1 = go.Figure(
-            data=go.Contour(
-                z=img_array,
-                colorscale=color,
-                colorbar=dict(
-                    title="Pixel Intensity",
-                    titleside="right",
-                    x=-0.15,
-                    xanchor="left",
-                ),
-                hoverinfo="z",
-            )
-        )
-        fig1.update_layout(
-            height=imaaa.shape[0] + 150,
-            autosize=False,
-            margin=dict(t=30, b=30, l=0, r=0),
-        )
-        fig = fig1
+        fig.plotly_restyle({'type': 'contour'}, 0)
         fig.update_yaxes(autorange="reversed")
 
     # Add dropdowns
     fig.update_layout(
-        height=imaaa.shape[0] + 150,
         autosize=False,
-        margin=dict(t=30, b=30, l=0, r=0),
     )
     corners = [
         dict(
