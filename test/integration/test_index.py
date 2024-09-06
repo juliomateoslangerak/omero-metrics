@@ -77,3 +77,17 @@ class TestLoadIndexPage(IWebTest):
 
         assert app2
         assert app._uid == app2._uid
+
+    @pytest.mark.django_db
+    def test_app_lookup_dataset(self, user1):
+        "Test looking up an existing application"
+        from OMERO_metrics.dash_apps.dash_dataset_metrics import (
+            dash_app_dataset,
+        )
+
+        from django_plotly_dash.models import get_stateless_by_name
+
+        app2 = get_stateless_by_name(dash_app_dataset._uid)
+
+        assert app2
+        assert dash_app_dataset._uid == app2._uid
