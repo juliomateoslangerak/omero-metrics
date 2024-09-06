@@ -1,7 +1,7 @@
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 import pandas as pd
-from dash import html,dash_table
+from dash import html, dash_table
 
 stylesheets = [
     "https://unpkg.com/@mantine/charts@7/styles.css",

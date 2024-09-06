@@ -64,100 +64,102 @@ dash_app_image.layout = dmc.MantineProvider(
                 dmc.Flex(
                     children=[
                         dcc.Graph(
-                                    figure={},
-                                    id="rois-graph",
-                                    style={
-                                        "margin-top": "20px",
-                                        "margin-bottom": "20px",
-                                        "border-radius": "0.5rem",
-                                        "padding": "20px",
-                                        "background-color": "white",
-                                    },
-                                ),   dmc.Stack(
+                            figure={},
+                            id="rois-graph",
+                            style={
+                                "margin-top": "20px",
+                                "margin-bottom": "20px",
+                                "border-radius": "0.5rem",
+                                "padding": "20px",
+                                "background-color": "white",
+                            },
+                        ),
+                        dmc.Stack(
+                            [
+                                html.Div(
                                     [
-                                        html.Div(
-                                            [
-                                                dmc.Text(
-                                                    "Select ROI",
-                                                    size="sm",
-                                                    fw=500,
-                                                ),
-                                                dmc.SegmentedControl(
-                                                    id="segmented",
-                                                    value="All",
-                                                    data=[
-                                                        {
-                                                            "value": "Center",
-                                                            "label": "Center",
-                                                        },
-                                                        {
-                                                            "value": "Line",
-                                                            "label": "Line",
-                                                        },
-                                                        {
-                                                            "value": "Square",
-                                                            "label": "Square",
-                                                        },
-                                                        {
-                                                            "value": "All",
-                                                            "label": "All",
-                                                        },
-                                                    ],
-                                                    mb=10,
-                                                ),
-                                            ]
+                                        dmc.Text(
+                                            "Select ROI",
+                                            size="sm",
+                                            fw=500,
                                         ),
-                                        dmc.Checkbox(
-                                            id="checkbox-state",
-                                            label="Contour Image",
-                                            checked=False,
-                                            mb=10,
-                                        ),
-                                        dmc.Select(
-                                            id="my-dropdown1",
-                                            label="Select Channel",
-                                            w="auto",
-                                            value="channel 0",
-                                            leftSection=DashIconify(
-                                                icon="radix-icons:magnifying-glass"
-                                            ),
-                                            rightSection=DashIconify(
-                                                icon="radix-icons:chevron-down"
-                                            ),
-                                        ),
-                                        dmc.Select(
-                                            id="my-dropdown2",
-                                            label="Select Color",
+                                        dmc.SegmentedControl(
+                                            id="segmented",
+                                            value="All",
                                             data=[
                                                 {
-                                                    "value": "Hot",
-                                                    "label": "Hot",
+                                                    "value": "Center",
+                                                    "label": "Center",
                                                 },
                                                 {
-                                                    "value": "Viridis",
-                                                    "label": "Viridis",
+                                                    "value": "Line",
+                                                    "label": "Line",
                                                 },
                                                 {
-                                                    "value": "Inferno",
-                                                    "label": "Inferno",
+                                                    "value": "Square",
+                                                    "label": "Square",
+                                                },
+                                                {
+                                                    "value": "All",
+                                                    "label": "All",
                                                 },
                                             ],
-                                            w="auto",
-                                            value="Hot",
-                                            leftSection=DashIconify(
-                                                icon="radix-icons:color-wheel"
-                                            ),
-                                            rightSection=DashIconify(
-                                                icon="radix-icons:chevron-down"
-                                            ),
+                                            mb=10,
                                         ),
-                                        dmc.Switch(
-                                            id="switch-invert-colors",
-                                            label="Invert Color",
-                                            checked=False,
-                                        ),
+                                    ]
+                                ),
+                                dmc.Checkbox(
+                                    id="checkbox-state",
+                                    label="Contour Image",
+                                    checked=False,
+                                    mb=10,
+                                ),
+                                dmc.Select(
+                                    id="my-dropdown1",
+                                    label="Select Channel",
+                                    w="auto",
+                                    value="channel 0",
+                                    leftSection=DashIconify(
+                                        icon="radix-icons:magnifying-glass"
+                                    ),
+                                    rightSection=DashIconify(
+                                        icon="radix-icons:chevron-down"
+                                    ),
+                                ),
+                                dmc.Select(
+                                    id="my-dropdown2",
+                                    label="Select Color",
+                                    data=[
+                                        {
+                                            "value": "Hot",
+                                            "label": "Hot",
+                                        },
+                                        {
+                                            "value": "Viridis",
+                                            "label": "Viridis",
+                                        },
+                                        {
+                                            "value": "Inferno",
+                                            "label": "Inferno",
+                                        },
                                     ],
-                                )],
+                                    w="auto",
+                                    value="Hot",
+                                    leftSection=DashIconify(
+                                        icon="radix-icons:color-wheel"
+                                    ),
+                                    rightSection=DashIconify(
+                                        icon="radix-icons:chevron-down"
+                                    ),
+                                ),
+                                dmc.Switch(
+                                    id="switch-invert-colors",
+                                    label="Invert Color",
+                                    checked=False,
+                                ),
+                            ],
+                        ),
+                    ],
                     direction={"base": "column", "sm": "row"},
                     gap={"base": "sm", "sm": "lg"},
                     justify={"sm": "space-between"},
@@ -165,10 +167,9 @@ dash_app_image.layout = dmc.MantineProvider(
                     style={
                         "margin-top": "10px",
                         "margin-bottom": "10px",
-                        'background-color': 'white',
+                        "background-color": "white",
                     },
                 ),
-
                 html.Div(
                     [
                         dmc.Title(
@@ -268,7 +269,7 @@ def callback_test4(*args, **kwargs):
         color_continuous_scale="Hot",
     )
     if checked_contour:
-        fig.plotly_restyle({'type': 'contour'}, 0)
+        fig.plotly_restyle({"type": "contour"}, 0)
         fig.update_yaxes(autorange="reversed")
 
     # Add dropdowns

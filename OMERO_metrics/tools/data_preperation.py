@@ -338,17 +338,18 @@ def fig_mip(mip_X, mip_Y, mip_Z, title):
     fig = make_subplots(
         rows=2,
         cols=2,
-
         subplot_titles=("MIP X axis", "MIP Y axis", "MIP Z axis"),
     )
     fig = fig.add_trace(mip_X.data[0], row=1, col=1)
     fig = fig.add_trace(mip_Y.data[0], row=1, col=2)
     fig = fig.add_trace(mip_Z.data[0], row=2, col=1)
-    fig = fig.update_yaxes(    yaxis_scaleanchor="x",
+    fig = fig.update_yaxes(
+        yaxis_scaleanchor="x",
     )
     fig = fig.update_layout(
-        title_text=title, coloraxis=dict(colorscale="hot"), autosize=False,
-
+        title_text=title,
+        coloraxis=dict(colorscale="hot"),
+        autosize=False,
     )
     return fig
 

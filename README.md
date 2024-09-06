@@ -2,7 +2,7 @@
 [![Actions Status](https://github.com/Wapaa/OMERO-project/workflows/OMERO/badge.svg)](https://github.com/Wapaa/OMERO-project/actions)
 [![GPLv2 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
 
-<img alt="Logo" height="150" src="https://raw.githubusercontent.com/Wapaa/OMERO-metrics/dev/OMERO_metrics/static/OMERO_metrics/images/logo.png" width="150"/>
+<img alt="Logo" height="100" src="https://raw.githubusercontent.com/Wapaa/OMERO-metrics/dev/OMERO_metrics/static/OMERO_metrics/images/logo.png" width="150"/>
 
 OMERO.metrics with Docker
 =========================
@@ -53,7 +53,7 @@ $ pip install -e .
 ```
 
 1. Add the following lines to the `omeroweb/settings.py` file:
-2. Make sure you have REACT_VERSION=18.2.0 installed.
+2. Make sure you have REACT_VERSION=18.2.0 installed and set ENV to REACT_VERSION=18.2.0 (export REACT_VERSION=18.2.0) .
 
 
     STATICFILES_FINDERS = ['django.contrib.staticfiles.finders.FileSystemFinder',

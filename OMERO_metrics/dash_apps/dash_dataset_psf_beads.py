@@ -71,7 +71,6 @@ app.layout = dmc.MantineProvider(
                 dmc.Divider(variant="solid"),
                 dmc.Stack(
                     [
-
                         dmc.Divider(variant="solid"),
                         dmc.Center(
                             [
