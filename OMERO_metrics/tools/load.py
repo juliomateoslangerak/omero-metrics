@@ -190,7 +190,7 @@ def load_dash_data_image(
     dash_context = {}
     if (
         isinstance(mm_dataset, FieldIlluminationDataset)
-        and image_location == "input"
+        and image_location == "input_data"
     ):
         dash_context["image"] = image.array_data
         dash_context["channel_names"] = image.channel_series
@@ -218,7 +218,10 @@ def load_dash_data_image(
         dash_context["message"] = (
             "No visualization available for output images."
         )
-    elif isinstance(mm_dataset, PSFBeadsDataset) and image_location == "input":
+    elif (
+        isinstance(mm_dataset, PSFBeadsDataset)
+        and image_location == "input_data"
+    ):
         dash_context["image"] = image.array_data
         dash_context["min_distance"] = (
             mm_dataset.input_parameters.min_lateral_distance_factor

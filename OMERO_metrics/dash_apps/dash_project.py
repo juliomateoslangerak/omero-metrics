@@ -65,6 +65,7 @@ dash_app_project.layout = dmc.MantineProvider(
                                     label="Select Measurement",
                                     w="300",
                                     value="0",
+                                    clearable=False,
                                     leftSection=DashIconify(
                                         icon="radix-icons:magnifying-glass"
                                     ),
@@ -127,7 +128,7 @@ def update_dropdown(*args, **kwargs):
     options = [{"value": f"{i}", "label": f"{k}"} for i, k in enumerate(kkm)]
     min_date = min(dates)
     max_date = max(dates)
-    data = [{"group": "Channels", "items": options}]
+    data = options
     value_date = [min_date, max_date]
     return data, min_date, max_date, value_date
 

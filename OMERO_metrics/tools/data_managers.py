@@ -68,11 +68,11 @@ TEMPLATE_MAPPINGS_DATASET = {
 
 TEMPLATE_MAPPINGS_IMAGE = {
     "FieldIlluminationDataset": {
-        "input": "OMERO_metrics/omero_views/center_view_image.html",
+        "input_data": "OMERO_metrics/omero_views/center_view_image.html",
         "output": "OMERO_metrics/omero_views/warning.html",
     },
     "PSFBeadsDataset": {
-        "input": "OMERO_metrics/omero_views/center_view_image_psf.html",
+        "input_data": "OMERO_metrics/omero_views/center_view_image_psf.html",
         "output": "OMERO_metrics/omero_views/warning.html",
     },
 }
@@ -240,7 +240,7 @@ class DatasetManager:
 
     def _update_dataset_input_config(self, config):
         for key, val in config.items():
-            setattr(self.mm_dataset.input, key, val)
+            setattr(self.mm_dataset.input_parameters, key, val)
 
     def dump_data(self):
         for mm_ds in self.mm_dataset:

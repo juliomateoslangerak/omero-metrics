@@ -78,7 +78,7 @@ dash_form_project.layout = dmc.MantineProvider(
                         ),
                         dmc.Divider(variant="solid"),
                         dmc.Select(
-                            id="my-dropdown2",
+                            id="my-dropdown5",
                             label="Select Analysis Type",
                             data=analysis_type,
                             w="300",

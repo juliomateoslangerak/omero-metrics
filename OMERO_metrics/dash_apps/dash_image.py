@@ -118,7 +118,8 @@ dash_app_image.layout = dmc.MantineProvider(
                                     id="my-dropdown1",
                                     label="Select Channel",
                                     w="auto",
-                                    value="channel 0",
+                                    value="0",
+                                    clearable=False,
                                     leftSection=DashIconify(
                                         icon="radix-icons:magnifying-glass"
                                     ),
@@ -145,6 +146,7 @@ dash_app_image.layout = dmc.MantineProvider(
                                     ],
                                     w="auto",
                                     value="Hot",
+                                    clearable=False,
                                     leftSection=DashIconify(
                                         icon="radix-icons:color-wheel"
                                     ),
@@ -170,6 +172,7 @@ dash_app_image.layout = dmc.MantineProvider(
                         "background-color": "white",
                     },
                 ),
+                html.Div(id="blank-input"),
                 html.Div(
                     [
                         dmc.Title(
@@ -229,8 +232,21 @@ dash_app_image.layout = dmc.MantineProvider(
 
 
 @dash_app_image.expanded_callback(
-    dash.dependencies.Output("rois-graph", "figure"),
     dash.dependencies.Output("my-dropdown1", "data"),
+    [dash.dependencies.Input("blank-input", "children")],
+)
+def callback_channel(*args, **kwargs):
+    channel_names = kwargs["session_state"]["context"]["channel_names"]
+    channel_list = [
+        {"label": c.name, "value": f"{i}"}
+        for i, c in enumerate(channel_names.channels)
+    ]
+    data = channel_list
+    return data
+
+
+@dash_app_image.expanded_callback(
+    dash.dependencies.Output("rois-graph", "figure"),
     [
         dash.dependencies.Input("my-dropdown1", "value"),
         dash.dependencies.Input("my-dropdown2", "value"),
@@ -239,7 +255,7 @@ dash_app_image.layout = dmc.MantineProvider(
         dash.dependencies.Input("segmented", "value"),
     ],
 )
-def callback_test4(*args, **kwargs):
+def callback_image(*args, **kwargs):
     color = args[1]
     checked_contour = args[2]
     inverted_color = args[3]
@@ -255,13 +271,8 @@ def callback_test4(*args, **kwargs):
     df_rects = kwargs["session_state"]["context"]["df_rects"]
     df_lines = kwargs["session_state"]["context"]["df_lines"]
     df_points = kwargs["session_state"]["context"]["df_points"]
-    df_point_channel = df_points[df_points["C"] == int(args[0][-1])].copy()
-    channel_names = kwargs["session_state"]["context"]["channel_names"]
-    channel_list = [
-        {"label": c.name, "value": f"channel {i}"}
-        for i, c in enumerate(channel_names.channels)
-    ]
-    data = [{"group": "Channels", "items": channel_list}]
+    df_point_channel = df_points[df_points["C"] == int(args[0])].copy()
+
     fig = px.imshow(
         imaaa,
         zmin=imaaa.min(),
@@ -333,7 +344,7 @@ def callback_test4(*args, **kwargs):
             go.Scatter(x=df_points.X, y=df_points.Y, mode="markers")
         )
     fig = fig2
-    return fig, data
+    return fig
 
 
 @dash_app_image.expanded_callback(
@@ -344,7 +355,7 @@ def callback_test5(*args, **kwargs):
     df_intensity_profiles = kwargs["session_state"]["context"][
         "df_intensity_profiles"
     ]
-    ch = "ch0" + args[0][-1]
+    ch = "ch0" + args[0]
     df_profile = df_intensity_profiles[
         df_intensity_profiles.columns[
             df_intensity_profiles.columns.str.startswith(ch)

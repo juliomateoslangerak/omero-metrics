@@ -72,8 +72,9 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                 dmc.Select(
                                     id="channel_dropdown_foi",
                                     label="Select Channel",
+                                    clearable=False,
                                     w="300",
-                                    value="channel 0",
+                                    value="0",
                                     leftSection=DashIconify(
                                         icon="radix-icons:magnifying-glass"
                                     ),
@@ -196,10 +197,10 @@ def update_dropdow_menu(*args, **kwargs):
     channel = kwargs["session_state"]["context"]["channel_names"]
 
     channel_list = [
-        {"label": c.name, "value": f"channel {i}"}
+        {"label": c.name, "value": f"{i}"}
         for i, c in enumerate(channel.channels)
     ]
-    data = [{"group": "Channels", "items": channel_list}]
+    data = channel_list
     return data
 
 
@@ -238,7 +239,7 @@ def dataset_callback_intensity_map(*args, **kwargs):
     df_intensity_profiles = kwargs["session_state"]["context"][
         "intensity_profiles"
     ]
-    channel = int(args[0][-1])
+    channel = int(args[0])
     image_channel = images[0, 0, :, :, channel]
     image_channel = rescale_intensity(
         image_channel, in_range=(0, image_channel.max()), out_range=(0.0, 1.0)
