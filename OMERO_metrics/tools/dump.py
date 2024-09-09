@@ -134,7 +134,11 @@ def dump_project(
 
 
 def _remove_unsupported_types(
-    data_obj: Union[mm_schema.MetricsInputData, mm_schema.MetricsInputParameters, mm_schema.MetricsOutput]
+    data_obj: Union[
+        mm_schema.MetricsInputData,
+        mm_schema.MetricsInputParameters,
+        mm_schema.MetricsOutput,
+    ]
 ):
     def _remove(_attr):
         if isinstance(_attr, mm_schema.Image):
@@ -304,7 +308,11 @@ def _dump_analysis_metadata(
 
     output_metadata = _get_output_metadata(dataset.output)
 
-    metadata = {**input_metadata_data, **input_metadata_parameters, **output_metadata}
+    metadata = {
+        **input_metadata_data,
+        **input_metadata_parameters,
+        **output_metadata,
+    }
 
     omero_tools.create_key_value(
         conn=target_dataset._conn,

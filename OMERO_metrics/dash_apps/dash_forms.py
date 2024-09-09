@@ -6,6 +6,7 @@ import pandas as pd
 from dash_iconify import DashIconify
 from datetime import datetime
 from microscopemetrics_schema import datamodel as mm_schema
+from dataclasses import fields
 
 primary_color = "#008080"
 
@@ -31,8 +32,10 @@ dash_form_project = DjangoDash(
 )
 
 analysis_type = [
-    {"label": cls.__name__, "value": f"{i}"}
-    for i, cls in enumerate(mm_schema.MetricsInput.__subclasses__())
+    {"label": field.name, "value": f"{i}"}
+    for i, field in enumerate(
+        fields(mm_schema.FieldIlluminationInputParameters)
+    )
 ]
 
 

@@ -58,4 +58,5 @@ urlpatterns = [
     ),
     re_path(r"^microscope", microscope_view, name="microscope"),
     re_path(r"^upload_image", upload_image, name="upload_image"),
+    re_path(r"^test_forms", test_request, name="test_forms"),
 ]

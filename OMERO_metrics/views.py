@@ -11,6 +11,13 @@ import numpy as np
 from .tools.omero_tools import create_image_from_numpy_array
 
 
+def test_request(request):
+    if request.method == "POST":
+        test = request.POST.get("test")
+        context = {"test": test}
+        return render(request, "OMERO_metrics/test.html", context)
+
+
 # Imaginary function to handle an uploaded file.
 @login_required()
 def upload_image(request, conn=None, **kwargs):
