@@ -155,7 +155,7 @@ def load_dataset(
         # dataset does not know which images to load
         if mm_dataset.processed:
             input_images = getattr(
-                mm_dataset.input,
+                mm_dataset.input_data,
                 INPUT_IMAGES_MAPPING[mm_dataset.__class__.__name__],
             )
             for input_image in input_images:
@@ -443,7 +443,7 @@ def get_images_intensity_profiles(
 ) -> pd.DataFrame:
     data = []
     for i, j in zip(
-        dataset.input["field_illumination_image"],
+        dataset.input_data["field_illumination_image"],
         dataset.output["intensity_profiles"],
     ):
         data.append(
