@@ -157,6 +157,21 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
     dash_context = request.session.get("django_plotly_dash", dict())
     dash_context["context"] = context
     request.session["django_plotly_dash"] = dash_context
+    if request.method == "POST":
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            file = request.FILES["file"]
+            title = form.cleaned_data["title"]
+            dataset_id = form.cleaned_data["dataset_id"]
+        return render(
+            request,
+            "OMERO_metrics/success.html",
+            {
+                "type": "test",
+                "id_dataset": " dataset.getId()",
+                "id_image": "id",
+            },
+        )
     return render(request, template_name=template, context=context)
 
 
