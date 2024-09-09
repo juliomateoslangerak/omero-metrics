@@ -47,11 +47,11 @@ OUTPUT_DATA = {
 
 DATASET_IMAGES = {
     "FieldIlluminationDataset": {
-        "input": ["field_illumination_image"],
+        "input_data": ["field_illumination_image"],
         "output": [],
     },
     "PSFBeadsDataset": {
-        "input": ["psf_beads_images"],
+        "input_data": ["psf_beads_images"],
         "output": ["average_bead"],
     },
 }
