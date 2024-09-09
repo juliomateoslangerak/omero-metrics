@@ -1,4 +1,5 @@
 import ast
+import contextlib
 import logging
 import tempfile
 from dataclasses import fields
@@ -133,7 +134,7 @@ def dump_project(
 
 
 def _remove_unsupported_types(
-    data_obj: Union[mm_schema.MetricsInput, mm_schema.MetricsOutput]
+    data_obj: Union[mm_schema.MetricsInputData, mm_schema.MetricsInputParameters, mm_schema.MetricsOutput]
 ):
     def _remove(_attr):
         if isinstance(_attr, mm_schema.Image):
@@ -147,7 +148,7 @@ def _remove_unsupported_types(
                 for m in _attr.masks:
                     _remove(m.mask)
 
-    try:
+    with contextlib.suppress(TypeError):
         for field in fields(data_obj):
             try:
                 _attr = getattr(data_obj, field.name)
@@ -157,8 +158,6 @@ def _remove_unsupported_types(
                     _remove(_attr)
             except AttributeError:
                 continue
-    except TypeError:
-        pass
 
 
 def _dump_mm_dataset_as_file_annotation(
@@ -171,7 +170,8 @@ def _dump_mm_dataset_as_file_annotation(
     ],
 ):
     # We need to remove the data on the numpy and pandas data objects as they cannot be serialized by linkml
-    _remove_unsupported_types(mm_dataset.input)
+    _remove_unsupported_types(mm_dataset.input_data)
+    _remove_unsupported_types(mm_dataset.input_parameters)
     if mm_dataset.output:
         _remove_unsupported_types(mm_dataset.output)
 
@@ -298,11 +298,13 @@ def _dump_analysis_metadata(
         )
         return None
 
-    input_metadata = _get_input_metadata(dataset.input)
+    input_metadata_data = _get_input_metadata(dataset.input_data)
+
+    input_metadata_parameters = _get_input_metadata(dataset.input_parameters)
 
     output_metadata = _get_output_metadata(dataset.output)
 
-    metadata = {**input_metadata, **output_metadata}
+    metadata = {**input_metadata_data, **input_metadata_parameters, **output_metadata}
 
     omero_tools.create_key_value(
         conn=target_dataset._conn,
@@ -315,7 +317,7 @@ def _dump_analysis_metadata(
 
 
 def _get_input_metadata(
-    input: mm_schema.MetricsInput,
+    input: Union[mm_schema.MetricsInputData, mm_schema.MetricsInputParameters],
 ) -> dict:
     metadata = {}
     for input_field in fields(input):
@@ -339,7 +341,7 @@ def dump_analysis_config():
 def _get_output_metadata(
     dataset_output: mm_schema.MetricsOutput,
 ) -> dict:
-    output_fields = set(f.name for f in fields(mm_schema.MetricsOutput))
+    output_fields = {f.name for f in fields(mm_schema.MetricsOutput)}
     output_elements = {}
     for output_field in fields(dataset_output):
         if output_field.name not in output_fields:

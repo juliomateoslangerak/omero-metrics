@@ -26,7 +26,6 @@ import pytest
 from django.urls import reverse
 from omero.gateway import BlitzGateway
 from django.shortcuts import resolve_url
-from structure_generator import generate_users_groups
 
 
 def get_connection(user, group_id=None):

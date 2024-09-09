@@ -90,7 +90,7 @@ def field_illumination_generator(args, microscope_name):
                 description=args["description_dataset"],
                 acquisition_datetime=dates[dataset_id],
                 microscope=mm_schema.Microscope(name=microscope_name),
-                input=mm_schema.FieldIlluminationInput(
+                input_data=mm_schema.FieldIlluminationInputData(
                     field_illumination_image=[
                         numpy_to_mm_image(
                             array=_gen_field_illumination_image(
@@ -180,7 +180,7 @@ def psf_beads_generator(args, microscope_name):
                 description=args["description_dataset"],
                 acquisition_datetime=dates[dataset_id],
                 microscope=mm_schema.Microscope(name=microscope_name),
-                input=mm_schema.PSFBeadsInput(
+                input_data=mm_schema.PSFBeadsInputData(
                     psf_beads_images=[
                         numpy_to_mm_image(
                             array=_gen_psf_beads_image(

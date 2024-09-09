@@ -221,7 +221,7 @@ def load_dash_data_image(
     elif isinstance(mm_dataset, PSFBeadsDataset) and image_location == "input":
         dash_context["image"] = image.array_data
         dash_context["min_distance"] = (
-            mm_dataset.input.min_lateral_distance_factor
+            mm_dataset.input_parameters.min_lateral_distance_factor
         )
         dash_context["channel_names"] = image.channel_series
         dash_context["bead_properties_df"] = get_table_file_id(
@@ -273,7 +273,7 @@ def load_dash_data_dataset(
         dash_context["dm"] = dataset
         df = get_images_intensity_profiles(dataset)
         dash_context["image"], channel_series = concatenate_images(
-            dataset.input.field_illumination_image
+            dataset.input_data.field_illumination_image
         )
         dash_context["channel_names"] = channel_series
         dash_context["intensity_profiles"] = get_all_intensity_profiles(
@@ -289,7 +289,7 @@ def load_dash_data_dataset(
                 "description": i.description,
                 "acquisition_datetime": i.acquisition_datetime,
             }
-            for i in dataset.input.field_illumination_image
+            for i in dataset.input_data.field_illumination_image
         ]
 
     elif isinstance(dataset, PSFBeadsDataset):
