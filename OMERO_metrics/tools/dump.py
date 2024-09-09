@@ -244,8 +244,8 @@ def dump_dataset(
         dataset.data_reference = omero_tools.get_ref_from_object(omero_dataset)
 
     if dump_input_images:
-        for input_field in fields(dataset.input):
-            input_element = getattr(dataset.input, input_field.name)
+        for input_field in fields(dataset.input_data):
+            input_element = getattr(dataset.input_data, input_field.name)
             if isinstance(input_element, mm_schema.Image):
                 dump_image(
                     conn=conn,
