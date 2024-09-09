@@ -426,9 +426,13 @@ class ProjectManager:
                 self.context, self.template = warning_message(message)
 
         else:
-            message = "This project doesn't contain a processed dataset. Unable to visualize"
-            logger.warning(message)
-            self.context, self.template = warning_message(message)
+            if self.setup:
+                message = "This project doesn't contain a processed dataset but it contains a config file. Unable to visualize"
+                logger.warning(message)
+                self.context, self.template = warning_message(message)
+            else:
+                self.template = "OMERO_metrics/forms/project_config_form.html"
+                self.context = {}
 
     def save_settings(self):
         pass

@@ -10,6 +10,7 @@ from .dash_apps import (
     dash_dataset_metrics,
     dash_group,
     dash_microscope,
+    dash_forms,
 )
 from .views import *
 from django.urls import re_path
