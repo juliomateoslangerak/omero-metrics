@@ -48,27 +48,28 @@ app.layout = dmc.MantineProvider(
             [
                 dmc.Center(
                     [
-                        dmc.Text(
-                            id="title",
-                            c=primary_color,
-                            style={"fontSize": 30},
-                        ),
                         dmc.Group(
                             [
                                 html.Img(
                                     src="./assets/images/logo.png",
                                     style={"width": "100px"},
                                 ),
-                                dmc.Text(
-                                    "OMERO Metrics Dashboard",
-                                    c=primary_color,
-                                    style={"fontSize": 15},
+                                dmc.Title(
+                                    "PSF Beads Dashboard",
+                                    c="#189A35",
+                                    size="h3",
+                                    mb=10,
+                                    mt=5,
                                 ),
                             ]
                         ),
-                    ]
+                    ],
+                    style={
+                        "background-color": "white",
+                        "border-radius": "0.5rem",
+                        "padding": "10px",
+                    },
                 ),
-                dmc.Divider(variant="solid"),
                 dmc.Stack(
                     [
                         dmc.Divider(variant="solid"),

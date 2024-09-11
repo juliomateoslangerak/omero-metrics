@@ -4,7 +4,7 @@ from dash_iconify import DashIconify
 from django_plotly_dash import DjangoDash
 from plotly.express.imshow_utils import rescale_intensity
 
-from ..tools.data_preperation import *
+from OMERO_metrics.tools.data_preperation import *
 import dash_mantine_components as dmc
 
 
@@ -37,42 +37,33 @@ dash_app_image.layout = dmc.MantineProvider(
             children=[
                 dmc.Center(
                     [
-                        dmc.Text(
-                            id="title",
-                            c=primary_color,
-                            style={"fontSize": 30},
-                        ),
                         dmc.Group(
                             [
                                 html.Img(
                                     src="./assets/images/logo.png",
                                     style={"width": "100px"},
                                 ),
-                                dmc.Text(
-                                    "OMERO Metrics Dashboard",
-                                    c=primary_color,
-                                    style={"fontSize": 15},
+                                dmc.Title(
+                                    "Intensity Map",
+                                    c="#189A35",
+                                    size="h3",
+                                    mb=10,
+                                    mt=5,
                                 ),
                             ]
                         ),
-                    ]
+                    ],
+                    style={
+                        "background-color": "white",
+                        "border-radius": "0.5rem",
+                        "padding": "10px",
+                    },
                 ),
-                dmc.Divider(variant="solid"),
-                dmc.Text(
-                    "Intensity Map", c=primary_color, style={"fontSize": 30}
-                ),
-                dmc.Flex(
+                dmc.Group(
                     children=[
                         dcc.Graph(
                             figure={},
                             id="rois-graph",
-                            style={
-                                "margin-top": "20px",
-                                "margin-bottom": "20px",
-                                "border-radius": "0.5rem",
-                                "padding": "20px",
-                                "background-color": "white",
-                            },
                         ),
                         dmc.Stack(
                             [
@@ -162,21 +153,34 @@ dash_app_image.layout = dmc.MantineProvider(
                             ],
                         ),
                     ],
-                    direction={"base": "column", "sm": "row"},
                     gap={"base": "sm", "sm": "lg"},
-                    justify={"sm": "space-between"},
-                    align={"sm": "center"},
+                    justify="space-around",
+                    align="center",
                     style={
                         "margin-top": "10px",
                         "margin-bottom": "10px",
                         "background-color": "white",
+                        "border-radius": "0.5rem",
                     },
                 ),
                 html.Div(id="blank-input"),
                 html.Div(
                     [
-                        dmc.Title(
-                            "Intensity Profiles", c="#63aa47", size="h3"
+                        dmc.Center(
+                            [
+                                dmc.Title(
+                                    "Intensity Profiles",
+                                    c="#189A35",
+                                    size="h3",
+                                    mb=10,
+                                    mt=5,
+                                )
+                            ],
+                            style={
+                                "background-color": "white",
+                                "border-top-radius": "0.5rem",
+                                "padding": "10px",
+                            },
                         ),
                         dmc.LineChart(
                             id="intensity_profile",
@@ -214,6 +218,7 @@ dash_app_image.layout = dmc.MantineProvider(
                             style={
                                 "background-color": "white",
                                 "padding": "20px",
+                                "border-radius": "0.5rem",
                             },
                         ),
                     ]
@@ -264,7 +269,7 @@ def callback_image(*args, **kwargs):
         color = color + "_r"
 
     image_omero = kwargs["session_state"]["context"]["image"]
-    imaaa = image_omero[0, 0, :, :, int(args[0][-1])]
+    imaaa = image_omero[0, 0, :, :, int(args[0])]
     imaaa = rescale_intensity(
         imaaa, in_range=(0, imaaa.max()), out_range=(0.0, 1.0)
     )
@@ -323,7 +328,7 @@ def callback_image(*args, **kwargs):
         )
         for i, row in df_lines.iterrows()
     ]
-    fig.update_layout(coloraxis_colorbar_x=-0.15)
+    # fig.update_layout(coloraxis_colorbar_x=-0.15)
     fig.update_layout(coloraxis={"colorscale": color})
     if roi == "All":
         fig2 = go.Figure(fig)

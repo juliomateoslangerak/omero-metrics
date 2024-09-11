@@ -46,7 +46,7 @@ from omero.model import (
     RoiI,
     enums,
 )
-from omero.rtypes import rdouble, rint, rlong, rstring, rtime
+from omero.rtypes import rdouble, rint, rstring, rtime
 from pandas import DataFrame
 
 logger = logging.getLogger(__name__)

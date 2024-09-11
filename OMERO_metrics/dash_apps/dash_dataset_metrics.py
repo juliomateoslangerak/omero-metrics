@@ -35,27 +35,28 @@ dash_app_dataset.layout = dmc.MantineProvider(
             [
                 dmc.Center(
                     [
-                        dmc.Text(
-                            id="title",
-                            c=primary_color,
-                            style={"fontSize": 30},
-                        ),
                         dmc.Group(
                             [
                                 html.Img(
                                     src="./assets/images/logo.png",
                                     style={"width": "100px"},
                                 ),
-                                dmc.Text(
-                                    "OMERO Metrics test2 Dashboard",
-                                    c=primary_color,
-                                    style={"fontSize": 15},
+                                dmc.Title(
+                                    "Field Of Illumination Dashboard",
+                                    c="#189A35",
+                                    size="h3",
+                                    mb=10,
+                                    mt=5,
                                 ),
                             ]
                         ),
-                    ]
+                    ],
+                    style={
+                        "background-color": "white",
+                        "border-radius": "0.5rem",
+                        "padding": "10px",
+                    },
                 ),
-                dmc.Divider(variant="solid"),
                 dmc.Grid(
                     id="group_image",
                     justify="space-between",
@@ -91,7 +92,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                     },
                                 ),
                             ],
-                            span="auto",
+                            span="6",
                         ),
                         dmc.GridCol(
                             [
@@ -115,7 +116,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                     className="table table-striped table-bordered",
                                 ),
                             ],
-                            span="auto",
+                            span="6",
                         ),
                     ],
                 ),

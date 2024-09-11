@@ -63,7 +63,7 @@ dash_app_project.layout = dmc.MantineProvider(
                                 dmc.Select(
                                     id="project-dropdown",
                                     label="Select Measurement",
-                                    w="300",
+                                    w="auto",
                                     value="0",
                                     clearable=False,
                                     leftSection=DashIconify(
@@ -74,7 +74,7 @@ dash_app_project.layout = dmc.MantineProvider(
                                     ),
                                 )
                             ],
-                            span="content",
+                            span="3",
                         ),
                         dmc.GridCol(
                             [
@@ -85,14 +85,18 @@ dash_app_project.layout = dmc.MantineProvider(
                                         icon="clarity:date-line"
                                     ),
                                     type="range",
-                                    w="300",
+                                    w="auto",
                                 ),
                             ],
-                            span="content",
+                            span="3",
                         ),
                     ],
                     justify="space-between",
-                    style={"marginBottom": "20px"},
+                    style={
+                        "padding": "10px",
+                        "borderTopLeftRadius": "0.5rem",
+                        "backgroundColor": "white",
+                    },
                 ),
                 html.Div(
                     id="graph-project",

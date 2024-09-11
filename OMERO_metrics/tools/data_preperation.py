@@ -343,9 +343,6 @@ def fig_mip(mip_X, mip_Y, mip_Z, title):
     fig = fig.add_trace(mip_X.data[0], row=1, col=1)
     fig = fig.add_trace(mip_Y.data[0], row=1, col=2)
     fig = fig.add_trace(mip_Z.data[0], row=2, col=1)
-    fig = fig.update_yaxes(
-        yaxis_scaleanchor="x",
-    )
     fig = fig.update_layout(
         title_text=title,
         coloraxis=dict(colorscale="hot"),
@@ -355,15 +352,16 @@ def fig_mip(mip_X, mip_Y, mip_Z, title):
 
 
 def mip_graphs(
-    x0: int, xf: int, y0: int, yf: int, z: int, stack: Union[np.array, list]
+    x0: int, xf: int, y0: int, yf: int, stack: Union[np.array, list]
 ):
     image_bead = stack[:, y0:yf, x0:xf]
-    z_ima = stack[z, y0:yf, x0:xf]
     image_x = np.max(image_bead, axis=2)
     image_y = np.max(image_bead, axis=1)
+    image_z = np.max(image_bead, axis=0)
     image_x = image_x / image_x.max()
     image_y = image_y / image_y.max()
-    image_z = z_ima / z_ima.max()
+    image_z = image_z / image_z.max()
+
     mip_x = px.imshow(
         image_x,
         zmin=image_x.min(),
