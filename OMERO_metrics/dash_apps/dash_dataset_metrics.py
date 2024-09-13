@@ -109,11 +109,20 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                         )
                                     ]
                                 ),
-                                dmc.Table(
-                                    id="km_table",
-                                    striped=True,
-                                    highlightOnHover=True,
-                                    className="table table-striped table-bordered",
+                                dmc.ScrollArea(
+                                    [
+                                        dmc.Table(
+                                            id="km_table",
+                                            striped=True,
+                                            highlightOnHover=True,
+                                            className="table table-striped table-bordered",
+                                            styles={
+                                                "background-color": "white",
+                                                "width": "auto",
+                                                "height": "auto",
+                                            },
+                                        )
+                                    ]
                                 ),
                             ],
                             span="6",

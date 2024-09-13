@@ -236,6 +236,8 @@ def update_project_view(*args, **kwargs):
                     highlightOnHover=True,
                     style={
                         "background-color": "white",
+                        "width": "auto",
+                        "height": "auto",
                     },
                 ),
             ]

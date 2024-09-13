@@ -338,6 +338,7 @@ def fig_mip(mip_X, mip_Y, mip_Z, title):
     fig = make_subplots(
         rows=2,
         cols=2,
+        specs=[[{}, {}], [{"colspan": 2}, None]],
         subplot_titles=("MIP X axis", "MIP Y axis", "MIP Z axis"),
     )
     fig = fig.add_trace(mip_X.data[0], row=1, col=1)
@@ -383,12 +384,12 @@ def mip_graphs(
 def crop_bead_index(bead, min_dist, stack):
     x = bead["center_x"].values[0]
     y = bead["center_y"].values[0]
-    z = bead["center_z"].values[0]
+    # z = bead["center_z"].values[0]
     x0 = max(0, x - min_dist)
     y0 = max(0, y - min_dist)
     xf = min(stack.shape[2], x + min_dist)
     yf = min(stack.shape[1], y + min_dist)
-    return x0, xf, y0, yf, z
+    return x0, xf, y0, yf
 
 
 def image_3d_chart(image_bead):

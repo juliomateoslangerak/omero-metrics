@@ -209,15 +209,15 @@ app.layout = dmc.MantineProvider(
                                         dmc.Select(
                                             data=[
                                                 {
-                                                    "label": "Axis: X",
+                                                    "label": "Axis X",
                                                     "value": "x",
                                                 },
                                                 {
-                                                    "label": "Axis: Y",
+                                                    "label": "Axis Y",
                                                     "value": "y",
                                                 },
                                                 {
-                                                    "label": "Axis: Z",
+                                                    "label": "Axis Z",
                                                     "value": "z",
                                                 },
                                             ],
@@ -384,7 +384,7 @@ def callback_mip(*args, **kwargs):
         bead = df_beads_location[
             df_beads_location["bead_id"] == bead_index
         ].copy()
-        x0, xf, y0, yf, z = crop_bead_index(bead, min_dist, stack)
+        x0, xf, y0, yf = crop_bead_index(bead, min_dist, stack)
         mip_x, mip_y, mip_z = mip_graphs(x0, xf, y0, yf, stack)
         return (
             fig_mip(mip_x, mip_y, mip_z, title),
@@ -400,12 +400,13 @@ def line_graph_axis(bead_index, channel_index, axis, kwargs):
     df_axis_3d = df_axis[
         df_axis.columns[df_axis.columns.str.startswith(str(image_id))]
     ]
+    # 81_0_0_y_fitted image_id_channel_nr_bead_id_axis_fitted
     display(df_axis_3d)
     df_meta_x = pd.DataFrame(
         data=[
             [
+                int(col.split("_")[-3]),
                 int(col.split("_")[-4]),
-                int(col.split("_")[-5]),
                 col.split("_")[-1],
                 col,
             ]

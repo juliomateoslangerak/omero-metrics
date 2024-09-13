@@ -70,26 +70,39 @@ app.layout = dmc.MantineProvider(
                         "padding": "10px",
                     },
                 ),
-                dmc.Stack(
+                html.Div(
                     [
-                        dmc.Divider(variant="solid"),
-                        dmc.Center(
+                        dmc.Stack(
                             [
-                                dmc.Title(
-                                    "Key Measurements",
-                                    c="#189A35",
-                                    size="h3",
-                                    mb=10,
+                                dmc.Divider(variant="solid"),
+                                dmc.Center(
+                                    [
+                                        dmc.Title(
+                                            "Key Measurements",
+                                            c="#189A35",
+                                            size="h3",
+                                            mb=10,
+                                        ),
+                                    ]
+                                ),
+                                dmc.ScrollArea(
+                                    [
+                                        dmc.Table(
+                                            id="key_values_psf",
+                                            striped=True,
+                                            highlightOnHover=True,
+                                            className="table table-striped table-bordered",
+                                            styles={
+                                                "background-color": "white",
+                                                "width": "auto",
+                                                "height": "auto",
+                                                "overflow-X": "auto",
+                                            },
+                                        )
+                                    ]
                                 ),
                             ]
-                        ),
-                        dmc.Table(
-                            id="key_values_psf",
-                            striped=True,
-                            highlightOnHover=True,
-                            className="table table-striped table-bordered",
-                            styles={"background-color": "white"},
-                        ),
+                        )
                     ]
                 ),
                 dmc.Divider(variant="solid"),

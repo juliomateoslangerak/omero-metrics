@@ -1,10 +1,5 @@
-from django.shortcuts import render
-from .tools import load
 from omeroweb.webclient.decorators import login_required, render_response
-from .tools.data_preperation import *
-from .tools.load import *
 from .tools.data_managers import DatasetManager, ProjectManager, ImageManager
-from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from .forms import UploadFileForm
 import numpy as np
@@ -145,6 +140,9 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
 
 @login_required()
 def center_viewer_project(request, project_id, conn=None, **kwargs):
+    # request["conn"] = conn
+    # conn.SERVICE_OPTS.setOmeroGroup("-1")
+
     project_wrapper = conn.getObject("Project", project_id)
     pm = ProjectManager(conn, project_wrapper)
     pm.load_data()
@@ -156,6 +154,7 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
     template = pm.template
     dash_context = request.session.get("django_plotly_dash", dict())
     dash_context["context"] = context
+    # dash_context["context"]["project_id"] = project_id
     request.session["django_plotly_dash"] = dash_context
     return render(request, template_name=template, context=context)
 

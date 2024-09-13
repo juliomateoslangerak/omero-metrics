@@ -20,7 +20,7 @@
 import yaml
 
 """Integration tests for index page."""
-from omero.gateway import ImageWrapper
+from omero.gateway import ImageWrapper, ProjectWrapper
 from omeroweb.testlib import IWebTest, get
 import pytest
 from django.urls import reverse
@@ -90,3 +90,20 @@ class TestLoadIndexPage(IWebTest):
 
         assert app2
         assert dash_app_dataset._uid == app2._uid
+
+    @pytest.mark.django_db
+    def test_load_project(self, user1):
+        """Test loading the app home page."""
+        conn = get_connection(user1)
+        project = self.make_project(
+            name="test_project", description="Project", client=conn.c
+        )
+        new_project = ProjectWrapper(conn, project)
+        id = int(new_project.getId())
+        user_name = conn.getUser().getName()
+        django_client = self.new_django_client(user_name, user_name)
+        index_url = reverse("project", args=[id])
+        # asserts we get a 200 response code etc
+        rsp = get(django_client, index_url)
+        html_str = rsp.content.decode()
+        assert "Omero Metrics" in html_str
