@@ -142,15 +142,19 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
     return render(request, template_name=template)
 
 
-@login_required()
+@login_required(doConnectionCleanup=False)
 def center_viewer_project(request, project_id, conn=None, **kwargs):
     # request["conn"] = conn
     # conn.SERVICE_OPTS.setOmeroGroup("-1")
+    if request.method == "POST":
+
+        project_id = request.POST.get
 
     project_wrapper = conn.getObject("Project", project_id)
     pm = ProjectManager(conn, project_wrapper)
     pm.load_data()
     pm.is_homogenized()
+
     pm.load_config_file()
     pm.check_processed_data()
     pm.visualize_data()
@@ -158,8 +162,9 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
     template = pm.template
     dash_context = request.session.get("django_plotly_dash", dict())
     dash_context["context"] = context
-    # dash_context["context"]["project_id"] = project_id
+    dash_context["context"]["project_id"] = project_id
     request.session["django_plotly_dash"] = dash_context
+    request.conn = conn
     return render(request, template_name=template, context=context)
 
 

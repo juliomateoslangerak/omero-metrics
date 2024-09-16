@@ -1,8 +1,11 @@
+from http.client import responses
+
 from omero.gateway import ProjectWrapper
 from omeroweb.testlib import IWebTest, get
 import pytest
 from django.urls import reverse
 from omero.gateway import BlitzGateway
+from omeroweb.webclient.decorators import login_required, render_response
 
 # import yaml
 
@@ -14,6 +17,11 @@ def get_connection(user, group_id=None):
     if group_id is not None:
         connection.SERVICE_OPTS.setOmeroGroup(group_id)
     return connection
+
+
+@login_required()
+def get_connection2(request, conn=None, **kwargs):
+    return conn
 
 
 class TestLoadIndexPage(IWebTest):
@@ -76,6 +84,11 @@ class TestLoadIndexPage(IWebTest):
         user_name = conn.getUser().getName()
         django_client = self.new_django_client(user_name, user_name)
         index_url = reverse("project", args=[project_id])
-        rsp = get(django_client, index_url)
-        html_str = rsp.content.decode()
+        response = get(django_client, index_url)
+        client = response.client
+        request = response.wsgi_request
+        conn2 = get_connection2(request=request)
+        print(f"---------------------------------{conn2.connect()}")
+        conn_bli = conn2.user._blitzcon
+        html_str = response.content.decode()
         assert "Omero Metrics" in html_str

@@ -1,3 +1,5 @@
+import json
+
 import dash
 from dash import html
 from django_plotly_dash import DjangoDash
@@ -191,11 +193,6 @@ dash_form_project.layout = dmc.MantineProvider(
 )
 
 
-@login_required()
-def get_connection(request, conn=None, **kwargs):
-    return conn
-
-
 @dash_form_project.expanded_callback(
     dash.dependencies.Output("form_analysis_type", "children"),
     [
@@ -203,9 +200,6 @@ def get_connection(request, conn=None, **kwargs):
     ],
 )
 def form_update(*args, **kwargs):
-    conn = get_connection(kwargs["request"])
-    project_id = int(kwargs["session_state"]["context"]["project_id"])
-    # projectWrapper = conn.getObject("Project", int(project_id))
     analysis_type = analysis_types[int(args[0])]
     if analysis_type["label"] in ALLOWED_ANALYSIS_TYPES:
         form_content = dmc.Stack(
@@ -271,11 +265,6 @@ dash_form_project.clientside_callback(
 )
 
 
-@login_required()
-def get_connection(request, conn, **kwargs):
-    return conn
-
-
 def validate_form(state):
     return all(
         i["props"]["id"] == "submit_id"
@@ -296,9 +285,10 @@ def validate_form(state):
 def save_config(*args, **kwargs):
     analysis_type = analysis_types[int(args[2])]
     form = getattr(mm_schema, analysis_type["label"])
-    conn = get_connection(kwargs["request"])
+    request = kwargs["request"]
+    conn = request.conn
     project_id = int(kwargs["session_state"]["context"]["project_id"])
-    projectWrapper = conn.getObject("Project", int(project_id))
+    project_wrapper = conn.getObject("Project", int(project_id))
     form_content = args[1]
     sleep(3)
     if validate_form(form_content):
@@ -307,7 +297,7 @@ def save_config(*args, **kwargs):
             if i["props"]["id"] != "submit_id":
                 form_data[i["props"]["id"]] = i["props"]["value"]
         form_instance = form(**form_data)
-        _dump_config_input_parameters(conn, form_instance, projectWrapper)
+        _dump_config_input_parameters(conn, form_instance, project_wrapper)
         return [dmc.Alert("Configuration saved", color="green")]
 
     else:
