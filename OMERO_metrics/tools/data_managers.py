@@ -1,6 +1,5 @@
 import datetime
 import logging
-from typing import Union
 from microscopemetrics.samples import field_illumination, psf_beads
 from microscopemetrics_schema.datamodel import (
     microscopemetrics_schema as mm_schema,
@@ -11,7 +10,7 @@ from omero.gateway import (
     ImageWrapper,
     ProjectWrapper,
 )
-from . import load, dump, update, delete
+from OMERO_metrics.tools import load, dump, update, delete
 
 logger = logging.getLogger(__name__)
 
@@ -358,7 +357,7 @@ class ProjectManager:
         self.homogenize = None
 
     def load_data(self, force_reload=True):
-        if force_reload or self.datasets is None:
+        if force_reload or self.datasets is []:
             for dataset in self.project.listChildren():
                 dm = DatasetManager(self._conn, dataset)
                 dm.load_data()
@@ -460,14 +459,14 @@ class MicroscopeManager:
         self.data = None
         self.context = None
 
-    def load_data(self, force_reload=True):
-        if force_reload or self.data is None:
-            self.data = load.load_microscope(self._conn, self.microscope_id)
-            self.context = self.data["context"]
-        else:
-            raise NotImplementedError(
-                "partial loading of data from OMERO is not yet implemented"
-            )
+    # def load_data(self, force_reload=True):
+    #     if force_reload or self.data is None:
+    #         self.data = load.load_microscope(self._conn, self.microscope_id)
+    #         self.context = self.data["context"]
+    #     else:
+    #         raise NotImplementedError(
+    #             "partial loading of data from OMERO is not yet implemented"
+    #         )
 
     def visualize_data(self):
         pass

@@ -1,9 +1,13 @@
 from omeroweb.webclient.decorators import login_required, render_response
-from .tools.data_managers import DatasetManager, ProjectManager, ImageManager
+from OMERO_metrics.tools.data_managers import (
+    DatasetManager,
+    ProjectManager,
+    ImageManager,
+)
 from django.shortcuts import render
-from .forms import UploadFileForm
+from OMERO_metrics.forms import UploadFileForm
 import numpy as np
-from .tools.omero_tools import create_image_from_numpy_array
+from OMERO_metrics.tools.omero_tools import create_image_from_numpy_array
 
 
 def test_request(request):

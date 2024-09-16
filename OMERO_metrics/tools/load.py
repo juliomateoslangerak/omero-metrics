@@ -16,14 +16,13 @@ from omero.gateway import (
 import microscopemetrics_schema.datamodel as mm_schema
 from linkml_runtime.loaders import yaml_loader
 import pandas as pd
-from . import omero_tools
-from .data_preperation import (
-    get_table_originalFile_id,
+from OMERO_metrics.tools import omero_tools
+from OMERO_metrics.tools.data_preperation import (
+    get_table_original_file_id,
     get_info_roi_lines,
     get_info_roi_rectangles,
     get_info_roi_points,
     get_rois_omero,
-    add_colors_intensity_profile,
 )
 
 # Creating logging services
@@ -507,7 +506,7 @@ def get_all_intensity_profiles(conn, data_df):
             .getFile()
             .getId()
         )
-        data = get_table_originalFile_id(conn, str(file_id))
+        data = get_table_original_file_id(conn, str(file_id))
         for j in range(row.Channel):
             regx_find = f"ch0{j}"
             ch = i + j

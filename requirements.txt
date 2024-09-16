@@ -1,9 +1,9 @@
-# django stuff
+# django web app requirements
 django-plotly-dash
 dpd_static_support
-dash-bootstrap-components
+dash-bootstrap-components~=1.6.0
 django-bootstrap4
-dash_mantine_components
+dash_mantine_components~=0.14.4
 dash-iconify
 
 # omero
@@ -13,3 +13,17 @@ microscopemetrics_schema @ git+https://github.com/juliomateoslangerak/microscope
 microscopemetrics @ git+https://github.com/juliomateoslangerak/microscope-metrics.git@dev
 omero-py==5.19.2
 hypothesis
+PyYAML~=6.0.1
+pytest~=8.1.1
+Django~=4.2.11
+numpy~=1.26.4
+scikit-image~=0.21.0
+microscopemetrics~=0.2.2
+microscopemetrics_schema~=0.0.3.post10.dev0+8ba3782
+setuptools~=69.0.2
+pandas~=1.5.3
+jsonasobj2~=1.0.4
+plotly~=5.20.0
+matplotlib~=3.8.3
+dash~=2.9.3
+dpd_components~=0.1.0

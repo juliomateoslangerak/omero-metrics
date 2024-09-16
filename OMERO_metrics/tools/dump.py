@@ -18,7 +18,7 @@ from omero.gateway import (
     ExperimenterGroupWrapper,
 )
 
-from . import omero_tools
+from OMERO_metrics.tools import omero_tools
 
 logger = logging.getLogger(__name__)
 

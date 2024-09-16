@@ -2,7 +2,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 from typing import Union
-from . import omero_tools
+from OMERO_metrics.tools import omero_tools
 import microscopemetrics_schema.datamodel as mm_schema
 from omero.gateway import BlitzGateway
 from dataclasses import fields

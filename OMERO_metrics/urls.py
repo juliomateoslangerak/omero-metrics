@@ -1,5 +1,7 @@
 from django.views.generic import TemplateView
-from .dash_apps import (
+from OMERO_metrics.views import *
+from django.urls import re_path
+from OMERO_metrics.dash_apps import (
     foi_apps,
     plotly_apps,
     dash_apps,
@@ -12,8 +14,6 @@ from .dash_apps import (
     dash_microscope,
     dash_forms,
 )
-from .views import *
-from django.urls import re_path
 
 urlpatterns = [
     re_path(r"^$", index, name="OMERO_metrics_index"),
