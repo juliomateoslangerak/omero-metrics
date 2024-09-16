@@ -1,6 +1,4 @@
 import dash
-from IPython.core.display_functions import display
-from click import style
 from dash import dcc, html
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
@@ -401,7 +399,6 @@ def line_graph_axis(bead_index, channel_index, axis, kwargs):
         df_axis.columns[df_axis.columns.str.startswith(str(image_id))]
     ]
     # 81_0_0_y_fitted image_id_channel_nr_bead_id_axis_fitted
-    display(df_axis_3d)
     df_meta_x = pd.DataFrame(
         data=[
             [
