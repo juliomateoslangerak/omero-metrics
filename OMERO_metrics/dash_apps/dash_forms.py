@@ -24,7 +24,7 @@ def _dump_config_input_parameters(
     dumper = YAMLDumper()
 
     with tempfile.NamedTemporaryFile(
-        prefix=f"{input_parameters.class_name}_",
+        prefix=f"study_config_{input_parameters.class_name}_",
         suffix=".yaml",
         mode="w",
         delete=False,
@@ -49,6 +49,20 @@ Field_TYPE_MAPPING = {
     "str": "TextInput",
     "bool": "Checkbox",
 }
+
+
+@login_required()
+def get_connection(request, conn=None, **kwargs):
+    try:
+        project_id = kwargs["project_id"]
+        form_instance = kwargs["form_instance"]
+        project_wrapper = conn.getObject("Project", project_id)
+        group_id = project_wrapper.getDetails().getGroup().getId()
+        conn.SERVICE_OPTS.setOmeroGroup(group_id)
+        _dump_config_input_parameters(conn, form_instance, project_wrapper)
+        return "cool"
+    except Exception as e:
+        return str(e)
 
 
 def clean_field_name(field: str):
@@ -179,7 +193,7 @@ dash_form_project.layout = dmc.MantineProvider(
                     gap="xs",
                     style={"margin-top": 10},
                 ),
-                html.Div(id="test_wawa", children=[]),
+                html.Div(id="saving_result", children=[]),
             ],
             fluid=True,
             style={
@@ -274,7 +288,8 @@ def validate_form(state):
 
 
 @dash_form_project.expanded_callback(
-    dash.dependencies.Output("form_stack", "children"),
+    dash.dependencies.Output("saving_result", "children"),
+    dash.dependencies.Output("submit_id", "loading"),
     [
         dash.dependencies.Input("submit_id", "n_clicks"),
         dash.dependencies.State("form_content", "children"),
@@ -286,9 +301,7 @@ def save_config(*args, **kwargs):
     analysis_type = analysis_types[int(args[2])]
     form = getattr(mm_schema, analysis_type["label"])
     request = kwargs["request"]
-    conn = request.conn
     project_id = int(kwargs["session_state"]["context"]["project_id"])
-    project_wrapper = conn.getObject("Project", int(project_id))
     form_content = args[1]
     sleep(3)
     if validate_form(form_content):
@@ -297,8 +310,12 @@ def save_config(*args, **kwargs):
             if i["props"]["id"] != "submit_id":
                 form_data[i["props"]["id"]] = i["props"]["value"]
         form_instance = form(**form_data)
-        _dump_config_input_parameters(conn, form_instance, project_wrapper)
-        return [dmc.Alert("Configuration saved", color="green")]
+        RESP = get_connection(
+            request, project_id=project_id, form_instance=form_instance
+        )
+        return [dmc.Alert(RESP, color="green")], False
 
     else:
-        return [dmc.Alert("Please fill all required fields", color="red")]
+        return [
+            dmc.Alert("Please fill all required fields", color="red")
+        ], False

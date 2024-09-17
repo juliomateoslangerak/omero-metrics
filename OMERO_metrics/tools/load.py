@@ -79,7 +79,7 @@ def load_config_file_data(conn, project):
     for ann in project.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
             ns = ann.getFile().getName()
-            if ns.startswith("study_config.yaml"):
+            if ns.startswith("study_config"):
                 exist = True
                 setup = yaml.load(
                     ann.getFileInChunks().__next__().decode(),
