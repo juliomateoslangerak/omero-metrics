@@ -1,5 +1,3 @@
-import json
-
 import dash
 from dash import html
 from django_plotly_dash import DjangoDash
@@ -14,6 +12,7 @@ from OMERO_metrics.tools import omero_tools
 from omero.gateway import ProjectWrapper, BlitzGateway
 from linkml_runtime.dumpers import YAMLDumper
 import tempfile
+from OMERO_metrics.tools.load import load_config_file_data
 
 
 def _dump_config_input_parameters(
@@ -22,7 +21,6 @@ def _dump_config_input_parameters(
     target_omero_obj: ProjectWrapper,
 ):
     dumper = YAMLDumper()
-
     with tempfile.NamedTemporaryFile(
         prefix=f"study_config_{input_parameters.class_name}_",
         suffix=".yaml",
@@ -59,8 +57,12 @@ def get_connection(request, conn=None, **kwargs):
         project_wrapper = conn.getObject("Project", project_id)
         group_id = project_wrapper.getDetails().getGroup().getId()
         conn.SERVICE_OPTS.setOmeroGroup(group_id)
-        _dump_config_input_parameters(conn, form_instance, project_wrapper)
-        return "cool"
+        setup = load_config_file_data(conn, project_wrapper)
+        if setup is None:
+            _dump_config_input_parameters(conn, form_instance, project_wrapper)
+            return "File saved successfully"
+        else:
+            return "Failed to save file, document already exists"
     except Exception as e:
         return str(e)
 
@@ -234,7 +236,9 @@ def form_update(*args, **kwargs):
                 get_dmc_field_input(field, Field_TYPE_MAPPING)
             )
         form_content.children.append(
-            dmc.Button(id="submit_id", children=["Submit"], color="green")
+            dmc.Button(
+                id="submit_id", children=["Submit"], color="green", n_clicks=0
+            )
         )
         form = dmc.Stack(
             [
@@ -282,20 +286,23 @@ dash_form_project.clientside_callback(
 def validate_form(state):
     return all(
         i["props"]["id"] == "submit_id"
-        or not (i["props"]["required"] and i["props"]["value"] is None)
+        or not (
+            i["props"]["required"]
+            and i["props"]["value"] is None
+            or i["props"]["value"] == ""
+        )
         for i in state
     )
 
 
 @dash_form_project.expanded_callback(
-    dash.dependencies.Output("saving_result", "children"),
+    dash.dependencies.Output("form_content", "children"),
     dash.dependencies.Output("submit_id", "loading"),
     [
         dash.dependencies.Input("submit_id", "n_clicks"),
         dash.dependencies.State("form_content", "children"),
         dash.dependencies.State("analysis_type_selector", "value"),
     ],
-    prevent_initial_call=True,
 )
 def save_config(*args, **kwargs):
     analysis_type = analysis_types[int(args[2])]
@@ -303,19 +310,19 @@ def save_config(*args, **kwargs):
     request = kwargs["request"]
     project_id = int(kwargs["session_state"]["context"]["project_id"])
     form_content = args[1]
-    sleep(3)
-    if validate_form(form_content):
-        form_data = {}
-        for i in form_content:
-            if i["props"]["id"] != "submit_id":
-                form_data[i["props"]["id"]] = i["props"]["value"]
-        form_instance = form(**form_data)
-        RESP = get_connection(
-            request, project_id=project_id, form_instance=form_instance
-        )
-        return [dmc.Alert(RESP, color="green")], False
-
+    if args[0] > 0:
+        if validate_form(form_content):
+            form_data = {}
+            sleep(2)
+            for i in form_content:
+                if i["props"]["id"] != "submit_id":
+                    form_data[i["props"]["id"]] = i["props"]["value"]
+            form_instance = form(**form_data)
+            response = get_connection(
+                request, project_id=project_id, form_instance=form_instance
+            )
+            return [dmc.Alert(response, color="green")], False
+        else:
+            return dash.no_update, False
     else:
-        return [
-            dmc.Alert("Please fill all required fields", color="red")
-        ], False
+        dash.no_update, False
