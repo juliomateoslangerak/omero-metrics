@@ -5,107 +5,9 @@ import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 from microscopemetrics_schema import datamodel as mm_schema
 from dataclasses import fields
-import re
-from omeroweb.webclient.decorators import login_required
 from time import sleep
-from OMERO_metrics.tools import omero_tools
-from omero.gateway import ProjectWrapper, BlitzGateway
-from linkml_runtime.dumpers import YAMLDumper
-import tempfile
-from OMERO_metrics.tools.load import load_config_file_data
-
-
-def _dump_config_input_parameters(
-    conn: BlitzGateway,
-    input_parameters: mm_schema.MetricsInputParameters,
-    target_omero_obj: ProjectWrapper,
-):
-    dumper = YAMLDumper()
-    with tempfile.NamedTemporaryFile(
-        prefix=f"study_config_{input_parameters.class_name}_",
-        suffix=".yaml",
-        mode="w",
-        delete=False,
-    ) as f:
-        f.write(dumper.dumps(input_parameters))
-        f.close()
-        file_ann = omero_tools.create_file(
-            conn=conn,
-            file_path=f.name,
-            omero_object=target_omero_obj,
-            file_description="Configuration file",
-            namespace=input_parameters.class_class_curie,
-            mimetype="application/yaml",
-        )
-
-    return file_ann
-
-
-Field_TYPE_MAPPING = {
-    "float": "NumberInput",
-    "int": "NumberInput",
-    "str": "TextInput",
-    "bool": "Checkbox",
-}
-
-
-@login_required()
-def get_connection(request, conn=None, **kwargs):
-    try:
-        project_id = kwargs["project_id"]
-        form_instance = kwargs["form_instance"]
-        project_wrapper = conn.getObject("Project", project_id)
-        group_id = project_wrapper.getDetails().getGroup().getId()
-        conn.SERVICE_OPTS.setOmeroGroup(group_id)
-        setup = load_config_file_data(conn, project_wrapper)
-        if setup is None:
-            _dump_config_input_parameters(conn, form_instance, project_wrapper)
-            return "File saved successfully"
-        else:
-            return "Failed to save file, document already exists"
-    except Exception as e:
-        return str(e)
-
-
-def clean_field_name(field: str):
-    return field.replace("_", " ").title()
-
-
-def get_field_types(field, supported_types=["str", "int", "float", "bool"]):
-    data_type = {
-        "field_name": clean_field_name(field.name),
-        "type": None,
-        "optional": False,
-        "default": field.default,
-    }
-    if field.type.__name__ == "Optional":
-        data_type["type"] = field.type.__args__[0].__name__
-        data_type["optional"] = True
-    elif field.type.__name__ in supported_types:
-        data_type["type"] = field.type.__name__
-    else:
-        data_type["type"] = "unsupported"
-    return data_type
-
-
-def get_dmc_field_input(field, type_mapping=Field_TYPE_MAPPING):
-    field_info = get_field_types(field)
-    input_field_name = getattr(dmc, type_mapping[field_info["type"]])
-    input_field = input_field_name()
-    input_field.id = field_info["field_name"].replace(" ", "_").lower()
-    input_field.label = field_info["field_name"]
-    input_field.placeholder = "Enter " + field_info["field_name"]
-    input_field.value = field_info["default"]
-    input_field.w = "300"
-    input_field.required = not field_info["optional"]
-    input_field.leftSection = DashIconify(icon="radix-icons:ruler-horizontal")
-    # if not field_info['optional']:
-    #     input_field.error = "This field is required"
-    return input_field
-
-
-def add_space_between_capitals(s: str) -> str:
-    return re.sub(r"(?<!^)(?=[A-Z])", " ", s)
+from OMERO_metrics.views import get_connection
+from OMERO_metrics.tools import dash_forms_tools as dft
 
 
 ALLOWED_ANALYSIS_TYPES = [
@@ -232,9 +134,7 @@ def form_update(*args, **kwargs):
         )
 
         for field in fields(getattr(mm_schema, analysis_type["label"])):
-            form_content.children.append(
-                get_dmc_field_input(field, Field_TYPE_MAPPING)
-            )
+            form_content.children.append(dft.get_dmc_field_input(field))
         form_content.children.append(
             dmc.Button(
                 id="submit_id", children=["Submit"], color="green", n_clicks=0
@@ -318,10 +218,10 @@ def save_config(*args, **kwargs):
                 if i["props"]["id"] != "submit_id":
                     form_data[i["props"]["id"]] = i["props"]["value"]
             form_instance = form(**form_data)
-            response = get_connection(
+            response, color = get_connection(
                 request, project_id=project_id, form_instance=form_instance
             )
-            return [dmc.Alert(response, color="green")], False
+            return [dmc.Alert(response, color=color)], False
         else:
             return dash.no_update, False
     else:

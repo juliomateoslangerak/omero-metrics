@@ -8,6 +8,8 @@ from django.shortcuts import render
 from OMERO_metrics.forms import UploadFileForm
 import numpy as np
 from OMERO_metrics.tools.omero_tools import create_image_from_numpy_array
+from OMERO_metrics.tools.load import load_config_file_data
+from OMERO_metrics.tools.dump import dump_config_input_parameters
 
 
 def test_request(request):
@@ -142,19 +144,14 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
     return render(request, template_name=template)
 
 
-@login_required(doConnectionCleanup=False)
+@login_required()
 def center_viewer_project(request, project_id, conn=None, **kwargs):
     # request["conn"] = conn
     # conn.SERVICE_OPTS.setOmeroGroup("-1")
-    if request.method == "POST":
-
-        project_id = request.POST.get
-
     project_wrapper = conn.getObject("Project", project_id)
     pm = ProjectManager(conn, project_wrapper)
     pm.load_data()
     pm.is_homogenized()
-
     pm.load_config_file()
     pm.check_processed_data()
     pm.visualize_data()
@@ -164,7 +161,6 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
     dash_context["context"] = context
     dash_context["context"]["project_id"] = project_id
     request.session["django_plotly_dash"] = dash_context
-    request.conn = conn
     return render(request, template_name=template, context=context)
 
 
@@ -211,3 +207,27 @@ def run_analysis(request, conn=None, **kwargs):
     """Simply shows a page of ROI thumbnails
     for the specified image"""
     return render(request, "OMERO_metrics/run_analysis.html")
+
+
+@login_required()
+def get_connection(request, conn=None, **kwargs):
+    try:
+        project_id = kwargs["project_id"]
+        form_instance = kwargs["form_instance"]
+        project_wrapper = conn.getObject("Project", project_id)
+        group_id = project_wrapper.getDetails().getGroup().getId()
+        conn.SERVICE_OPTS.setOmeroGroup(group_id)
+        setup = load_config_file_data(conn, project_wrapper)
+        if setup is None:
+            dump_config_input_parameters(conn, form_instance, project_wrapper)
+            return (
+                "File saved successfully, Re-click on the project to see the changes",
+                "green",
+            )
+        else:
+            return (
+                "Failed to save file, a configuration file already exists",
+                "red",
+            )
+    except Exception as e:
+        return str(e), "red"

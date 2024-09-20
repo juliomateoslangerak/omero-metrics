@@ -35,27 +35,28 @@ dash_app_project.layout = dmc.MantineProvider(
             [
                 dmc.Center(
                     [
-                        dmc.Text(
-                            id="title",
-                            c=primary_color,
-                            style={"fontSize": 30},
-                        ),
                         dmc.Group(
                             [
                                 html.Img(
                                     src="./assets/images/logo.png",
                                     style={"width": "100px"},
                                 ),
-                                dmc.Text(
-                                    "OMERO Metrics Dashboard",
-                                    c=primary_color,
-                                    style={"fontSize": 15},
+                                dmc.Title(
+                                    "Project Dashboard",
+                                    c="#189A35",
+                                    size="h3",
+                                    mb=10,
+                                    mt=5,
                                 ),
                             ]
                         ),
-                    ]
+                    ],
+                    style={
+                        "background-color": "white",
+                        "border-radius": "0.5rem",
+                        "padding": "10px",
+                    },
                 ),
-                dmc.Divider(variant="solid", style={"marginBottom": 20}),
                 dmc.Grid(
                     [
                         dmc.GridCol(
@@ -81,6 +82,7 @@ dash_app_project.layout = dmc.MantineProvider(
                                 dmc.DatePicker(
                                     id="date-picker",
                                     label="Select Date",
+                                    valueFormat="DD-MM-YYYY",
                                     leftSection=DashIconify(
                                         icon="clarity:date-line"
                                     ),
@@ -95,7 +97,9 @@ dash_app_project.layout = dmc.MantineProvider(
                     style={
                         "padding": "10px",
                         "borderTopLeftRadius": "0.5rem",
+                        "borderTopRightRadius": "0.5rem",
                         "backgroundColor": "white",
+                        "margin-top": "10px",
                     },
                 ),
                 html.Div(
@@ -209,23 +213,6 @@ def update_project_view(*args, **kwargs):
         date = dates[selected_dataset]
         grid = dmc.Stack(
             [
-                dmc.Divider(
-                    variant="solid",
-                    style={"marginTop": 50, "marginBottom": 20},
-                ),
-                dmc.Center(
-                    [
-                        dmc.Text(
-                            [
-                                "Key Measurements for Dataset Number: "
-                                + str(selected_dataset),
-                                " processed at Date: " + str(date),
-                            ],
-                            c="#189A35",
-                            size="md",
-                        )
-                    ]
-                ),
                 dmc.Table(
                     striped=True,
                     data={
@@ -242,6 +229,31 @@ def update_project_view(*args, **kwargs):
                 ),
             ]
         )
-        return [grid]
+        return [
+            dmc.Divider(
+                variant="solid",
+                style={"marginTop": 30, "marginBottom": 10},
+            ),
+            dmc.Center(
+                [
+                    dmc.Text(
+                        [
+                            "Key Measurements for Dataset Number: "
+                            + str(selected_dataset),
+                            " processed at Date: " + str(date),
+                        ],
+                        c="#189A35",
+                        mb=10,
+                        mt=10,
+                    )
+                ],
+                style={
+                    "backgroundColor": "white",
+                    "borderTopLeftRadius": "0.5rem",
+                    "borderTopRightRadius": "0.5rem",
+                },
+            ),
+            grid,
+        ]
     else:
         return dash.no_update

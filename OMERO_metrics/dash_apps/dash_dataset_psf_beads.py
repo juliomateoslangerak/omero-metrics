@@ -103,7 +103,12 @@ app.layout = dmc.MantineProvider(
                                 ),
                             ]
                         )
-                    ]
+                    ],
+                    style={
+                        "background-color": "white",
+                        "border-radius": "0.5rem",
+                        "padding": "10px",
+                    },
                 ),
                 dmc.Divider(variant="solid"),
                 html.Div(id="blank-input"),

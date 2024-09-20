@@ -760,3 +760,29 @@ def dump_comment(
         omero_object=target_object,
         namespace=comment.class_class_curie,
     )
+
+
+def dump_config_input_parameters(
+    conn: BlitzGateway,
+    input_parameters: mm_schema.MetricsInputParameters,
+    target_omero_obj: ProjectWrapper,
+):
+    dumper = YAMLDumper()
+    with tempfile.NamedTemporaryFile(
+        prefix=f"study_config_{input_parameters.class_name}_",
+        suffix=".yaml",
+        mode="w",
+        delete=False,
+    ) as f:
+        f.write(dumper.dumps(input_parameters))
+        f.close()
+        file_ann = omero_tools.create_file(
+            conn=conn,
+            file_path=f.name,
+            omero_object=target_omero_obj,
+            file_description="Configuration file",
+            namespace=input_parameters.class_class_curie,
+            mimetype="application/yaml",
+        )
+
+    return file_ann

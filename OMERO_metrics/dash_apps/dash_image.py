@@ -69,6 +69,20 @@ dash_app_image.layout = dmc.MantineProvider(
                             [
                                 html.Div(
                                     [
+                                        dmc.Select(
+                                            id="my-dropdown1",
+                                            label="Select Channel",
+                                            w="auto",
+                                            value="0",
+                                            clearable=False,
+                                            leftSection=DashIconify(
+                                                icon="radix-icons:magnifying-glass"
+                                            ),
+                                            rightSection=DashIconify(
+                                                icon="radix-icons:chevron-down"
+                                            ),
+                                            mb=10,
+                                        ),
                                         dmc.Text(
                                             "Select ROI",
                                             size="sm",
@@ -105,18 +119,10 @@ dash_app_image.layout = dmc.MantineProvider(
                                     checked=False,
                                     mb=10,
                                 ),
-                                dmc.Select(
-                                    id="my-dropdown1",
-                                    label="Select Channel",
-                                    w="auto",
-                                    value="0",
-                                    clearable=False,
-                                    leftSection=DashIconify(
-                                        icon="radix-icons:magnifying-glass"
-                                    ),
-                                    rightSection=DashIconify(
-                                        icon="radix-icons:chevron-down"
-                                    ),
+                                dmc.Switch(
+                                    id="switch-invert-colors",
+                                    label="Invert Color",
+                                    checked=False,
                                 ),
                                 dmc.Select(
                                     id="my-dropdown2",
@@ -144,11 +150,6 @@ dash_app_image.layout = dmc.MantineProvider(
                                     rightSection=DashIconify(
                                         icon="radix-icons:chevron-down"
                                     ),
-                                ),
-                                dmc.Switch(
-                                    id="switch-invert-colors",
-                                    label="Invert Color",
-                                    checked=False,
                                 ),
                             ],
                         ),

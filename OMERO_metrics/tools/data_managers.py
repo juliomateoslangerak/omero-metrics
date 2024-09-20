@@ -188,6 +188,9 @@ class DatasetManager:
         self.processed = False
         self.microscope = mm_schema.Microscope()
         self.kkm = None
+        self.attached_images = [
+            i for i in omero_dataset.listChildren() if i.OMERO_CLASS == "Image"
+        ]
 
     def is_processed(self):
         if self.mm_dataset:
@@ -325,9 +328,14 @@ class DatasetManager:
                 logger.warning(message)
                 self.context, self.template = warning_message(message)
         else:
-            message = "Dataset has not been processed. Unable to visualize"
-            logger.warning(message)
-            self.context, self.template = warning_message(message)
+            if self.omero_project and len(self.attached_images) > 0:
+                self.template = "OMERO_metrics/forms/omero_dataset_form.html"
+                self.context = {}
+
+            else:
+                message = "The dataset is not under a project or does not contain images. Unable to visualize"
+                logger.warning(message)
+                self.context, self.template = warning_message(message)
 
     def save_settings(self):
         pass

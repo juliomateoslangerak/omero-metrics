@@ -7,6 +7,7 @@ import plotly.graph_objs as go
 import numpy as np
 import logging
 import pandas as pd
+from matplotlib.pyplot import autoscale
 
 from OMERO_metrics.tools.data_preperation import (
     crop_bead_index,
@@ -55,11 +56,28 @@ app.layout = dmc.MantineProvider(
                                 dcc.Graph(
                                     figure={},
                                     id="psf_image_graph",
+                                    style={
+                                        "margin-top": "0px",
+                                        "margin-bottom": "0px",
+                                    },
                                 ),
                                 dmc.Stack(
                                     [
                                         html.Div(
                                             [
+                                                dmc.Select(
+                                                    id="channel_selector_psf_image",
+                                                    label="Select Channel",
+                                                    w="auto",
+                                                    value="0",
+                                                    leftSection=DashIconify(
+                                                        icon="radix-icons:magnifying-glass"
+                                                    ),
+                                                    rightSection=DashIconify(
+                                                        icon="radix-icons:chevron-down"
+                                                    ),
+                                                    mb=10,
+                                                ),
                                                 dmc.Text(
                                                     "Select Beads Location",
                                                     size="sm",
@@ -94,17 +112,11 @@ app.layout = dmc.MantineProvider(
                                             checked=False,
                                             mb=10,
                                         ),
-                                        dmc.Select(
-                                            id="channel_selector_psf_image",
-                                            label="Select Channel",
-                                            w="auto",
-                                            value="0",
-                                            leftSection=DashIconify(
-                                                icon="radix-icons:magnifying-glass"
-                                            ),
-                                            rightSection=DashIconify(
-                                                icon="radix-icons:chevron-down"
-                                            ),
+                                        dmc.Switch(
+                                            id="color_switch_psf_image",
+                                            label="Invert Color",
+                                            checked=False,
+                                            mb=10,
                                         ),
                                         dmc.Select(
                                             id="color_selector_psf_image",
@@ -131,12 +143,6 @@ app.layout = dmc.MantineProvider(
                                             rightSection=DashIconify(
                                                 icon="radix-icons:chevron-down"
                                             ),
-                                        ),
-                                        dmc.Switch(
-                                            id="color_switch_psf_image",
-                                            label="Invert Color",
-                                            checked=False,
-                                            mb=10,
                                         ),
                                     ],
                                 ),
@@ -234,11 +240,6 @@ app.layout = dmc.MantineProvider(
                                         dcc.Graph(
                                             id="mip_chart_image",
                                             figure={},
-                                            style={
-                                                "display": "inline-block",
-                                                "width": "100%",
-                                                "height": "100%;",
-                                            },
                                         ),
                                     ],
                                     span="6",
@@ -318,7 +319,10 @@ def update_image(*args, **kwargs):
             "center_x",
         ]
     ].copy()
-    beads, roi_rect = get_beads_info(df_beads_location, min_distance)
+    df = df_beads_location[df_beads_location["bead_id"] == 0].copy
+    df = df.reset_index(drop=True)
+    print(df)
+    beads, roi_rect = get_beads_info(df, min_distance)
     if invert:
         color = color + "_r"
     stack = image_omero[0, :, :, :, channel_index]
@@ -332,12 +336,24 @@ def update_image(*args, **kwargs):
 
     if contour:
         fig.plotly_restyle({"type": "contour"}, 0)
-        fig.update_yaxes(autorange="reversed")
+
     if beads_info == "beads_info":
-        fig.plotly_restyle({"visible": True}, 1)
+        fig.plotly_restyle(
+            {
+                "visible": True,
+            },
+            1,
+        )
     else:
         fig.plotly_restyle({"visible": False}, 1)
-    fig.update_layout(coloraxis={"colorscale": color})
+    fig.update_layout(
+        coloraxis={"colorscale": color},
+        margin={"l": 0, "r": 0, "t": 10, "b": 10},
+    )
+    # fig = fig.update_yaxes(automargin=False)
+    # fig.update_xaxes(range=[0, mip_z.shape[1]], scaleanchor="y", anchor='y',automargin=False)
+    # fig.update_yaxes(range=[mip_z.shape[0]+20, -40],automargin=False)
+    # fig.update_layout(autosize=True)
     return fig
 
 
@@ -384,8 +400,12 @@ def callback_mip(*args, **kwargs):
         ].copy()
         x0, xf, y0, yf = crop_bead_index(bead, min_dist, stack)
         mip_x, mip_y, mip_z = mip_graphs(x0, xf, y0, yf, stack)
+        fig_mip_go = fig_mip(mip_x, mip_y, mip_z, title)
+        print(
+            f"-----------------------------------GRAPH MIP {fig_mip_go}----------------------------------------"
+        )
         return (
-            fig_mip(mip_x, mip_y, mip_z, title),
+            fig_mip_go,
             line_graph_axis(bead_index, channel_index, axis, kwargs),
         )
     else:
@@ -447,7 +467,7 @@ def get_beads_info(df, min_distance):
         mode="markers",
         name="Beads Locations",
         marker=dict(
-            size=4, opacity=0.3, color=df["considered_valid"].map(color_map)
+            size=10, opacity=0.3, color=df["considered_valid"].map(color_map)
         ),
         text=df["channel_nr"],
         customdata=np.stack(

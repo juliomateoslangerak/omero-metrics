@@ -13,6 +13,7 @@ from OMERO_metrics.dash_apps import (
     dash_group,
     dash_microscope,
     dash_forms,
+    dash_dataset_form,
 )
 
 urlpatterns = [

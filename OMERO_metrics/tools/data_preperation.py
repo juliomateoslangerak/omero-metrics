@@ -346,6 +346,38 @@ def fig_mip(mip_x, mip_y, mip_z, title):
         coloraxis=dict(colorscale="hot"),
         autosize=False,
     )
+    fig.update_layout(
+        {  # "margin": {"l": 10, "r": 10, "t": 10, "b": 10},
+            "xaxis": {
+                "automargin": False,
+                "rangemode": "nonnegative",
+                "range": [0, mip_x.data[0].z.max()],
+            },
+            "xaxis2": {"automargin": False, "rangemode": "nonnegative"},
+            "xaxis3": {"automargin": False, "rangemode": "nonnegative"},
+            "yaxis": {
+                "anchor": "x",
+                "scaleanchor": "x",
+                "autorange": "reversed",
+                "automargin": False,
+            },
+            "yaxis2": {
+                "anchor": "x2",
+                "scaleanchor": "x2",
+                "autorange": "reversed",
+                "automargin": False,
+            },
+            "yaxis3": {
+                "anchor": "x3",
+                "scaleanchor": "x3",
+                "autorange": "reversed",
+                "automargin": False,
+            },
+        }
+    )
+    # fig = fig.update_yaxes(automargin=False)
+    # fig = fig.update_xaxes(automargin=False)
+
     return fig
 
 
