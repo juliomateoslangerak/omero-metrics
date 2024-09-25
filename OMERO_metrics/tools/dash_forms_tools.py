@@ -11,6 +11,16 @@ Field_TYPE_MAPPING = {
 }
 
 
+def extract_form_data(form_content):
+    return {i["props"]["id"]: i["props"]["value"] for i in form_content}
+
+
+def disable_all_fields_dash_form(form):
+    for i, t in enumerate(form):
+        form[i]["props"]["disabled"] = True
+    return form
+
+
 def clean_field_name(field: str):
     return field.replace("_", " ").title()
 
@@ -35,7 +45,9 @@ def get_field_types(field, supported_types=["str", "int", "float", "bool"]):
     return data_type
 
 
-def get_dmc_field_input(field, type_mapping=Field_TYPE_MAPPING):
+def get_dmc_field_input(
+    field, type_mapping=Field_TYPE_MAPPING, disabled=False
+):
     field_info = get_field_types(field)
     input_field_name = getattr(dmc, type_mapping[field_info["type"]])
     input_field = input_field_name()
@@ -44,6 +56,7 @@ def get_dmc_field_input(field, type_mapping=Field_TYPE_MAPPING):
     input_field.placeholder = "Enter " + field_info["field_name"]
     input_field.value = field_info["default"]
     input_field.w = "300"
+    input_field.disabled = disabled
     input_field.required = not field_info["optional"]
     input_field.leftSection = DashIconify(icon="radix-icons:ruler-horizontal")
     # if not field_info['optional']:
@@ -51,18 +64,32 @@ def get_dmc_field_input(field, type_mapping=Field_TYPE_MAPPING):
     return input_field
 
 
+def validate_form(state):
+    return all(
+        i["props"]["id"] == "submit_id"
+        or not (
+            i["props"]["required"]
+            and i["props"]["value"] is None
+            or i["props"]["value"] == ""
+        )
+        for i in state
+    )
+
+
 def add_space_between_capitals(s: str) -> str:
     return re.sub(r"(?<!^)(?=[A-Z])", " ", s)
 
 
 class dashForm:
-    def __init__(self, mm_object):
+    def __init__(self, mm_object, disabled=False, form_id="form_content"):
         self.mm_object = mm_object
+        self.disabled = disabled
+        self.form_id = form_id
         self.form = self.get_form()
 
     def get_form(self):
         form_content = dmc.Stack(
-            id="form_content",
+            id=self.form_id,
             children=[],
             align="center",
             style={
@@ -74,10 +101,12 @@ class dashForm:
             },
         )
         for field in fields(self.mm_object):
-            form_content.children.append(get_dmc_field_input(field))
-        form_content.children.append(
-            dmc.Button(
-                id="submit_id", children=["Submit"], color="green", n_clicks=0
+            form_content.children.append(
+                get_dmc_field_input(field, disabled=self.disabled)
             )
-        )
+        # form_content.children.append(
+        #     dmc.Button(
+        #         id="submit_id", children=["Submit"], color="green", n_clicks=0
+        #     )
+        # )
         return form_content

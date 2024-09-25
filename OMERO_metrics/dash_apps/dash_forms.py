@@ -183,18 +183,6 @@ dash_form_project.clientside_callback(
 )
 
 
-def validate_form(state):
-    return all(
-        i["props"]["id"] == "submit_id"
-        or not (
-            i["props"]["required"]
-            and i["props"]["value"] is None
-            or i["props"]["value"] == ""
-        )
-        for i in state
-    )
-
-
 @dash_form_project.expanded_callback(
     dash.dependencies.Output("form_content", "children"),
     dash.dependencies.Output("submit_id", "loading"),
@@ -211,7 +199,7 @@ def save_config(*args, **kwargs):
     project_id = int(kwargs["session_state"]["context"]["project_id"])
     form_content = args[1]
     if args[0] > 0:
-        if validate_form(form_content):
+        if dft.validate_form(form_content):
             form_data = {}
             sleep(2)
             for i in form_content:

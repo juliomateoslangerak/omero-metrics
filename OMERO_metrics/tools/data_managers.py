@@ -178,6 +178,7 @@ class DatasetManager:
             raise ValueError("datasets must be a DatasetWrapper")
 
         self.omero_project = self.omero_dataset.getParent()
+        self.input_parameters = None
         self.load_images = load_images
         self.mm_dataset = None
         self.analysis_config = None
@@ -189,7 +190,9 @@ class DatasetManager:
         self.microscope = mm_schema.Microscope()
         self.kkm = None
         self.attached_images = [
-            i for i in omero_dataset.listChildren() if i.OMERO_CLASS == "Image"
+            {"value": f"{i.getId()}", "label": f"{i.getName()}"}
+            for i in omero_dataset.listChildren()
+            if i.OMERO_CLASS == "Image"
         ]
 
     def is_processed(self):
@@ -329,9 +332,22 @@ class DatasetManager:
                 self.context, self.template = warning_message(message)
         else:
             if self.omero_project and len(self.attached_images) > 0:
-                self.template = "OMERO_metrics/forms/omero_dataset_form.html"
-                self.context = {}
-
+                self.input_parameters = load.load_config_file_data(
+                    self._conn, self.omero_project
+                )
+                if self.input_parameters:
+                    self.template = (
+                        "OMERO_metrics/forms/omero_dataset_form.html"
+                    )
+                    self.context = {
+                        "list_images": self.attached_images,
+                        "input_parameters": self.input_parameters,
+                        "dataset_id": self.omero_dataset.getId(),
+                    }
+                else:
+                    message = "No, config file detect. Click on the project parent to load the config file."
+                    logger.warning(message)
+                    self.context, self.template = warning_message(message)
             else:
                 message = "The dataset is not under a project or does not contain images. Unable to visualize"
                 logger.warning(message)

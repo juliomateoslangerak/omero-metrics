@@ -75,20 +75,16 @@ def image_exist(image_id, mm_dataset):
 
 
 def load_config_file_data(conn, project):
-    exist = False
+    setup = None
     for ann in project.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
             ns = ann.getFile().getName()
             if ns.startswith("study_config"):
-                exist = True
                 setup = yaml.load(
                     ann.getFileInChunks().__next__().decode(),
                     Loader=yaml.SafeLoader,
                 )
-    if exist:
-        return setup
-    else:
-        return None
+    return setup
 
 
 def load_project(

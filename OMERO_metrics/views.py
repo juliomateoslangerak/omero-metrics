@@ -1,3 +1,4 @@
+from click import option
 from omeroweb.webclient.decorators import login_required, render_response
 from OMERO_metrics.tools.data_managers import (
     DatasetManager,
@@ -7,9 +8,31 @@ from OMERO_metrics.tools.data_managers import (
 from django.shortcuts import render
 from OMERO_metrics.forms import UploadFileForm
 import numpy as np
-from OMERO_metrics.tools.omero_tools import create_image_from_numpy_array
+from OMERO_metrics.tools.omero_tools import (
+    create_image_from_numpy_array,
+    get_ref_from_object,
+)
 from OMERO_metrics.tools.load import load_config_file_data
 from OMERO_metrics.tools.dump import dump_config_input_parameters
+from OMERO_metrics.tools.load import load_image
+from microscopemetrics_schema import datamodel as mm_schema
+from microscopemetrics.samples import field_illumination, psf_beads
+from OMERO_metrics.tools.dump import dump_dataset
+
+DATA_TYPE = {
+    "FieldIlluminationInputParameters": [
+        "FieldIlluminationDataset",
+        "FieldIlluminationInputData",
+        "field_illumination_image",
+        field_illumination.analise_field_illumination,
+    ],
+    "PSFBeadsInputParameters": [
+        "PSFBeadsDataset",
+        "PSFBeadsInputData",
+        "psf_beads_images",
+        psf_beads.analyse_psf_beads,
+    ],
+}
 
 
 def test_request(request):
@@ -229,5 +252,75 @@ def get_connection(request, conn=None, **kwargs):
                 "Failed to save file, a configuration file already exists",
                 "red",
             )
+    except Exception as e:
+        return str(e), "red"
+
+
+@login_required()
+def run_analysis_view(request, conn=None, **kwargs):
+    try:
+        conn.SERVICE_OPTS.setOmeroGroup(-1)
+        dataset_wrapper = conn.getObject("Dataset", kwargs["dataset_id"])
+        project_wrapper = dataset_wrapper.getParent()
+        group_id = project_wrapper.getDetails().getGroup().getId()
+        conn.SERVICE_OPTS.setOmeroGroup(int(group_id))
+        # conn.SERVICE_OPTS.setOmeroGroup(int(group_id))
+        # dataset_wrapper = conn.getObject("Dataset", kwargs["dataset_id"])
+
+        list_images = kwargs["list_images"]
+        list_mm_images = [
+            load_image(conn.getObject("Image", int(i))) for i in list_images
+        ]
+        mm_sample = kwargs["mm_sample"]
+        mm_input_parameters = kwargs["mm_input_parameters"]
+        input_data = getattr(
+            mm_schema, DATA_TYPE[mm_input_parameters.class_name][1]
+        )
+        input_data = input_data(
+            **{DATA_TYPE[mm_input_parameters.class_name][2]: list_mm_images}
+        )
+        mm_microscope = mm_schema.Microscope(
+            name=project_wrapper.getDetails().getGroup().getName()
+        )
+        mm_experimenter = mm_schema.Experimenter(
+            orcid="0000-0002-1825-0097", name=conn.getUser().getName()
+        )
+        mm_dataset = getattr(
+            mm_schema, DATA_TYPE[mm_input_parameters.class_name][0]
+        )
+        mm_dataset = mm_dataset(
+            name=dataset_wrapper.getName(),
+            description=dataset_wrapper.getDescription(),
+            data_reference=get_ref_from_object(dataset_wrapper),
+            input_parameters=mm_input_parameters,
+            microscope=mm_microscope,
+            sample=mm_sample,
+            input_data=input_data,
+            acquisition_datetime=dataset_wrapper.getDate().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            ),
+            experimenter=mm_experimenter,
+        )
+        run_status = DATA_TYPE[mm_input_parameters.class_name][3](mm_dataset)
+        if run_status:
+            print(
+                "--------------------------------HERE-------------------------------"
+            )
+            try:
+                wrapper = dump_dataset(
+                    conn=conn,
+                    dataset=mm_dataset,
+                    target_project=project_wrapper,
+                    dump_as_project_file_annotation=True,
+                    dump_as_dataset_file_annotation=True,
+                    dump_input_images=False,
+                    dump_analysis=True,
+                )
+                return "Analysis completed successfully", "green"
+            except Exception as e:
+                print(e)
+                return str(e), "red"
+        else:
+            return "Analysis failed", "red"
     except Exception as e:
         return str(e), "red"
