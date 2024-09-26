@@ -263,10 +263,8 @@ def run_analysis_view(request, conn=None, **kwargs):
     try:
         dataset_wrapper = conn.getObject("Dataset", kwargs["dataset_id"])
         project_wrapper = dataset_wrapper.getParent()
-        group = project_wrapper.getDetails().getGroup()
-        group_id = group.getId()
+        group_id = project_wrapper.getDetails().getGroup().getId()
         conn.SERVICE_OPTS.setOmeroGroup(int(group_id))
-        conn.setGroupNameForSession(group.getName())
         list_images = kwargs["list_images"]
         list_mm_images = [
             load_image(conn.getObject("Image", int(i))) for i in list_images
@@ -325,6 +323,7 @@ def run_analysis_view(request, conn=None, **kwargs):
                 else:
                     return str(e), "red"
         else:
+            logger.error("Analysis failed")
             return "We couldn't process the analysis.", "red"
     except Exception as e:
         return str(e), "red"
