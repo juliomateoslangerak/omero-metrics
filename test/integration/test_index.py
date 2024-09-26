@@ -19,7 +19,6 @@ def get_connection(user, group_id=None):
     return connection
 
 
-
 class TestLoadIndexPage(IWebTest):
     """Tests loading the index page."""
 
