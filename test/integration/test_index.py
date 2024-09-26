@@ -1,13 +1,8 @@
-from http.client import responses
-
 from omero.gateway import ProjectWrapper
 from omeroweb.testlib import IWebTest, get
 import pytest
 from django.urls import reverse
 from omero.gateway import BlitzGateway
-from omeroweb.webclient.decorators import login_required, render_response
-
-# import yaml
 
 
 def get_connection(user, group_id=None):
