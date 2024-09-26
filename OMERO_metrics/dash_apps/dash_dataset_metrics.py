@@ -207,8 +207,8 @@ def update_dropdow_menu(*args, **kwargs):
     channel = kwargs["session_state"]["context"]["channel_names"]
 
     channel_list = [
-        {"label": c.name, "value": f"{i}"}
-        for i, c in enumerate(channel.channels)
+        {"label": channel_name, "value": f"{i}"}
+        for i, channel_name in enumerate(channel)
     ]
     data = channel_list
     return data
@@ -250,7 +250,8 @@ def dataset_callback_intensity_map(*args, **kwargs):
         "intensity_profiles"
     ]
     channel = int(args[0])
-    image_channel = images[0, 0, :, :, channel]
+    image = images[channel]
+    image_channel = image[0, 0, :, :]
     image_channel = rescale_intensity(
         image_channel, in_range=(0, image_channel.max()), out_range=(0.0, 1.0)
     )
@@ -296,40 +297,3 @@ def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:
         df, col, value
     )  # TODO: replace setattr with df.loc[:, col] = value
     return df
-
-
-# dmc.GridCol([dmc.Center([dmc.Text("Key Measurements", size="md")]),
-#                          table2, dmc.Center([dmc.Text("Key Measurements for Field of Illumination", c="dimmed",
-#                         size="sm")])]
-
-#
-# table2 = dash_table.DataTable(
-#     data=table_kkm.to_dict('records'),
-#     columns=[{"name": i, "id": i} for i in table_kkm.columns],
-#     style_table={"overflowX": "auto",
-#                  "padding": "10px",
-#                  "background": "white",
-#                  "border": "thin, white, solid",
-#
-#                  },
-#     page_size=10,
-#     editable=False,
-#     style_cell={
-#         "textAlign": "center",
-#         "fontSize": 10,
-#         "font-family": "Roboto",
-#         "border": "thin, white, solid",
-#         "border-bottom": 'thin #dee2e6 solid'
-#
-#     },
-#     style_header={
-#         "fontWeight": "bold",
-#         "font-family": "Roboto",
-#
-#         "fontSize": 12,
-#         "textAlign": "center",
-#         "border": "thin, white, solid",
-#         "border-bottom": 'thin #dee2e6 solid'
-#     },
-#
-# )

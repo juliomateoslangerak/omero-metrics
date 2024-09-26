@@ -10,7 +10,7 @@ from omeroweb.webclient.decorators import login_required, render_response
 # import yaml
 
 
-def get_connection2(user, group_id=None):
+def get_connection(user, group_id=None):
     """Get a BlitzGateway connection for the given user's client."""
     connection = BlitzGateway(client_obj=user[0])
     connection.getEventContext()
@@ -18,11 +18,6 @@ def get_connection2(user, group_id=None):
         connection.SERVICE_OPTS.setOmeroGroup(group_id)
     return connection
 
-
-@login_required()
-def get_connection(request, conn=None, **kwargs):
-    conn4 = conn
-    return conn4
 
 
 class TestLoadIndexPage(IWebTest):
@@ -43,7 +38,7 @@ class TestLoadIndexPage(IWebTest):
 
     def test_load_index(self, user1):
         """Test loading the app index page"""
-        conn = get_connection2(user1)
+        conn = get_connection(user1)
         user_name = conn.getUser().getName()
         django_client = self.new_django_client(user_name, user_name)
         index_url = reverse("OMERO_metrics_index")
@@ -76,7 +71,7 @@ class TestLoadIndexPage(IWebTest):
     @pytest.mark.django_db
     def test_load_project(self, user1):
         """Test loading the project dash view page."""
-        conn = get_connection2(user1)
+        conn = get_connection(user1)
         project = self.make_project(
             name="test_project", description="Project", client=conn.c
         )
@@ -86,11 +81,5 @@ class TestLoadIndexPage(IWebTest):
         django_client = self.new_django_client(user_name, user_name)
         index_url = reverse("project", args=[project_id])
         response = get(django_client, index_url)
-        client = response.client
-        request = response.wsgi_request
-        print(request.conn.connect())
-        conn2 = get_connection(request=request)
-        print(f"---------------------------------{conn2.connect()}")
-        conn_bli = conn2.user._blitzcon
         html_str = response.content.decode()
         assert "Omero Metrics" in html_str

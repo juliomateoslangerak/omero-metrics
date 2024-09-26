@@ -478,20 +478,32 @@ def get_key_values(var: FieldIlluminationDataset.output) -> pd.DataFrame:
     return df
 
 
+# def concatenate_images(images: list):
+#     if len(images) > 1:
+#         image_array_0 = images[0].array_data
+#         channels = images[0].channel_series
+#         result = image_array_0
+#         for i in range(1, len(images)):
+#             image_array = images[i].array_data
+#             channels.channels.extend(images[i].channel_series.channels)
+#             result = np.concatenate((result, image_array), axis=-1)
+#         return result, channels
+#     elif len(images) == 1:
+#         return images[0].array_data, images[0].channel_series
+#     else:
+#         return None
+
+
 def concatenate_images(images: list):
-    if len(images) > 1:
-        image_array_0 = images[0].array_data
-        channels = images[0].channel_series
-        result = image_array_0
-        for i in range(1, len(images)):
-            image_array = images[i].array_data
-            channels.channels.extend(images[i].channel_series.channels)
-            result = np.concatenate((result, image_array), axis=-1)
-        return result, channels
-    elif len(images) == 1:
-        return images[0].array_data, images[0].channel_series
-    else:
-        return None
+    list_images = []
+    list_channels = []
+    for mm_image in images:
+        image = mm_image.array_data
+        result = [image[:, :, :, :, i] for i in range(image.shape[4])]
+        channels = [c.name for c in mm_image.channel_series.channels]
+        list_images.extend(result)
+        list_channels.extend(channels)
+    return list_images, list_channels
 
 
 def get_all_intensity_profiles(conn, data_df):
