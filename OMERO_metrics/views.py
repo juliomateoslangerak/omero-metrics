@@ -1,4 +1,3 @@
-from click import option
 from omeroweb.webclient.decorators import login_required, render_response
 from OMERO_metrics.tools.data_managers import (
     DatasetManager,
@@ -18,6 +17,10 @@ from OMERO_metrics.tools.load import load_image
 from microscopemetrics_schema import datamodel as mm_schema
 from microscopemetrics.samples import field_illumination, psf_beads
 from OMERO_metrics.tools.dump import dump_dataset
+import omero
+import logging
+
+logger = logging.getLogger(__name__)
 
 DATA_TYPE = {
     "FieldIlluminationInputParameters": [
@@ -42,7 +45,6 @@ def test_request(request):
         return render(request, "OMERO_metrics/test.html", context)
 
 
-# Imaginary function to handle an uploaded file.
 @login_required()
 def upload_image(request, conn=None, **kwargs):
     if request.method == "POST":
@@ -259,14 +261,10 @@ def get_connection(request, conn=None, **kwargs):
 @login_required()
 def run_analysis_view(request, conn=None, **kwargs):
     try:
-        conn.SERVICE_OPTS.setOmeroGroup(-1)
         dataset_wrapper = conn.getObject("Dataset", kwargs["dataset_id"])
         project_wrapper = dataset_wrapper.getParent()
         group_id = project_wrapper.getDetails().getGroup().getId()
         conn.SERVICE_OPTS.setOmeroGroup(int(group_id))
-        # conn.SERVICE_OPTS.setOmeroGroup(int(group_id))
-        # dataset_wrapper = conn.getObject("Dataset", kwargs["dataset_id"])
-
         list_images = kwargs["list_images"]
         list_mm_images = [
             load_image(conn.getObject("Image", int(i))) for i in list_images
@@ -303,11 +301,9 @@ def run_analysis_view(request, conn=None, **kwargs):
         )
         run_status = DATA_TYPE[mm_input_parameters.class_name][3](mm_dataset)
         if run_status:
-            print(
-                "--------------------------------HERE-------------------------------"
-            )
+
             try:
-                wrapper = dump_dataset(
+                dump_dataset(
                     conn=conn,
                     dataset=mm_dataset,
                     target_project=project_wrapper,
@@ -318,9 +314,15 @@ def run_analysis_view(request, conn=None, **kwargs):
                 )
                 return "Analysis completed successfully", "green"
             except Exception as e:
-                print(e)
-                return str(e), "red"
+                if isinstance(e, omero.SecurityViolation):
+                    return (
+                        "You don't have the necessary permissions to save the analysis. "
+                        "Try changing the default group to the group where the project is located.",
+                        "red",
+                    )
+                else:
+                    return str(e), "red"
         else:
-            return "Analysis failed", "red"
+            return "We couldn't process the analysis.", "red"
     except Exception as e:
         return str(e), "red"
