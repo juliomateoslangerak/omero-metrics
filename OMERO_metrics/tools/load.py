@@ -192,14 +192,19 @@ def load_dash_data_image(
         ann_id = mm_dataset.output.__dict__["intensity_profiles"][
             image_index
         ].data_reference.omero_object_id
-        roi_service = conn.getRoiService()
-        result = roi_service.findByImage(
-            int(image.data_reference.omero_object_id), None, conn.SERVICE_OPTS
-        )
-        shapes_rectangle, shapes_line, shapes_point = get_rois_omero(result)
-        df_lines_omero = get_info_roi_lines(shapes_line)
-        df_rects_omero = get_info_roi_rectangles(shapes_rectangle)
-        df_points_omero = get_info_roi_points(shapes_point)
+        # roi_service = conn.getRoiService()
+        # result = roi_service.findByImage(
+        #     int(image.data_reference.omero_object_id), None, conn.SERVICE_OPTS
+        # )
+        # shapes_rectangle, shapes_line, shapes_point = get_rois_omero(result)
+        image_id = int(image.data_reference.omero_object_id)
+        rois = get_rois_mm_dataset(mm_dataset)
+        df_lines_omero = pd.DataFrame(rois[image_id]["roi"]["Line"])
+        df_rects_omero = pd.DataFrame(rois[image_id]["roi"]["Rectangle"])
+        df_points_omero = pd.DataFrame(rois[image_id]["roi"]["Point"])
+        df_lines_omero.columns = df_lines_omero.columns.str.upper()
+        df_rects_omero.columns = df_rects_omero.columns.str.upper()
+        df_points_omero.columns = df_points_omero.columns.str.upper()
         dash_context["df_lines"] = df_lines_omero
         dash_context["df_rects"] = df_rects_omero
         dash_context["df_points"] = df_points_omero
@@ -545,3 +550,100 @@ def get_table_file_id(conn, file_annotation_id):
     df = pd.DataFrame.from_dict(data_buffer)
     df.index = index_buffer[0 : len(df)]
     return df
+
+
+# -----------------------------------------------------------------------------------
+
+
+def roi_finder(roi: mm_schema.Roi):
+    if roi.rectangles:
+        return {
+            "type": "Rectangle",
+            "data": [
+                {
+                    "roi_name": roi.name,
+                    "name": rect.name,
+                    "x": rect.x,
+                    "y": rect.y,
+                    "w": rect.w,
+                    "h": rect.h,
+                }
+                for rect in roi.rectangles
+            ],
+        }
+    elif roi.lines:
+        return {
+            "type": "Line",
+            "data": [
+                {
+                    "roi_name": roi.name,
+                    "name": line.name,
+                    "x1": line.x1,
+                    "y1": line.y1,
+                    "x2": line.x2,
+                    "y2": line.y2,
+                }
+                for line in roi.lines
+            ],
+        }
+    elif roi.points:
+        return {
+            "type": "Point",
+            "data": [
+                {
+                    "roi_name": roi.name,
+                    "name": point.name,
+                    "x": point.x,
+                    "y": point.y,
+                    "c": point.c,
+                }
+                for point in roi.points
+            ],
+        }
+    else:
+        return None
+
+
+def get_image_info_mm_dataset(mm_dataset: mm_schema.MetricsDataset):
+    mm_images = getattr(
+        mm_dataset["input_data"],
+        DATASET_IMAGES[mm_dataset.class_name]["input_data"][0],
+    )
+    image_info = {
+        i.data_reference.omero_object_id: {
+            "name": i.name,
+            "id": i.data_reference.omero_object_id,
+            "n_channel": i.shape_c,
+            "roi": {"Rectangle": [], "Line": [], "Point": []},
+        }
+        for i in mm_images
+    }
+    return image_info
+
+
+def get_rois_mm_dataset(mm_dataset: mm_schema.MetricsDataset):
+    images_info = get_image_info_mm_dataset(mm_dataset)
+    output = mm_dataset.output
+    for i, item in enumerate(images_info.items()):
+        for field in output:
+            if (
+                isinstance(output[field], mm_schema.Roi)
+                and isinstance(output[field].linked_references, list)
+                and len(output[field].linked_references) == len(images_info)
+            ):
+                roi = roi_finder(output[field])
+                if roi:
+                    images_info[item[0]]["roi"][roi["type"]].extend(
+                        roi["data"]
+                    )
+            elif (
+                isinstance(output[field], list)
+                and len(output[field]) == len(images_info)
+                and isinstance(output[field][i], mm_schema.Roi)
+            ):
+                roi = roi_finder(output[field][i])
+                if roi:
+                    images_info[item[0]]["roi"][roi["type"]].extend(
+                        roi["data"]
+                    )
+    return images_info

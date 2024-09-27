@@ -10,6 +10,7 @@ from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import pandas as pd
 from typing import Union
+from microscopemetrics_schema import datamodel as mm_schema
 
 PROFILES_COLORS = {
     "center_vertical": "red",
@@ -67,7 +68,7 @@ def add_line_rois_trace(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
             )
         )
         fig.add_trace(
-            go.Scatter(x=data.x, y=data.y, mode="lines", name=str(row.ROI))
+            go.Scatter(x=data.x, y=data.y, mode="lines", name=str(row.NAME))
         )
     return fig
 
@@ -77,7 +78,7 @@ def add_line_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
         fig.add_shape(
             go.layout.Shape(
                 type="line",
-                name=str(row.ROI),
+                name=str(row.NAME),
                 showlegend=True,
                 editable=True,
                 x0=row.X1,
@@ -97,7 +98,15 @@ def add_line_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
 
 
 def add_point_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
-    fig.add_trace(go.Scatter(x=df.X, y=df.Y, mode="markers"))
+    fig.add_trace(
+        go.Scatter(
+            x=df.X,
+            y=df.Y,
+            mode="markers",
+            customdata=df.ROI_NAME,
+            hovertemplate="%{customdata}",
+        )
+    )
     return fig
 
 
@@ -443,3 +452,6 @@ def image_3d_chart(image_bead):
         scene_zaxis_showticklabels=False,
     )
     return fig
+
+
+# ---------------------------------------READING FROM MM_DATASET--------------------------------------------------

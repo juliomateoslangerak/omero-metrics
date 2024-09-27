@@ -312,7 +312,7 @@ def callback_image(*args, **kwargs):
     lines = [
         dict(
             type="line",
-            name=str(row.ROI),
+            name=str(row.NAME),
             showlegend=True,
             editable=True,
             x0=row.X1,
@@ -335,7 +335,13 @@ def callback_image(*args, **kwargs):
         fig2 = go.Figure(fig)
         fig2.update_layout(shapes=corners + lines)
         fig2.add_trace(
-            go.Scatter(x=df_points.X, y=df_points.Y, mode="markers")
+            go.Scatter(
+                x=df_points.X,
+                y=df_points.Y,
+                mode="markers",
+                customdata=df_points.ROI_NAME.str.replace(" ROIs", ""),
+                hovertemplate="%{customdata}<extra></extra>",
+            )
         )
 
     elif roi == "Line":
