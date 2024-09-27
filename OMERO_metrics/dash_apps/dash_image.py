@@ -108,6 +108,10 @@ dash_app_image.layout = dmc.MantineProvider(
                                                     "value": "All",
                                                     "label": "All",
                                                 },
+                                                {
+                                                    "value": "None",
+                                                    "label": "None",
+                                                },
                                             ],
                                             mb=10,
                                         ),
@@ -285,6 +289,15 @@ def callback_image(*args, **kwargs):
         zmax=imaaa.max(),
         color_continuous_scale="Hot",
     )
+    fig.add_trace(
+        go.Scatter(
+            x=df_point_channel.X,
+            y=df_point_channel.Y,
+            mode="markers",
+            customdata=df_point_channel.ROI_NAME.str.replace(" ROIs", ""),
+            hovertemplate="%{customdata}<extra></extra>",
+        )
+    )
     if checked_contour:
         fig.plotly_restyle({"type": "contour"}, 0)
         fig.update_yaxes(autorange="reversed")
@@ -332,30 +345,45 @@ def callback_image(*args, **kwargs):
     # fig.update_layout(coloraxis_colorbar_x=-0.15)
     fig.update_layout(coloraxis={"colorscale": color})
     if roi == "All":
-        fig2 = go.Figure(fig)
-        fig2.update_layout(shapes=corners + lines)
-        fig2.add_trace(
-            go.Scatter(
-                x=df_points.X,
-                y=df_points.Y,
-                mode="markers",
-                customdata=df_points.ROI_NAME.str.replace(" ROIs", ""),
-                hovertemplate="%{customdata}<extra></extra>",
-            )
+        fig.update_layout(shapes=corners + lines)
+        fig.plotly_restyle(
+            {
+                "visible": True,
+            },
+            1,
         )
-
     elif roi == "Line":
-        fig2 = go.Figure(fig)
-        fig2.update_layout(shapes=lines)
-    elif roi == "Square":
-        fig2 = go.Figure(fig)
-        fig2.update_layout(shapes=corners)
-    elif roi == "Center":
-        fig2 = go.Figure(fig)
-        fig2.add_trace(
-            go.Scatter(x=df_points.X, y=df_points.Y, mode="markers")
+        fig.update_layout(shapes=lines)
+        fig.plotly_restyle(
+            {
+                "visible": False,
+            },
+            1,
         )
-    fig = fig2
+    elif roi == "Square":
+        fig.update_layout(shapes=corners)
+        fig.plotly_restyle(
+            {
+                "visible": False,
+            },
+            1,
+        )
+    elif roi == "Center":
+        fig.update_layout(shapes=None)
+        fig.plotly_restyle(
+            {
+                "visible": True,
+            },
+            1,
+        )
+    elif roi == "None":
+        fig.update_layout(shapes=None)
+        fig.plotly_restyle(
+            {
+                "visible": False,
+            },
+            1,
+        )
     return fig
 
 
