@@ -9,6 +9,7 @@ Field_TYPE_MAPPING = {
     "str": "TextInput",
     "bool": "Checkbox",
 }
+from typing import get_origin, get_args, Union
 
 
 def extract_form_data(form_content):
@@ -25,19 +26,23 @@ def clean_field_name(field: str):
     return field.replace("_", " ").title()
 
 
-def get_field_types(field, supported_types=["str", "int", "float", "bool"]):
+def get_field_types(field, supported_types=[str, int, float, bool]):
     data_type = {
         "field_name": clean_field_name(field.name),
         "type": None,
         "optional": False,
         "default": field.default,
     }
-    if field.type.__name__ == "Optional":
-        data_type["type"] = field.type.__args__[0].__name__
-        data_type["optional"] = True
-    elif field.type.__name__ == "Union":
-        data_type["type"] = field.type.__args__[0].__name__
-    elif field.type.__name__ in supported_types:
+    if get_origin(field.type) is Union:
+        args = get_args(field.type)
+        if args[1] is type(None):
+            data_type["optional"] = True
+            data_type["type"] = args[0].__name__
+        elif args[0] in supported_types:
+            data_type["type"] = args[0].__name__
+        else:
+            data_type["type"] = "unsupported"
+    elif field.type in supported_types:
         data_type["type"] = field.type.__name__
     else:
         print(f'Field type "{field.type}" not supported')
