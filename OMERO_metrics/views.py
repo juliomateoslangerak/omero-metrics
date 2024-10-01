@@ -245,13 +245,23 @@ def save_config(request, conn=None, **kwargs):
         conn.SERVICE_OPTS.setOmeroGroup(group_id)
         setup = load_config_file_data(conn, project_wrapper)
         if setup is None:
-            dump_config_input_parameters(
-                conn, mm_input_parameters, mm_sample, project_wrapper
-            )
-            return (
-                "File saved successfully, Re-click on the project to see the changes",
-                "green",
-            )
+            try:
+                dump_config_input_parameters(
+                    conn, mm_input_parameters, mm_sample, project_wrapper
+                )
+                return (
+                    "File saved successfully, Re-click on the project to see the changes",
+                    "green",
+                )
+            except Exception as e:
+                if isinstance(e, omero.SecurityViolation):
+                    return (
+                        "You don't have the necessary permissions to save the configuration. ",
+                        "red",
+                    )
+                else:
+                    return str(e), "red"
+
         else:
             return (
                 "Failed to save file, a configuration file already exists",
@@ -274,7 +284,7 @@ def run_analysis_view(request, conn=None, **kwargs):
         print(f"Group ID           1: {conn.getGroupFromContext().getName()}")
         g_id = dataset_wrapper.getDetails().getGroup().getId()
         conn.SERVICE_OPTS.setOmeroGroup(int(g_id))
-        conn.setGroupForSession(int(g_id))
+        # conn.setGroupForSession(int(g_id))
         print(f"Group ID           2: {conn.getGroupFromContext().getName()}")
         list_images = kwargs["list_images"]
         list_mm_images = [

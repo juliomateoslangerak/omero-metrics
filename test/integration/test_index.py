@@ -67,7 +67,8 @@ class TestLoadIndexPage(IWebTest):
         """Test loading the project dash view page."""
         conn = get_connection(user1)
         project = self.make_project(
-            name="test_project", description="Project", client=conn.c)
+            name="test_project", description="Project", client=conn.c
+        )
         new_project = ProjectWrapper(conn, project)
         project_id = int(new_project.getId())
         user_name = conn.getUser().getName()
