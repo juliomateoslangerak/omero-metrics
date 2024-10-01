@@ -91,7 +91,7 @@ def dash_example_1_view(
     request,
     conn=None,
     template_name="OMERO_metrics/foi_key_measurement.html",
-    **kwargs
+    **kwargs,
 ):
     """Example view that inserts content into the
     dash context passed to the dash application"""
@@ -235,16 +235,19 @@ def run_analysis(request, conn=None, **kwargs):
 
 
 @login_required()
-def get_connection(request, conn=None, **kwargs):
+def save_config(request, conn=None, **kwargs):
     try:
         project_id = kwargs["project_id"]
-        form_instance = kwargs["form_instance"]
+        mm_input_parameters = kwargs["input_parameters"]
+        mm_sample = kwargs["sample"]
         project_wrapper = conn.getObject("Project", project_id)
         group_id = project_wrapper.getDetails().getGroup().getId()
         conn.SERVICE_OPTS.setOmeroGroup(group_id)
         setup = load_config_file_data(conn, project_wrapper)
         if setup is None:
-            dump_config_input_parameters(conn, form_instance, project_wrapper)
+            dump_config_input_parameters(
+                conn, mm_input_parameters, mm_sample, project_wrapper
+            )
             return (
                 "File saved successfully, Re-click on the project to see the changes",
                 "green",
@@ -264,7 +267,15 @@ def run_analysis_view(request, conn=None, **kwargs):
         dataset_wrapper = conn.getObject("Dataset", kwargs["dataset_id"])
         project_wrapper = dataset_wrapper.getParent()
         group_id = project_wrapper.getDetails().getGroup().getId()
-        conn.SERVICE_OPTS.setOmeroGroup(int(group_id))
+        group_id2 = conn.getGroupFromContext().getName()
+        group_id3 = dataset_wrapper.getDetails().getGroup().getName()
+        print(f"Group ID           4: {group_id3}")
+        print(f"Group ID           3: {group_id2}")
+        print(f"Group ID           1: {conn.getGroupFromContext().getName()}")
+        g_id = dataset_wrapper.getDetails().getGroup().getId()
+        conn.SERVICE_OPTS.setOmeroGroup(int(g_id))
+        conn.setGroupForSession(int(g_id))
+        print(f"Group ID           2: {conn.getGroupFromContext().getName()}")
         list_images = kwargs["list_images"]
         list_mm_images = [
             load_image(conn.getObject("Image", int(i))) for i in list_images

@@ -210,13 +210,9 @@ def dump_dataset(
     dump_as_project_file_annotation: bool = True,
     dump_as_dataset_file_annotation: bool = False,
 ) -> DatasetWrapper:
-    print(
-        "-------------------------here 1--------------------------------------"
-    )
+
     if dataset.data_reference:
-        print(
-            "-------------------------here 2--------------------------------------"
-        )
+
         try:
             omero_dataset = omero_tools.get_omero_obj_from_mm_obj(
                 conn=conn, mm_obj=dataset
@@ -228,9 +224,6 @@ def dump_dataset(
             )
             raise e
     else:
-        print(
-            "-------------------------here 3--------------------------------------"
-        )
         if target_project is None:
             logger.warning(
                 f"Creating new dataset {dataset.name} in OMERO"
@@ -274,57 +267,35 @@ def dump_dataset(
                 continue
 
     if dump_analysis:
-        print(
-            "-------------------------here 4--------------------------------------"
-        )
+
         if dataset.processed:
             if dataset.output is not None:
-                print(
-                    "-------------------------here 4.1--------------------------------------"
-                )
 
                 _dump_analysis_metadata(dataset, omero_dataset)
 
-                print(
-                    "-------------------------here 4.2--------------------------------------"
-                )
                 _dump_dataset_output(dataset.output, omero_dataset)
             else:
-                print(
-                    "-------------------------here 4.3--------------------------------------"
-                )
                 logger.error(
                     f"Dataset {dataset.name} is processed but has no output. Skipping dump."
                 )
         else:
-            print(
-                "-------------------------here 4.4--------------------------------------"
-            )
             logger.warning(
                 f"Dataset {dataset.name} is not processed. Skipping output dump."
             )
 
     target_objs = []
     if dump_as_dataset_file_annotation:
-        print(
-            "-------------------------here 5--------------------------------------"
-        )
+
         target_objs.append(omero_dataset)
     if dump_as_project_file_annotation:
-        print(
-            "-------------------------here 6--------------------------------------"
-        )
+
         target_objs.append(target_project)
     if target_objs:
-        print(
-            "-------------------------here 7--------------------------------------"
-        )
+
         _dump_mm_dataset_as_file_annotation(
             conn=conn, mm_dataset=dataset, target_omero_obj=target_objs
         )
-    print(
-        "-------------------------here 8--------------------------------------"
-    )
+
     return omero_dataset
 
 
@@ -414,7 +385,6 @@ def _dump_dataset_output(
         )
         return None
     conn = target_dataset._conn
-    print(conn)
     for output_field in fields(dataset_output):
         output_element = getattr(dataset_output, output_field.name)
         if isinstance(output_element, mm_schema.MetricsObject):
@@ -802,6 +772,7 @@ def dump_comment(
 def dump_config_input_parameters(
     conn: BlitzGateway,
     input_parameters: mm_schema.MetricsInputParameters,
+    sample: mm_schema.Sample,
     target_omero_obj: ProjectWrapper,
 ):
     dumper = YAMLDumper()
@@ -816,6 +787,7 @@ def dump_config_input_parameters(
                 {
                     "analyse_type": input_parameters.class_name,
                     "input_parameters": input_parameters,
+                    "sample": sample,
                 }
             )
         )

@@ -51,103 +51,113 @@ app.layout = dmc.MantineProvider(
                 html.Div(id="blank-input"),
                 dmc.Stack(
                     [
-                        dmc.Group(
+                        dmc.Grid(
                             children=[
-                                dcc.Graph(
-                                    figure={},
-                                    id="psf_image_graph",
-                                    style={
-                                        "margin-top": "0px",
-                                        "margin-bottom": "0px",
-                                    },
-                                ),
-                                dmc.Stack(
+                                dmc.GridCol(
                                     [
-                                        html.Div(
+                                        dcc.Graph(
+                                            figure={},
+                                            id="psf_image_graph",
+                                            style={
+                                                "margin-top": "0px",
+                                                "margin-bottom": "0px",
+                                            },
+                                        ),
+                                    ],
+                                    span=6,
+                                ),
+                                dmc.GridCol(
+                                    [
+                                        dmc.Stack(
                                             [
+                                                html.Div(
+                                                    [
+                                                        dmc.Select(
+                                                            id="channel_selector_psf_image",
+                                                            label="Select Channel",
+                                                            w="auto",
+                                                            value="0",
+                                                            leftSection=DashIconify(
+                                                                icon="radix-icons:magnifying-glass"
+                                                            ),
+                                                            rightSection=DashIconify(
+                                                                icon="radix-icons:chevron-down"
+                                                            ),
+                                                            mb=10,
+                                                        ),
+                                                        dmc.Text(
+                                                            "Select Beads Location",
+                                                            size="sm",
+                                                            fw=500,
+                                                        ),
+                                                        dmc.SegmentedControl(
+                                                            id="beads_info_segmented",
+                                                            value="beads_info",
+                                                            data=[
+                                                                {
+                                                                    "value": "beads_info",
+                                                                    "label": "Beads Info",
+                                                                },
+                                                                {
+                                                                    "value": "None",
+                                                                    "label": "None",
+                                                                },
+                                                            ],
+                                                            mb=10,
+                                                        ),
+                                                    ]
+                                                ),
+                                                dmc.Checkbox(
+                                                    id="contour_checkbox_psf_image",
+                                                    label="Contour Image",
+                                                    checked=False,
+                                                    mb=10,
+                                                ),
+                                                dmc.Checkbox(
+                                                    id="roi_checkbox_psf_image",
+                                                    label="Add ROI",
+                                                    checked=False,
+                                                    mb=10,
+                                                ),
+                                                dmc.Switch(
+                                                    id="color_switch_psf_image",
+                                                    label="Invert Color",
+                                                    checked=False,
+                                                    mb=10,
+                                                ),
                                                 dmc.Select(
-                                                    id="channel_selector_psf_image",
-                                                    label="Select Channel",
+                                                    id="color_selector_psf_image",
+                                                    label="Select Color",
+                                                    data=[
+                                                        {
+                                                            "value": "Hot",
+                                                            "label": "Hot",
+                                                        },
+                                                        {
+                                                            "value": "Viridis",
+                                                            "label": "Viridis",
+                                                        },
+                                                        {
+                                                            "value": "Inferno",
+                                                            "label": "Inferno",
+                                                        },
+                                                    ],
                                                     w="auto",
-                                                    value="0",
+                                                    value="Hot",
                                                     leftSection=DashIconify(
-                                                        icon="radix-icons:magnifying-glass"
+                                                        icon="radix-icons:color-wheel"
                                                     ),
                                                     rightSection=DashIconify(
                                                         icon="radix-icons:chevron-down"
                                                     ),
-                                                    mb=10,
                                                 ),
-                                                dmc.Text(
-                                                    "Select Beads Location",
-                                                    size="sm",
-                                                    fw=500,
-                                                ),
-                                                dmc.SegmentedControl(
-                                                    id="beads_info_segmented",
-                                                    value="beads_info",
-                                                    data=[
-                                                        {
-                                                            "value": "beads_info",
-                                                            "label": "Beads Info",
-                                                        },
-                                                        {
-                                                            "value": "None",
-                                                            "label": "None",
-                                                        },
-                                                    ],
-                                                    mb=10,
-                                                ),
-                                            ]
-                                        ),
-                                        dmc.Checkbox(
-                                            id="contour_checkbox_psf_image",
-                                            label="Contour Image",
-                                            checked=False,
-                                            mb=10,
-                                        ),
-                                        dmc.Checkbox(
-                                            id="roi_checkbox_psf_image",
-                                            label="Add ROI",
-                                            checked=False,
-                                            mb=10,
-                                        ),
-                                        dmc.Switch(
-                                            id="color_switch_psf_image",
-                                            label="Invert Color",
-                                            checked=False,
-                                            mb=10,
-                                        ),
-                                        dmc.Select(
-                                            id="color_selector_psf_image",
-                                            label="Select Color",
-                                            data=[
-                                                {
-                                                    "value": "Hot",
-                                                    "label": "Hot",
-                                                },
-                                                {
-                                                    "value": "Viridis",
-                                                    "label": "Viridis",
-                                                },
-                                                {
-                                                    "value": "Inferno",
-                                                    "label": "Inferno",
-                                                },
                                             ],
-                                            w="auto",
-                                            value="Hot",
-                                            leftSection=DashIconify(
-                                                icon="radix-icons:color-wheel"
-                                            ),
-                                            rightSection=DashIconify(
-                                                icon="radix-icons:chevron-down"
-                                            ),
                                         ),
                                     ],
+                                    span="content",
                                 ),
                             ],
-                            gap={"base": "sm", "sm": "lg"},
+                            # gap={"base": "sm", "sm": "lg"},
                             justify="space-around",
                             align="center",
                             style={
@@ -258,7 +268,7 @@ app.layout = dmc.MantineProvider(
             fluid=True,
             style={
                 "background-color": "#eceff1",
-                "margin": "20px",
+                "margin": "10px",
                 "border-radius": "0.5rem",
                 "padding": "10px",
             },

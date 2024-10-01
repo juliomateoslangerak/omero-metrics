@@ -67,11 +67,12 @@ class TestLoadIndexPage(IWebTest):
         """Test loading the project dash view page."""
         conn = get_connection(user1)
         project = self.make_project(
-            name="test_project", description="Project", client=conn.c
-        )
+            name="test_project", description="Project", client=conn.c)
         new_project = ProjectWrapper(conn, project)
         project_id = int(new_project.getId())
         user_name = conn.getUser().getName()
+        conn.setGroupForSession(int(3))
+        print("Group ID: ", conn.getGroupFromContext().getName())
         django_client = self.new_django_client(user_name, user_name)
         index_url = reverse("project", args=[project_id])
         response = get(django_client, index_url)

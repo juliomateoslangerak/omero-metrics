@@ -113,7 +113,7 @@ dash_app_project.layout = dmc.MantineProvider(
             fluid=True,
             style={
                 "background-color": "#eceff1",
-                "margin": "20px",
+                "margin": "10px",
                 "border-radius": "0.5rem",
                 "padding": "10px",
             },

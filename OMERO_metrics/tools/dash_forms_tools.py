@@ -51,7 +51,7 @@ def get_field_types(field, supported_types=[str, int, float, bool]):
 
 
 def get_dmc_field_input(
-    field, type_mapping=Field_TYPE_MAPPING, disabled=False
+    field, mm_object, type_mapping=Field_TYPE_MAPPING, disabled=False
 ):
     field_info = get_field_types(field)
     input_field_name = getattr(dmc, type_mapping[field_info["type"]])
@@ -59,7 +59,11 @@ def get_dmc_field_input(
     input_field.id = field_info["field_name"].replace(" ", "_").lower()
     input_field.label = field_info["field_name"]
     input_field.placeholder = "Enter " + field_info["field_name"]
-    input_field.value = field_info["default"]
+    input_field.value = (
+        field_info["default"]
+        if getattr(mm_object, field.name) is None
+        else getattr(mm_object, field.name)
+    )
     input_field.w = "300"
     input_field.disabled = disabled
     input_field.required = not field_info["optional"]
@@ -100,14 +104,16 @@ class dashForm:
             style={
                 "width": "auto",
                 "height": "auto",
-                "border-radius": "0.5rem",
                 "padding": "10px",
+                "border-radius": "0.5rem",
                 "border": "1px solid #189A35",
             },
         )
         for field in fields(self.mm_object):
             form_content.children.append(
-                get_dmc_field_input(field, disabled=self.disabled)
+                get_dmc_field_input(
+                    field, self.mm_object, disabled=self.disabled
+                )
             )
         # form_content.children.append(
         #     dmc.Button(

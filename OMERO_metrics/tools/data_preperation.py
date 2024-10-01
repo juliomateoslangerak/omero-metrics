@@ -10,7 +10,6 @@ from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import pandas as pd
 from typing import Union
-from microscopemetrics_schema import datamodel as mm_schema
 
 PROFILES_COLORS = {
     "center_vertical": "red",
