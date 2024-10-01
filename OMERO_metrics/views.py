@@ -279,12 +279,13 @@ def run_analysis_view(request, conn=None, **kwargs):
         group_id = project_wrapper.getDetails().getGroup().getId()
         group_id2 = conn.getGroupFromContext().getName()
         group_id3 = dataset_wrapper.getDetails().getGroup().getName()
-        print(f"Group ID           4: {group_id3}")
-        print(f"Group ID           3: {group_id2}")
-        print(f"Group ID           1: {conn.getGroupFromContext().getName()}")
-        g_id = dataset_wrapper.getDetails().getGroup().getId()
-        conn.SERVICE_OPTS.setOmeroGroup(int(g_id))
+        print(f"Group from datasetw           4: {group_id3}")
+        print(f"Group context          3: {group_id2}")
+        print(f"Group project           1: {project_wrapper.getDetails().getGroup().getName()}")
+        # g_id = dataset_wrapper.getDetails().getGroup().getId()
+        conn.SERVICE_OPTS.setOmeroGroup(int(group_id))
         # conn.setGroupForSession(int(g_id))
+        print()
         print(f"Group ID           2: {conn.getGroupFromContext().getName()}")
         list_images = kwargs["list_images"]
         list_mm_images = [
