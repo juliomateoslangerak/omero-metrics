@@ -187,15 +187,19 @@ dash_form_project.layout = dmc.MantineProvider(
                                             dmc.Grid(
                                                 [
                                                     dmc.GridCol(
-                                                        id="sample_col", span=4
+                                                        id="sample_col",
+                                                        span="auto",
                                                     ),
                                                     dmc.GridCol(
-                                                        id="config_col", span=4
+                                                        id="config_col",
+                                                        span="auto",
                                                     ),
                                                     dmc.GridCol(
-                                                        id="image_id", span=4
+                                                        id="image_id",
+                                                        span="auto",
                                                     ),
-                                                ]
+                                                ],
+                                                justify="space-around",
                                             ),
                                         ]
                                     ),

@@ -14,5 +14,6 @@ RUN echo "X_FRAME_OPTIONS = 'SAMEORIGIN'" >> /opt/omero/web/venv3/lib/python3.10
 RUN echo 'TEMPLATES[0]["OPTIONS"]["context_processors"].append("django.template.context_processors.request")' >> /opt/omero/web/venv3/lib/python3.10/site-packages/omeroweb/settings.py
 ENV REACT_VERSION=18.2.0
 RUN npm install react@${REACT_VERSION}
+COPY ./98-dash-migrate.sh /startup/
+RUN chmod +x /startup/98-dash-migrate.sh
 USER omero-web
-#/opt/omero/web/venv3/bin/python /opt/omero/web/venv3/lib/python3.10/site-packages/omeroweb/manage.py migrate

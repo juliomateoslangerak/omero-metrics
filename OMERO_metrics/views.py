@@ -174,6 +174,8 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
     # request["conn"] = conn
     # conn.SERVICE_OPTS.setOmeroGroup("-1")
     project_wrapper = conn.getObject("Project", project_id)
+    group_id = project_wrapper.getDetails().getGroup().getId()
+    conn.SERVICE_OPTS.setOmeroGroup(group_id)
     pm = ProjectManager(conn, project_wrapper)
     pm.load_data()
     pm.is_homogenized()
