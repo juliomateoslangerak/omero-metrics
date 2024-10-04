@@ -46,7 +46,7 @@ from omero.model import (
     RoiI,
     enums,
 )
-from omero.rtypes import rdouble, rint, rlong, rstring, rtime
+from omero.rtypes import rdouble, rint, rstring, rtime
 from pandas import DataFrame
 
 logger = logging.getLogger(__name__)
@@ -1004,11 +1004,20 @@ def create_table(
     namespace: str,
 ):
     """Creates a table annotation from a pandas dataframe or a list of columns as dictionaries."""
+    print(
+        "--------------------------------------Here: Éyo-------------------------------------------"
+    )
 
     table_name = f'{table_name}_{"".join([choice(ascii_letters) for _ in range(32)])}.h5'
     columns = _create_columns(table)
-
+    print(
+        "--------------------------------------Éyo 1-------------------------------------------"
+    )
     resources = conn.c.sf.sharedResources()
+    print(
+        "--------------------------------------Éyo 2-------------------------------------------"
+    )
+
     repository_id = resources.repositories().descriptions[0].getId().getValue()
     table = resources.newTable(repository_id, table_name)
     table.initialize(columns)
@@ -1021,7 +1030,14 @@ def create_table(
         file_ann.setNs(namespace)
     file_ann.setDescription(table_description)
     file_ann.setFile(OriginalFileI(original_file.id.val, False))
+    print(
+        "--------------------------------------Éyo 3-------------------------------------------"
+    )
+
     file_ann.save()
+    print(
+        "--------------------------------------Éyo 4-------------------------------------------"
+    )
 
     if isinstance(omero_object, list):
         for obj in omero_object:

@@ -1,4 +1,3 @@
-import plotly.graph_objs as go
 import yaml
 import omero.gateway as gateway
 from datetime import datetime, timedelta
@@ -7,14 +6,13 @@ import collections
 import omero
 import plotly.express as px
 import numpy as np
-from matplotlib.pyplot import autoscale
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import pandas as pd
 from typing import Union
 
 PROFILES_COLORS = {
-    "center_vertival": "red",
+    "center_vertical": "red",
     "center_horizontal": "blue",
     "leftBottom_to_rightTop": "green",
     "leftTop_to_rightBottom": "yellow",
@@ -22,13 +20,13 @@ PROFILES_COLORS = {
 
 
 # This function is no longer needed
-def get_intensity_profile(imaaa):
-    imaaa = imaaa[0, 0, :, :, 0] / 255
-    imaa_fliped = np.flip(imaaa, axis=1)
-    rb = imaaa[:, -1]
-    lb = imaaa[:, 0]
-    dr = np.fliplr(imaaa).diagonal()
-    dl = np.fliplr(imaa_fliped).diagonal()
+def get_intensity_profile(image):
+    image = image[0, 0, :, :, 0] / 255
+    image_flipped = np.flip(image, axis=1)
+    rb = image[:, -1]
+    lb = image[:, 0]
+    dr = np.fliplr(image).diagonal()
+    dl = np.fliplr(image_flipped).diagonal()
     df = pd.DataFrame(
         {
             "Right Bottom": rb,
@@ -69,7 +67,7 @@ def add_line_rois_trace(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
             )
         )
         fig.add_trace(
-            go.Scatter(x=data.x, y=data.y, mode="lines", name=str(row.ROI))
+            go.Scatter(x=data.x, y=data.y, mode="lines", name=str(row.NAME))
         )
     return fig
 
@@ -79,7 +77,7 @@ def add_line_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
         fig.add_shape(
             go.layout.Shape(
                 type="line",
-                name=str(row.ROI),
+                name=str(row.NAME),
                 showlegend=True,
                 editable=True,
                 x0=row.X1,
@@ -99,7 +97,15 @@ def add_line_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
 
 
 def add_point_rois(fig: go.Figure, df: pd.DataFrame) -> go.Figure:
-    fig.add_trace(go.Scatter(x=df.X, y=df.Y, mode="markers"))
+    fig.add_trace(
+        go.Scatter(
+            x=df.X,
+            y=df.Y,
+            mode="markers",
+            customdata=df.ROI_NAME,
+            hovertemplate="%{customdata}",
+        )
+    )
     return fig
 
 
@@ -109,8 +115,7 @@ def get_rois_omero(result):
     shapes_point = {}
     for roi in result.rois:
         for s in roi.copyShapes():
-            shape = {}
-            shape["id"] = s.getId().getValue()
+            shape = {"id": s.getId().getValue()}
             # shape["theT"] = s.getTheT().getValue()
             # shape["theZ"] = s.getTheZ().getValue()
             if s.getTextValue():
@@ -188,7 +193,7 @@ def get_info_roi_rectangles(shape_dict):
     return df
 
 
-def get_dataset_ids_lists(conn, project):
+def get_dataset_ids_lists(project):
     """
     Get the processed and unprocessed dataset ids for a project
     """
@@ -214,13 +219,13 @@ def get_image_list_by_dataset_id(conn, dataset_id):
     return images
 
 
-def get_dataset_mapAnnotation(datasetWrapper):
+def get_dataset_map_annotation(dataset_wrapper):
     """
     Get the mapAnnotation for a dataset
     """
-
+    df = {}
     try:
-        for i in datasetWrapper.listAnnotations():
+        for i in dataset_wrapper.listAnnotations():
             if "FieldIlluminationKeyValues" in i.getNs():
                 table = dict(i.getValue())
                 df = pd.DataFrame(table.items(), columns=["Key", "Value"])
@@ -230,8 +235,8 @@ def get_dataset_mapAnnotation(datasetWrapper):
                 df = pd.DataFrame(table.items(), columns=["Key", "Value"])
                 break
         return df
-    except:
-        return {}
+    except AttributeError:
+        return df
 
 
 def read_config_from_file_ann(file_annotation):
@@ -241,9 +246,9 @@ def read_config_from_file_ann(file_annotation):
     )
 
 
-def get_file_annotation_project(projectWrapper):
+def get_file_annotation_project(project_wrapper):
     study_config = None
-    for ann in projectWrapper.listAnnotations():
+    for ann in project_wrapper.listAnnotations():
         if (
             type(ann) == gateway.FileAnnotationWrapper
             and ann.getFile().getName() == "study_config.yaml"
@@ -252,11 +257,11 @@ def get_file_annotation_project(projectWrapper):
     return study_config
 
 
-def get_analysis_type(projectWrapper):
-    study_config = get_file_annotation_project(projectWrapper)
+def get_analysis_type(project_wrapper):
+    study_config = get_file_annotation_project(project_wrapper)
     try:
         analysis_type = next(iter(study_config["analysis"]))
-    except:
+    except KeyError:
         analysis_type = None
     return analysis_type
 
@@ -272,7 +277,7 @@ def random_date(start, end):
     return start + timedelta(seconds=random_second)
 
 
-def get_table_originalFile_id(conn, file_id):
+def get_table_original_file_id(conn, file_id):
     ctx = conn.createServiceOptsDict()
     ctx.setOmeroGroup("-1")
     r = conn.getSharedResources()
@@ -292,14 +297,14 @@ def get_table_originalFile_id(conn, file_id):
     return df
 
 
-def getOriginalFile_id(dataset):
-    id = None
+def get_original_file_id(dataset):
+    dataset_id = None
     for ann in dataset.listAnnotations():
         if type(ann) == gateway.FileAnnotationWrapper:
             if type(ann.getFile()) == gateway.OriginalFileWrapper:
-                id = ann.getFile().getId()
+                dataset_id = ann.getFile().getId()
                 break
-    return id
+    return dataset_id
 
 
 def processed_data_project_view(processed_list):
@@ -312,7 +317,7 @@ def processed_data_project_view(processed_list):
     return df
 
 
-def get_originalFile_id_by_image_id(dataset):
+def get_original_file_id_by_image_id(dataset):
     list_file = []
     for ann in dataset.listAnnotations():
         if type(ann) == gateway.FileAnnotationWrapper:
@@ -334,22 +339,53 @@ def get_intensity_map_image(image_name, list_file):
 # ---------------------------------------dash_functions--------------------------------------------------
 
 
-def fig_mip(mip_X, mip_Y, mip_Z, title):
+def fig_mip(mip_x, mip_y, mip_z, title):
     fig = make_subplots(
         rows=2,
         cols=2,
-        specs=[
-            [{"type": "heatmap"}, {"type": "heatmap"}],
-            [{"type": "heatmap"}, {"type": "heatmap"}],
-        ],
+        specs=[[{}, {}], [{"colspan": 2}, None]],
         subplot_titles=("MIP X axis", "MIP Y axis", "MIP Z axis"),
     )
-    fig = fig.add_trace(mip_X.data[0], row=1, col=1)
-    fig = fig.add_trace(mip_Y.data[0], row=1, col=2)
-    fig = fig.add_trace(mip_Z.data[0], row=2, col=1)
+    fig = fig.add_trace(mip_x.data[0], row=1, col=1)
+    fig = fig.add_trace(mip_y.data[0], row=1, col=2)
+    fig = fig.add_trace(mip_z.data[0], row=2, col=1)
     fig = fig.update_layout(
-        title_text=title, coloraxis=dict(colorscale="hot"), autosize=False
+        title_text=title,
+        coloraxis=dict(colorscale="hot"),
+        autosize=False,
     )
+    fig.update_layout(
+        {  # "margin": {"l": 10, "r": 10, "t": 10, "b": 10},
+            "xaxis": {
+                "automargin": False,
+                "rangemode": "nonnegative",
+                "range": [0, mip_x.data[0].z.max()],
+            },
+            "xaxis2": {"automargin": False, "rangemode": "nonnegative"},
+            "xaxis3": {"automargin": False, "rangemode": "nonnegative"},
+            "yaxis": {
+                "anchor": "x",
+                "scaleanchor": "x",
+                "autorange": "reversed",
+                "automargin": False,
+            },
+            "yaxis2": {
+                "anchor": "x2",
+                "scaleanchor": "x2",
+                "autorange": "reversed",
+                "automargin": False,
+            },
+            "yaxis3": {
+                "anchor": "x3",
+                "scaleanchor": "x3",
+                "autorange": "reversed",
+                "automargin": False,
+            },
+        }
+    )
+    # fig = fig.update_yaxes(automargin=False)
+    # fig = fig.update_xaxes(automargin=False)
+
     return fig
 
 
@@ -357,26 +393,27 @@ def mip_graphs(
     x0: int, xf: int, y0: int, yf: int, stack: Union[np.array, list]
 ):
     image_bead = stack[:, y0:yf, x0:xf]
-    image_x = np.sqrt(np.max(image_bead, axis=2) / image_bead.max())
-    image_y = np.sqrt(np.max(image_bead, axis=1) / image_bead.max())
-    image_z = np.sqrt(np.max(image_bead, axis=0) / image_bead.max())
+    image_x = np.max(image_bead, axis=2)
+    image_y = np.max(image_bead, axis=1)
+    image_z = np.max(image_bead, axis=0)
+    image_x = image_x / image_x.max()
+    image_y = image_y / image_y.max()
+    image_z = image_z / image_z.max()
+
     mip_x = px.imshow(
         image_x,
         zmin=image_x.min(),
         zmax=image_x.max(),
-        color_continuous_scale="hot",
     )
     mip_y = px.imshow(
         image_y,
         zmin=image_y.min(),
         zmax=image_y.max(),
-        color_continuous_scale="hot",
     )
     mip_z = px.imshow(
         image_z,
         zmin=image_z.min(),
         zmax=image_z.max(),
-        color_continuous_scale="hot",
     )
     return mip_x, mip_y, mip_z
 
@@ -384,6 +421,7 @@ def mip_graphs(
 def crop_bead_index(bead, min_dist, stack):
     x = bead["center_x"].values[0]
     y = bead["center_y"].values[0]
+    # z = bead["center_z"].values[0]
     x0 = max(0, x - min_dist)
     y0 = max(0, y - min_dist)
     xf = min(stack.shape[2], x + min_dist)
@@ -394,17 +432,17 @@ def crop_bead_index(bead, min_dist, stack):
 def image_3d_chart(image_bead):
     image_bead = image_bead / image_bead.max()
     lz, ly, lx = image_bead.shape
-    Z, Y, X = np.mgrid[:lz, :ly, :lx]
+    z, y, x = np.mgrid[:lz, :ly, :lx]
     fig = go.Figure(
         data=go.Volume(
-            x=Z.flatten(),
-            y=Y.flatten(),
-            z=X.flatten(),
+            x=z.flatten(),
+            y=y.flatten(),
+            z=x.flatten(),
             value=image_bead.flatten(),
             isomin=0,
             isomax=1,
             opacity=0.3,
-            surface_count=25,
+            # surface_count=25,
         )
     )
     fig = fig.update_layout(
@@ -413,3 +451,6 @@ def image_3d_chart(image_bead):
         scene_zaxis_showticklabels=False,
     )
     return fig
+
+
+# ---------------------------------------READING FROM MM_DATASET--------------------------------------------------

@@ -1,6 +1,5 @@
 import datetime
 import logging
-from typing import Union
 from microscopemetrics.samples import field_illumination, psf_beads
 from microscopemetrics_schema.datamodel import (
     microscopemetrics_schema as mm_schema,
@@ -11,7 +10,7 @@ from omero.gateway import (
     ImageWrapper,
     ProjectWrapper,
 )
-from . import load, dump, update, delete
+from OMERO_metrics.tools import load, dump, update, delete
 
 logger = logging.getLogger(__name__)
 
@@ -30,10 +29,10 @@ DATASET_MAPPINGS = {
     "PSFBeadsDataset": mm_schema.PSFBeadsDataset,
 }
 
-INPUT_MAPPINGS = {
-    "FieldIlluminationInput": mm_schema.FieldIlluminationInput,
-    "PSFBeadsInput": mm_schema.PSFBeadsInput,
-}
+# INPUT_MAPPINGS = {
+#     "FieldIlluminationInput": mm_schema.FieldIlluminationInput,
+#     "PSFBeadsInput": mm_schema.PSFBeadsInput,
+# }
 
 KKM_MAPPINGS = {
     "FieldIlluminationDataset": [
@@ -68,11 +67,11 @@ TEMPLATE_MAPPINGS_DATASET = {
 
 TEMPLATE_MAPPINGS_IMAGE = {
     "FieldIlluminationDataset": {
-        "input": "OMERO_metrics/omero_views/center_view_image.html",
+        "input_data": "OMERO_metrics/omero_views/center_view_image.html",
         "output": "OMERO_metrics/omero_views/warning.html",
     },
     "PSFBeadsDataset": {
-        "input": "OMERO_metrics/omero_views/center_view_image_psf.html",
+        "input_data": "OMERO_metrics/omero_views/center_view_image_psf.html",
         "output": "OMERO_metrics/omero_views/warning.html",
     },
 }
@@ -179,6 +178,7 @@ class DatasetManager:
             raise ValueError("datasets must be a DatasetWrapper")
 
         self.omero_project = self.omero_dataset.getParent()
+        self.input_parameters = None
         self.load_images = load_images
         self.mm_dataset = None
         self.analysis_config = None
@@ -189,6 +189,11 @@ class DatasetManager:
         self.processed = False
         self.microscope = mm_schema.Microscope()
         self.kkm = None
+        self.attached_images = [
+            {"value": f"{i.getId()}", "label": f"{i.getName()}"}
+            for i in omero_dataset.listChildren()
+            if i.OMERO_CLASS == "Image"
+        ]
 
     def is_processed(self):
         if self.mm_dataset:
@@ -240,7 +245,7 @@ class DatasetManager:
 
     def _update_dataset_input_config(self, config):
         for key, val in config.items():
-            setattr(self.mm_dataset.input, key, val)
+            setattr(self.mm_dataset.input_parameters, key, val)
 
     def dump_data(self):
         for mm_ds in self.mm_dataset:
@@ -326,9 +331,27 @@ class DatasetManager:
                 logger.warning(message)
                 self.context, self.template = warning_message(message)
         else:
-            message = "Dataset has not been processed. Unable to visualize"
-            logger.warning(message)
-            self.context, self.template = warning_message(message)
+            if self.omero_project and len(self.attached_images) > 0:
+                self.input_parameters = load.load_config_file_data(
+                    self._conn, self.omero_project
+                )
+                if self.input_parameters:
+                    self.template = (
+                        "OMERO_metrics/forms/omero_dataset_form.html"
+                    )
+                    self.context = {
+                        "list_images": self.attached_images,
+                        "input_parameters": self.input_parameters,
+                        "dataset_id": self.omero_dataset.getId(),
+                    }
+                else:
+                    message = "No, config file detect. Click on the project parent to load the config file."
+                    logger.warning(message)
+                    self.context, self.template = warning_message(message)
+            else:
+                message = "The dataset is not under a project or does not contain images. Unable to visualize"
+                logger.warning(message)
+                self.context, self.template = warning_message(message)
 
     def save_settings(self):
         pass
@@ -358,7 +381,7 @@ class ProjectManager:
         self.homogenize = None
 
     def load_data(self, force_reload=True):
-        if force_reload or self.datasets is None:
+        if force_reload or self.datasets is []:
             for dataset in self.project.listChildren():
                 dm = DatasetManager(self._conn, dataset)
                 dm.load_data()
@@ -426,9 +449,13 @@ class ProjectManager:
                 self.context, self.template = warning_message(message)
 
         else:
-            message = "This project doesn't contain a processed dataset. Unable to visualize"
-            logger.warning(message)
-            self.context, self.template = warning_message(message)
+            if self.setup:
+                message = "This project doesn't contain a processed dataset but it contains a config file. Unable to visualize"
+                logger.warning(message)
+                self.context, self.template = warning_message(message)
+            else:
+                self.template = "OMERO_metrics/forms/project_config_form.html"
+                self.context = {}
 
     def save_settings(self):
         pass
@@ -456,14 +483,14 @@ class MicroscopeManager:
         self.data = None
         self.context = None
 
-    def load_data(self, force_reload=True):
-        if force_reload or self.data is None:
-            self.data = load.load_microscope(self._conn, self.microscope_id)
-            self.context = self.data["context"]
-        else:
-            raise NotImplementedError(
-                "partial loading of data from OMERO is not yet implemented"
-            )
+    # def load_data(self, force_reload=True):
+    #     if force_reload or self.data is None:
+    #         self.data = load.load_microscope(self._conn, self.microscope_id)
+    #         self.context = self.data["context"]
+    #     else:
+    #         raise NotImplementedError(
+    #             "partial loading of data from OMERO is not yet implemented"
+    #         )
 
     def visualize_data(self):
         pass

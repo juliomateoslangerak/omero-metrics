@@ -1,13 +1,10 @@
 import dash
 import pandas as pd
-from dash import dcc, html, dash_table
+from dash import dcc, html
 from django_plotly_dash import DjangoDash
 import plotly.express as px
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
-
-from datetime import datetime
-import plotly.graph_objects as go
 from skimage.exposure import rescale_intensity
 
 external_scripts = [
@@ -38,27 +35,28 @@ dash_app_dataset.layout = dmc.MantineProvider(
             [
                 dmc.Center(
                     [
-                        dmc.Text(
-                            id="title",
-                            c=primary_color,
-                            style={"fontSize": 30},
-                        ),
                         dmc.Group(
                             [
                                 html.Img(
                                     src="./assets/images/logo.png",
                                     style={"width": "100px"},
                                 ),
-                                dmc.Text(
-                                    "OMERO Metrics Dashboard",
-                                    c=primary_color,
-                                    style={"fontSize": 15},
+                                dmc.Title(
+                                    "Field Of Illumination Dashboard",
+                                    c="#189A35",
+                                    size="h3",
+                                    mb=10,
+                                    mt=5,
                                 ),
                             ]
                         ),
-                    ]
+                    ],
+                    style={
+                        "background-color": "white",
+                        "border-radius": "0.5rem",
+                        "padding": "10px",
+                    },
                 ),
-                dmc.Divider(variant="solid"),
                 dmc.Grid(
                     id="group_image",
                     justify="space-between",
@@ -75,8 +73,9 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                 dmc.Select(
                                     id="channel_dropdown_foi",
                                     label="Select Channel",
+                                    clearable=False,
                                     w="300",
-                                    value="channel 0",
+                                    value="0",
                                     leftSection=DashIconify(
                                         icon="radix-icons:magnifying-glass"
                                     ),
@@ -93,7 +92,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                     },
                                 ),
                             ],
-                            span="auto",
+                            span="6",
                         ),
                         dmc.GridCol(
                             [
@@ -110,14 +109,23 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                         )
                                     ]
                                 ),
-                                dmc.Table(
-                                    id="km_table",
-                                    striped=True,
-                                    highlightOnHover=True,
-                                    className="table table-striped table-bordered",
+                                dmc.ScrollArea(
+                                    [
+                                        dmc.Table(
+                                            id="km_table",
+                                            striped=True,
+                                            highlightOnHover=True,
+                                            className="table table-striped table-bordered",
+                                            styles={
+                                                "background-color": "white",
+                                                "width": "auto",
+                                                "height": "auto",
+                                            },
+                                        )
+                                    ]
                                 ),
                             ],
-                            span="auto",
+                            span="6",
                         ),
                     ],
                 ),
@@ -199,10 +207,10 @@ def update_dropdow_menu(*args, **kwargs):
     channel = kwargs["session_state"]["context"]["channel_names"]
 
     channel_list = [
-        {"label": c.name, "value": f"channel {i}"}
-        for i, c in enumerate(channel.channels)
+        {"label": channel_name, "value": f"{i}"}
+        for i, channel_name in enumerate(channel)
     ]
-    data = [{"group": "Channels", "items": channel_list}]
+    data = channel_list
     return data
 
 
@@ -241,8 +249,9 @@ def dataset_callback_intensity_map(*args, **kwargs):
     df_intensity_profiles = kwargs["session_state"]["context"][
         "intensity_profiles"
     ]
-    channel = int(args[0][-1])
-    image_channel = images[0, 0, :, :, channel]
+    channel = int(args[0])
+    image = images[channel]
+    image_channel = image[0, 0, :, :]
     image_channel = rescale_intensity(
         image_channel, in_range=(0, image_channel.max()), out_range=(0.0, 1.0)
     )
@@ -288,40 +297,3 @@ def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:
         df, col, value
     )  # TODO: replace setattr with df.loc[:, col] = value
     return df
-
-
-# dmc.GridCol([dmc.Center([dmc.Text("Key Measurements", size="md")]),
-#                          table2, dmc.Center([dmc.Text("Key Measurements for Field of Illumination", c="dimmed",
-#                         size="sm")])]
-
-#
-# table2 = dash_table.DataTable(
-#     data=table_kkm.to_dict('records'),
-#     columns=[{"name": i, "id": i} for i in table_kkm.columns],
-#     style_table={"overflowX": "auto",
-#                  "padding": "10px",
-#                  "background": "white",
-#                  "border": "thin, white, solid",
-#
-#                  },
-#     page_size=10,
-#     editable=False,
-#     style_cell={
-#         "textAlign": "center",
-#         "fontSize": 10,
-#         "font-family": "Roboto",
-#         "border": "thin, white, solid",
-#         "border-bottom": 'thin #dee2e6 solid'
-#
-#     },
-#     style_header={
-#         "fontWeight": "bold",
-#         "font-family": "Roboto",
-#
-#         "fontSize": 12,
-#         "textAlign": "center",
-#         "border": "thin, white, solid",
-#         "border-bottom": 'thin #dee2e6 solid'
-#     },
-#
-# )

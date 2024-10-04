@@ -1,4 +1,5 @@
 import ast
+import contextlib
 import logging
 import tempfile
 from dataclasses import fields
@@ -17,7 +18,7 @@ from omero.gateway import (
     ExperimenterGroupWrapper,
 )
 
-from . import omero_tools
+from OMERO_metrics.tools import omero_tools
 
 logger = logging.getLogger(__name__)
 
@@ -133,7 +134,11 @@ def dump_project(
 
 
 def _remove_unsupported_types(
-    data_obj: Union[mm_schema.MetricsInput, mm_schema.MetricsOutput]
+    data_obj: Union[
+        mm_schema.MetricsInputData,
+        mm_schema.MetricsInputParameters,
+        mm_schema.MetricsOutput,
+    ]
 ):
     def _remove(_attr):
         if isinstance(_attr, mm_schema.Image):
@@ -147,7 +152,7 @@ def _remove_unsupported_types(
                 for m in _attr.masks:
                     _remove(m.mask)
 
-    try:
+    with contextlib.suppress(TypeError):
         for field in fields(data_obj):
             try:
                 _attr = getattr(data_obj, field.name)
@@ -157,8 +162,6 @@ def _remove_unsupported_types(
                     _remove(_attr)
             except AttributeError:
                 continue
-    except TypeError:
-        pass
 
 
 def _dump_mm_dataset_as_file_annotation(
@@ -171,7 +174,8 @@ def _dump_mm_dataset_as_file_annotation(
     ],
 ):
     # We need to remove the data on the numpy and pandas data objects as they cannot be serialized by linkml
-    _remove_unsupported_types(mm_dataset.input)
+    _remove_unsupported_types(mm_dataset.input_data)
+    _remove_unsupported_types(mm_dataset.input_parameters)
     if mm_dataset.output:
         _remove_unsupported_types(mm_dataset.output)
 
@@ -206,7 +210,9 @@ def dump_dataset(
     dump_as_project_file_annotation: bool = True,
     dump_as_dataset_file_annotation: bool = False,
 ) -> DatasetWrapper:
+
     if dataset.data_reference:
+
         try:
             omero_dataset = omero_tools.get_omero_obj_from_mm_obj(
                 conn=conn, mm_obj=dataset
@@ -240,8 +246,8 @@ def dump_dataset(
         dataset.data_reference = omero_tools.get_ref_from_object(omero_dataset)
 
     if dump_input_images:
-        for input_field in fields(dataset.input):
-            input_element = getattr(dataset.input, input_field.name)
+        for input_field in fields(dataset.input_data):
+            input_element = getattr(dataset.input_data, input_field.name)
             if isinstance(input_element, mm_schema.Image):
                 dump_image(
                     conn=conn,
@@ -261,9 +267,12 @@ def dump_dataset(
                 continue
 
     if dump_analysis:
+
         if dataset.processed:
             if dataset.output is not None:
+
                 _dump_analysis_metadata(dataset, omero_dataset)
+
                 _dump_dataset_output(dataset.output, omero_dataset)
             else:
                 logger.error(
@@ -276,10 +285,13 @@ def dump_dataset(
 
     target_objs = []
     if dump_as_dataset_file_annotation:
+
         target_objs.append(omero_dataset)
     if dump_as_project_file_annotation:
+
         target_objs.append(target_project)
     if target_objs:
+
         _dump_mm_dataset_as_file_annotation(
             conn=conn, mm_dataset=dataset, target_omero_obj=target_objs
         )
@@ -298,11 +310,17 @@ def _dump_analysis_metadata(
         )
         return None
 
-    input_metadata = _get_input_metadata(dataset.input)
+    input_metadata_data = _get_input_metadata(dataset.input_data)
+
+    input_metadata_parameters = _get_input_metadata(dataset.input_parameters)
 
     output_metadata = _get_output_metadata(dataset.output)
 
-    metadata = {**input_metadata, **output_metadata}
+    metadata = {
+        **input_metadata_data,
+        **input_metadata_parameters,
+        **output_metadata,
+    }
 
     omero_tools.create_key_value(
         conn=target_dataset._conn,
@@ -315,7 +333,7 @@ def _dump_analysis_metadata(
 
 
 def _get_input_metadata(
-    input: mm_schema.MetricsInput,
+    input: Union[mm_schema.MetricsInputData, mm_schema.MetricsInputParameters],
 ) -> dict:
     metadata = {}
     for input_field in fields(input):
@@ -339,7 +357,7 @@ def dump_analysis_config():
 def _get_output_metadata(
     dataset_output: mm_schema.MetricsOutput,
 ) -> dict:
-    output_fields = set(f.name for f in fields(mm_schema.MetricsOutput))
+    output_fields = {f.name for f in fields(mm_schema.MetricsOutput)}
     output_elements = {}
     for output_field in fields(dataset_output):
         if output_field.name not in output_fields:
@@ -366,9 +384,7 @@ def _dump_dataset_output(
             f"Invalid dataset output object provided for {dataset_output}. Skipping dump."
         )
         return None
-
     conn = target_dataset._conn
-
     for output_field in fields(dataset_output):
         output_element = getattr(dataset_output, output_field.name)
         if isinstance(output_element, mm_schema.MetricsObject):
@@ -395,6 +411,7 @@ def _dump_output_element(
     output_element: mm_schema.MetricsObject,
     target_dataset: DatasetWrapper,
 ):
+
     if isinstance(output_element, mm_schema.Image):
         return dump_image(
             conn=conn,
@@ -750,3 +767,38 @@ def dump_comment(
         omero_object=target_object,
         namespace=comment.class_class_curie,
     )
+
+
+def dump_config_input_parameters(
+    conn: BlitzGateway,
+    input_parameters: mm_schema.MetricsInputParameters,
+    sample: mm_schema.Sample,
+    target_omero_obj: ProjectWrapper,
+):
+    dumper = YAMLDumper()
+    with tempfile.NamedTemporaryFile(
+        prefix=f"study_config_{input_parameters.class_name}_",
+        suffix=".yaml",
+        mode="w",
+        delete=False,
+    ) as f:
+        f.write(
+            dumper.dumps(
+                {
+                    "analyse_type": input_parameters.class_name,
+                    "input_parameters": input_parameters,
+                    "sample": sample,
+                }
+            )
+        )
+        f.close()
+        file_ann = omero_tools.create_file(
+            conn=conn,
+            file_path=f.name,
+            omero_object=target_omero_obj,
+            file_description="Configuration file",
+            namespace=input_parameters.class_class_curie,
+            mimetype="application/yaml",
+        )
+
+    return file_ann

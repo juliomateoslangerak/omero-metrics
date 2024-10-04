@@ -48,59 +48,67 @@ app.layout = dmc.MantineProvider(
             [
                 dmc.Center(
                     [
-                        dmc.Text(
-                            id="title",
-                            c=primary_color,
-                            style={"fontSize": 30},
-                        ),
                         dmc.Group(
                             [
                                 html.Img(
                                     src="./assets/images/logo.png",
                                     style={"width": "100px"},
                                 ),
-                                dmc.Text(
-                                    "OMERO Metrics Dashboard",
-                                    c=primary_color,
-                                    style={"fontSize": 15},
-                                ),
-                            ]
-                        ),
-                    ]
-                ),
-                dmc.Divider(variant="solid"),
-                dmc.Stack(
-                    [
-                        dmc.Flex(
-                            children=[content, content, content],
-                            direction={"base": "column", "sm": "row"},
-                            gap={"base": "sm", "sm": "lg"},
-                            justify={"sm": "space-between"},
-                            align={"sm": "center"},
-                            style={
-                                "margin-top": "20px",
-                                "margin-bottom": "10px",
-                            },
-                        ),
-                        dmc.Divider(variant="solid"),
-                        dmc.Center(
-                            [
                                 dmc.Title(
-                                    "Key Measurements",
+                                    "PSF Beads Dashboard",
                                     c="#189A35",
                                     size="h3",
                                     mb=10,
+                                    mt=5,
                                 ),
                             ]
                         ),
-                        dmc.Table(
-                            id="key_values_psf",
-                            striped=True,
-                            highlightOnHover=True,
-                            className="table table-striped table-bordered",
-                            styles={"background-color": "white"},
-                        ),
-                    ]
+                    ],
+                    style={
+                        "background-color": "white",
+                        "border-radius": "0.5rem",
+                        "padding": "10px",
+                    },
+                ),
+                html.Div(
+                    [
+                        dmc.Stack(
+                            [
+                                dmc.Divider(variant="solid"),
+                                dmc.Center(
+                                    [
+                                        dmc.Title(
+                                            "Key Measurements",
+                                            c="#189A35",
+                                            size="h3",
+                                            mb=10,
+                                        ),
+                                    ]
+                                ),
+                                dmc.ScrollArea(
+                                    [
+                                        dmc.Table(
+                                            id="key_values_psf",
+                                            striped=True,
+                                            highlightOnHover=True,
+                                            className="table table-striped table-bordered",
+                                            styles={
+                                                "background-color": "white",
+                                                "width": "auto",
+                                                "height": "auto",
+                                                "overflow-X": "auto",
+                                            },
+                                        )
+                                    ]
+                                ),
+                            ]
+                        )
+                    ],
+                    style={
+                        "background-color": "white",
+                        "border-radius": "0.5rem",
+                        "padding": "10px",
+                    },
                 ),
                 dmc.Divider(variant="solid"),
                 html.Div(id="blank-input"),
@@ -108,7 +116,7 @@ app.layout = dmc.MantineProvider(
             fluid=True,
             style={
                 "background-color": "#eceff1",
-                "margin": "20px",
+                "margin": "10px",
                 "border-radius": "0.5rem",
                 "padding": "10px",
             },

@@ -4,7 +4,7 @@ from dash_iconify import DashIconify
 from django_plotly_dash import DjangoDash
 from plotly.express.imshow_utils import rescale_intensity
 
-from ..tools.data_preperation import *
+from OMERO_metrics.tools.data_preperation import *
 import dash_mantine_components as dmc
 
 
@@ -37,47 +37,42 @@ dash_app_image.layout = dmc.MantineProvider(
             children=[
                 dmc.Center(
                     [
-                        dmc.Text(
-                            id="title",
-                            c=primary_color,
-                            style={"fontSize": 30},
-                        ),
                         dmc.Group(
                             [
                                 html.Img(
                                     src="./assets/images/logo.png",
                                     style={"width": "100px"},
                                 ),
-                                dmc.Text(
-                                    "OMERO Metrics Dashboard",
-                                    c=primary_color,
-                                    style={"fontSize": 15},
+                                dmc.Title(
+                                    "Intensity Map",
+                                    c="#189A35",
+                                    size="h3",
+                                    mb=10,
+                                    mt=5,
                                 ),
                             ]
                         ),
-                    ]
-                ),
-                dmc.Divider(variant="solid"),
-                dmc.Text(
-                    "Intensity Map", c=primary_color, style={"fontSize": 30}
+                    ],
+                    style={
+                        "background-color": "white",
+                        "border-radius": "0.5rem",
+                        "padding": "10px",
+                    },
                 ),
                 dmc.Grid(
-                    [
+                    children=[
                         dmc.GridCol(
                             [
                                 dcc.Graph(
                                     figure={},
                                     id="rois-graph",
                                     style={
-                                        "margin-top": "20px",
-                                        "margin-bottom": "20px",
-                                        "border-radius": "0.5rem",
-                                        "padding": "20px",
-                                        "background-color": "white",
+                                        "margin-top": "0px",
+                                        "margin-bottom": "0px",
                                     },
                                 ),
                             ],
-                            span="8",
+                            span=6,
                         ),
                         dmc.GridCol(
                             [
@@ -85,6 +80,20 @@ dash_app_image.layout = dmc.MantineProvider(
                                     [
                                         html.Div(
                                             [
+                                                dmc.Select(
+                                                    id="my-dropdown1",
+                                                    label="Select Channel",
+                                                    w="auto",
+                                                    value="0",
+                                                    clearable=False,
+                                                    leftSection=DashIconify(
+                                                        icon="radix-icons:magnifying-glass"
+                                                    ),
+                                                    rightSection=DashIconify(
+                                                        icon="radix-icons:chevron-down"
+                                                    ),
+                                                    mb=10,
+                                                ),
                                                 dmc.Text(
                                                     "Select ROI",
                                                     size="sm",
@@ -110,6 +119,10 @@ dash_app_image.layout = dmc.MantineProvider(
                                                             "value": "All",
                                                             "label": "All",
                                                         },
+                                                        {
+                                                            "value": "None",
+                                                            "label": "None",
+                                                        },
                                                     ],
                                                     mb=10,
                                                 ),
@@ -121,17 +134,10 @@ dash_app_image.layout = dmc.MantineProvider(
                                             checked=False,
                                             mb=10,
                                         ),
-                                        dmc.Select(
-                                            id="my-dropdown1",
-                                            label="Select Channel",
-                                            w="auto",
-                                            value="channel 0",
-                                            leftSection=DashIconify(
-                                                icon="radix-icons:magnifying-glass"
-                                            ),
-                                            rightSection=DashIconify(
-                                                icon="radix-icons:chevron-down"
-                                            ),
+                                        dmc.Switch(
+                                            id="switch-invert-colors",
+                                            label="Invert Color",
+                                            checked=False,
                                         ),
                                         dmc.Select(
                                             id="my-dropdown2",
@@ -152,6 +158,7 @@ dash_app_image.layout = dmc.MantineProvider(
                                             ],
                                             w="auto",
                                             value="Hot",
+                                            clearable=False,
                                             leftSection=DashIconify(
                                                 icon="radix-icons:color-wheel"
                                             ),
@@ -159,30 +166,40 @@ dash_app_image.layout = dmc.MantineProvider(
                                                 icon="radix-icons:chevron-down"
                                             ),
                                         ),
-                                        dmc.Switch(
-                                            id="switch-invert-colors",
-                                            label="Invert Color",
-                                            checked=False,
-                                        ),
                                     ],
-                                )
+                                ),
                             ],
-                            span=2,
+                            span="content",
                         ),
                     ],
-                    justify="space-between",
+                    # gap={"base": "sm", "sm": "lg"},
+                    justify="space-around",
                     align="center",
                     style={
                         "margin-top": "10px",
+                        "margin-bottom": "10px",
                         "background-color": "white",
                         "border-radius": "0.5rem",
-                        "padding": "10px",
                     },
                 ),
+                html.Div(id="blank-input"),
                 html.Div(
                     [
-                        dmc.Title(
-                            "Intensity Profiles", c="#63aa47", size="h3"
+                        dmc.Center(
+                            [
+                                dmc.Title(
+                                    "Intensity Profiles",
+                                    c="#189A35",
+                                    size="h3",
+                                    mb=10,
+                                    mt=5,
+                                )
+                            ],
+                            style={
+                                "background-color": "white",
+                                "border-top-radius": "0.5rem",
+                                "padding": "10px",
+                            },
                         ),
                         dmc.LineChart(
                             id="intensity_profile",
@@ -220,6 +237,7 @@ dash_app_image.layout = dmc.MantineProvider(
                             style={
                                 "background-color": "white",
                                 "padding": "20px",
+                                "border-radius": "0.5rem",
                             },
                         ),
                     ]
@@ -228,7 +246,7 @@ dash_app_image.layout = dmc.MantineProvider(
             fluid=True,
             style={
                 "background-color": "#eceff1",
-                "margin": "20px",
+                "margin": "10px",
                 "border-radius": "0.5rem",
                 "padding": "10px",
             },
@@ -238,8 +256,21 @@ dash_app_image.layout = dmc.MantineProvider(
 
 
 @dash_app_image.expanded_callback(
-    dash.dependencies.Output("rois-graph", "figure"),
     dash.dependencies.Output("my-dropdown1", "data"),
+    [dash.dependencies.Input("blank-input", "children")],
+)
+def callback_channel(*args, **kwargs):
+    channel_names = kwargs["session_state"]["context"]["channel_names"]
+    channel_list = [
+        {"label": c.name, "value": f"{i}"}
+        for i, c in enumerate(channel_names.channels)
+    ]
+    data = channel_list
+    return data
+
+
+@dash_app_image.expanded_callback(
+    dash.dependencies.Output("rois-graph", "figure"),
     [
         dash.dependencies.Input("my-dropdown1", "value"),
         dash.dependencies.Input("my-dropdown2", "value"),
@@ -248,7 +279,7 @@ dash_app_image.layout = dmc.MantineProvider(
         dash.dependencies.Input("segmented", "value"),
     ],
 )
-def callback_test4(*args, **kwargs):
+def callback_image(*args, **kwargs):
     color = args[1]
     checked_contour = args[2]
     inverted_color = args[3]
@@ -257,54 +288,37 @@ def callback_test4(*args, **kwargs):
         color = color + "_r"
 
     image_omero = kwargs["session_state"]["context"]["image"]
-    imaaa = image_omero[0, 0, :, :, int(args[0][-1])]
+    imaaa = image_omero[0, 0, :, :, int(args[0])]
     imaaa = rescale_intensity(
         imaaa, in_range=(0, imaaa.max()), out_range=(0.0, 1.0)
     )
     df_rects = kwargs["session_state"]["context"]["df_rects"]
     df_lines = kwargs["session_state"]["context"]["df_lines"]
     df_points = kwargs["session_state"]["context"]["df_points"]
-    df_point_channel = df_points[df_points["C"] == int(args[0][-1])].copy()
-    channel_names = kwargs["session_state"]["context"]["channel_names"]
-    channel_list = [
-        {"label": c.name, "value": f"channel {i}"}
-        for i, c in enumerate(channel_names.channels)
-    ]
-    data = [{"group": "Channels", "items": channel_list}]
+    df_point_channel = df_points[df_points["C"] == int(args[0])].copy()
+
     fig = px.imshow(
         imaaa,
         zmin=imaaa.min(),
         zmax=imaaa.max(),
         color_continuous_scale="Hot",
     )
+    fig.add_trace(
+        go.Scatter(
+            x=df_point_channel.X,
+            y=df_point_channel.Y,
+            mode="markers",
+            customdata=df_point_channel.ROI_NAME.str.replace(" ROIs", ""),
+            hovertemplate="%{customdata}<extra></extra>",
+        )
+    )
     if checked_contour:
-        img_array = np.array(imaaa)
-        fig1 = go.Figure(
-            data=go.Contour(
-                z=img_array,
-                colorscale=color,
-                colorbar=dict(
-                    title="Pixel Intensity",
-                    titleside="right",
-                    x=-0.15,
-                    xanchor="left",
-                ),
-                hoverinfo="z",
-            )
-        )
-        fig1.update_layout(
-            height=imaaa.shape[0] + 150,
-            autosize=False,
-            margin=dict(t=30, b=30, l=0, r=0),
-        )
-        fig = fig1
+        fig.plotly_restyle({"type": "contour"}, 0)
         fig.update_yaxes(autorange="reversed")
 
     # Add dropdowns
     fig.update_layout(
-        height=imaaa.shape[0] + 150,
         autosize=False,
-        margin=dict(t=30, b=30, l=0, r=0),
     )
     corners = [
         dict(
@@ -325,7 +339,7 @@ def callback_test4(*args, **kwargs):
     lines = [
         dict(
             type="line",
-            name=str(row.ROI),
+            name=str(row.NAME),
             showlegend=True,
             editable=True,
             x0=row.X1,
@@ -342,28 +356,50 @@ def callback_test4(*args, **kwargs):
         )
         for i, row in df_lines.iterrows()
     ]
-    fig.update_layout(coloraxis_colorbar_x=-0.15)
+    # fig.update_layout(coloraxis_colorbar_x=-0.15)
     fig.update_layout(coloraxis={"colorscale": color})
     if roi == "All":
-        fig2 = go.Figure(fig)
-        fig2.update_layout(shapes=corners + lines)
-        fig2.add_trace(
-            go.Scatter(x=df_points.X, y=df_points.Y, mode="markers")
+        fig.update_layout(shapes=corners + lines)
+        fig.plotly_restyle(
+            {
+                "visible": True,
+            },
+            1,
         )
-
     elif roi == "Line":
-        fig2 = go.Figure(fig)
-        fig2.update_layout(shapes=lines)
-    elif roi == "Square":
-        fig2 = go.Figure(fig)
-        fig2.update_layout(shapes=corners)
-    elif roi == "Center":
-        fig2 = go.Figure(fig)
-        fig2.add_trace(
-            go.Scatter(x=df_points.X, y=df_points.Y, mode="markers")
+        fig.update_layout(shapes=lines)
+        fig.plotly_restyle(
+            {
+                "visible": False,
+            },
+            1,
         )
-    fig = fig2
-    return fig, data
+    elif roi == "Square":
+        fig.update_layout(shapes=corners)
+        fig.plotly_restyle(
+            {
+                "visible": False,
+            },
+            1,
+        )
+    elif roi == "Center":
+        fig.update_layout(shapes=None)
+        fig.plotly_restyle(
+            {
+                "visible": True,
+            },
+            1,
+        )
+    elif roi == "None":
+        fig.update_layout(shapes=None)
+        fig.plotly_restyle(
+            {
+                "visible": False,
+            },
+            1,
+        )
+    fig.update_layout(margin=dict(l=10, r=10, b=10, t=10))
+    return fig
 
 
 @dash_app_image.expanded_callback(
@@ -374,7 +410,7 @@ def callback_test5(*args, **kwargs):
     df_intensity_profiles = kwargs["session_state"]["context"][
         "df_intensity_profiles"
     ]
-    ch = "ch0" + args[0][-1]
+    ch = "ch0" + args[0]
     df_profile = df_intensity_profiles[
         df_intensity_profiles.columns[
             df_intensity_profiles.columns.str.startswith(ch)

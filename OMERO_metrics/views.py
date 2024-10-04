@@ -1,17 +1,50 @@
-from django.shortcuts import render
-from .tools import load
 from omeroweb.webclient.decorators import login_required, render_response
-from .tools.data_preperation import *
-from .tools.load import *
-from .tools.data_managers import DatasetManager, ProjectManager, ImageManager
-from django.http import HttpResponseRedirect
+from OMERO_metrics.tools.data_managers import (
+    DatasetManager,
+    ProjectManager,
+    ImageManager,
+)
 from django.shortcuts import render
-from .forms import UploadFileForm
+from OMERO_metrics.forms import UploadFileForm
 import numpy as np
-from .tools.omero_tools import create_image_from_numpy_array
+from OMERO_metrics.tools.omero_tools import (
+    create_image_from_numpy_array,
+    get_ref_from_object,
+)
+from OMERO_metrics.tools.load import load_config_file_data
+from OMERO_metrics.tools.dump import dump_config_input_parameters
+from OMERO_metrics.tools.load import load_image
+from microscopemetrics_schema import datamodel as mm_schema
+from microscopemetrics.samples import field_illumination, psf_beads
+from OMERO_metrics.tools.dump import dump_dataset
+import omero
+import logging
+
+logger = logging.getLogger(__name__)
+
+DATA_TYPE = {
+    "FieldIlluminationInputParameters": [
+        "FieldIlluminationDataset",
+        "FieldIlluminationInputData",
+        "field_illumination_image",
+        field_illumination.analise_field_illumination,
+    ],
+    "PSFBeadsInputParameters": [
+        "PSFBeadsDataset",
+        "PSFBeadsInputData",
+        "psf_beads_images",
+        psf_beads.analyse_psf_beads,
+    ],
+}
 
 
-# Imaginary function to handle an uploaded file.
+def test_request(request):
+    if request.method == "POST":
+        test = request.POST.get("test")
+        context = {"test": test}
+        return render(request, "OMERO_metrics/test.html", context)
+
+
 @login_required()
 def upload_image(request, conn=None, **kwargs):
     if request.method == "POST":
@@ -58,7 +91,7 @@ def dash_example_1_view(
     request,
     conn=None,
     template_name="OMERO_metrics/foi_key_measurement.html",
-    **kwargs
+    **kwargs,
 ):
     """Example view that inserts content into the
     dash context passed to the dash application"""
@@ -138,7 +171,11 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
 
 @login_required()
 def center_viewer_project(request, project_id, conn=None, **kwargs):
+    # request["conn"] = conn
+    # conn.SERVICE_OPTS.setOmeroGroup("-1")
     project_wrapper = conn.getObject("Project", project_id)
+    group_id = project_wrapper.getDetails().getGroup().getId()
+    conn.SERVICE_OPTS.setOmeroGroup(group_id)
     pm = ProjectManager(conn, project_wrapper)
     pm.load_data()
     pm.is_homogenized()
@@ -149,6 +186,7 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
     template = pm.template
     dash_context = request.session.get("django_plotly_dash", dict())
     dash_context["context"] = context
+    dash_context["context"]["project_id"] = project_id
     request.session["django_plotly_dash"] = dash_context
     return render(request, template_name=template, context=context)
 
@@ -196,3 +234,122 @@ def run_analysis(request, conn=None, **kwargs):
     """Simply shows a page of ROI thumbnails
     for the specified image"""
     return render(request, "OMERO_metrics/run_analysis.html")
+
+
+@login_required()
+def save_config(request, conn=None, **kwargs):
+    try:
+        project_id = kwargs["project_id"]
+        mm_input_parameters = kwargs["input_parameters"]
+        mm_sample = kwargs["sample"]
+        project_wrapper = conn.getObject("Project", project_id)
+        group_id = project_wrapper.getDetails().getGroup().getId()
+        conn.SERVICE_OPTS.setOmeroGroup(group_id)
+        setup = load_config_file_data(conn, project_wrapper)
+        if setup is None:
+            try:
+                dump_config_input_parameters(
+                    conn, mm_input_parameters, mm_sample, project_wrapper
+                )
+                return (
+                    "File saved successfully, Re-click on the project to see the changes",
+                    "green",
+                )
+            except Exception as e:
+                if isinstance(e, omero.SecurityViolation):
+                    return (
+                        "You don't have the necessary permissions to save the configuration. ",
+                        "red",
+                    )
+                else:
+                    return str(e), "red"
+
+        else:
+            return (
+                "Failed to save file, a configuration file already exists",
+                "red",
+            )
+    except Exception as e:
+        return str(e), "red"
+
+
+@login_required()
+def run_analysis_view(request, conn=None, **kwargs):
+    try:
+        dataset_wrapper = conn.getObject("Dataset", kwargs["dataset_id"])
+        project_wrapper = dataset_wrapper.getParent()
+        group_id = project_wrapper.getDetails().getGroup().getId()
+        group_id2 = conn.getGroupFromContext().getName()
+        group_id3 = dataset_wrapper.getDetails().getGroup().getName()
+        print(f"Group from datasetw           4: {group_id3}")
+        print(f"Group context          3: {group_id2}")
+        print(
+            f"Group project           1: {project_wrapper.getDetails().getGroup().getName()}"
+        )
+        # g_id = dataset_wrapper.getDetails().getGroup().getId()
+        conn.SERVICE_OPTS.setOmeroGroup(int(group_id))
+        # conn.setGroupForSession(int(g_id))
+        print()
+        print(f"Group ID           2: {conn.getGroupFromContext().getName()}")
+        list_images = kwargs["list_images"]
+        list_mm_images = [
+            load_image(conn.getObject("Image", int(i))) for i in list_images
+        ]
+        mm_sample = kwargs["mm_sample"]
+        mm_input_parameters = kwargs["mm_input_parameters"]
+        input_data = getattr(
+            mm_schema, DATA_TYPE[mm_input_parameters.class_name][1]
+        )
+        input_data = input_data(
+            **{DATA_TYPE[mm_input_parameters.class_name][2]: list_mm_images}
+        )
+        mm_microscope = mm_schema.Microscope(
+            name=project_wrapper.getDetails().getGroup().getName()
+        )
+        mm_experimenter = mm_schema.Experimenter(
+            orcid="0000-0002-1825-0097", name=conn.getUser().getName()
+        )
+        mm_dataset = getattr(
+            mm_schema, DATA_TYPE[mm_input_parameters.class_name][0]
+        )
+        mm_dataset = mm_dataset(
+            name=dataset_wrapper.getName(),
+            description=dataset_wrapper.getDescription(),
+            data_reference=get_ref_from_object(dataset_wrapper),
+            input_parameters=mm_input_parameters,
+            microscope=mm_microscope,
+            sample=mm_sample,
+            input_data=input_data,
+            acquisition_datetime=dataset_wrapper.getDate().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            ),
+            experimenter=mm_experimenter,
+        )
+        run_status = DATA_TYPE[mm_input_parameters.class_name][3](mm_dataset)
+        if run_status:
+
+            try:
+                dump_dataset(
+                    conn=conn,
+                    dataset=mm_dataset,
+                    target_project=project_wrapper,
+                    dump_as_project_file_annotation=True,
+                    dump_as_dataset_file_annotation=True,
+                    dump_input_images=False,
+                    dump_analysis=True,
+                )
+                return "Analysis completed successfully", "green"
+            except Exception as e:
+                if isinstance(e, omero.SecurityViolation):
+                    return (
+                        "You don't have the necessary permissions to save the analysis. "
+                        "Try changing the default group to the group where the project is located.",
+                        "red",
+                    )
+                else:
+                    return str(e), "red"
+        else:
+            logger.error("Analysis failed")
+            return "We couldn't process the analysis.", "red"
+    except Exception as e:
+        return str(e), "red"

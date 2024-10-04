@@ -16,14 +16,13 @@ from omero.gateway import (
 import microscopemetrics_schema.datamodel as mm_schema
 from linkml_runtime.loaders import yaml_loader
 import pandas as pd
-from . import omero_tools
-from .data_preperation import (
-    get_table_originalFile_id,
+from OMERO_metrics.tools import omero_tools
+from OMERO_metrics.tools.data_preperation import (
+    get_table_original_file_id,
     get_info_roi_lines,
     get_info_roi_rectangles,
     get_info_roi_points,
     get_rois_omero,
-    add_colors_intensity_profile,
 )
 
 # Creating logging services
@@ -47,11 +46,11 @@ OUTPUT_DATA = {
 
 DATASET_IMAGES = {
     "FieldIlluminationDataset": {
-        "input": ["field_illumination_image"],
+        "input_data": ["field_illumination_image"],
         "output": [],
     },
     "PSFBeadsDataset": {
-        "input": ["psf_beads_images"],
+        "input_data": ["psf_beads_images"],
         "output": ["average_bead"],
     },
 }
@@ -76,20 +75,16 @@ def image_exist(image_id, mm_dataset):
 
 
 def load_config_file_data(conn, project):
-    exist = False
+    setup = None
     for ann in project.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
             ns = ann.getFile().getName()
-            if ns.startswith("study_config.yaml"):
-                exist = True
+            if ns.startswith("study_config"):
                 setup = yaml.load(
                     ann.getFileInChunks().__next__().decode(),
                     Loader=yaml.SafeLoader,
                 )
-    if exist:
-        return setup
-    else:
-        return None
+    return setup
 
 
 def load_project(
@@ -155,7 +150,7 @@ def load_dataset(
         # dataset does not know which images to load
         if mm_dataset.processed:
             input_images = getattr(
-                mm_dataset.input,
+                mm_dataset.input_data,
                 INPUT_IMAGES_MAPPING[mm_dataset.__class__.__name__],
             )
             for input_image in input_images:
@@ -190,21 +185,26 @@ def load_dash_data_image(
     dash_context = {}
     if (
         isinstance(mm_dataset, FieldIlluminationDataset)
-        and image_location == "input"
+        and image_location == "input_data"
     ):
         dash_context["image"] = image.array_data
         dash_context["channel_names"] = image.channel_series
         ann_id = mm_dataset.output.__dict__["intensity_profiles"][
             image_index
         ].data_reference.omero_object_id
-        roi_service = conn.getRoiService()
-        result = roi_service.findByImage(
-            int(image.data_reference.omero_object_id), None, conn.SERVICE_OPTS
-        )
-        shapes_rectangle, shapes_line, shapes_point = get_rois_omero(result)
-        df_lines_omero = get_info_roi_lines(shapes_line)
-        df_rects_omero = get_info_roi_rectangles(shapes_rectangle)
-        df_points_omero = get_info_roi_points(shapes_point)
+        # roi_service = conn.getRoiService()
+        # result = roi_service.findByImage(
+        #     int(image.data_reference.omero_object_id), None, conn.SERVICE_OPTS
+        # )
+        # shapes_rectangle, shapes_line, shapes_point = get_rois_omero(result)
+        image_id = int(image.data_reference.omero_object_id)
+        rois = get_rois_mm_dataset(mm_dataset)
+        df_lines_omero = pd.DataFrame(rois[image_id]["roi"]["Line"])
+        df_rects_omero = pd.DataFrame(rois[image_id]["roi"]["Rectangle"])
+        df_points_omero = pd.DataFrame(rois[image_id]["roi"]["Point"])
+        df_lines_omero.columns = df_lines_omero.columns.str.upper()
+        df_rects_omero.columns = df_rects_omero.columns.str.upper()
+        df_points_omero.columns = df_points_omero.columns.str.upper()
         dash_context["df_lines"] = df_lines_omero
         dash_context["df_rects"] = df_rects_omero
         dash_context["df_points"] = df_points_omero
@@ -218,10 +218,13 @@ def load_dash_data_image(
         dash_context["message"] = (
             "No visualization available for output images."
         )
-    elif isinstance(mm_dataset, PSFBeadsDataset) and image_location == "input":
+    elif (
+        isinstance(mm_dataset, PSFBeadsDataset)
+        and image_location == "input_data"
+    ):
         dash_context["image"] = image.array_data
         dash_context["min_distance"] = (
-            mm_dataset.input.min_lateral_distance_factor
+            mm_dataset.input_parameters.min_lateral_distance_factor
         )
         dash_context["channel_names"] = image.channel_series
         dash_context["bead_properties_df"] = get_table_file_id(
@@ -273,7 +276,7 @@ def load_dash_data_dataset(
         dash_context["dm"] = dataset
         df = get_images_intensity_profiles(dataset)
         dash_context["image"], channel_series = concatenate_images(
-            dataset.input.field_illumination_image
+            dataset.input_data.field_illumination_image
         )
         dash_context["channel_names"] = channel_series
         dash_context["intensity_profiles"] = get_all_intensity_profiles(
@@ -289,7 +292,7 @@ def load_dash_data_dataset(
                 "description": i.description,
                 "acquisition_datetime": i.acquisition_datetime,
             }
-            for i in dataset.input.field_illumination_image
+            for i in dataset.input_data.field_illumination_image
         ]
 
     elif isinstance(dataset, PSFBeadsDataset):
@@ -443,7 +446,7 @@ def get_images_intensity_profiles(
 ) -> pd.DataFrame:
     data = []
     for i, j in zip(
-        dataset.input["field_illumination_image"],
+        dataset.input_data["field_illumination_image"],
         dataset.output["intensity_profiles"],
     ):
         data.append(
@@ -480,20 +483,32 @@ def get_key_values(var: FieldIlluminationDataset.output) -> pd.DataFrame:
     return df
 
 
+# def concatenate_images(images: list):
+#     if len(images) > 1:
+#         image_array_0 = images[0].array_data
+#         channels = images[0].channel_series
+#         result = image_array_0
+#         for i in range(1, len(images)):
+#             image_array = images[i].array_data
+#             channels.channels.extend(images[i].channel_series.channels)
+#             result = np.concatenate((result, image_array), axis=-1)
+#         return result, channels
+#     elif len(images) == 1:
+#         return images[0].array_data, images[0].channel_series
+#     else:
+#         return None
+
+
 def concatenate_images(images: list):
-    if len(images) > 1:
-        image_array_0 = images[0].array_data
-        channels = images[0].channel_series
-        result = image_array_0
-        for i in range(1, len(images)):
-            image_array = images[i].array_data
-            channels.channels.extend(images[i].channel_series.channels)
-            result = np.concatenate((result, image_array), axis=-1)
-        return result, channels
-    elif len(images) == 1:
-        return images[0].array_data, images[0].channel_series
-    else:
-        return None
+    list_images = []
+    list_channels = []
+    for mm_image in images:
+        image = mm_image.array_data
+        result = [image[:, :, :, :, i] for i in range(image.shape[4])]
+        channels = [c.name for c in mm_image.channel_series.channels]
+        list_images.extend(result)
+        list_channels.extend(channels)
+    return list_images, list_channels
 
 
 def get_all_intensity_profiles(conn, data_df):
@@ -504,7 +519,7 @@ def get_all_intensity_profiles(conn, data_df):
             .getFile()
             .getId()
         )
-        data = get_table_originalFile_id(conn, str(file_id))
+        data = get_table_original_file_id(conn, str(file_id))
         for j in range(row.Channel):
             regx_find = f"ch0{j}"
             ch = i + j
@@ -535,3 +550,100 @@ def get_table_file_id(conn, file_annotation_id):
     df = pd.DataFrame.from_dict(data_buffer)
     df.index = index_buffer[0 : len(df)]
     return df
+
+
+# -----------------------------------------------------------------------------------
+
+
+def roi_finder(roi: mm_schema.Roi):
+    if roi.rectangles:
+        return {
+            "type": "Rectangle",
+            "data": [
+                {
+                    "roi_name": roi.name,
+                    "name": rect.name,
+                    "x": rect.x,
+                    "y": rect.y,
+                    "w": rect.w,
+                    "h": rect.h,
+                }
+                for rect in roi.rectangles
+            ],
+        }
+    elif roi.lines:
+        return {
+            "type": "Line",
+            "data": [
+                {
+                    "roi_name": roi.name,
+                    "name": line.name,
+                    "x1": line.x1,
+                    "y1": line.y1,
+                    "x2": line.x2,
+                    "y2": line.y2,
+                }
+                for line in roi.lines
+            ],
+        }
+    elif roi.points:
+        return {
+            "type": "Point",
+            "data": [
+                {
+                    "roi_name": roi.name,
+                    "name": point.name,
+                    "x": point.x,
+                    "y": point.y,
+                    "c": point.c,
+                }
+                for point in roi.points
+            ],
+        }
+    else:
+        return None
+
+
+def get_image_info_mm_dataset(mm_dataset: mm_schema.MetricsDataset):
+    mm_images = getattr(
+        mm_dataset["input_data"],
+        DATASET_IMAGES[mm_dataset.class_name]["input_data"][0],
+    )
+    image_info = {
+        i.data_reference.omero_object_id: {
+            "name": i.name,
+            "id": i.data_reference.omero_object_id,
+            "n_channel": i.shape_c,
+            "roi": {"Rectangle": [], "Line": [], "Point": []},
+        }
+        for i in mm_images
+    }
+    return image_info
+
+
+def get_rois_mm_dataset(mm_dataset: mm_schema.MetricsDataset):
+    images_info = get_image_info_mm_dataset(mm_dataset)
+    output = mm_dataset.output
+    for i, item in enumerate(images_info.items()):
+        for field in output:
+            if (
+                isinstance(output[field], mm_schema.Roi)
+                and isinstance(output[field].linked_references, list)
+                and len(output[field].linked_references) == len(images_info)
+            ):
+                roi = roi_finder(output[field])
+                if roi:
+                    images_info[item[0]]["roi"][roi["type"]].extend(
+                        roi["data"]
+                    )
+            elif (
+                isinstance(output[field], list)
+                and len(output[field]) == len(images_info)
+                and isinstance(output[field][i], mm_schema.Roi)
+            ):
+                roi = roi_finder(output[field][i])
+                if roi:
+                    images_info[item[0]]["roi"][roi["type"]].extend(
+                        roi["data"]
+                    )
+    return images_info

@@ -1,0 +1,21 @@
+{% extends "webgateway/base/base_main.html" %}
+{%load plotly_dash%}
+{% block title %}Omero Metrics{% endblock %}
+
+
+{% block link %}
+<link rel="stylesheet" type="text/css" href="{% static 'OMERO_metrics/css/omero_metrics.css' %}">
+{% endblock %}
+
+
+{% block script %}
+{% endblock %}
+
+{% block body %}
+
+
+<div class="{%plotly_class name="omero_dataset_form"%}">
+    {%plotly_app name="omero_dataset_form" ratio=1%}
+</div>
+
+{% endblock %}
