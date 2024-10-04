@@ -1,9 +1,18 @@
-{%extends "OMERO_metrics/base_nav.html"%}
+{% extends "webgateway/base/base_main.html" %}
 {%load plotly_dash%}
-{% load bootstrap4%}
-{% bootstrap_css%}
-{%block title%} Upload Image{%endblock%}
-{%block content%}
+{% block title %}Omero Metrics{% endblock %}
+
+
+{% block link %}
+<link rel="stylesheet" type="text/css" href="{% static 'OMERO_metrics/css/omero_metrics.css' %}">
+{% endblock %}
+
+
+{% block script %}
+{% endblock %}
+
+{% block body %}
+
 <div class="container">
     <h1 class="text-center my-4 bg-light">Upload Image</h1>
     <p class="text-center mb-4">We can upload only npy files at the moment</p>
@@ -15,4 +24,5 @@
         <button type="submit" class="btn btn-primary">Upload</button>
     </form>
 </div>
-{%endblock%}
+
+{% endblock %}
