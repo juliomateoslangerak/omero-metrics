@@ -9,7 +9,7 @@ from OMERO_metrics import views
 from OMERO_metrics.tools import dash_forms_tools as dft
 
 
-formManager = dft.dashForm(
+formManager = dft.DashForm(
     mm_schema.Sample, disabled=False, form_id="sample_content"
 )
 sampleFORM = formManager.form

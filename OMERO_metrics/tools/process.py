@@ -3,7 +3,7 @@ from dataclasses import fields
 from datetime import datetime
 from typing import Union
 
-from microscopemetrics.samples import (
+from microscopemetrics.analyses import (
     argolight,
     field_illumination,
     numpy_to_image_byref,

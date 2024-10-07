@@ -119,7 +119,7 @@ def load_dataset(
     for ann in dataset.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
             ns = ann.getNs()
-            if ns.startswith("microscopemetrics_schema:samples"):
+            if ns.startswith("microscopemetrics_schema:analyses"):
                 ds_type = ns.split("/")[-1]
                 if ds_type in DATASET_TYPES:
                     mm_datasets.append(
