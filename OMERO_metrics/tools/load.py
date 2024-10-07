@@ -19,10 +19,6 @@ import pandas as pd
 from OMERO_metrics.tools import omero_tools
 from OMERO_metrics.tools.data_preperation import (
     get_table_original_file_id,
-    get_info_roi_lines,
-    get_info_roi_rectangles,
-    get_info_roi_points,
-    get_rois_omero,
 )
 
 # Creating logging services
