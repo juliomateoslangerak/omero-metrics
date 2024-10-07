@@ -4,8 +4,6 @@ import logging
 import tempfile
 from dataclasses import fields
 from typing import Union
-
-import pandas as pd
 from linkml_runtime.dumpers import YAMLDumper
 from microscopemetrics_schema.datamodel import (
     microscopemetrics_schema as mm_schema,

@@ -11,6 +11,8 @@ services:
       - omero
     volumes:
       - "database:/var/lib/postgresql/data"
+    ports:
+      - "5432:5432"
 
   omeroserver:
     # This container uses the tag for the latest server release of OMERO 5

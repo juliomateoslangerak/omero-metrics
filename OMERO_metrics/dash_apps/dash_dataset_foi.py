@@ -7,10 +7,7 @@ import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 from skimage.exposure import rescale_intensity
 
-external_scripts = [
-    # add the tailwind cdn url hosting the files with the utility classes
-    {"src": "https://cdn.tailwindcss.com"}
-]
+
 stylesheets = [
     "https://unpkg.com/@mantine/dates@7/styles.css",
     "https://unpkg.com/@mantine/code-highlight@7/styles.css",
@@ -26,7 +23,6 @@ dash_app_dataset = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
     external_stylesheets=stylesheets,
-    external_scripts=external_scripts,
 )
 
 dash_app_dataset.layout = dmc.MantineProvider(
@@ -203,7 +199,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
     dash.dependencies.Output("channel_dropdown_foi", "data"),
     [dash.dependencies.Input("blank-input", "children")],
 )
-def update_dropdow_menu(*args, **kwargs):
+def update_dropdown_menu(*args, **kwargs):
     channel = kwargs["session_state"]["context"]["channel_names"]
 
     channel_list = [

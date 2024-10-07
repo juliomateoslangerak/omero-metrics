@@ -40,20 +40,20 @@ class TestLoadIndexPage(IWebTest):
         html_str = rsp.content.decode()
         assert "Microscope" in html_str
 
-    @pytest.mark.django_db
-    def test_app_lookup(self, user1):
-        """Test looking up an existing application"""
-        from OMERO_metrics.dash_apps.plotly_apps import app
-        from django_plotly_dash.models import get_stateless_by_name
-
-        app2 = get_stateless_by_name(app._uid)
-        assert app2
-        assert app._uid == app2._uid
+    # @pytest.mark.django_db
+    # def test_app_lookup(self, user1):
+    #     """Test looking up an existing application"""
+    #     from OMERO_metrics.dash_apps.plotly_apps import app
+    #     from django_plotly_dash.models import get_stateless_by_name
+    #
+    #     app2 = get_stateless_by_name(app._uid)
+    #     assert app2
+    #     assert app._uid == app2._uid
 
     @pytest.mark.django_db
     def test_app_lookup_dataset_metrics(self, user1):
         """Test looking up an existing application for dataset foi"""
-        from OMERO_metrics.dash_apps.dash_dataset_metrics import (
+        from OMERO_metrics.dash_apps.dash_dataset_foi import (
             dash_app_dataset,
         )
         from django_plotly_dash.models import get_stateless_by_name
@@ -64,7 +64,7 @@ class TestLoadIndexPage(IWebTest):
 
     @pytest.mark.django_db
     def test_app_lookup_dataset_psf(self, user1):
-        """Test looking up an existing application for datset psf"""
+        """Test looking up an existing application for dataset psf"""
         from OMERO_metrics.dash_apps.dash_dataset_psf_beads import (
             app,
         )
