@@ -159,7 +159,7 @@ def form_update(*args, **kwargs):
     analysis_type = analysis_types[int(args[0])]
     if analysis_type["label"] in ALLOWED_ANALYSIS_TYPES:
         ana = getattr(mm_schema, analysis_type["label"])
-        form = dft.dashForm(ana, disabled=False, form_id="config_content")
+        form = dft.DashForm(ana, disabled=False, form_id="config_content")
         return [
             dmc.Center(
                 dmc.Text(
