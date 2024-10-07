@@ -27,6 +27,7 @@ from omero.gateway import (
     TagAnnotationWrapper,
     CommentAnnotationWrapper,
     ChannelWrapper,
+    BlitzObjectWrapper,
 )
 
 from omero.model import (
@@ -93,6 +94,26 @@ COLUMN_TYPES = {
     "mask": grid.MaskColumn,
     "file": grid.FileColumn,
 }
+
+
+def set_group(conn: BlitzGateway, obj: BlitzObjectWrapper) -> None:
+    """
+    This function is bluntly and shamelessly copied from ezomero:
+    https://github.com/TheJacksonLaboratory/ezomero/
+    TODO: wrap as a decorator
+    """
+    group_id = obj.getDetails().group.id.val
+    user_id = conn.getUser().getId()
+    g = conn.getObject("ExperimenterGroup", group_id)
+    owners, members = g.groupSummary()
+    owner_ids = [e.getId() for e in owners]
+    member_ids = [e.getId() for e in members]
+    if (user_id in owner_ids) or (user_id in member_ids):
+        conn.SERVICE_OPTS.setOmeroGroup(group_id)
+        return True
+    else:
+        logging.warning(f"User {user_id} is not a member of Group {group_id}")
+        return False
 
 
 def get_object_ids_from_url(url: str) -> list[tuple[str, int]]:
@@ -637,6 +658,7 @@ def _get_tile_list(zct_list, data_shape, tile_size):
 def create_roi(
     conn: BlitzGateway, image: ImageWrapper, shapes: list, name, description
 ):
+    set_group(conn, image)
     # create an ROI, link it to Image
     roi = RoiI()
     # use the omero.model.ImageI that underlies the 'image' wrapper
@@ -1007,6 +1029,8 @@ def create_table(
     print(
         "--------------------------------------Here: Éyo-------------------------------------------"
     )
+    # We need to change the connection group in order to be able to save the table.
+    set_group(conn, omero_object)
 
     table_name = f'{table_name}_{"".join([choice(ascii_letters) for _ in range(32)])}.h5'
     columns = _create_columns(table)
