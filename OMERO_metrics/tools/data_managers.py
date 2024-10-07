@@ -63,7 +63,7 @@ TEMPLATE_MAPPINGS_DATASET = {
 
 TEMPLATE_MAPPINGS_IMAGE = {
     "FieldIlluminationDataset": {
-        "input_data": "OMERO_metrics/omero_views/center_view_image.html",
+        "input_data": "OMERO_metrics/omero_views/center_view_image_foi.html",
         "output": "OMERO_metrics/omero_views/warning.html",
     },
     "PSFBeadsDataset": {
