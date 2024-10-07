@@ -24,8 +24,8 @@ from microscopemetrics.strategies.strategies import (
     _gen_field_illumination_image,
     _gen_psf_beads_image,
 )
-from microscopemetrics.samples import numpy_to_mm_image
-from microscopemetrics.samples import field_illumination, psf_beads
+from microscopemetrics.analyses import numpy_to_mm_image
+from microscopemetrics.analyses import field_illumination, psf_beads
 from microscopemetrics_schema import datamodel as mm_schema
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ BIT_DEPTH_TO_DTYPE = {
 }
 
 DATASET_TO_ANALYSIS = {
-    "FieldIlluminationDataset": field_illumination.analise_field_illumination,
+    "FieldIlluminationDataset": field_illumination.analyse_field_illumination,
     "PSFBeadsDataset": psf_beads.analyse_psf_beads,
 }
 

@@ -1,6 +1,6 @@
 import datetime
 import logging
-from microscopemetrics.samples import field_illumination, psf_beads
+from microscopemetrics.analyses import field_illumination, psf_beads
 from microscopemetrics_schema.datamodel import (
     microscopemetrics_schema as mm_schema,
 )
@@ -15,7 +15,7 @@ from OMERO_metrics.tools import load, dump, update, delete
 logger = logging.getLogger(__name__)
 
 ANALYSIS_MAPPINGS = {
-    "analise_field_illumination": field_illumination.analise_field_illumination,
+    "analyse_field_illumination": field_illumination.analyse_field_illumination,
     "analyse_psf_beads": psf_beads.analyse_psf_beads,
 }
 
