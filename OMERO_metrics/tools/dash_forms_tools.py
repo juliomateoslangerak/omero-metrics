@@ -26,7 +26,7 @@ def clean_field_name(field: str):
     return field.replace("_", " ").title()
 
 
-def get_field_types(field, supported_types=[str, int, float, bool]):
+def get_field_types(field, supported_types=(str, int, float, bool)):
     data_type = {
         "field_name": clean_field_name(field.name),
         "type": None,
@@ -89,7 +89,7 @@ def add_space_between_capitals(s: str) -> str:
     return re.sub(r"(?<!^)(?=[A-Z])", " ", s)
 
 
-class dashForm:
+class DashForm:
     def __init__(self, mm_object, disabled=False, form_id="form_content"):
         self.mm_object = mm_object
         self.disabled = disabled

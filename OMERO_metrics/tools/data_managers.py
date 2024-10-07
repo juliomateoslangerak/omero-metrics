@@ -29,10 +29,6 @@ DATASET_MAPPINGS = {
     "PSFBeadsDataset": mm_schema.PSFBeadsDataset,
 }
 
-# INPUT_MAPPINGS = {
-#     "FieldIlluminationInput": mm_schema.FieldIlluminationInput,
-#     "PSFBeadsInput": mm_schema.PSFBeadsInput,
-# }
 
 KKM_MAPPINGS = {
     "FieldIlluminationDataset": [

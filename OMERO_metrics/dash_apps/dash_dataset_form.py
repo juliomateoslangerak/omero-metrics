@@ -23,7 +23,7 @@ min_step = 0
 max_step = 3
 active = 0
 
-formManager = dft.dashForm(
+formManager = dft.DashForm(
     mm_schema.Sample, disabled=False, form_id="form_content"
 )
 sampleFORM = formManager.form
@@ -280,7 +280,7 @@ def update_setup(*args, **kwargs):
     input_parameters_mm = input_parameters_object(
         **input_parameters["input_parameters"]
     )
-    form = dft.dashForm(
+    form = dft.DashForm(
         input_parameters_mm, disabled=True, form_id="input_parameters_form"
     )
     return form.form

@@ -38,17 +38,12 @@ DATA_TYPE = {
 }
 
 
-def test_request(request):
-    if request.method == "POST":
-        test = request.POST.get("test")
-        context = {"test": test}
-        return render(request, "OMERO_metrics/test.html", context)
-
-
 @login_required()
 def upload_image(request, conn=None, **kwargs):
     if request.method == "POST":
         form = UploadFileForm(request.POST, request.FILES)
+        id_image = ""
+        type_image = ""
         if form.is_valid():
             file = request.FILES["file"]
             title = form.cleaned_data["title"]
@@ -56,17 +51,21 @@ def upload_image(request, conn=None, **kwargs):
             dataset = conn.getObject("Dataset", int(dataset_id))
             group_id = dataset.getDetails().getGroup().getId()
             conn.SERVICE_OPTS.setOmeroGroup(group_id)
-            type = file.name
+            type_image = file.name
             ima = np.load(file)
             image = ima.transpose((1, 4, 0, 2, 3))
             ima_wrapper = create_image_from_numpy_array(
                 conn, image, title, dataset=dataset
             )
-            id = ima_wrapper.getId()
+            id_image = ima_wrapper.getId()
         return render(
             request,
             "OMERO_metrics/success.html",
-            {"type": type, "id_dataset": dataset.getId(), "id_image": id},
+            {
+                "type": type_image,
+                "id_dataset": dataset.getId(),
+                "id_image": id_image,
+            },
         )
     else:
         form = UploadFileForm()
@@ -84,34 +83,6 @@ def index(request, conn=None, **kwargs):
         "experimenterId": experimenter.id,
     }
     return render(request, "OMERO_metrics/index.html", context)
-
-
-@login_required()
-def dash_example_1_view(
-    request,
-    conn=None,
-    template_name="OMERO_metrics/foi_key_measurement.html",
-    **kwargs,
-):
-    """Example view that inserts content into the
-    dash context passed to the dash application"""
-    experimenter = conn.getUser()
-    context = {
-        "firstName": experimenter.firstName,
-        "lastName": experimenter.lastName,
-        "experimenterId": experimenter.id,
-    }
-    # create some context to send over to Dash:
-    dash_context = request.session.get("django_plotly_dash", dict())
-    dash_context["django_to_dash_context"] = (
-        "I am Dash receiving context from Django"
-    )
-    request.session["django_plotly_dash"] = dash_context
-    return render(
-        request,
-        template_name=template_name,
-        context=context,
-    )
 
 
 @login_required()
@@ -230,13 +201,6 @@ def microscope_view(request, conn=None, **kwargs):
 
 
 @login_required()
-def run_analysis(request, conn=None, **kwargs):
-    """Simply shows a page of ROI thumbnails
-    for the specified image"""
-    return render(request, "OMERO_metrics/run_analysis.html")
-
-
-@login_required()
 def save_config(request, conn=None, **kwargs):
     try:
         project_id = kwargs["project_id"]
@@ -281,7 +245,7 @@ def run_analysis_view(request, conn=None, **kwargs):
         group_id = project_wrapper.getDetails().getGroup().getId()
         group_id2 = conn.getGroupFromContext().getName()
         group_id3 = dataset_wrapper.getDetails().getGroup().getName()
-        print(f"Group from datasetw           4: {group_id3}")
+        print(f"Group from dataset           4: {group_id3}")
         print(f"Group context          3: {group_id2}")
         print(
             f"Group project           1: {project_wrapper.getDetails().getGroup().getName()}"
