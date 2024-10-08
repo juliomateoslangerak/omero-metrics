@@ -102,17 +102,19 @@ def set_group(conn: BlitzGateway, obj: BlitzObjectWrapper) -> None:
     https://github.com/TheJacksonLaboratory/ezomero/
     TODO: wrap as a decorator
     """
-    group_id = obj.getDetails().group.id.val
+    obj_group_id = obj.getDetails().group.id.val
+    obj_group = conn.getObject("ExperimenterGroup", obj_group_id)
     user_id = conn.getUser().getId()
-    g = conn.getObject("ExperimenterGroup", group_id)
-    owners, members = g.groupSummary()
+    owners, members = obj_group.groupSummary()
     owner_ids = [e.getId() for e in owners]
     member_ids = [e.getId() for e in members]
     if (user_id in owner_ids) or (user_id in member_ids):
-        conn.SERVICE_OPTS.setOmeroGroup(group_id)
+        conn.setGroupForSession(obj_group_id)
         return True
     else:
-        logging.warning(f"User {user_id} is not a member of Group {group_id}")
+        logging.warning(
+            f"User {conn.getUser().getName()} is not a member of Group {obj_group.getName()}"
+        )
         return False
 
 
@@ -1027,7 +1029,10 @@ def create_table(
 ):
     """Creates a table annotation from a pandas dataframe or a list of columns as dictionaries."""
     # We need to change the connection group in order to be able to save the table.
-    set_group(conn, omero_object)
+    if isinstance(omero_object, list):
+        set_group(conn, omero_object[0])
+    else:
+        set_group(conn, omero_object)
 
     table_name = f'{table_name}_{"".join([choice(ascii_letters) for _ in range(32)])}.h5'
     columns = _create_columns(table)
