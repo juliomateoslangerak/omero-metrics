@@ -1,10 +1,12 @@
 # django
 bootstrap4
-django-plotly-dash
+django-plotly-dash==2.4.0
+dash==2.9.3
+plotly==5.20.0
 dpd_static_support
 dash-bootstrap-components
 django-bootstrap4
-dash-mantine-components
+dash-mantine-components==0.14.5
 hypothesis
 dash-iconify
 ipywidgets>=7.0.0

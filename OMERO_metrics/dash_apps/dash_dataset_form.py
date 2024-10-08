@@ -47,7 +47,6 @@ stylesheets = [
     "https://unpkg.com/@mantine/carousel@7/styles.css",
     "https://unpkg.com/@mantine/notifications@7/styles.css",
     "https://unpkg.com/@mantine/nprogress@7/styles.css",
-    "./assets/omero_metrics.css",
 ]
 dashboard_name = "omero_dataset_form"
 dash_form_project = DjangoDash(

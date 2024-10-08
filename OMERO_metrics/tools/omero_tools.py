@@ -511,7 +511,7 @@ def create_image_from_numpy_array(
     force_whole_planes: bool = False,
 ) -> ImageWrapper:
     """
-    Creates a new image in OMERO from a n dimensional numpy array.
+    Creates a new image in OMERO from n dimensional numpy array.
     :param acquisition_datetime: The acquisition datetime of the image in ISO format
     :param channel_labels: A list of channel labels
     :param force_whole_planes:
@@ -658,7 +658,7 @@ def _get_tile_list(zct_list, data_shape, tile_size):
 def create_roi(
     conn: BlitzGateway, image: ImageWrapper, shapes: list, name, description
 ):
-    set_group(conn, image)
+    # set_group(conn, image)
     # create an ROI, link it to Image
     roi = RoiI()
     # use the omero.model.ImageI that underlies the 'image' wrapper

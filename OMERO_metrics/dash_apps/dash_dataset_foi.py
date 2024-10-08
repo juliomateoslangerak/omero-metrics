@@ -15,7 +15,6 @@ stylesheets = [
     "https://unpkg.com/@mantine/carousel@7/styles.css",
     "https://unpkg.com/@mantine/notifications@7/styles.css",
     "https://unpkg.com/@mantine/nprogress@7/styles.css",
-    "./assets/omero_metrics.css",
 ]
 primary_color = "#63aa47"
 dashboard_name = "omero_dataset_metrics"
@@ -284,7 +283,10 @@ def dataset_callback_intensity_map(*args, **kwargs):
             "font": {"family": "Arial", "size": 18, "color": "#63aa47"},
         }
     )
-    return (fig, df_new.to_dict("records"))
+    print(
+        f"------------------------------------------------------{len(image_channel)}"
+    )
+    return fig, df_new.to_dict("records")
 
 
 def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:
