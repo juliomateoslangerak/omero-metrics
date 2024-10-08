@@ -290,8 +290,7 @@ def run_analysis_view(request, conn=None, **kwargs):
             experimenter=mm_experimenter,
         )
         run_status = DATA_TYPE[mm_input_parameters.class_name][3](mm_dataset)
-        if run_status:
-
+        if run_status and mm_dataset.processed:
             try:
                 dump_dataset(
                     conn=conn,
@@ -304,14 +303,10 @@ def run_analysis_view(request, conn=None, **kwargs):
                 )
                 return "Analysis completed successfully", "green"
             except Exception as e:
-                if isinstance(e, omero.SecurityViolation):
-                    return (
-                        "You don't have the necessary permissions to save the analysis. "
-                        "Try changing the default group to the group where the project is located.",
-                        "red",
-                    )
-                else:
-                    return str(e), "red"
+                return (
+                    e.msg,
+                    "red",
+                )
         else:
             logger.error("Analysis failed")
             return "We couldn't process the analysis.", "red"
