@@ -7,10 +7,7 @@ import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 from skimage.exposure import rescale_intensity
 
-external_scripts = [
-    # add the tailwind cdn url hosting the files with the utility classes
-    {"src": "https://cdn.tailwindcss.com"}
-]
+
 stylesheets = [
     "https://unpkg.com/@mantine/dates@7/styles.css",
     "https://unpkg.com/@mantine/code-highlight@7/styles.css",
@@ -18,7 +15,6 @@ stylesheets = [
     "https://unpkg.com/@mantine/carousel@7/styles.css",
     "https://unpkg.com/@mantine/notifications@7/styles.css",
     "https://unpkg.com/@mantine/nprogress@7/styles.css",
-    "./assets/omero_metrics.css",
 ]
 primary_color = "#63aa47"
 dashboard_name = "omero_dataset_metrics"
@@ -26,7 +22,6 @@ dash_app_dataset = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
     external_stylesheets=stylesheets,
-    external_scripts=external_scripts,
 )
 
 dash_app_dataset.layout = dmc.MantineProvider(
@@ -203,7 +198,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
     dash.dependencies.Output("channel_dropdown_foi", "data"),
     [dash.dependencies.Input("blank-input", "children")],
 )
-def update_dropdow_menu(*args, **kwargs):
+def update_dropdown_menu(*args, **kwargs):
     channel = kwargs["session_state"]["context"]["channel_names"]
 
     channel_list = [
@@ -288,7 +283,10 @@ def dataset_callback_intensity_map(*args, **kwargs):
             "font": {"family": "Arial", "size": 18, "color": "#63aa47"},
         }
     )
-    return (fig, df_new.to_dict("records"))
+    print(
+        f"------------------------------------------------------{len(image_channel)}"
+    )
+    return fig, df_new.to_dict("records")
 
 
 def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:

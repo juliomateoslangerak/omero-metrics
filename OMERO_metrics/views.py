@@ -15,7 +15,7 @@ from OMERO_metrics.tools.load import load_config_file_data
 from OMERO_metrics.tools.dump import dump_config_input_parameters
 from OMERO_metrics.tools.load import load_image
 from microscopemetrics_schema import datamodel as mm_schema
-from microscopemetrics.samples import field_illumination, psf_beads
+from microscopemetrics.analyses import field_illumination, psf_beads
 from OMERO_metrics.tools.dump import dump_dataset
 import omero
 import logging
@@ -27,7 +27,7 @@ DATA_TYPE = {
         "FieldIlluminationDataset",
         "FieldIlluminationInputData",
         "field_illumination_image",
-        field_illumination.analise_field_illumination,
+        field_illumination.analyse_field_illumination,
     ],
     "PSFBeadsInputParameters": [
         "PSFBeadsDataset",
@@ -38,17 +38,12 @@ DATA_TYPE = {
 }
 
 
-def test_request(request):
-    if request.method == "POST":
-        test = request.POST.get("test")
-        context = {"test": test}
-        return render(request, "OMERO_metrics/test.html", context)
-
-
 @login_required()
 def upload_image(request, conn=None, **kwargs):
     if request.method == "POST":
         form = UploadFileForm(request.POST, request.FILES)
+        id_image = ""
+        type_image = ""
         if form.is_valid():
             file = request.FILES["file"]
             title = form.cleaned_data["title"]
@@ -56,17 +51,21 @@ def upload_image(request, conn=None, **kwargs):
             dataset = conn.getObject("Dataset", int(dataset_id))
             group_id = dataset.getDetails().getGroup().getId()
             conn.SERVICE_OPTS.setOmeroGroup(group_id)
-            type = file.name
+            type_image = file.name
             ima = np.load(file)
             image = ima.transpose((1, 4, 0, 2, 3))
             ima_wrapper = create_image_from_numpy_array(
                 conn, image, title, dataset=dataset
             )
-            id = ima_wrapper.getId()
+            id_image = ima_wrapper.getId()
         return render(
             request,
             "OMERO_metrics/success.html",
-            {"type": type, "id_dataset": dataset.getId(), "id_image": id},
+            {
+                "type": type_image,
+                "id_dataset": dataset.getId(),
+                "id_image": id_image,
+            },
         )
     else:
         form = UploadFileForm()
@@ -84,34 +83,6 @@ def index(request, conn=None, **kwargs):
         "experimenterId": experimenter.id,
     }
     return render(request, "OMERO_metrics/index.html", context)
-
-
-@login_required()
-def dash_example_1_view(
-    request,
-    conn=None,
-    template_name="OMERO_metrics/foi_key_measurement.html",
-    **kwargs,
-):
-    """Example view that inserts content into the
-    dash context passed to the dash application"""
-    experimenter = conn.getUser()
-    context = {
-        "firstName": experimenter.firstName,
-        "lastName": experimenter.lastName,
-        "experimenterId": experimenter.id,
-    }
-    # create some context to send over to Dash:
-    dash_context = request.session.get("django_plotly_dash", dict())
-    dash_context["django_to_dash_context"] = (
-        "I am Dash receiving context from Django"
-    )
-    request.session["django_plotly_dash"] = dash_context
-    return render(
-        request,
-        template_name=template_name,
-        context=context,
-    )
 
 
 @login_required()
@@ -160,6 +131,10 @@ def image_rois(request, image_id, conn=None, **kwargs):
 def center_viewer_image(request, image_id, conn=None, **kwargs):
     dash_context = request.session.get("django_plotly_dash", dict())
     image_wrapper = conn.getObject("Image", image_id)
+    group_id = conn.getGroupFromContext().getName()
+    print(
+        f"IMAGE VIEW----------------------------------------{group_id}---------------"
+    )
     im = ImageManager(conn, image_wrapper)
     im.load_data()
     im.visualize_data()
@@ -174,7 +149,8 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
     # request["conn"] = conn
     # conn.SERVICE_OPTS.setOmeroGroup("-1")
     project_wrapper = conn.getObject("Project", project_id)
-    group_id = project_wrapper.getDetails().getGroup().getId()
+    group_id = conn.getGroupFromContext().getName()
+    print(f"PROJECT VIEW--------------{group_id}--------------------------")
     conn.SERVICE_OPTS.setOmeroGroup(group_id)
     pm = ProjectManager(conn, project_wrapper)
     pm.load_data()
@@ -195,8 +171,12 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
 def center_viewer_group(request, conn=None, **kwargs):
     group2 = conn.SERVICE_OPTS.getOmeroGroup()
     group = conn.getGroupFromContext()
-    group_id = group.getId()
+    group_id = conn.getGroupFromContext().getName()
     group_name = group.getName()
+    print(
+        f"GROUP VIEW----------------------------------------{group_id}---------------"
+    )
+
     group_description = group.getDescription()
     context = {
         "group_id": group_id,
@@ -212,6 +192,10 @@ def center_viewer_group(request, conn=None, **kwargs):
 def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
     dash_context = request.session.get("django_plotly_dash", dict())
     dataset_wrapper = conn.getObject("Dataset", dataset_id)
+    group_id = conn.getGroupFromContext().getName()
+    print(
+        f"DATASET VIEW----------------------------------------{group_id}---------------"
+    )
     dm = DatasetManager(conn, dataset_wrapper, load_images=True)
     dm.load_data()
     dm.is_processed()
@@ -227,13 +211,6 @@ def microscope_view(request, conn=None, **kwargs):
     """Simply shows a page of ROI thumbnails for
     the specified image"""
     return render(request, "OMERO_metrics/microscope.html")
-
-
-@login_required()
-def run_analysis(request, conn=None, **kwargs):
-    """Simply shows a page of ROI thumbnails
-    for the specified image"""
-    return render(request, "OMERO_metrics/run_analysis.html")
 
 
 @login_required()
@@ -276,12 +253,13 @@ def save_config(request, conn=None, **kwargs):
 @login_required()
 def run_analysis_view(request, conn=None, **kwargs):
     try:
+        co = conn.getEventContext()
         dataset_wrapper = conn.getObject("Dataset", kwargs["dataset_id"])
         project_wrapper = dataset_wrapper.getParent()
         group_id = project_wrapper.getDetails().getGroup().getId()
         group_id2 = conn.getGroupFromContext().getName()
         group_id3 = dataset_wrapper.getDetails().getGroup().getName()
-        print(f"Group from datasetw           4: {group_id3}")
+        print(f"Group from dataset           4: {group_id3}")
         print(f"Group context          3: {group_id2}")
         print(
             f"Group project           1: {project_wrapper.getDetails().getGroup().getName()}"
@@ -289,7 +267,11 @@ def run_analysis_view(request, conn=None, **kwargs):
         # g_id = dataset_wrapper.getDetails().getGroup().getId()
         conn.SERVICE_OPTS.setOmeroGroup(int(group_id))
         # conn.setGroupForSession(int(g_id))
+        co5 = conn.getEventContext()
+
         print()
+        co5.setGroup(group_id)
+        c = co5
         print(f"Group ID           2: {conn.getGroupFromContext().getName()}")
         list_images = kwargs["list_images"]
         list_mm_images = [
@@ -326,8 +308,7 @@ def run_analysis_view(request, conn=None, **kwargs):
             experimenter=mm_experimenter,
         )
         run_status = DATA_TYPE[mm_input_parameters.class_name][3](mm_dataset)
-        if run_status:
-
+        if run_status and mm_dataset.processed:
             try:
                 dump_dataset(
                     conn=conn,
@@ -340,14 +321,10 @@ def run_analysis_view(request, conn=None, **kwargs):
                 )
                 return "Analysis completed successfully", "green"
             except Exception as e:
-                if isinstance(e, omero.SecurityViolation):
-                    return (
-                        "You don't have the necessary permissions to save the analysis. "
-                        "Try changing the default group to the group where the project is located.",
-                        "red",
-                    )
-                else:
-                    return str(e), "red"
+                return (
+                    e.msg,
+                    "red",
+                )
         else:
             logger.error("Analysis failed")
             return "We couldn't process the analysis.", "red"

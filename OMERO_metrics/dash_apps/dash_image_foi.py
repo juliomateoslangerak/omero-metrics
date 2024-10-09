@@ -8,10 +8,6 @@ from OMERO_metrics.tools.data_preperation import *
 import dash_mantine_components as dmc
 
 
-external_scripts = [
-    # add the tailwind cdn url hosting the files with the utility classes
-    {"src": "https://cdn.tailwindcss.com"}
-]
 stylesheets = [
     "https://unpkg.com/@mantine/dates@7/styles.css",
     "https://unpkg.com/@mantine/code-highlight@7/styles.css",
@@ -19,7 +15,6 @@ stylesheets = [
     "https://unpkg.com/@mantine/carousel@7/styles.css",
     "https://unpkg.com/@mantine/notifications@7/styles.css",
     "https://unpkg.com/@mantine/nprogress@7/styles.css",
-    "./assets/omero_metrics.css",
 ]
 primary_color = "#63aa47"
 
@@ -406,7 +401,7 @@ def callback_image(*args, **kwargs):
     dash.dependencies.Output("intensity_profile", "data"),
     [dash.dependencies.Input("my-dropdown1", "value")],
 )
-def callback_test5(*args, **kwargs):
+def update_intensity_profiles(*args, **kwargs):
     df_intensity_profiles = kwargs["session_state"]["context"][
         "df_intensity_profiles"
     ]

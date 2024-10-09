@@ -27,6 +27,7 @@ from omero.gateway import (
     TagAnnotationWrapper,
     CommentAnnotationWrapper,
     ChannelWrapper,
+    BlitzObjectWrapper,
 )
 
 from omero.model import (
@@ -93,6 +94,28 @@ COLUMN_TYPES = {
     "mask": grid.MaskColumn,
     "file": grid.FileColumn,
 }
+
+
+def set_group(conn: BlitzGateway, obj: BlitzObjectWrapper) -> None:
+    """
+    This function is bluntly and shamelessly copied from ezomero:
+    https://github.com/TheJacksonLaboratory/ezomero/
+    TODO: wrap as a decorator
+    """
+    obj_group_id = obj.getDetails().group.id.val
+    obj_group = conn.getObject("ExperimenterGroup", obj_group_id)
+    user_id = conn.getUser().getId()
+    owners, members = obj_group.groupSummary()
+    owner_ids = [e.getId() for e in owners]
+    member_ids = [e.getId() for e in members]
+    if (user_id in owner_ids) or (user_id in member_ids):
+        conn.setGroupForSession(obj_group_id)
+        return True
+    else:
+        logging.warning(
+            f"User {conn.getUser().getName()} is not a member of Group {obj_group.getName()}"
+        )
+        return False
 
 
 def get_object_ids_from_url(url: str) -> list[tuple[str, int]]:
@@ -490,7 +513,7 @@ def create_image_from_numpy_array(
     force_whole_planes: bool = False,
 ) -> ImageWrapper:
     """
-    Creates a new image in OMERO from a n dimensional numpy array.
+    Creates a new image in OMERO from n dimensional numpy array.
     :param acquisition_datetime: The acquisition datetime of the image in ISO format
     :param channel_labels: A list of channel labels
     :param force_whole_planes:
@@ -637,6 +660,7 @@ def _get_tile_list(zct_list, data_shape, tile_size):
 def create_roi(
     conn: BlitzGateway, image: ImageWrapper, shapes: list, name, description
 ):
+    # set_group(conn, image)
     # create an ROI, link it to Image
     roi = RoiI()
     # use the omero.model.ImageI that underlies the 'image' wrapper
@@ -1004,19 +1028,11 @@ def create_table(
     namespace: str,
 ):
     """Creates a table annotation from a pandas dataframe or a list of columns as dictionaries."""
-    print(
-        "--------------------------------------Here: Éyo-------------------------------------------"
-    )
+    # We need to change the connection group in order to be able to save the table.
 
     table_name = f'{table_name}_{"".join([choice(ascii_letters) for _ in range(32)])}.h5'
     columns = _create_columns(table)
-    print(
-        "--------------------------------------Éyo 1-------------------------------------------"
-    )
     resources = conn.c.sf.sharedResources()
-    print(
-        "--------------------------------------Éyo 2-------------------------------------------"
-    )
 
     repository_id = resources.repositories().descriptions[0].getId().getValue()
     table = resources.newTable(repository_id, table_name)
@@ -1030,14 +1046,8 @@ def create_table(
         file_ann.setNs(namespace)
     file_ann.setDescription(table_description)
     file_ann.setFile(OriginalFileI(original_file.id.val, False))
-    print(
-        "--------------------------------------Éyo 3-------------------------------------------"
-    )
 
     file_ann.save()
-    print(
-        "--------------------------------------Éyo 4-------------------------------------------"
-    )
 
     if isinstance(omero_object, list):
         for obj in omero_object:

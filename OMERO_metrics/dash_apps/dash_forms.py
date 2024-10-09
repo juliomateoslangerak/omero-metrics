@@ -9,7 +9,7 @@ from OMERO_metrics import views
 from OMERO_metrics.tools import dash_forms_tools as dft
 
 
-formManager = dft.dashForm(
+formManager = dft.DashForm(
     mm_schema.Sample, disabled=False, form_id="sample_content"
 )
 sampleFORM = formManager.form
@@ -32,7 +32,6 @@ stylesheets = [
     "https://unpkg.com/@mantine/carousel@7/styles.css",
     "https://unpkg.com/@mantine/notifications@7/styles.css",
     "https://unpkg.com/@mantine/nprogress@7/styles.css",
-    "./assets/omero_metrics.css",
 ]
 dashboard_name = "omero_project_config_form"
 dash_form_project = DjangoDash(
@@ -159,7 +158,7 @@ def form_update(*args, **kwargs):
     analysis_type = analysis_types[int(args[0])]
     if analysis_type["label"] in ALLOWED_ANALYSIS_TYPES:
         ana = getattr(mm_schema, analysis_type["label"])
-        form = dft.dashForm(ana, disabled=False, form_id="config_content")
+        form = dft.DashForm(ana, disabled=False, form_id="config_content")
         return [
             dmc.Center(
                 dmc.Text(

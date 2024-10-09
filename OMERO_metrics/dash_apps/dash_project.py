@@ -8,10 +8,6 @@ from datetime import datetime
 
 primary_color = "#008080"
 
-external_scripts = [
-    # add the tailwind cdn url hosting the files with the utility classes
-    {"src": "https://cdn.tailwindcss.com"}
-]
 stylesheets = [
     "https://unpkg.com/@mantine/dates@7/styles.css",
     "https://unpkg.com/@mantine/code-highlight@7/styles.css",
@@ -19,14 +15,12 @@ stylesheets = [
     "https://unpkg.com/@mantine/carousel@7/styles.css",
     "https://unpkg.com/@mantine/notifications@7/styles.css",
     "https://unpkg.com/@mantine/nprogress@7/styles.css",
-    "./assets/omero_metrics.css",
 ]
 dashboard_name = "omero_project_dash"
 dash_app_project = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
     external_stylesheets=stylesheets,
-    external_scripts=external_scripts,
 )
 
 dash_app_project.layout = dmc.MantineProvider(

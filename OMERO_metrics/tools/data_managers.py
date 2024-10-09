@@ -1,6 +1,6 @@
 import datetime
 import logging
-from microscopemetrics.samples import field_illumination, psf_beads
+from microscopemetrics.analyses import field_illumination, psf_beads
 from microscopemetrics_schema.datamodel import (
     microscopemetrics_schema as mm_schema,
 )
@@ -15,7 +15,7 @@ from OMERO_metrics.tools import load, dump, update, delete
 logger = logging.getLogger(__name__)
 
 ANALYSIS_MAPPINGS = {
-    "analise_field_illumination": field_illumination.analise_field_illumination,
+    "analyse_field_illumination": field_illumination.analyse_field_illumination,
     "analyse_psf_beads": psf_beads.analyse_psf_beads,
 }
 
@@ -29,10 +29,6 @@ DATASET_MAPPINGS = {
     "PSFBeadsDataset": mm_schema.PSFBeadsDataset,
 }
 
-# INPUT_MAPPINGS = {
-#     "FieldIlluminationInput": mm_schema.FieldIlluminationInput,
-#     "PSFBeadsInput": mm_schema.PSFBeadsInput,
-# }
 
 KKM_MAPPINGS = {
     "FieldIlluminationDataset": [
@@ -67,7 +63,7 @@ TEMPLATE_MAPPINGS_DATASET = {
 
 TEMPLATE_MAPPINGS_IMAGE = {
     "FieldIlluminationDataset": {
-        "input_data": "OMERO_metrics/omero_views/center_view_image.html",
+        "input_data": "OMERO_metrics/omero_views/center_view_image_foi.html",
         "output": "OMERO_metrics/omero_views/warning.html",
     },
     "PSFBeadsDataset": {

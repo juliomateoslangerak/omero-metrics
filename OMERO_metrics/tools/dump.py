@@ -4,8 +4,6 @@ import logging
 import tempfile
 from dataclasses import fields
 from typing import Union
-
-import pandas as pd
 from linkml_runtime.dumpers import YAMLDumper
 from microscopemetrics_schema.datamodel import (
     microscopemetrics_schema as mm_schema,
@@ -212,7 +210,6 @@ def dump_dataset(
 ) -> DatasetWrapper:
 
     if dataset.data_reference:
-
         try:
             omero_dataset = omero_tools.get_omero_obj_from_mm_obj(
                 conn=conn, mm_obj=dataset
@@ -223,6 +220,7 @@ def dump_dataset(
                 f"Dataset {dataset.name} could not be retrieved from OMERO: {e}"
             )
             raise e
+
     else:
         if target_project is None:
             logger.warning(
@@ -245,56 +243,61 @@ def dump_dataset(
         )
         dataset.data_reference = omero_tools.get_ref_from_object(omero_dataset)
 
-    if dump_input_images:
-        for input_field in fields(dataset.input_data):
-            input_element = getattr(dataset.input_data, input_field.name)
-            if isinstance(input_element, mm_schema.Image):
-                dump_image(
-                    conn=conn,
-                    image=input_element,
-                    target_dataset=omero_dataset,
-                )
-            elif isinstance(input_element, list) and all(
-                isinstance(i_e, mm_schema.Image) for i_e in input_element
-            ):
-                for image in input_element:
+    try:
+        if dump_input_images:
+            for input_field in fields(dataset.input_data):
+                input_element = getattr(dataset.input_data, input_field.name)
+                if isinstance(input_element, mm_schema.Image):
                     dump_image(
                         conn=conn,
-                        image=image,
+                        image=input_element,
                         target_dataset=omero_dataset,
                     )
+                elif isinstance(input_element, list) and all(
+                    isinstance(i_e, mm_schema.Image) for i_e in input_element
+                ):
+                    for image in input_element:
+                        dump_image(
+                            conn=conn,
+                            image=image,
+                            target_dataset=omero_dataset,
+                        )
+                else:
+                    continue
+
+        if dump_analysis:
+            if dataset.processed:
+                if dataset.output is not None:
+
+                    _dump_analysis_metadata(dataset, omero_dataset)
+
+                    _dump_dataset_output(dataset.output, omero_dataset)
+                else:
+                    logger.error(
+                        f"Dataset {dataset.name} is processed but has no output. Skipping dump."
+                    )
             else:
-                continue
-
-    if dump_analysis:
-
-        if dataset.processed:
-            if dataset.output is not None:
-
-                _dump_analysis_metadata(dataset, omero_dataset)
-
-                _dump_dataset_output(dataset.output, omero_dataset)
-            else:
-                logger.error(
-                    f"Dataset {dataset.name} is processed but has no output. Skipping dump."
+                logger.warning(
+                    f"Dataset {dataset.name} is not processed. Skipping output dump."
                 )
-        else:
-            logger.warning(
-                f"Dataset {dataset.name} is not processed. Skipping output dump."
+
+        target_objs = []
+
+        if dump_as_dataset_file_annotation:
+            target_objs.append(omero_dataset)
+
+        if dump_as_project_file_annotation:
+            target_objs.append(target_project)
+
+        if target_objs:
+            _dump_mm_dataset_as_file_annotation(
+                conn=conn, mm_dataset=dataset, target_omero_obj=target_objs
             )
-
-    target_objs = []
-    if dump_as_dataset_file_annotation:
-
-        target_objs.append(omero_dataset)
-    if dump_as_project_file_annotation:
-
-        target_objs.append(target_project)
-    if target_objs:
-
-        _dump_mm_dataset_as_file_annotation(
-            conn=conn, mm_dataset=dataset, target_omero_obj=target_objs
+    except Exception as e:
+        logger.error(
+            f"Dataset {dataset.name} could not be dumped to OMERO: {e}"
         )
+        raise e
 
     return omero_dataset
 

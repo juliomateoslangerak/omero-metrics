@@ -1,33 +1,20 @@
-from django.views.generic import TemplateView
 from OMERO_metrics.views import *
 from django.urls import re_path
 from OMERO_metrics.dash_apps import (
-    foi_apps,
-    plotly_apps,
-    dash_apps,
-    dash_image,
+    dash_image_foi,
     dash_project,
     dash_dataset_psf_beads,
     dash_image_psf_beads,
-    dash_dataset_metrics,
+    dash_dataset_foi,
     dash_group,
     dash_microscope,
     dash_forms,
     dash_dataset_form,
+    dash_feedback,
 )
 
 urlpatterns = [
     re_path(r"^$", index, name="OMERO_metrics_index"),
-    re_path(
-        r"^demo-one",
-        TemplateView.as_view(template_name="OMERO_metrics/demo_one.html"),
-        name="demo-one",
-    ),
-    re_path(
-        r"^foi_key_measurement",
-        dash_example_1_view,
-        name="foi_key_measurement",
-    ),
     re_path(
         r"^webgateway_templates/(?P<base_template>[a-z0-9_]+)/",
         web_gateway_templates,
@@ -59,5 +46,4 @@ urlpatterns = [
     ),
     re_path(r"^microscope", microscope_view, name="microscope"),
     re_path(r"^upload_image", upload_image, name="upload_image"),
-    re_path(r"^test_forms", test_request, name="test_forms"),
 ]
