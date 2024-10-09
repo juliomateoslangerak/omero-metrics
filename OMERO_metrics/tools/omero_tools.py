@@ -1029,10 +1029,6 @@ def create_table(
 ):
     """Creates a table annotation from a pandas dataframe or a list of columns as dictionaries."""
     # We need to change the connection group in order to be able to save the table.
-    if isinstance(omero_object, list):
-        set_group(conn, omero_object[0])
-    else:
-        set_group(conn, omero_object)
 
     table_name = f'{table_name}_{"".join([choice(ascii_letters) for _ in range(32)])}.h5'
     columns = _create_columns(table)

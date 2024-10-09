@@ -131,6 +131,10 @@ def image_rois(request, image_id, conn=None, **kwargs):
 def center_viewer_image(request, image_id, conn=None, **kwargs):
     dash_context = request.session.get("django_plotly_dash", dict())
     image_wrapper = conn.getObject("Image", image_id)
+    group_id = conn.getGroupFromContext().getName()
+    print(
+        f"IMAGE VIEW----------------------------------------{group_id}---------------"
+    )
     im = ImageManager(conn, image_wrapper)
     im.load_data()
     im.visualize_data()
@@ -145,7 +149,8 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
     # request["conn"] = conn
     # conn.SERVICE_OPTS.setOmeroGroup("-1")
     project_wrapper = conn.getObject("Project", project_id)
-    group_id = project_wrapper.getDetails().getGroup().getId()
+    group_id = conn.getGroupFromContext().getName()
+    print(f"PROJECT VIEW--------------{group_id}--------------------------")
     conn.SERVICE_OPTS.setOmeroGroup(group_id)
     pm = ProjectManager(conn, project_wrapper)
     pm.load_data()
@@ -166,8 +171,12 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
 def center_viewer_group(request, conn=None, **kwargs):
     group2 = conn.SERVICE_OPTS.getOmeroGroup()
     group = conn.getGroupFromContext()
-    group_id = group.getId()
+    group_id = conn.getGroupFromContext().getName()
     group_name = group.getName()
+    print(
+        f"GROUP VIEW----------------------------------------{group_id}---------------"
+    )
+
     group_description = group.getDescription()
     context = {
         "group_id": group_id,
@@ -183,6 +192,10 @@ def center_viewer_group(request, conn=None, **kwargs):
 def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
     dash_context = request.session.get("django_plotly_dash", dict())
     dataset_wrapper = conn.getObject("Dataset", dataset_id)
+    group_id = conn.getGroupFromContext().getName()
+    print(
+        f"DATASET VIEW----------------------------------------{group_id}---------------"
+    )
     dm = DatasetManager(conn, dataset_wrapper, load_images=True)
     dm.load_data()
     dm.is_processed()
@@ -240,6 +253,7 @@ def save_config(request, conn=None, **kwargs):
 @login_required()
 def run_analysis_view(request, conn=None, **kwargs):
     try:
+        co = conn.getEventContext()
         dataset_wrapper = conn.getObject("Dataset", kwargs["dataset_id"])
         project_wrapper = dataset_wrapper.getParent()
         group_id = project_wrapper.getDetails().getGroup().getId()
@@ -253,7 +267,11 @@ def run_analysis_view(request, conn=None, **kwargs):
         # g_id = dataset_wrapper.getDetails().getGroup().getId()
         conn.SERVICE_OPTS.setOmeroGroup(int(group_id))
         # conn.setGroupForSession(int(g_id))
+        co5 = conn.getEventContext()
+
         print()
+        co5.setGroup(group_id)
+        c = co5
         print(f"Group ID           2: {conn.getGroupFromContext().getName()}")
         list_images = kwargs["list_images"]
         list_mm_images = [
