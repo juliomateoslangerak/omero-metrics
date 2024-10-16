@@ -12,8 +12,12 @@ Field_TYPE_MAPPING = {
 from typing import get_origin, get_args, Union
 
 
-def extract_form_data(form_content):
-    return {i["props"]["id"]: i["props"]["value"] for i in form_content}
+def extract_form_data(form_content, class_name):
+    replace_str = class_name + "_"
+    return {
+        i["props"]["id"].replace(replace_str, ""): i["props"]["value"]
+        for i in form_content
+    }
 
 
 def disable_all_fields_dash_form(form):
@@ -56,7 +60,11 @@ def get_dmc_field_input(
     field_info = get_field_types(field)
     input_field_name = getattr(dmc, type_mapping[field_info["type"]])
     input_field = input_field_name()
-    input_field.id = field_info["field_name"].replace(" ", "_").lower()
+    input_field.id = (
+        mm_object.__class__.__name__
+        + "_"
+        + field_info["field_name"].replace(" ", "_").lower()
+    )
     input_field.label = field_info["field_name"]
     input_field.placeholder = "Enter " + field_info["field_name"]
     input_field.value = (
@@ -86,7 +94,9 @@ def validate_form(state):
 
 
 def add_space_between_capitals(s: str) -> str:
-    return re.sub(r"(?<!^)(?=[A-Z])", " ", s)
+    label = re.sub(r"(?<!^)(?=[A-Z])", " ", s)
+    label = label.replace("P S F", "PSF")
+    return label
 
 
 class DashForm:

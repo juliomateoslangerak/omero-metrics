@@ -3,10 +3,6 @@ from dash import dcc, html, dash_table
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 
-external_scripts = [
-    # add the tailwind cdn url hosting the files with the utility classes
-    {"src": "https://cdn.tailwindcss.com"}
-]
 stylesheets = [
     "https://unpkg.com/@mantine/dates@7/styles.css",
     "https://unpkg.com/@mantine/code-highlight@7/styles.css",
@@ -37,7 +33,6 @@ content = dmc.Card(
 app = DjangoDash(
     "PSF_Beads",
     external_stylesheets=stylesheets,
-    external_scripts=external_scripts,
 )
 
 
