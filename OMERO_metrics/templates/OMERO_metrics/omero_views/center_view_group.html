@@ -19,18 +19,8 @@
 {% block body %}
 
 
-<div class="header">
-    <div class="image"> <img src="{% static 'OMERO_metrics/images/logo.png' %}" width='125px' height="100px" alt="Omero metrics image"> </div>
-    <div class="text">Omero Metrics Dashboards</div>
+<div  class="{%plotly_class name="omero_group_dash"%}">
+    {%plotly_app name="omero_group_dash" ratio=1%}
 </div>
-
-<div class="content">
-<p>Test 2</p>
-<p>Group: {{ group_name }}</p>
-<p>Group ID: {{ group_id }}</p>
-<p>Group Description: {{ group_description }}</p>
-<p> This is a global view of the group / Microscoope</p>
-    </div>
-
 
 {% endblock %}

@@ -329,9 +329,6 @@ def update_image(*args, **kwargs):
             "center_x",
         ]
     ].copy()
-    # df = df_beads_location[df_beads_location["bead_id"] == 0].copy()
-    # df = df.reset_index(drop=True)
-    # print(df)
     beads, roi_rect = get_beads_info(df_beads_location, min_distance)
     if invert:
         color = color + "_r"
@@ -411,9 +408,6 @@ def callback_mip(*args, **kwargs):
         x0, xf, y0, yf = crop_bead_index(bead, min_dist, stack)
         mip_x, mip_y, mip_z = mip_graphs(x0, xf, y0, yf, stack)
         fig_mip_go = fig_mip(mip_x, mip_y, mip_z, title)
-        # print(
-        #     f"-----------------------------------GRAPH MIP {fig_mip_go}----------------------------------------"
-        # )
         return (
             fig_mip_go,
             line_graph_axis(bead_index, channel_index, axis, kwargs),
@@ -428,7 +422,6 @@ def line_graph_axis(bead_index, channel_index, axis, kwargs):
     df_axis_3d = df_axis[
         df_axis.columns[df_axis.columns.str.startswith(str(image_id))]
     ]
-    # 81_0_0_y_fitted image_id_channel_nr_bead_id_axis_fitted
     df_meta_x = pd.DataFrame(
         data=[
             [

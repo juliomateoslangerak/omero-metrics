@@ -341,7 +341,7 @@ class DatasetManager:
                         "dataset_id": self.omero_dataset.getId(),
                     }
                 else:
-                    message = "No, config file detect. Click on the project parent to load the config file."
+                    message = "No, config file detected. Click on the project parent to load the config file."
                     logger.warning(message)
                     self.context, self.template = warning_message(message)
             else:

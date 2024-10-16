@@ -218,7 +218,7 @@ def update_km_table(*args, **kwargs):
     table_kkm = table[
         [
             "channel_name",
-            "image_name",
+            # "image_name",
             "center_region_intensity_fraction",
             "center_region_area_fraction",
             "max_intensity",
@@ -282,9 +282,6 @@ def dataset_callback_intensity_map(*args, **kwargs):
             "xanchor": "center",
             "font": {"family": "Arial", "size": 18, "color": "#63aa47"},
         }
-    )
-    print(
-        f"------------------------------------------------------{len(image_channel)}"
     )
     return fig, df_new.to_dict("records")
 

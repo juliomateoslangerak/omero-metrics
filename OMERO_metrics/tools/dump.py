@@ -788,9 +788,11 @@ def dump_config_input_parameters(
         f.write(
             dumper.dumps(
                 {
-                    "analyse_type": input_parameters.class_name,
-                    "input_parameters": input_parameters,
-                    "sample": sample,
+                    "input_parameters": {
+                        "type": input_parameters.class_name,
+                        "fields": input_parameters,
+                    },
+                    "sample": {"type": sample.class_name, "fields": sample},
                 }
             )
         )

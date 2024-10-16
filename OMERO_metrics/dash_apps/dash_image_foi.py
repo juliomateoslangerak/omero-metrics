@@ -62,8 +62,7 @@ dash_app_image.layout = dmc.MantineProvider(
                                     figure={},
                                     id="rois-graph",
                                     style={
-                                        "margin-top": "0px",
-                                        "margin-bottom": "0px",
+                                        "margin": "10px",
                                     },
                                 ),
                             ],

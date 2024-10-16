@@ -8,7 +8,7 @@ from OMERO_metrics.dash_apps import (
     dash_dataset_foi,
     dash_group,
     dash_microscope,
-    dash_forms,
+    dash_form_config,
     dash_dataset_form,
     dash_feedback,
 )

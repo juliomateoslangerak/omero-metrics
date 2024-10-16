@@ -115,7 +115,7 @@ def webclient_templates(request, base_template, **kwargs):
     return {"template": template_name}
 
 
-@login_required()
+@login_required(setGroupContext=True)
 def image_rois(request, image_id, conn=None, **kwargs):
     """Simply shows a page of ROI
     thumbnails for the specified image"""
@@ -127,101 +127,107 @@ def image_rois(request, image_id, conn=None, **kwargs):
     )
 
 
-@login_required()
+@login_required(setGroupContext=True)
 def center_viewer_image(request, image_id, conn=None, **kwargs):
     dash_context = request.session.get("django_plotly_dash", dict())
-    image_wrapper = conn.getObject("Image", image_id)
-    group_id = conn.getGroupFromContext().getName()
-    print(
-        f"IMAGE VIEW----------------------------------------{group_id}---------------"
-    )
-    im = ImageManager(conn, image_wrapper)
-    im.load_data()
-    im.visualize_data()
-    dash_context["context"] = im.context
-    template = im.template
-    request.session["django_plotly_dash"] = dash_context
-    return render(request, template_name=template)
+    try:
+        image_wrapper = conn.getObject("Image", image_id)
+        im = ImageManager(conn, image_wrapper)
+        im.load_data()
+        im.visualize_data()
+        context = im.context
+        dash_context["context"] = context
+        request.session["django_plotly_dash"] = dash_context
+        return render(request, template_name=im.template, context=context)
+    except Exception as e:
+        dash_context["context"] = {"message": str(e)}
+        request.session["django_plotly_dash"] = dash_context
+        return render(
+            request, template_name="OMERO_metrics/omero_views/warning.html"
+        )
 
 
-@login_required()
+@login_required(setGroupContext=True)
 def center_viewer_project(request, project_id, conn=None, **kwargs):
-    # request["conn"] = conn
-    # conn.SERVICE_OPTS.setOmeroGroup("-1")
-    project_wrapper = conn.getObject("Project", project_id)
-    group_id = conn.getGroupFromContext().getName()
-    print(f"PROJECT VIEW--------------{group_id}--------------------------")
-    conn.SERVICE_OPTS.setOmeroGroup(group_id)
-    pm = ProjectManager(conn, project_wrapper)
-    pm.load_data()
-    pm.is_homogenized()
-    pm.load_config_file()
-    pm.check_processed_data()
-    pm.visualize_data()
-    context = pm.context
-    template = pm.template
     dash_context = request.session.get("django_plotly_dash", dict())
-    dash_context["context"] = context
-    dash_context["context"]["project_id"] = project_id
-    request.session["django_plotly_dash"] = dash_context
-    return render(request, template_name=template, context=context)
+    try:
+        project_wrapper = conn.getObject("Project", project_id)
+        pm = ProjectManager(conn, project_wrapper)
+        pm.load_data()
+        pm.is_homogenized()
+        pm.load_config_file()
+        pm.check_processed_data()
+        pm.visualize_data()
+        context = pm.context
+        template = pm.template
+        dash_context["context"] = context
+        dash_context["context"]["project_id"] = project_id
+        request.session["django_plotly_dash"] = dash_context
+        return render(request, template_name=template, context=context)
+    except Exception as e:
+        dash_context["context"] = {"message": str(e)}
+        request.session["django_plotly_dash"] = dash_context
+        return render(
+            request, template_name="OMERO_metrics/omero_views/warning.html"
+        )
 
 
-@login_required()
+@login_required(setGroupContext=True)
 def center_viewer_group(request, conn=None, **kwargs):
-    group2 = conn.SERVICE_OPTS.getOmeroGroup()
-    group = conn.getGroupFromContext()
-    group_id = conn.getGroupFromContext().getName()
-    group_name = group.getName()
-    print(
-        f"GROUP VIEW----------------------------------------{group_id}---------------"
-    )
+    if request.session.get("active_group"):
+        active_group = request.session["active_group"]
+    else:
+        active_group = conn.getEventContext().groupId
 
+    dash_context = request.session.get("django_plotly_dash", dict())
+    group = conn.getObject("ExperimenterGroup", active_group)
+    group_name = group.getName()
     group_description = group.getDescription()
     context = {
-        "group_id": group_id,
-        "group_name": group2,
+        "group_id": active_group,
+        "group_name": group_name,
         "group_description": group_description,
     }
-    return render(
-        request, "OMERO_metrics/omero_views/center_view_group.html", context
-    )
+    dash_context["context"] = context
+    request.session["django_plotly_dash"] = dash_context
+    return render(request, "OMERO_metrics/omero_views/center_view_group.html")
 
 
-@login_required()
+@login_required(setGroupContext=True)
 def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
     dash_context = request.session.get("django_plotly_dash", dict())
-    dataset_wrapper = conn.getObject("Dataset", dataset_id)
-    group_id = conn.getGroupFromContext().getName()
-    print(
-        f"DATASET VIEW----------------------------------------{group_id}---------------"
-    )
-    dm = DatasetManager(conn, dataset_wrapper, load_images=True)
-    dm.load_data()
-    dm.is_processed()
-    dm.visualize_data()
-    dash_context["context"] = dm.context
-    template = dm.template
-    request.session["django_plotly_dash"] = dash_context
-    return render(request, template_name=template)
+    try:
+        dataset_wrapper = conn.getObject("Dataset", dataset_id)
+        dm = DatasetManager(conn, dataset_wrapper, load_images=True)
+        dm.load_data()
+        dm.is_processed()
+        dm.visualize_data()
+        dash_context["context"] = dm.context
+        template = dm.template
+        request.session["django_plotly_dash"] = dash_context
+        return render(request, template_name=template)
+    except Exception as e:
+        dash_context["context"] = {"message": str(e)}
+        request.session["django_plotly_dash"] = dash_context
+        return render(
+            request, template_name="OMERO_metrics/omero_views/warning.html"
+        )
 
 
-@login_required()
+@login_required(setGroupContext=True)
 def microscope_view(request, conn=None, **kwargs):
     """Simply shows a page of ROI thumbnails for
     the specified image"""
     return render(request, "OMERO_metrics/microscope.html")
 
 
-@login_required()
+@login_required(setGroupContext=True)
 def save_config(request, conn=None, **kwargs):
     try:
         project_id = kwargs["project_id"]
         mm_input_parameters = kwargs["input_parameters"]
         mm_sample = kwargs["sample"]
         project_wrapper = conn.getObject("Project", project_id)
-        group_id = project_wrapper.getDetails().getGroup().getId()
-        conn.SERVICE_OPTS.setOmeroGroup(group_id)
         setup = load_config_file_data(conn, project_wrapper)
         if setup is None:
             try:
@@ -250,29 +256,11 @@ def save_config(request, conn=None, **kwargs):
         return str(e), "red"
 
 
-@login_required()
+@login_required(setGroupContext=True)
 def run_analysis_view(request, conn=None, **kwargs):
     try:
-        co = conn.getEventContext()
         dataset_wrapper = conn.getObject("Dataset", kwargs["dataset_id"])
         project_wrapper = dataset_wrapper.getParent()
-        group_id = project_wrapper.getDetails().getGroup().getId()
-        group_id2 = conn.getGroupFromContext().getName()
-        group_id3 = dataset_wrapper.getDetails().getGroup().getName()
-        print(f"Group from dataset           4: {group_id3}")
-        print(f"Group context          3: {group_id2}")
-        print(
-            f"Group project           1: {project_wrapper.getDetails().getGroup().getName()}"
-        )
-        # g_id = dataset_wrapper.getDetails().getGroup().getId()
-        conn.SERVICE_OPTS.setOmeroGroup(int(group_id))
-        # conn.setGroupForSession(int(g_id))
-        co5 = conn.getEventContext()
-
-        print()
-        co5.setGroup(group_id)
-        c = co5
-        print(f"Group ID           2: {conn.getGroupFromContext().getName()}")
         list_images = kwargs["list_images"]
         list_mm_images = [
             load_image(conn.getObject("Image", int(i))) for i in list_images
@@ -322,7 +310,7 @@ def run_analysis_view(request, conn=None, **kwargs):
                 return "Analysis completed successfully", "green"
             except Exception as e:
                 return (
-                    e.msg,
+                    str(e),
                     "red",
                 )
         else:

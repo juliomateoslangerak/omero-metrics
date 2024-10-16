@@ -11,52 +11,64 @@ dash_app_group = DjangoDash(
 
 dash_app_group.layout = dmc.MantineProvider(
     [
-        html.Div(id="blank-output"),
-        html.Div(
+        dmc.Container(
             [
-                dcc.Tabs(
-                    id="tabs-example-1",
-                    value="tab-1",
+                dmc.Card(
                     children=[
-                        dcc.Tab(label="Tab one", value="tab-1"),
-                        dcc.Tab(label="Tab two", value="tab-2"),
+                        dmc.Group(
+                            [
+                                html.Img(
+                                    src="./assets/images/microscope.png",
+                                    style={"width": "100px"},
+                                ),
+                                dmc.Title(
+                                    "Microscope Health Dashboard",
+                                    c="#189A35",
+                                    size="h3",
+                                    mb=10,
+                                    mt=5,
+                                ),
+                            ],
+                            justify="space-between",
+                            align="center",
+                            mt="md",
+                            mb="xs",
+                        ),
+                        dmc.Divider(mb="sm"),
+                        dmc.Text(
+                            id="microscope_info",
+                            size="sm",
+                            c="dimmed",
+                        ),
                     ],
+                    withBorder=True,
+                    shadow="sm",
+                    radius="md",
+                    style={
+                        "width": "100%",
+                        "maxWidth": "600px",
+                        "margin": "auto",
+                    },
                 ),
-                html.Div(id="tabs-example-content-1"),
-                dmc.Title("Plot Over Time", c="#63aa47", size="h3", mb=10),
-                dcc.Graph(
-                    id="graph_line", className="loadContentli", figure={}
-                ),
-            ]
-        ),
+                html.Div(id="blank-input"),
+            ],
+            style={"padding": "20px"},
+        )
     ]
 )
 
 
 @dash_app_group.expanded_callback(
-    dash.dependencies.Output("tabs-example-content-1", "children"),
-    dash.dependencies.Input("tabs-example-1", "value"),
+    dash.dependencies.Output("microscope_info", "children"),
+    dash.dependencies.Input("blank-input", "children"),
 )
-def render_content(tab):
-    if tab == "tab-1":
-        return html.Div(
-            [
-                html.H3("Tab content 1"),
-                dcc.Graph(
-                    figure=dict(
-                        data=[dict(x=[1, 2, 3], y=[3, 1, 2], type="bar")]
-                    )
-                ),
-            ]
-        )
-    elif tab == "tab-2":
-        return html.Div(
-            [
-                html.H3("Tab content 2"),
-                dcc.Graph(
-                    figure=dict(
-                        data=[dict(x=[1, 2, 3], y=[5, 10, 6], type="bar")]
-                    )
-                ),
-            ]
-        )
+def render_content(*args, **kwargs):
+    group_name = kwargs["session_state"]["context"]["group_name"]
+    group_id = kwargs["session_state"]["context"]["group_id"]
+    group_description = kwargs["session_state"]["context"]["group_description"]
+    result = [
+        f"Group Name: {group_name}<br>",
+        f"Group ID: {group_id}<br>",
+        f"Group Description: {group_description}<br>",
+    ]
+    return result

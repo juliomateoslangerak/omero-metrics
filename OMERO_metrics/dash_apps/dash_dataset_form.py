@@ -20,13 +20,9 @@ def get_icon(icon):
 
 
 min_step = 0
-max_step = 3
+max_step = 2
 active = 0
 
-formManager = dft.DashForm(
-    mm_schema.Sample, disabled=False, form_id="form_content"
-)
-sampleFORM = formManager.form
 
 ALLOWED_ANALYSIS_TYPES = [
     "FieldIlluminationInputParameters",
@@ -36,10 +32,6 @@ ALLOWED_ANALYSIS_TYPES = [
 
 primary_color = "#008080"
 
-external_scripts = [
-    # add the tailwind cdn url hosting the files with the utility classes
-    {"src": "https://cdn.tailwindcss.com"}
-]
 stylesheets = [
     "https://unpkg.com/@mantine/dates@7/styles.css",
     "https://unpkg.com/@mantine/code-highlight@7/styles.css",
@@ -53,7 +45,6 @@ dash_form_project = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
     external_stylesheets=stylesheets,
-    external_scripts=external_scripts,
 )
 
 analysis_types = [
@@ -114,7 +105,9 @@ dash_form_project.layout = dmc.MantineProvider(
                                                     ta="center",
                                                 ),
                                                 html.Br(),
-                                                sampleFORM,
+                                                html.Div(
+                                                    id="sample_container"
+                                                ),
                                             ],
                                             align="center",
                                             style={
@@ -135,36 +128,39 @@ dash_form_project.layout = dmc.MantineProvider(
                                                 dmc.Text(
                                                     "Step 2 Input Data: Select the input data for the analysis",
                                                 ),
-                                                dmc.Divider(
-                                                    label="Input data",
-                                                    color="#189A35",
-                                                    labelPosition="left",
-                                                    size=10,
-                                                ),
-                                                dmc.MultiSelect(
-                                                    label="Select Images to process",
-                                                    placeholder="Select images",
-                                                    id="framework-multi-select",
-                                                    w="300",
-                                                    mb=10,
-                                                    leftSection=DashIconify(
-                                                        icon="material-symbols-light:image"
-                                                    ),
-                                                    rightSection=DashIconify(
-                                                        icon="radix-icons:chevron-down"
-                                                    ),
-                                                ),
-                                                dmc.Divider(
-                                                    label="Input Parameters from the config file",
-                                                    color="#189A35",
-                                                    labelPosition="left",
-                                                    size=10,
-                                                ),
-                                                html.Div(
-                                                    id="setup-text",
+                                                dmc.Grid(
+                                                    [
+                                                        dmc.GridCol(
+                                                            [
+                                                                dmc.MultiSelect(
+                                                                    label="Select Images to process",
+                                                                    placeholder="Select images",
+                                                                    id="framework-multi-select",
+                                                                    w="300",
+                                                                    mb=10,
+                                                                    leftSection=DashIconify(
+                                                                        icon="material-symbols-light:image"
+                                                                    ),
+                                                                    rightSection=DashIconify(
+                                                                        icon="radix-icons:chevron-down"
+                                                                    ),
+                                                                ),
+                                                            ],
+                                                            span="auto",
+                                                        ),
+                                                        dmc.GridCol(
+                                                            [
+                                                                html.Div(
+                                                                    id="setup-text",
+                                                                ),
+                                                            ],
+                                                            span="auto",
+                                                        ),
+                                                    ],
+                                                    justify="space-around",
                                                 ),
                                             ],
-                                            align="flex-start",
+                                            align="center",
                                             style={
                                                 "background-color": "white",
                                                 "border-radius": "0.5rem",
@@ -173,10 +169,7 @@ dash_form_project.layout = dmc.MantineProvider(
                                         )
                                     ],
                                 ),
-                                dmc.StepperStep(
-                                    id="step_review",
-                                    label="Review",
-                                    description="Get full access",
+                                dmc.StepperCompleted(
                                     children=dmc.Stack(
                                         [
                                             dmc.Text(
@@ -203,27 +196,6 @@ dash_form_project.layout = dmc.MantineProvider(
                                         ]
                                     ),
                                 ),
-                                dmc.StepperCompleted(
-                                    children=[
-                                        dmc.Text(
-                                            "Please click on the button to run the analysis",
-                                            ta="center",
-                                            mt="20",
-                                            mb="20",
-                                        ),
-                                        dmc.Center(
-                                            id="analysis_progress",
-                                            children=[
-                                                dmc.Button(
-                                                    id="run_analysis",
-                                                    children="Run Analysis",
-                                                    color="green",
-                                                    size="lg",
-                                                )
-                                            ],
-                                        ),
-                                    ]
-                                ),
                             ],
                             styles={
                                 "separator": {"border-color": "#189A35"},
@@ -240,9 +212,9 @@ dash_form_project.layout = dmc.MantineProvider(
                                 dmc.Button(
                                     "Back",
                                     id="back-basic-usage",
-                                    variant="default",
+                                    # variant="default",
                                 ),
-                                dmc.Button("Next step", id="next-basic-usage"),
+                                dmc.Button("Next", id="next-basic-usage"),
                             ],
                         ),
                     ],
@@ -272,16 +244,26 @@ dash_form_project.layout = dmc.MantineProvider(
     [dash.dependencies.Input("blank", "children")],
 )
 def update_setup(*args, **kwargs):
-    input_parameters = kwargs["session_state"]["context"]["input_parameters"]
-    input_parameters_object = getattr(
-        mm_schema, input_parameters["analyse_type"]
-    )
-    input_parameters_mm = input_parameters_object(
-        **input_parameters["input_parameters"]
-    )
+    input_parameters = kwargs["session_state"]["context"]["input_parameters"][
+        "input_parameters"
+    ]
+    input_parameters_object = getattr(mm_schema, input_parameters["type"])
+    input_parameters_mm = input_parameters_object(**input_parameters["fields"])
     form = dft.DashForm(
         input_parameters_mm, disabled=True, form_id="input_parameters_form"
     )
+    return form.form
+
+
+@dash_form_project.expanded_callback(
+    dash.dependencies.Output("sample_container", "children"),
+    [dash.dependencies.Input("blank", "children")],
+)
+def update_sample(*args, **kwargs):
+    sample = kwargs["session_state"]["context"]["input_parameters"]["sample"]
+    mm_sample = getattr(mm_schema, sample["type"])
+    mm_sample = mm_sample(**sample["fields"])
+    form = dft.DashForm(mm_sample, disabled=True, form_id="sample_form")
     return form.form
 
 
@@ -292,7 +274,9 @@ def update_setup(*args, **kwargs):
 )
 def list_images_multi_selector(*args, **kwargs):
     list_images = kwargs["session_state"]["context"]["list_images"]
-    return list_images, [list_images[0]["value"]]
+    return list_images, [
+        list_images[i]["value"] for i in range(len(list_images))
+    ]
 
 
 @dash_form_project.expanded_callback(
@@ -310,7 +294,7 @@ def multi_selector_callback(*args, **kwargs):
     dash.dependencies.Output("config_col", "children"),
     [
         dash.dependencies.Input("next-basic-usage", "n_clicks"),
-        dash.dependencies.State("form_content", "children"),
+        dash.dependencies.State("sample_form", "children"),
         dash.dependencies.State("framework-multi-select", "value"),
         dash.dependencies.State("input_parameters_form", "children"),
         dash.dependencies.State("stepper-basic-usage", "active"),
@@ -360,12 +344,14 @@ def update_review_form(*args, **kwargs):
 
 @dash_form_project.expanded_callback(
     dash.dependencies.Output("stepper-basic-usage", "active"),
+    dash.dependencies.Output("next-basic-usage", "children"),
+    dash.dependencies.Output("next-basic-usage", "color"),
     [
         dash.dependencies.Input("back-basic-usage", "n_clicks"),
         dash.dependencies.Input("next-basic-usage", "n_clicks"),
         dash.dependencies.State("framework-multi-select", "value"),
         dash.dependencies.State("stepper-basic-usage", "active"),
-        dash.dependencies.State("form_content", "children"),
+        dash.dependencies.State("sample_form", "children"),
     ],
     prevent_initial_call=True,
 )
@@ -374,6 +360,8 @@ def stepper_callback(*args, **kwargs):
     multi_selector = args[2]
     button_id = kwargs["callback_context"].triggered[0]["prop_id"]
     step = current if current is not None else active
+    next_text = "Next"
+    next_color = "blue"
     if button_id == "back-basic-usage.n_clicks":
         step = step - 1 if step > min_step else step
     else:
@@ -382,48 +370,56 @@ def stepper_callback(*args, **kwargs):
         elif step == 1 and len(multi_selector) < 1:
             step = 1
         else:
+            if step >= 1:
+                next_text = "Run Analysis"
+                next_color = "green"
             step = step + 1 if step < max_step else step
-    return step
+    return step, next_text, next_color
 
 
 dash_form_project.clientside_callback(
     """
-    function updateLoadingState(n_clicks) {
-        return [true, []];
+    function updateLoadingState(n_clicks, current) {
+        if (current == 2) {
+            return true
+        } else {
+            return false
+        }
     }
     """,
-    dash.dependencies.Output("run_analysis", "loading", allow_duplicate=True),
-    dash.dependencies.Output("group_buttons", "children"),
-    dash.dependencies.Input("run_analysis", "n_clicks"),
+    dash.dependencies.Output(
+        "next-basic-usage", "loading", allow_duplicate=True
+    ),
+    dash.dependencies.Input("next-basic-usage", "n_clicks"),
+    dash.dependencies.State("stepper-basic-usage", "active"),
     prevent_initial_call=True,
 )
 
 
 @dash_form_project.expanded_callback(
-    dash.dependencies.Output("analysis_progress", "children"),
+    dash.dependencies.Output("output-data-upload", "children"),
     [
-        dash.dependencies.Input("run_analysis", "n_clicks"),
+        dash.dependencies.Input("next-basic-usage", "n_clicks"),
         dash.dependencies.State("framework-multi-select", "value"),
-        dash.dependencies.State("form_content", "children"),
+        # dash.dependencies.State("form_content", "children"),
         dash.dependencies.State("stepper-basic-usage", "active"),
     ],
     prevent_initial_call=True,
 )
 def run_analysis(*args, **kwargs):
-    input_parameters = kwargs["session_state"]["context"]["input_parameters"]
+    config = kwargs["session_state"]["context"]["input_parameters"]
+    input_parameters = config["input_parameters"]
+    sample = config["sample"]
     dataset_id = kwargs["session_state"]["context"]["dataset_id"]
     list_images = args[1]
-    input_parameters_object = getattr(
-        mm_schema, input_parameters["analyse_type"]
-    )
-    mm_input_parameters = input_parameters_object(
-        **input_parameters["input_parameters"]
-    )
-    form_content = args[2]
-    sample = dft.extract_form_data(form_content)
-    mm_sample = mm_schema.Sample(**sample)
-    current = args[3]
-    if current == 3:
+    input_parameters_object = getattr(mm_schema, input_parameters["type"])
+    mm_input_parameters = input_parameters_object(**input_parameters["fields"])
+    # form_content = args[1]
+    sample_object = getattr(mm_schema, sample["type"])
+    # sample_ex = dft.extract_form_data(form_content, sample_object.__class__.__name__)
+    mm_sample = sample_object(**sample["fields"])
+    current = args[2]
+    if current == 2:
         sleep(3)
         msg, color = run_analysis_view(
             request=kwargs["request"],
@@ -432,6 +428,14 @@ def run_analysis(*args, **kwargs):
             list_images=list_images,
             mm_input_parameters=mm_input_parameters,
         )
-        return dmc.Alert(msg, color=color)
+        return dmc.Alert(msg, color=color, title="Analysis Results")
     else:
         return dash.no_update
+
+
+#
+# @dash_form_project.expanded_callback(
+#
+# )
+# def update_next_button(*args, **kwargs):
+#     return dmc.Button("Next step", id="next-basic-usage")
