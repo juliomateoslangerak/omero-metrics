@@ -1,3 +1,4 @@
+from django.utils.datetime_safe import datetime
 from omeroweb.webclient.decorators import login_required, render_response
 from OMERO_metrics.tools.data_managers import (
     DatasetManager,
@@ -262,6 +263,7 @@ def run_analysis_view(request, conn=None, **kwargs):
         dataset_wrapper = conn.getObject("Dataset", kwargs["dataset_id"])
         project_wrapper = dataset_wrapper.getParent()
         list_images = kwargs["list_images"]
+        comment = kwargs["comment"]
         list_mm_images = [
             load_image(conn.getObject("Image", int(i))) for i in list_images
         ]
@@ -295,9 +297,16 @@ def run_analysis_view(request, conn=None, **kwargs):
             ),
             experimenter=mm_experimenter,
         )
+
         run_status = DATA_TYPE[mm_input_parameters.class_name][3](mm_dataset)
+
         if run_status and mm_dataset.processed:
             try:
+                mm_dataset["output"]["comment"] = mm_schema.Comment(
+                    datetime=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    text=comment,
+                    comment_type="PROCESSING",
+                )
                 dump_dataset(
                     conn=conn,
                     dataset=mm_dataset,
