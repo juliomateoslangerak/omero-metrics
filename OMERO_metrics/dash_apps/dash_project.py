@@ -207,20 +207,24 @@ def update_project_view(*args, **kwargs):
         date = dates[selected_dataset]
         grid = dmc.Stack(
             [
-                dmc.Table(
-                    striped=True,
-                    data={
-                        "head": table_kkm.columns.tolist(),
-                        "body": table_kkm.values.tolist(),
-                        "caption": "Key Measurements for the selected dataset",
-                    },
-                    highlightOnHover=True,
-                    style={
-                        "background-color": "white",
-                        "width": "auto",
-                        "height": "auto",
-                    },
-                ),
+                dmc.ScrollArea(
+                    [
+                        dmc.Table(
+                            striped=True,
+                            data={
+                                "head": table_kkm.columns.tolist(),
+                                "body": table_kkm.values.tolist(),
+                                "caption": "Key Measurements for the selected dataset",
+                            },
+                            highlightOnHover=True,
+                            style={
+                                "background-color": "white",
+                                "width": "auto",
+                                "height": "auto",
+                            },
+                        ),
+                    ]
+                )
             ]
         )
         return [

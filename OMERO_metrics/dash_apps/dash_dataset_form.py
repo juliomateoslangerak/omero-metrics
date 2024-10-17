@@ -145,6 +145,14 @@ dash_form_project.layout = dmc.MantineProvider(
                                                                         icon="radix-icons:chevron-down"
                                                                     ),
                                                                 ),
+                                                                dmc.Textarea(
+                                                                    id="comment",
+                                                                    label="Comment",
+                                                                    placeholder="Add a comment",
+                                                                    w=300,
+                                                                    autosize=True,
+                                                                    minRows=2,
+                                                                ),
                                                             ],
                                                             span="auto",
                                                         ),
@@ -403,6 +411,7 @@ dash_form_project.clientside_callback(
         dash.dependencies.State("framework-multi-select", "value"),
         # dash.dependencies.State("form_content", "children"),
         dash.dependencies.State("stepper-basic-usage", "active"),
+        dash.dependencies.State("comment", "value"),
     ],
     prevent_initial_call=True,
 )
@@ -416,6 +425,7 @@ def run_analysis(*args, **kwargs):
     mm_input_parameters = input_parameters_object(**input_parameters["fields"])
     # form_content = args[1]
     sample_object = getattr(mm_schema, sample["type"])
+    print(f"Comment object: {args[3]}")
     # sample_ex = dft.extract_form_data(form_content, sample_object.__class__.__name__)
     mm_sample = sample_object(**sample["fields"])
     current = args[2]
@@ -427,6 +437,7 @@ def run_analysis(*args, **kwargs):
             mm_sample=mm_sample,
             list_images=list_images,
             mm_input_parameters=mm_input_parameters,
+            comment=args[3],
         )
         return dmc.Alert(msg, color=color, title="Analysis Results")
     else:

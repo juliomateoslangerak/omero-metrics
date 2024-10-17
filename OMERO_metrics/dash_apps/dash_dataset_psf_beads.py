@@ -40,30 +40,6 @@ app.layout = dmc.MantineProvider(
     [
         dmc.Container(
             [
-                dmc.Center(
-                    [
-                        dmc.Group(
-                            [
-                                html.Img(
-                                    src="./assets/images/logo.png",
-                                    style={"width": "100px"},
-                                ),
-                                dmc.Title(
-                                    "PSF Beads Dashboard",
-                                    c="#189A35",
-                                    size="h3",
-                                    mb=10,
-                                    mt=5,
-                                ),
-                            ]
-                        ),
-                    ],
-                    style={
-                        "background-color": "white",
-                        "border-radius": "0.5rem",
-                        "padding": "10px",
-                    },
-                ),
                 html.Div(
                     [
                         dmc.Stack(

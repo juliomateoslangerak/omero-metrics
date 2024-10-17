@@ -36,6 +36,7 @@ services:
       - "6064:4064"
     volumes:
       - "omero:/OMERO"
+    mem_limit: 16g
 
   omeroweb:
     depends_on:
@@ -58,6 +59,8 @@ services:
       - omero
     ports:
       - "5080:4080"
+    mem_limit: 16g
+
 
 networks:
   omero:
