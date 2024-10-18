@@ -6,8 +6,6 @@ import pandas as pd
 from dash_iconify import DashIconify
 from datetime import datetime
 
-from pandas.io.formats.printing import justify
-
 import OMERO_metrics.tools.dash_forms_tools as dft
 import microscopemetrics_schema.datamodel as mm_schema
 
@@ -141,7 +139,7 @@ dash_app_project.layout = dmc.MantineProvider(
                             html.Div(id="blank-output"),
                             html.Div(id="text_km"),
                             html.Div(
-                                id="clickdata",
+                                id="click_data",
                                 style={
                                     "background-color": "white",
                                     "align": "center",
@@ -165,13 +163,13 @@ dash_app_project.layout = dmc.MantineProvider(
                                 [
                                     dmc.GridCol(
                                         id="input_parameters_container",
-                                        span="auto",
+                                        span="content",
                                     ),
                                     dmc.GridCol(
-                                        id="sample_container", span="auto"
+                                        id="sample_container", span="content"
                                     ),
                                 ],
-                                justify="flex-end",
+                                justify="space-around",
                                 mt=10,
                                 mb=10,
                             ),
@@ -284,7 +282,7 @@ def update_table(*args, **kwargs):
 
 @dash_app_project.expanded_callback(
     dash.dependencies.Output("text_km", "children"),
-    dash.dependencies.Output("clickdata", "children"),
+    dash.dependencies.Output("click_data", "children"),
     [dash.dependencies.Input("line-chart", "clickData")],
     prevent_initial_call=True,
 )

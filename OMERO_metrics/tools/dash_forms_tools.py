@@ -8,7 +8,7 @@ Field_TYPE_MAPPING = {
     "float": ["NumberInput", "carbon:character-decimal"],
     "int": ["NumberInput", "carbon:character-whole-number"],
     "str": ["TextInput", "carbon:string-text"],
-    "bool": ["Checkbox", "radix-icons:ruler-horizontal"],
+    # "bool": ["Checkbox", "radix-icons:ruler-horizontal"],
 }
 from typing import get_origin, get_args, Union
 
@@ -76,6 +76,8 @@ def get_dmc_field_input(
     input_field.w = "300"
     input_field.disabled = disabled
     input_field.required = not field_info["optional"]
+    input_field.variant = "filled"
+    input_field.radius = "md"
     input_field.leftSection = DashIconify(
         icon=type_mapping[field_info["type"]][1]
     )
@@ -115,11 +117,12 @@ class DashForm:
             children=[],
             align="center",
             style={
+                "margin": "10px",
                 "width": "auto",
                 "height": "auto",
                 "padding": "10px",
                 "border-radius": "0.5rem",
-                "border": "1px solid #189A35",
+                "box-shadow": "0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)",
             },
         )
         for field in fields(self.mm_object):
