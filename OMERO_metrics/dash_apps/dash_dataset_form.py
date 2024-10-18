@@ -131,29 +131,36 @@ dash_form_project.layout = dmc.MantineProvider(
                                                 dmc.Grid(
                                                     [
                                                         dmc.GridCol(
-                                                            [
-                                                                dmc.MultiSelect(
-                                                                    label="Select Images to process",
-                                                                    placeholder="Select images",
-                                                                    id="framework-multi-select",
-                                                                    w="300",
-                                                                    mb=10,
-                                                                    leftSection=DashIconify(
-                                                                        icon="material-symbols-light:image"
+                                                            html.Div(
+                                                                [
+                                                                    dmc.MultiSelect(
+                                                                        label="Select Images to process",
+                                                                        placeholder="Select images",
+                                                                        id="framework-multi-select",
+                                                                        w="300",
+                                                                        mb=10,
+                                                                        leftSection=DashIconify(
+                                                                            icon="material-symbols-light:image"
+                                                                        ),
+                                                                        rightSection=DashIconify(
+                                                                            icon="radix-icons:chevron-down"
+                                                                        ),
                                                                     ),
-                                                                    rightSection=DashIconify(
-                                                                        icon="radix-icons:chevron-down"
+                                                                    dmc.Textarea(
+                                                                        id="comment",
+                                                                        label="Comment",
+                                                                        placeholder="Add a comment",
+                                                                        w=300,
+                                                                        autosize=True,
+                                                                        minRows=2,
                                                                     ),
-                                                                ),
-                                                                dmc.Textarea(
-                                                                    id="comment",
-                                                                    label="Comment",
-                                                                    placeholder="Add a comment",
-                                                                    w=300,
-                                                                    autosize=True,
-                                                                    minRows=2,
-                                                                ),
-                                                            ],
+                                                                ],
+                                                                style={
+                                                                    "border-radius": "0.5rem",
+                                                                    "border": "1px solid #189A35",
+                                                                    "padding": "10px",
+                                                                },
+                                                            ),
                                                             span="auto",
                                                         ),
                                                         dmc.GridCol(

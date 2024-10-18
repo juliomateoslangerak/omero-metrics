@@ -3,11 +3,12 @@ from dataclasses import fields
 from dash_iconify import DashIconify
 import re
 
+
 Field_TYPE_MAPPING = {
-    "float": "NumberInput",
-    "int": "NumberInput",
-    "str": "TextInput",
-    "bool": "Checkbox",
+    "float": ["NumberInput", "carbon:character-decimal"],
+    "int": ["NumberInput", "carbon:character-whole-number"],
+    "str": ["TextInput", "carbon:string-text"],
+    "bool": ["Checkbox", "radix-icons:ruler-horizontal"],
 }
 from typing import get_origin, get_args, Union
 
@@ -58,7 +59,7 @@ def get_dmc_field_input(
     field, mm_object, type_mapping=Field_TYPE_MAPPING, disabled=False
 ):
     field_info = get_field_types(field)
-    input_field_name = getattr(dmc, type_mapping[field_info["type"]])
+    input_field_name = getattr(dmc, type_mapping[field_info["type"]][0])
     input_field = input_field_name()
     input_field.id = (
         mm_object.__class__.__name__
@@ -75,7 +76,9 @@ def get_dmc_field_input(
     input_field.w = "300"
     input_field.disabled = disabled
     input_field.required = not field_info["optional"]
-    input_field.leftSection = DashIconify(icon="radix-icons:ruler-horizontal")
+    input_field.leftSection = DashIconify(
+        icon=type_mapping[field_info["type"]][1]
+    )
     # if not field_info['optional']:
     #     input_field.error = "This field is required"
     return input_field

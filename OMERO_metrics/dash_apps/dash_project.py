@@ -6,6 +6,11 @@ import pandas as pd
 from dash_iconify import DashIconify
 from datetime import datetime
 
+from pandas.io.formats.printing import justify
+
+import OMERO_metrics.tools.dash_forms_tools as dft
+import microscopemetrics_schema.datamodel as mm_schema
+
 primary_color = "#008080"
 
 stylesheets = [
@@ -25,93 +30,181 @@ dash_app_project = DjangoDash(
 
 dash_app_project.layout = dmc.MantineProvider(
     [
-        dmc.Container(
+        dmc.Tabs(
             [
-                dmc.Center(
+                dmc.TabsList(
                     [
-                        dmc.Group(
-                            [
-                                html.Img(
-                                    src="./assets/images/logo.png",
-                                    style={"width": "100px"},
-                                ),
-                                dmc.Title(
-                                    "Project Dashboard",
-                                    c="#189A35",
-                                    size="h3",
-                                    mb=10,
-                                    mt=5,
-                                ),
-                            ]
+                        dmc.TabsTab(
+                            "Dashboard",
+                            leftSection=DashIconify(
+                                icon="fluent-mdl2:b-i-dashboard"
+                            ),
+                            value="dashboard",
+                            color="#189A35",
+                        ),
+                        dmc.TabsTab(
+                            "Settings",
+                            leftSection=DashIconify(icon="tabler:settings"),
+                            value="settings",
+                            color="#189A35",
                         ),
                     ],
-                    style={
-                        "background-color": "white",
-                        "border-radius": "0.5rem",
-                        "padding": "10px",
-                    },
+                    grow="True",
+                    justify="space-around",
+                    variant="light",
                 ),
-                dmc.Grid(
-                    [
-                        dmc.GridCol(
-                            [
-                                dmc.Select(
-                                    id="project-dropdown",
-                                    label="Select Measurement",
-                                    w="auto",
-                                    value="0",
-                                    clearable=False,
-                                    leftSection=DashIconify(
-                                        icon="radix-icons:magnifying-glass"
+                dmc.TabsPanel(
+                    dmc.Container(
+                        [
+                            dmc.Center(
+                                [
+                                    dmc.Group(
+                                        [
+                                            html.Img(
+                                                src="./assets/images/logo.png",
+                                                style={"width": "95px"},
+                                            ),
+                                            dmc.Title(
+                                                "Project Dashboard",
+                                                c="#189A35",
+                                                size="h3",
+                                                mb=10,
+                                                mt=5,
+                                            ),
+                                        ]
                                     ),
-                                    rightSection=DashIconify(
-                                        icon="radix-icons:chevron-down"
+                                ],
+                                style={
+                                    "background-color": "white",
+                                    "border-radius": "0.5rem",
+                                    "padding": "10px",
+                                },
+                            ),
+                            dmc.Divider(
+                                variant="solid",
+                                style={"marginTop": 10, "marginBottom": 10},
+                            ),
+                            dmc.Grid(
+                                [
+                                    dmc.GridCol(
+                                        [
+                                            dmc.Select(
+                                                id="project-dropdown",
+                                                label="Select Measurement",
+                                                w="auto",
+                                                value="0",
+                                                clearable=False,
+                                                leftSection=DashIconify(
+                                                    icon="radix-icons:magnifying-glass"
+                                                ),
+                                                rightSection=DashIconify(
+                                                    icon="radix-icons:chevron-down"
+                                                ),
+                                            )
+                                        ],
+                                        span="3",
                                     ),
-                                )
-                            ],
-                            span="3",
-                        ),
-                        dmc.GridCol(
-                            [
-                                dmc.DatePicker(
-                                    id="date-picker",
-                                    label="Select Date",
-                                    valueFormat="DD-MM-YYYY",
-                                    leftSection=DashIconify(
-                                        icon="clarity:date-line"
+                                    dmc.GridCol(
+                                        [
+                                            dmc.DatePicker(
+                                                id="date-picker",
+                                                label="Select Date",
+                                                valueFormat="DD-MM-YYYY",
+                                                leftSection=DashIconify(
+                                                    icon="clarity:date-line"
+                                                ),
+                                                type="range",
+                                                w="auto",
+                                            ),
+                                        ],
+                                        span="3",
                                     ),
-                                    type="range",
-                                    w="auto",
-                                ),
-                            ],
-                            span="3",
-                        ),
-                    ],
-                    justify="space-between",
-                    style={
-                        "padding": "10px",
-                        "borderTopLeftRadius": "0.5rem",
-                        "borderTopRightRadius": "0.5rem",
-                        "backgroundColor": "white",
-                        "margin-top": "10px",
-                    },
+                                ],
+                                justify="space-between",
+                                style={
+                                    "padding": "10px",
+                                    "borderTopLeftRadius": "0.5rem",
+                                    "borderTopRightRadius": "0.5rem",
+                                    "backgroundColor": "white",
+                                    "margin-top": "10px",
+                                },
+                            ),
+                            html.Div(
+                                id="graph-project",
+                                style={"background-color": "white"},
+                            ),
+                            dmc.Divider(
+                                variant="solid",
+                                style={"marginTop": 10, "marginBottom": 10},
+                            ),
+                            html.Div(id="blank-input"),
+                            html.Div(id="blank-output"),
+                            html.Div(id="text_km"),
+                            html.Div(
+                                id="clickdata",
+                                style={
+                                    "background-color": "white",
+                                    "align": "center",
+                                },
+                            ),
+                        ],
+                        fluid=True,
+                        style={
+                            "background-color": "white",
+                            "margin": "10px",
+                            "border-radius": "0.5rem",
+                            "padding": "10px",
+                        },
+                    ),
+                    value="dashboard",
                 ),
-                html.Div(
-                    id="graph-project",
-                    style={"background-color": "white"},
+                dmc.TabsPanel(
+                    dmc.Container(
+                        children=[
+                            dmc.Grid(
+                                [
+                                    dmc.GridCol(
+                                        id="input_parameters_container",
+                                        span="auto",
+                                    ),
+                                    dmc.GridCol(
+                                        id="sample_container", span="auto"
+                                    ),
+                                ],
+                                justify="flex-end",
+                                mt=10,
+                                mb=10,
+                            ),
+                            dmc.Group(
+                                [
+                                    dmc.Button(
+                                        "Update",
+                                        id="modal-submit-button",
+                                    ),
+                                    dmc.Button(
+                                        "Reset",
+                                        color="red",
+                                        variant="outline",
+                                        id="modal-close-button",
+                                    ),
+                                ],
+                                justify="center",
+                                align="center",
+                            ),
+                        ],
+                        fluid=True,
+                        style={
+                            "background-color": "white",
+                            "margin": "10px",
+                            "border-radius": "0.5rem",
+                            "padding": "10px",
+                        },
+                    ),
+                    value="settings",
                 ),
-                html.Div(id="blank-input"),
-                html.Div(id="blank-output"),
-                html.Div(id="clickdata"),
             ],
-            fluid=True,
-            style={
-                "background-color": "#eceff1",
-                "margin": "10px",
-                "border-radius": "0.5rem",
-                "padding": "10px",
-            },
-        ),
+            value="dashboard",
+        )
     ]
 )
 
@@ -190,6 +283,7 @@ def update_table(*args, **kwargs):
 
 
 @dash_app_project.expanded_callback(
+    dash.dependencies.Output("text_km", "children"),
     dash.dependencies.Output("clickdata", "children"),
     [dash.dependencies.Input("line-chart", "clickData")],
     prevent_initial_call=True,
@@ -205,53 +299,87 @@ def update_project_view(*args, **kwargs):
         table_kkm = table_kkm.round(3)
         table_kkm.columns = table_kkm.columns.str.replace("_", " ").str.title()
         date = dates[selected_dataset]
-        grid = dmc.Stack(
+        grid = dmc.ScrollArea(
             [
-                dmc.ScrollArea(
-                    [
-                        dmc.Table(
-                            striped=True,
-                            data={
-                                "head": table_kkm.columns.tolist(),
-                                "body": table_kkm.values.tolist(),
-                                "caption": "Key Measurements for the selected dataset",
-                            },
-                            highlightOnHover=True,
-                            style={
-                                "background-color": "white",
-                                "width": "auto",
-                                "height": "auto",
-                            },
-                        ),
-                    ]
+                dmc.Table(
+                    striped=True,
+                    data={
+                        "head": table_kkm.columns.tolist(),
+                        "body": table_kkm.values.tolist(),
+                        "caption": "Key Measurements for the selected dataset",
+                    },
+                    highlightOnHover=True,
+                    style={
+                        "background-color": "white",
+                        "width": "98%",
+                        "height": "auto",
+                        "margin": "20px",
+                        "border-radius": "0.5rem",
+                        "align": "center",
+                    },
                 )
             ]
         )
-        return [
-            dmc.Divider(
-                variant="solid",
-                style={"marginTop": 30, "marginBottom": 10},
-            ),
+        return (
             dmc.Center(
                 [
+                    DashIconify(icon="gis:measure-line", color="#189A35"),
                     dmc.Text(
                         [
-                            "Key Measurements for Dataset Number: "
-                            + str(selected_dataset),
-                            " processed at Date: " + str(date),
+                            "Key Measurements" " processed at " + str(date),
                         ],
                         c="#189A35",
-                        mb=10,
                         mt=10,
-                    )
-                ],
-                style={
-                    "backgroundColor": "white",
-                    "borderTopLeftRadius": "0.5rem",
-                    "borderTopRightRadius": "0.5rem",
-                },
+                        ml=10,
+                        mr=10,
+                        fw="bold",
+                    ),
+                ]
             ),
             grid,
-        ]
+        )
+
     else:
         return dash.no_update
+
+
+@dash_app_project.expanded_callback(
+    dash.dependencies.Output("input_parameters_container", "children"),
+    dash.dependencies.Output("sample_container", "children"),
+    [dash.dependencies.Input("blank-input", "children")],
+)
+def update_modal(*args, **kwargs):
+    setup = kwargs["session_state"]["context"]["setup"]
+    print("setup", setup)
+    sample = setup["sample"]
+    mm_sample = getattr(mm_schema, sample["type"])
+    mm_sample = mm_sample(**sample["fields"])
+    sample_form = dft.DashForm(
+        mm_sample, disabled=False, form_id="sample_form"
+    )
+    input_parameters = setup["input_parameters"]
+    mm_input_parameters = getattr(mm_schema, input_parameters["type"])
+    mm_input_parameters = mm_input_parameters(**input_parameters["fields"])
+    input_parameters_form = dft.DashForm(
+        mm_input_parameters, disabled=False, form_id="input_parameters_form"
+    )
+
+    return (
+        [dmc.Text("Input Parameters:"), input_parameters_form.form],
+        [dmc.Text("Sample:"), sample_form.form],
+    )
+
+
+@dash_app_project.expanded_callback(
+    dash.dependencies.Output("modal-simple", "opened"),
+    [
+        dash.dependencies.Input("modal-demo-button", "n_clicks"),
+        dash.dependencies.Input("modal-close-button", "n_clicks"),
+        dash.dependencies.Input("modal-submit-button", "n_clicks"),
+        dash.dependencies.State("modal-simple", "opened"),
+    ],
+    prevent_initial_call=True,
+)
+def modal_demo(*args, **kwargs):
+    opened = args[3]
+    return not opened

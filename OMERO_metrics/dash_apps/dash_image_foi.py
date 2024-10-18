@@ -176,6 +176,7 @@ dash_app_image.layout = dmc.MantineProvider(
                         "border-radius": "0.5rem",
                         "padding": "10px",
                     },
+                    mt=10,
                 ),
                 html.Div(id="blank-input"),
                 html.Div(
