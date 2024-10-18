@@ -13,7 +13,7 @@ from OMERO_metrics.tools.omero_tools import (
     get_ref_from_object,
 )
 from OMERO_metrics.tools.load import load_config_file_data
-from OMERO_metrics.tools.dump import dump_config_input_parameters
+from OMERO_metrics.tools.dump import dump_config_input_parameters, dump_comment
 from OMERO_metrics.tools.load import load_image
 from microscopemetrics_schema import datamodel as mm_schema
 from microscopemetrics.analyses import field_illumination, psf_beads
@@ -297,16 +297,15 @@ def run_analysis_view(request, conn=None, **kwargs):
             ),
             experimenter=mm_experimenter,
         )
-
         run_status = DATA_TYPE[mm_input_parameters.class_name][3](mm_dataset)
-
         if run_status and mm_dataset.processed:
             try:
-                mm_dataset["output"]["comment"] = mm_schema.Comment(
+                mm_comment = mm_schema.Comment(
                     datetime=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     text=comment,
                     comment_type="PROCESSING",
                 )
+                mm_dataset["output"]["comment"] = mm_comment
                 dump_dataset(
                     conn=conn,
                     dataset=mm_dataset,
@@ -316,6 +315,10 @@ def run_analysis_view(request, conn=None, **kwargs):
                     dump_input_images=False,
                     dump_analysis=True,
                 )
+                # dump_comment(
+                #     conn, target_object=dataset_wrapper, comment=mm_comment
+                # )
+
                 return "Analysis completed successfully", "green"
             except Exception as e:
                 return (

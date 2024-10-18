@@ -35,11 +35,7 @@ dash_app_group.layout = dmc.MantineProvider(
                             mb="xs",
                         ),
                         dmc.Divider(mb="sm"),
-                        dmc.Text(
-                            id="microscope_info",
-                            size="sm",
-                            c="dimmed",
-                        ),
+                        html.Div(id="microscope_info"),
                     ],
                     withBorder=True,
                     shadow="sm",
@@ -66,9 +62,14 @@ def render_content(*args, **kwargs):
     group_name = kwargs["session_state"]["context"]["group_name"]
     group_id = kwargs["session_state"]["context"]["group_id"]
     group_description = kwargs["session_state"]["context"]["group_description"]
-    result = [
-        f"Group Name: {group_name}<br>",
-        f"Group ID: {group_id}<br>",
-        f"Group Description: {group_description}<br>",
-    ]
+    result = dmc.Stack(
+        [
+            dmc.Text("Microscope Information", c="#189A35", size="xl"),
+            dmc.Text(f"Group Name: {group_name}", size="xs"),
+            dmc.Text(f"Group ID: {group_id}", size="xs"),
+            dmc.Text(f"Group Description: {group_description}", size="xs"),
+        ],
+        align="flex-start",
+        gap="xs",
+    )
     return result
