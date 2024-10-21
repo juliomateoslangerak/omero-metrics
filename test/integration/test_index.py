@@ -52,8 +52,9 @@ class TestLoadIndexPage(IWebTest):
 
     @pytest.mark.django_db
     def test_app_lookup_dataset_metrics(self, user1):
+        # TODO: These references are wrong
         """Test looking up an existing application for dataset foi"""
-        from OMERO_metrics.dash_apps.dash_dataset_foi import (
+        from OMERO_metrics.dash_apps.dash_analyses.dash_foi import (
             dash_app_dataset,
         )
         from django_plotly_dash.models import get_stateless_by_name
@@ -64,8 +65,9 @@ class TestLoadIndexPage(IWebTest):
 
     @pytest.mark.django_db
     def test_app_lookup_dataset_psf(self, user1):
+        # TODO: These references are wrong
         """Test looking up an existing application for dataset psf"""
-        from OMERO_metrics.dash_apps.dash_dataset_psf_beads import (
+        from OMERO_metrics.dash_apps.dash_analyses.dash_psf_beads import (
             app,
         )
         from django_plotly_dash.models import get_stateless_by_name

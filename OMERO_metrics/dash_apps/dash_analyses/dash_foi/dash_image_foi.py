@@ -35,7 +35,7 @@ dash_app_image.layout = dmc.MantineProvider(
                         dmc.Group(
                             [
                                 html.Img(
-                                    src="assets/images/metrics_logo.png",
+                                    src="../../assets/images/metrics_logo.png",
                                     style={"width": "100px"},
                                 ),
                                 dmc.Title(
