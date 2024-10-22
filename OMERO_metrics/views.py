@@ -6,14 +6,11 @@ from OMERO_metrics.tools.data_managers import (
     ImageManager,
 )
 from django.shortcuts import render
-from OMERO_metrics.forms import UploadFileForm
-import numpy as np
 from OMERO_metrics.tools.omero_tools import (
-    create_image_from_numpy_array,
     get_ref_from_object,
 )
 from OMERO_metrics.tools.load import load_config_file_data
-from OMERO_metrics.tools.dump import dump_config_input_parameters, dump_comment
+from OMERO_metrics.tools.dump import dump_config_input_parameters
 from OMERO_metrics.tools.load import load_image
 from microscopemetrics_schema import datamodel as mm_schema
 from microscopemetrics.analyses import field_illumination, psf_beads
@@ -22,6 +19,7 @@ import omero
 import logging
 
 logger = logging.getLogger(__name__)
+template_name = "OMERO_metrics/dash_template/dash_template.html"
 
 DATA_TYPE = {
     "FieldIlluminationInputParameters": [
@@ -39,42 +37,6 @@ DATA_TYPE = {
 }
 
 
-# @login_required()
-# def upload_image(request, conn=None, **kwargs):
-#     if request.method == "POST":
-#         form = UploadFileForm(request.POST, request.FILES)
-#         id_image = ""
-#         type_image = ""
-#         if form.is_valid():
-#             file = request.FILES["file"]
-#             title = form.cleaned_data["title"]
-#             dataset_id = form.cleaned_data["dataset_id"]
-#             dataset = conn.getObject("Dataset", int(dataset_id))
-#             group_id = dataset.getDetails().getGroup().getId()
-#             conn.SERVICE_OPTS.setOmeroGroup(group_id)
-#             type_image = file.name
-#             ima = np.load(file)
-#             image = ima.transpose((1, 4, 0, 2, 3))
-#             ima_wrapper = create_image_from_numpy_array(
-#                 conn, image, title, dataset=dataset
-#             )
-#             id_image = ima_wrapper.getId()
-#         return render(
-#             request,
-#             "OMERO_metrics/success.html",
-#             {
-#                 "type": type_image,
-#                 "id_dataset": dataset.getId(),
-#                 "id_image": id_image,
-#             },
-#         )
-#     else:
-#         form = UploadFileForm()
-#     return render(
-#         request, "OMERO_metrics/upload_image_omero.html", {"form": form}
-#     )
-
-
 @login_required()
 def index(request, conn=None, **kwargs):
     experimenter = conn.getUser()
@@ -84,19 +46,6 @@ def index(request, conn=None, **kwargs):
         "experimenterId": experimenter.id,
     }
     return render(request, "OMERO_metrics/index.html", context)
-
-
-@login_required()
-def session_state_view(request, template_name, **kwargs):
-    "Example view that exhibits the use of sessions to store state"
-    session = request.session
-    omero_views_count = session.get("django_plotly_dash", {})
-    ind_use = omero_views_count.get("ind_use", 0)
-    ind_use += 1
-    omero_views_count["ind_use"] = ind_use
-    context = {"ind_use": ind_use}
-    session["django_plotly_dash"] = omero_views_count
-    return render(request, template_name=template_name, context=context)
 
 
 def web_gateway_templates(request, base_template):
@@ -139,12 +88,18 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
         context = im.context
         dash_context["context"] = context
         request.session["django_plotly_dash"] = dash_context
-        return render(request, template_name=im.template, context=context)
+        return render(
+            request,
+            template_name=template_name,
+            context={"app_name": im.app_name},
+        )
     except Exception as e:
         dash_context["context"] = {"message": str(e)}
         request.session["django_plotly_dash"] = dash_context
         return render(
-            request, template_name="OMERO_metrics/omero_views/warning.html"
+            request,
+            template_name=template_name,
+            context={"app_name": "WarningApp"},
         )
 
 
@@ -160,16 +115,21 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
         pm.check_processed_data()
         pm.visualize_data()
         context = pm.context
-        template = pm.template
         dash_context["context"] = context
         dash_context["context"]["project_id"] = project_id
         request.session["django_plotly_dash"] = dash_context
-        return render(request, template_name=template, context=context)
+        return render(
+            request,
+            template_name=template_name,
+            context={"app_name": pm.app_name},
+        )
     except Exception as e:
         dash_context["context"] = {"message": str(e)}
         request.session["django_plotly_dash"] = dash_context
         return render(
-            request, template_name="OMERO_metrics/omero_views/warning.html"
+            request,
+            template_name=template_name,
+            context={"app_name": "WarningApp"},
         )
 
 
@@ -191,7 +151,11 @@ def center_viewer_group(request, conn=None, **kwargs):
     }
     dash_context["context"] = context
     request.session["django_plotly_dash"] = dash_context
-    return render(request, "OMERO_metrics/omero_views/center_view_group.html")
+    return render(
+        request,
+        template_name=template_name,
+        context={"app_name": "omero_group_dash"},
+    )
 
 
 @login_required(setGroupContext=True)
@@ -204,14 +168,19 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
         dm.is_processed()
         dm.visualize_data()
         dash_context["context"] = dm.context
-        template = dm.template
         request.session["django_plotly_dash"] = dash_context
-        return render(request, template_name=template)
+        return render(
+            request,
+            template_name=template_name,
+            context={"app_name": dm.app_name},
+        )
     except Exception as e:
         dash_context["context"] = {"message": str(e)}
         request.session["django_plotly_dash"] = dash_context
         return render(
-            request, template_name="OMERO_metrics/omero_views/warning.html"
+            request,
+            template_name=template_name,
+            context={"app_name": "WarningApp"},
         )
 
 
@@ -219,7 +188,11 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
 def microscope_view(request, conn=None, **kwargs):
     """Simply shows a page of ROI thumbnails for
     the specified image"""
-    return render(request, "OMERO_metrics/microscope.html")
+    return render(
+        request,
+        template_name=template_name,
+        context={"app_name": "Microscope"},
+    )
 
 
 @login_required(setGroupContext=True)
@@ -315,9 +288,6 @@ def run_analysis_view(request, conn=None, **kwargs):
                     dump_input_images=False,
                     dump_analysis=True,
                 )
-                # dump_comment(
-                #     conn, target_object=dataset_wrapper, comment=mm_comment
-                # )
 
                 return "Analysis completed successfully", "green"
             except Exception as e:

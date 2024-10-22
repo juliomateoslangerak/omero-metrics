@@ -460,6 +460,3 @@ def image_3d_chart(image_bead):
         scene_zaxis_showticklabels=False,
     )
     return fig
-
-
-# ---------------------------------------READING FROM MM_DATASET--------------------------------------------------

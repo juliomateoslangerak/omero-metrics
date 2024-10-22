@@ -432,7 +432,6 @@ def run_analysis(*args, **kwargs):
     mm_input_parameters = input_parameters_object(**input_parameters["fields"])
     # form_content = args[1]
     sample_object = getattr(mm_schema, sample["type"])
-    print(f"Comment object: {args[3]}")
     # sample_ex = dft.extract_form_data(form_content, sample_object.__class__.__name__)
     mm_sample = sample_object(**sample["fields"])
     current = args[2]

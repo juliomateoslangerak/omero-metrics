@@ -4,6 +4,7 @@ from OMERO_metrics.dash_apps import (
     dash_feedback,
     dash_group,
     dash_project,
+    dash_microscope,
 )
 from OMERO_metrics.dash_apps.dash_forms import (
     dash_group_form,
@@ -52,5 +53,4 @@ urlpatterns = [
     ),
     # This url is for the app in a new tab
     re_path(r"^microscope", microscope_view, name="microscope"),
-    # re_path(r"^upload_image", upload_image, name="upload_image"),  # This creates the upload file menu entry
 ]

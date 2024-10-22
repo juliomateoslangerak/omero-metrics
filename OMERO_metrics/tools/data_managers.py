@@ -57,26 +57,26 @@ OBJECT_TO_DUMP_FUNCTION = {
 }
 
 TEMPLATE_MAPPINGS_DATASET = {
-    "FieldIlluminationDataset": "OMERO_metrics/omero_views/center_view_dataset_foi.html",
-    "PSFBeadsDataset": "OMERO_metrics/omero_views/center_view_dataset_psf_beads.html",
+    "FieldIlluminationDataset": "omero_dataset_metrics",
+    "PSFBeadsDataset": "PSF_Beads",
 }
 
 TEMPLATE_MAPPINGS_IMAGE = {
     "FieldIlluminationDataset": {
-        "input_data": "OMERO_metrics/omero_views/center_view_image_foi.html",
-        "output": "OMERO_metrics/omero_views/warning.html",
+        "input_data": "omero_image_dash",
+        "output": "WarningApp",
     },
     "PSFBeadsDataset": {
-        "input_data": "OMERO_metrics/omero_views/center_view_image_psf.html",
-        "output": "OMERO_metrics/omero_views/warning.html",
+        "input_data": "PSF_Beads_image",
+        "output": "WarningApp",
     },
 }
 
 
 def warning_message(msg):
     dash_context = {"message": msg}
-    template = "OMERO_metrics/omero_views/warning.html"
-    return dash_context, template
+    app_name = "WarningApp"
+    return dash_context, app_name
 
 
 class ImageManager:
@@ -98,7 +98,7 @@ class ImageManager:
         self.image_exist = None
         self.image_index = None
         self.image_location = None
-        self.template = None
+        self.app_name = None
 
     def load_data(self, force_reload=True):
         logger.info("Loading data CALL")
@@ -128,7 +128,7 @@ class ImageManager:
                     self.omero_image.getId(), self.dataset_manager.mm_dataset
                 )
                 if self.image_exist:
-                    self.template = TEMPLATE_MAPPINGS_IMAGE.get(
+                    self.app_name = TEMPLATE_MAPPINGS_IMAGE.get(
                         self.dataset_manager.mm_dataset.__class__.__name__
                     )[self.image_location]
                     self.context = load.load_dash_data_image(
@@ -141,15 +141,15 @@ class ImageManager:
                 else:
                     message = "Image does not exist in the dataset yaml file. Unable to visualize"
                     logger.warning(message)
-                    self.context, self.template = warning_message(message)
+                    self.context, self.app_name = warning_message(message)
             else:
                 message = "Unknown analysis type. Unable to visualize"
                 logger.warning(message)
-                self.context, self.template = warning_message(message)
+                self.context, self.app_name = warning_message(message)
         else:
             message = "Dataset has not been processed. Unable to visualize"
             logger.warning(message)
-            self.context, self.template = warning_message(message)
+            self.context, self.app_name = warning_message(message)
 
 
 class DatasetManager:
@@ -180,7 +180,7 @@ class DatasetManager:
         self.analysis_config = None
         self.analysis_config_id = None
         self.analysis_func = None
-        self.template = None
+        self.app_name = None
         self.context = None
         self.processed = False
         self.microscope = mm_schema.Microscope()
@@ -316,7 +316,7 @@ class DatasetManager:
     def visualize_data(self):
         if self.processed:
             if self.mm_dataset.__class__.__name__ in TEMPLATE_MAPPINGS_DATASET:
-                self.template = TEMPLATE_MAPPINGS_DATASET.get(
+                self.app_name = TEMPLATE_MAPPINGS_DATASET.get(
                     self.mm_dataset.__class__.__name__
                 )
                 self.context = load.load_dash_data_dataset(
@@ -325,16 +325,14 @@ class DatasetManager:
             else:
                 message = "Unknown analysis type. Unable to visualize"
                 logger.warning(message)
-                self.context, self.template = warning_message(message)
+                self.context, self.app_name = warning_message(message)
         else:
             if self.omero_project and len(self.attached_images) > 0:
                 self.input_parameters = load.load_config_file_data(
                     self._conn, self.omero_project
                 )
                 if self.input_parameters:
-                    self.template = (
-                        "OMERO_metrics/forms/omero_dataset_form.html"
-                    )
+                    self.app_name = "omero_dataset_form"
                     self.context = {
                         "list_images": self.attached_images,
                         "input_parameters": self.input_parameters,
@@ -343,11 +341,11 @@ class DatasetManager:
                 else:
                     message = "No, config file detected. Click on the project parent to load the config file."
                     logger.warning(message)
-                    self.context, self.template = warning_message(message)
+                    self.context, self.app_name = warning_message(message)
             else:
                 message = "The dataset is not under a project or does not contain images. Unable to visualize"
                 logger.warning(message)
-                self.context, self.template = warning_message(message)
+                self.context, self.app_name = warning_message(message)
 
     def save_settings(self):
         pass
@@ -373,7 +371,7 @@ class ProjectManager:
         self.datasets_types = []
         self.processed_datasets = {}
         self.unprocessed_datasets = {}
-        self.template = None
+        self.app_name = None
         self.homogenize = None
 
     def load_data(self, force_reload=True):
@@ -423,7 +421,7 @@ class ProjectManager:
                     ].mm_dataset.__class__.__name__
                     in TEMPLATE_MAPPINGS_DATASET
                 ):
-                    self.context, self.template = load.load_dash_data_project(
+                    self.context, self.app_name = load.load_dash_data_project(
                         self._conn, self.processed_datasets
                     )
                     self.context["unprocessed_datasets"] = list(
@@ -437,20 +435,20 @@ class ProjectManager:
                 else:
                     message = "This project contains unsupported analysis type. Unable to visualize"
                     logger.warning(message)
-                    self.context, self.template = warning_message(message)
+                    self.context, self.app_name = warning_message(message)
 
             else:
                 message = "This project contains different types of datasets. Unable to visualize"
                 logger.warning(message)
-                self.context, self.template = warning_message(message)
+                self.context, self.app_name = warning_message(message)
 
         else:
             if self.setup:
                 message = "This project doesn't contain a processed dataset but it contains a config file. Unable to visualize"
                 logger.warning(message)
-                self.context, self.template = warning_message(message)
+                self.context, self.app_name = warning_message(message)
             else:
-                self.template = "OMERO_metrics/forms/project_config_form.html"
+                self.app_name = "omero_project_config_form"
                 self.context = {}
 
     def save_settings(self):

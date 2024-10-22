@@ -75,7 +75,7 @@ dash_form_project.layout = dmc.MantineProvider(
                         dmc.Group(
                             [
                                 html.Img(
-                                    src="../assets/images/metrics_logo.png",
+                                    src="./assets/images/logo.png",
                                     style={"width": "100px"},
                                 ),
                                 dmc.Title(

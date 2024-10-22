@@ -308,7 +308,7 @@ def load_dash_data_project(
     processed_datasets: dict,
 ) -> (dict, str):
     dash_context = {}
-    template = "OMERO_metrics/omero_views/center_view_project.html"
+    app_name = "omero_project_dash"
     df_list = []
     kkm = list(processed_datasets.values())[0].kkm
     dates = []
@@ -325,7 +325,7 @@ def load_dash_data_project(
     dash_context["key_measurements_list"] = df_list
     dash_context["kkm"] = kkm
     dash_context["dates"] = dates
-    return dash_context, template
+    return dash_context, app_name
 
 
 def load_analysis_config(project=ProjectWrapper):
