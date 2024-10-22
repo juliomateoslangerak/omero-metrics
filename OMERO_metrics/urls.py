@@ -50,6 +50,6 @@ urlpatterns = [
         image_rois,
         name="webtest_image_rois",
     ),
-    re_path(r"^microscope", microscope_view, name="microscope"),
-    re_path(r"^upload_image", upload_image, name="upload_image"),
+    re_path(r"^microscope", microscope_view, name="microscope"),  # TODO: What is this doing? Isnt it group?
+    re_path(r"^upload_image", upload_image, name="upload_image"),  # TODO: Remove?
 ]
