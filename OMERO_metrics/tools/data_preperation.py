@@ -390,12 +390,16 @@ def fig_mip(mip_x, mip_y, mip_z, title):
 
 
 def mip_graphs(
-    x0: int, xf: int, y0: int, yf: int, stack: Union[np.array, list]
+    x0: int, xf: int, y0: int, yf: int, stack: Union[np.array, list], do_sqrt: bool = True
 ):
     image_bead = stack[:, y0:yf, x0:xf]
     image_x = np.max(image_bead, axis=2)
     image_y = np.max(image_bead, axis=1)
     image_z = np.max(image_bead, axis=0)
+    if do_sqrt:
+        image_x = np.sqrt(image_x)
+        image_y = np.sqrt(image_y)
+        image_z = np.sqrt(image_z)
     image_x = image_x / image_x.max()
     image_y = image_y / image_y.max()
     image_z = image_z / image_z.max()

@@ -39,40 +39,40 @@ DATA_TYPE = {
 }
 
 
-@login_required()
-def upload_image(request, conn=None, **kwargs):
-    if request.method == "POST":
-        form = UploadFileForm(request.POST, request.FILES)
-        id_image = ""
-        type_image = ""
-        if form.is_valid():
-            file = request.FILES["file"]
-            title = form.cleaned_data["title"]
-            dataset_id = form.cleaned_data["dataset_id"]
-            dataset = conn.getObject("Dataset", int(dataset_id))
-            group_id = dataset.getDetails().getGroup().getId()
-            conn.SERVICE_OPTS.setOmeroGroup(group_id)
-            type_image = file.name
-            ima = np.load(file)
-            image = ima.transpose((1, 4, 0, 2, 3))
-            ima_wrapper = create_image_from_numpy_array(
-                conn, image, title, dataset=dataset
-            )
-            id_image = ima_wrapper.getId()
-        return render(
-            request,
-            "OMERO_metrics/success.html",
-            {
-                "type": type_image,
-                "id_dataset": dataset.getId(),
-                "id_image": id_image,
-            },
-        )
-    else:
-        form = UploadFileForm()
-    return render(
-        request, "OMERO_metrics/upload_image_omero.html", {"form": form}
-    )
+# @login_required()
+# def upload_image(request, conn=None, **kwargs):
+#     if request.method == "POST":
+#         form = UploadFileForm(request.POST, request.FILES)
+#         id_image = ""
+#         type_image = ""
+#         if form.is_valid():
+#             file = request.FILES["file"]
+#             title = form.cleaned_data["title"]
+#             dataset_id = form.cleaned_data["dataset_id"]
+#             dataset = conn.getObject("Dataset", int(dataset_id))
+#             group_id = dataset.getDetails().getGroup().getId()
+#             conn.SERVICE_OPTS.setOmeroGroup(group_id)
+#             type_image = file.name
+#             ima = np.load(file)
+#             image = ima.transpose((1, 4, 0, 2, 3))
+#             ima_wrapper = create_image_from_numpy_array(
+#                 conn, image, title, dataset=dataset
+#             )
+#             id_image = ima_wrapper.getId()
+#         return render(
+#             request,
+#             "OMERO_metrics/success.html",
+#             {
+#                 "type": type_image,
+#                 "id_dataset": dataset.getId(),
+#                 "id_image": id_image,
+#             },
+#         )
+#     else:
+#         form = UploadFileForm()
+#     return render(
+#         request, "OMERO_metrics/upload_image_omero.html", {"form": form}
+#     )
 
 
 @login_required()
