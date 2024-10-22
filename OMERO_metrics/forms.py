@@ -8,7 +8,9 @@ class UploadFileForm(forms.Form):
     dataset_id = forms.IntegerField(required=True)
     file = forms.FileField()
 
+
 # TODO: Can we remove this?
+
 
 def dataclass_to_form(dataclass):
     form_fields = {}
