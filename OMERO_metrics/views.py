@@ -45,6 +45,7 @@ DATA_TYPE = {
 #         views.omero_table,
 #         name="omero_table",
 #     ),
+# Download annotation file like yaml http://localhost:4545/webclient/annotation/623
 @login_required()
 def download_file(request, conn=None, **kwargs):
     """Download a file"""
@@ -90,11 +91,10 @@ def webclient_templates(request, base_template, **kwargs):
 def image_rois(request, image_id, conn=None, **kwargs):
     """Simply shows a page of ROI
     thumbnails for the specified image"""
-    roi_ids = image_id
     return render(
         request,
-        "OMERO_metrics/omero_views/image_rois.html",
-        {"roiIds": roi_ids},
+        "OMERO_metrics/image_rois.html",
+        {"ImageId": image_id},
     )
 
 
