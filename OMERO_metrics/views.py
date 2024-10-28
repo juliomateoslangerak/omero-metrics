@@ -1,4 +1,6 @@
 from django.utils.datetime_safe import datetime
+from django.http import HttpRequest
+from OMERO_metrics.tools import delete
 from omeroweb.webclient.decorators import login_required, render_response
 from OMERO_metrics.tools.data_managers import (
     DatasetManager,
@@ -17,9 +19,10 @@ from microscopemetrics.analyses import field_illumination, psf_beads
 from OMERO_metrics.tools.dump import dump_dataset
 import omero
 import logging
+from OMERO_metrics.tools import load
+from django.urls import reverse
 
 logger = logging.getLogger(__name__)
-template_name = "OMERO_metrics/dash_template/dash_template.html"
 
 DATA_TYPE = {
     "FieldIlluminationInputParameters": [
@@ -35,6 +38,24 @@ DATA_TYPE = {
         psf_beads.analyse_psf_beads,
     ],
 }
+
+
+# re_path(
+#         r"^omero_table/(?P<file_id>[0-9]+)/(?:(?P<mtype>(json|csv))/)?$",
+#         views.omero_table,
+#         name="omero_table",
+#     ),
+@login_required()
+def download_file(request, conn=None, **kwargs):
+    """Download a file"""
+    try:
+        file_id = kwargs["file_id"]
+        response = reverse("omero_table", args=[file_id, "csv"])
+        uri = request.build_absolute_uri(response)
+        msg = uri
+        return msg
+    except Exception as e:
+        return str(e)
 
 
 @login_required()
@@ -77,6 +98,9 @@ def image_rois(request, image_id, conn=None, **kwargs):
     )
 
 
+template_name_dash = "OMERO_metrics/dash_template/dash_template.html"
+
+
 @login_required(setGroupContext=True)
 def center_viewer_image(request, image_id, conn=None, **kwargs):
     dash_context = request.session.get("django_plotly_dash", dict())
@@ -90,7 +114,7 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name=template_name,
+            template_name=template_name_dash,
             context={"app_name": im.app_name},
         )
     except Exception as e:
@@ -98,7 +122,7 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name=template_name,
+            template_name=template_name_dash,
             context={"app_name": "WarningApp"},
         )
 
@@ -120,7 +144,7 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name=template_name,
+            template_name=template_name_dash,
             context={"app_name": pm.app_name},
         )
     except Exception as e:
@@ -128,7 +152,7 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name=template_name,
+            template_name=template_name_dash,
             context={"app_name": "WarningApp"},
         )
 
@@ -139,7 +163,7 @@ def center_viewer_group(request, conn=None, **kwargs):
         active_group = request.session["active_group"]
     else:
         active_group = conn.getEventContext().groupId
-
+    file_ann, map_ann = load.get_annotations_tables(conn, active_group)
     dash_context = request.session.get("django_plotly_dash", dict())
     group = conn.getObject("ExperimenterGroup", active_group)
     group_name = group.getName()
@@ -148,12 +172,14 @@ def center_viewer_group(request, conn=None, **kwargs):
         "group_id": active_group,
         "group_name": group_name,
         "group_description": group_description,
+        "file_ann": file_ann,
+        "map_ann": map_ann,
     }
     dash_context["context"] = context
     request.session["django_plotly_dash"] = dash_context
     return render(
         request,
-        template_name=template_name,
+        template_name=template_name_dash,
         context={"app_name": "omero_group_dash"},
     )
 
@@ -171,7 +197,7 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name=template_name,
+            template_name=template_name_dash,
             context={"app_name": dm.app_name},
         )
     except Exception as e:
@@ -179,7 +205,7 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name=template_name,
+            template_name=template_name_dash,
             context={"app_name": "WarningApp"},
         )
 
@@ -190,13 +216,17 @@ def microscope_view(request, conn=None, **kwargs):
     the specified image"""
     return render(
         request,
-        template_name=template_name,
+        template_name=template_name_dash,
         context={"app_name": "Microscope"},
     )
 
 
+# These views are called from the dash app, and they return a message and a color to display in the app.
+
+
 @login_required(setGroupContext=True)
 def save_config(request, conn=None, **kwargs):
+    """Save the configuration file"""
     try:
         project_id = kwargs["project_id"]
         mm_input_parameters = kwargs["input_parameters"]
@@ -232,6 +262,7 @@ def save_config(request, conn=None, **kwargs):
 
 @login_required(setGroupContext=True)
 def run_analysis_view(request, conn=None, **kwargs):
+    """Run the analysis"""
     try:
         dataset_wrapper = conn.getObject("Dataset", kwargs["dataset_id"])
         project_wrapper = dataset_wrapper.getParent()
@@ -298,5 +329,16 @@ def run_analysis_view(request, conn=None, **kwargs):
         else:
             logger.error("Analysis failed")
             return "We couldn't process the analysis.", "red"
+    except Exception as e:
+        return str(e), "red"
+
+
+@login_required(setGroupContext=True)
+def delete_all(request, conn=None, **kwargs):
+    """Delete all the files"""
+    try:
+        group_id = kwargs["group_id"]
+        delete.delete_all_mm_analysis(conn, group_id)
+        return "Files deleted successfully", "green"
     except Exception as e:
         return str(e), "red"

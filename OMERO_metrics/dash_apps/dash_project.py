@@ -39,12 +39,35 @@ dash_app_project.layout = dmc.MantineProvider(
                             ),
                             value="dashboard",
                             color="#189A35",
+                            style={
+                                "font-size": "1.1rem",
+                                "font-weight": "bold",
+                                "color": "#189A35",
+                            },
                         ),
                         dmc.TabsTab(
                             "Settings",
                             leftSection=DashIconify(icon="tabler:settings"),
                             value="settings",
                             color="#189A35",
+                            style={
+                                "font-size": "1.1rem",
+                                "font-weight": "bold",
+                                "color": "#189A35",
+                            },
+                        ),
+                        dmc.TabsTab(
+                            "Thresholds",
+                            leftSection=DashIconify(
+                                icon="material-symbols-light:data-thresholding-outline"
+                            ),
+                            value="thresholds",
+                            color="#189A35",
+                            style={
+                                "font-size": "1.1rem",
+                                "font-weight": "bold",
+                                "color": "#189A35",
+                            },
                         ),
                     ],
                     grow="True",
@@ -199,6 +222,57 @@ dash_app_project.layout = dmc.MantineProvider(
                         },
                     ),
                     value="settings",
+                ),
+                dmc.TabsPanel(
+                    dmc.Container(
+                        [
+                            dmc.Stack(
+                                [
+                                    dmc.Group(
+                                        [
+                                            dmc.Select(
+                                                data=[
+                                                    "KKM 1",
+                                                    "KKM 2",
+                                                    "KKM 3",
+                                                ],
+                                                label="Select KKM",
+                                                w="auto",
+                                                clearable=False,
+                                            ),
+                                            dmc.Select(
+                                                data=[
+                                                    "Upper Limit",
+                                                    "Lower Limit",
+                                                ],
+                                                label="Select Threshold",
+                                                w="auto",
+                                                clearable=False,
+                                            ),
+                                            dmc.NumberInput(
+                                                label="Value", w="auto"
+                                            ),
+                                        ],
+                                        justify="space-between",
+                                        style={
+                                            "background-color": "#ECEFF1",
+                                            "border-radius": "0.5rem",
+                                            "padding": "10px",
+                                            "border": "1px solid #B0BEC5",
+                                        },
+                                    ),
+                                ]
+                            )
+                        ],
+                        fluid=True,
+                        style={
+                            "background-color": "white",
+                            "margin": "10px",
+                            "border-radius": "0.5rem",
+                            "padding": "10px",
+                        },
+                    ),
+                    value="thresholds",
                 ),
             ],
             value="dashboard",
@@ -381,3 +455,11 @@ def update_modal(*args, **kwargs):
 def modal_demo(*args, **kwargs):
     opened = args[3]
     return not opened
+
+
+@dash_app_project.expanded_callback(
+    dash.dependencies.Output("sample_container", "children"),
+    [dash.dependencies.Input("blank-input", "children")],
+)
+def update_thresholds(*args, **kwargs):
+    kkm = kwargs["session_state"]["context"]["kkm"]

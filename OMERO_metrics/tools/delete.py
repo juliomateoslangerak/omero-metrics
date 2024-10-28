@@ -90,3 +90,27 @@ def delete_dataset_file_ann(
     if del_success:
         delete_data_references(dataset)
         return True
+
+
+def delete_all_mm_analysis(conn, group_id):
+    all_annotations = conn.getObjects("Annotation", opts={"group": group_id})
+    rois = conn.getObjects("Roi", opts={"group": group_id})
+    rois_ids = [roi.getId() for roi in rois if roi.canDelete()]
+    obj_ids = []
+    for ann in all_annotations:
+        if ann.getNs() and ann.getNs().startswith("microscopemetrics"):
+            obj_ids.append(ann.getId())
+    try:
+        if len(obj_ids) > 0:
+            conn.deleteObjects(
+                graph_spec="Annotation",
+                obj_ids=obj_ids,
+                deleteAnns=True,
+                deleteChildren=True,
+                wait=True,
+            )
+        if len(rois_ids) > 0:
+            conn.deleteObjects(graph_spec="Roi", obj_ids=rois_ids, wait=True)
+        return "All microscopemetrics analysis deleted"
+    except Exception as e:
+        return str(e)

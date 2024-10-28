@@ -52,6 +52,87 @@ DATASET_IMAGES = {
 }
 
 
+def get_annotations_tables(conn, group_id):
+    all_annotations = conn.getObjects("Annotation", opts={"group": group_id})
+    file_ann_cols = [
+        "Name",
+        "ID",
+        "File_ID",
+        "Description",
+        "Date",
+        "Owner",
+        "NS",
+    ]
+    file_ann_rows = []
+    map_ann_cols = ["Name", "ID", "Description", "Date", "Owner", "NS"]
+    map_ann_rows = []
+    for ann in all_annotations:
+        if ann.getNs() and ann.getNs().startswith("microscopemetrics"):
+            if isinstance(ann, FileAnnotationWrapper):
+                file_ann_rows.append(
+                    [
+                        ann.getFile().getName(),
+                        ann.getId(),
+                        ann.getFile().getId(),
+                        ann.getDescription(),
+                        ann.getDate(),
+                        ann.getOwner().getName(),
+                        ann.getNs(),
+                    ]
+                )
+            elif isinstance(ann, omero.gateway.MapAnnotationWrapper):
+                map_ann_rows.append(
+                    [
+                        ann.getName(),
+                        ann.getId(),
+                        ann.getDescription(),
+                        ann.getDate(),
+                        ann.getOwner().getName(),
+                        ann.getNs(),
+                    ]
+                )
+    file_ann_df = pd.DataFrame(file_ann_rows, columns=file_ann_cols)
+    map_ann_df = pd.DataFrame(map_ann_rows, columns=map_ann_cols)
+    file_ann_df["Date"] = pd.to_datetime(file_ann_df["Date"])
+    map_ann_df["Date"] = pd.to_datetime(map_ann_df["Date"])
+    return file_ann_df, map_ann_df
+
+
+def get_annotations_list_group(conn, group_id):
+    projects = conn.getObjects("Project", opts={"group": group_id})
+    data = []
+    columns = [
+        "Name",
+        "ID",
+        "File_ID",
+        "Description",
+        "Date",
+        "Owner",
+        "Project_ID",
+        "Project_Name",
+        "NS",
+        "Type",
+    ]
+    for p in projects:
+        for ds in p.listAnnotations():
+            data.append(
+                [
+                    ds.getFile().getName(),
+                    ds.getId(),
+                    ds.getFile().getId(),
+                    ds.getDescription(),
+                    ds.getDate(),
+                    ds.getOwner().getName(),
+                    p.getId(),
+                    p.getName(),
+                    ds.getNs(),
+                    ds.__class__.__name__,
+                ]
+            )
+    df = pd.DataFrame(data, columns=columns)
+    return df
+
+
 def image_exist(image_id, mm_dataset):
     image_found = False
     image_location = None
