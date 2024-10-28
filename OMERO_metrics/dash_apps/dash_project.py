@@ -82,7 +82,7 @@ dash_app_project.layout = dmc.MantineProvider(
                                     dmc.Group(
                                         [
                                             html.Img(
-                                                src="assets/images/metrics_logo.png",
+                                                src="/static/OMERO_metrics/images/metrics_logo.png",
                                                 style={"width": "95px"},
                                             ),
                                             dmc.Title(
@@ -231,11 +231,7 @@ dash_app_project.layout = dmc.MantineProvider(
                                     dmc.Group(
                                         [
                                             dmc.Select(
-                                                data=[
-                                                    "KKM 1",
-                                                    "KKM 2",
-                                                    "KKM 3",
-                                                ],
+                                                id="thresholds-dropdown",
                                                 label="Select KKM",
                                                 w="auto",
                                                 clearable=False,
@@ -458,8 +454,11 @@ def modal_demo(*args, **kwargs):
 
 
 @dash_app_project.expanded_callback(
-    dash.dependencies.Output("sample_container", "children"),
+    dash.dependencies.Output("thresholds-dropdown", "data"),
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_thresholds(*args, **kwargs):
     kkm = kwargs["session_state"]["context"]["kkm"]
+    kkm = [k.replace("_", " ").title() for k in kkm]
+    data = [{"value": f"{i}", "label": f"{k}"} for i, k in enumerate(kkm)]
+    return data

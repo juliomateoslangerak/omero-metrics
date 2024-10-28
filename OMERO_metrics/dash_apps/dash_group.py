@@ -55,7 +55,7 @@ dash_app_group.layout = dmc.MantineProvider(
                                     dmc.Group(
                                         [
                                             html.Img(
-                                                src="./assets/images/microscope.png",
+                                                src="/static/OMERO_metrics/images/microscope.png",
                                                 style={"width": "100px"},
                                             ),
                                             dmc.Title(
