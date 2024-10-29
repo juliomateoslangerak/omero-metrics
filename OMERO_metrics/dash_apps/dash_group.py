@@ -1,8 +1,8 @@
 import dash
-from dash import dcc, html, dash_table
+import pandas as pd
+from dash import html, dash_table, dcc
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
-import dash_bootstrap_components as dbc
 from dash_iconify import DashIconify
 from OMERO_metrics import views
 
@@ -109,6 +109,7 @@ dash_app_group.layout = dmc.MantineProvider(
                                         },
                                         id="download_test",
                                     ),
+                                    dcc.Download(id="download"),
                                     dmc.DatePicker(
                                         id="date-picker",
                                         label="Select Date",
@@ -403,11 +404,13 @@ def delete_all_callback(*args, **kwargs):
 
 
 @dash_app_group.expanded_callback(
-    dash.dependencies.Output("result", "children"),
+    dash.dependencies.Output("download", "data"),
     dash.dependencies.Input("download_test", "n_clicks"),
     prevent_initial_call=True,
 )
 def download_file(*args, **kwargs):
     request = kwargs["request"]
-    msg = views.download_file(request, file_id=691)
-    return msg
+    url = views.download_file(request, file_id=691)
+    msg = "File downloaded"
+    df = pd.read_csv(url)
+    return dcc.send_data_frame(df.to_csv, "mydf.csv")

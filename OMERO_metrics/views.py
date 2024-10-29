@@ -1,5 +1,4 @@
 from django.utils.datetime_safe import datetime
-from django.http import HttpRequest
 from OMERO_metrics.tools import delete
 from omeroweb.webclient.decorators import login_required, render_response
 from OMERO_metrics.tools.data_managers import (
@@ -20,6 +19,7 @@ from OMERO_metrics.tools.dump import dump_dataset
 import omero
 import logging
 from OMERO_metrics.tools import load
+from django.shortcuts import redirect
 from django.urls import reverse
 
 logger = logging.getLogger(__name__)
@@ -46,17 +46,23 @@ DATA_TYPE = {
 #         name="omero_table",
 #     ),
 # Download annotation file like yaml http://localhost:4545/webclient/annotation/623
-@login_required()
+
+
+@login_required(setGroupContext=True)
 def download_file(request, conn=None, **kwargs):
-    """Download a file"""
+    """Download a file by triggering the omero_table view"""
     try:
-        file_id = kwargs["file_id"]
-        response = reverse("omero_table", args=[file_id, "csv"])
-        uri = request.build_absolute_uri(response)
-        msg = uri
-        return msg
+        file_id = kwargs.get("file_id")
+        if not file_id:
+            raise ValueError("File ID is required")
+
+        # Build the URL for the view you want to trigger
+        response_url = reverse("omero_table", args=[file_id, "csv"])
+        uri = request.build_absolute_uri(response_url)
+
+        return uri
     except Exception as e:
-        return str(e)
+        return str(e)  # Or consider returning an HttpResponse with the error
 
 
 @login_required()

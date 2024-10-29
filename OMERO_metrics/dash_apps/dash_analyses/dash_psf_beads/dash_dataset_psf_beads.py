@@ -3,14 +3,7 @@ from dash import dcc, html, dash_table
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 
-stylesheets = [
-    "https://unpkg.com/@mantine/dates@7/styles.css",
-    "https://unpkg.com/@mantine/code-highlight@7/styles.css",
-    "https://unpkg.com/@mantine/charts@7/styles.css",
-    "https://unpkg.com/@mantine/carousel@7/styles.css",
-    "https://unpkg.com/@mantine/notifications@7/styles.css",
-    "https://unpkg.com/@mantine/nprogress@7/styles.css",
-]
+
 primary_color = "#63aa47"
 content = dmc.Card(
     children=[
@@ -32,7 +25,7 @@ content = dmc.Card(
 )
 app = DjangoDash(
     "PSF_Beads",
-    external_stylesheets=stylesheets,
+    external_stylesheets=dmc.styles.ALL,
 )
 
 

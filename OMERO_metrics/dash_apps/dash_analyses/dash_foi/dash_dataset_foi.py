@@ -8,20 +8,12 @@ from dash_iconify import DashIconify
 from skimage.exposure import rescale_intensity
 
 
-stylesheets = [
-    "https://unpkg.com/@mantine/dates@7/styles.css",
-    "https://unpkg.com/@mantine/code-highlight@7/styles.css",
-    "https://unpkg.com/@mantine/charts@7/styles.css",
-    "https://unpkg.com/@mantine/carousel@7/styles.css",
-    "https://unpkg.com/@mantine/notifications@7/styles.css",
-    "https://unpkg.com/@mantine/nprogress@7/styles.css",
-]
 primary_color = "#63aa47"
 dashboard_name = "omero_dataset_metrics"
 dash_app_dataset = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
-    external_stylesheets=stylesheets,
+    external_stylesheets=dmc.styles.ALL,
 )
 
 dash_app_dataset.layout = dmc.MantineProvider(

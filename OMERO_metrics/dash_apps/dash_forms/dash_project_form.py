@@ -43,19 +43,11 @@ ALLOWED_ANALYSIS_TYPES = [
 primary_color = "#008080"
 
 
-stylesheets = [
-    "https://unpkg.com/@mantine/dates@7/styles.css",
-    "https://unpkg.com/@mantine/code-highlight@7/styles.css",
-    "https://unpkg.com/@mantine/charts@7/styles.css",
-    "https://unpkg.com/@mantine/carousel@7/styles.css",
-    "https://unpkg.com/@mantine/notifications@7/styles.css",
-    "https://unpkg.com/@mantine/nprogress@7/styles.css",
-]
 dashboard_name = "omero_project_config_form"
 dash_form_project = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
-    external_stylesheets=stylesheets,
+    external_stylesheets=dmc.styles.ALL,
 )
 
 analysis_types = [

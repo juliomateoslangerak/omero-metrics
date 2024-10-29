@@ -76,8 +76,6 @@ def get_dmc_field_input(
     input_field.w = "300"
     input_field.disabled = disabled
     input_field.required = not field_info["optional"]
-    input_field.variant = "filled"
-    input_field.radius = "md"
     input_field.leftSection = DashIconify(
         icon=type_mapping[field_info["type"]][1]
     )
@@ -112,18 +110,14 @@ class DashForm:
         self.form = self.get_form()
 
     def get_form(self):
-        form_content = dmc.Stack(
+        form_content = dmc.Fieldset(
             id=self.form_id,
             children=[],
-            align="center",
-            style={
-                "margin": "10px",
-                "width": "auto",
-                "height": "auto",
-                "padding": "10px",
-                "border-radius": "0.5rem",
-                "box-shadow": "0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)",
-            },
+            legend=add_space_between_capitals(
+                self.mm_object.__class__.__name__
+            ),
+            variant="filled",
+            radius="md",
         )
         for field in fields(self.mm_object):
             form_content.children.append(
