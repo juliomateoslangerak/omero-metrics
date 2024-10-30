@@ -183,6 +183,7 @@ dash_app_project.layout = dmc.MantineProvider(
                                                             rightSection=DashIconify(
                                                                 icon="ph:caret-down"
                                                             ),
+                                                            allowDeselect=False,
                                                             styles={
                                                                 "label": {
                                                                     "marginBottom": "8px"
@@ -578,15 +579,24 @@ def update_thresholds_controls(*args, **kwargs):
                                 dmc.NumberInput(
                                     label="Upper Limit",
                                     placeholder="Enter upper limit",
+                                    leftSection=DashIconify(
+                                        icon="hugeicons:chart-maximum",
+                                        color="green",
+                                    ),
                                 ),
                                 dmc.NumberInput(
                                     label="Lower Limit",
                                     placeholder="Enter lower limit",
+                                    leftSection=DashIconify(
+                                        icon="hugeicons:chart-minimum",
+                                        color="green",
+                                    ),
                                 ),
                             ],
                             legend=key,
                             variant="filled",
                             radius="md",
+                            style={"padding": "10px", "margin": "10px"},
                         )
                     ]
                 ),
@@ -608,6 +618,7 @@ def show(*args, **kwargs):
     return dmc.Notification(
         title="Hey there!",
         id="simple-notify",
+        color="green",
         action="show",
         message="Notifications in Dash, Awesome!",
         icon=DashIconify(icon="ic:round-celebration"),

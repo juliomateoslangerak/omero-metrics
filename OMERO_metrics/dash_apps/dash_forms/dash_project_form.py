@@ -14,9 +14,14 @@ DATASET_TO_INPUT = {
     "PSFBeadsDataset": mm_schema.PSFBeadsInputParameters,
 }
 
+# Improved sample type formatting
 sample_types = [x[0] for x in MAPPINGS]
 sample_types_dp = [
-    {"label": dft.add_space_between_capitals(x.__name__), "value": f"{i}"}
+    {
+        "label": dft.add_space_between_capitals(x.__name__),
+        "value": f"{i}",
+        "description": f"Configure analysis for {x.__name__}",  # Added descriptions
+    }
     for i, x in enumerate(sample_types)
 ]
 
@@ -25,23 +30,16 @@ def get_icon(icon):
     return DashIconify(icon=icon, height=20)
 
 
-min_step = 0
-max_step = 2
-active = 0
-
-formManager = dft.DashForm(
-    mm_schema.Sample, disabled=False, form_id="form_content"
-)
-sampleFORM = formManager.form
-
-ALLOWED_ANALYSIS_TYPES = [
-    "FieldIlluminationInputParameters",
-    "PSFBeadsInputParameters",
-]
-
-
-primary_color = "#008080"
-
+# Theme configuration
+THEME = {
+    "primary": "#189A35",
+    "secondary": "#008080",
+    "background": "#f8fafc",
+    "surface": "#ffffff",
+    "border": "#e2e8f0",
+    "success": "#10b981",
+    "error": "#ef4444",
+}
 
 dashboard_name = "omero_project_config_form"
 dash_form_project = DjangoDash(
@@ -50,195 +48,255 @@ dash_form_project = DjangoDash(
     external_stylesheets=dmc.styles.ALL,
 )
 
-analysis_types = [
-    {"label": field.__name__, "value": f"{i}"}
-    for i, field in enumerate(
-        mm_schema.MetricsInputParameters.__subclasses__()
-    )
-]
-
-
+# Improved layout with better visual hierarchy
 dash_form_project.layout = dmc.MantineProvider(
-    [
+    theme={
+        "colorScheme": "light",
+        "primaryColor": "green",
+        "components": {
+            "Button": {"styles": {"root": {"fontWeight": 500}}},
+            "Title": {"styles": {"root": {"letterSpacing": "-0.5px"}}},
+        },
+    },
+    children=[
         dmc.Container(
             [
-                dmc.Center(
-                    [
+                # Header Section
+                dmc.Paper(
+                    children=[
                         dmc.Group(
                             [
                                 html.Img(
                                     src="/static/OMERO_metrics/images/metrics_logo.png",
-                                    style={"width": "100px"},
+                                    style={
+                                        "width": "120px",
+                                        "objectFit": "contain",
+                                    },
                                 ),
-                                dmc.Title(
-                                    "Configuration Set Up",
-                                    c="#189A35",
-                                    size="h3",
-                                    mb=10,
-                                    mt=5,
+                                dmc.Stack(
+                                    [
+                                        dmc.Title(
+                                            "Configuration Setup",
+                                            c=THEME["primary"],
+                                            size="h2",
+                                        ),
+                                        dmc.Text(
+                                            "Configure your microscopy analysis parameters",
+                                            c="dimmed",
+                                            size="sm",
+                                        ),
+                                    ],
+                                    gap=5,
                                 ),
-                            ]
+                            ],
+                            justify="space-between",
                         ),
                     ],
-                    style={
-                        "background-color": "white",
-                        "border-radius": "0.5rem",
-                        "padding": "10px",
-                    },
+                    p="lg",
+                    radius="md",
+                    withBorder=True,
                 ),
-                html.Div(
-                    id="output-data-upload",
+                # Main Content
+                dmc.Paper(
+                    id="main-content",
                     children=[
                         dmc.LoadingOverlay(
-                            visible=False,
                             id="loading-overlay",
                             overlayProps={"radius": "sm", "blur": 2},
-                            zIndex=10,
                         ),
+                        # Progress Indicator
+                        dmc.Progress(
+                            id="progress-bar",
+                            value=0,
+                            color=THEME["primary"],
+                            size="sm",
+                            mb="md",
+                        ),
+                        # Stepper
                         dmc.Stepper(
                             id="stepper-basic-usage",
-                            mt="20",
-                            ml="15",
-                            active=active,
-                            color="#189A35",
+                            active=0,
+                            color=THEME["primary"],
+                            size="sm",
+                            iconSize=32,
                             children=[
                                 dmc.StepperStep(
                                     id="step_sample",
-                                    label="Sample Form",
-                                    description="Create a sample",
+                                    label="Sample Configuration",
+                                    description="Define your sample parameters",
+                                    icon=DashIconify(
+                                        icon="mdi:microscope", width=20
+                                    ),
                                     children=[
                                         dmc.Stack(
                                             children=[
-                                                dmc.Text(
-                                                    "Step 1 Sample: Select your sample type",
-                                                    ta="center",
+                                                dmc.Title(
+                                                    "Sample Configuration",
+                                                    order=3,
+                                                    c=THEME["secondary"],
                                                 ),
-                                                html.Br(),
+                                                dmc.Text(
+                                                    "Select your sample type and configure its parameters",
+                                                    c="dimmed",
+                                                    size="sm",
+                                                ),
                                                 dmc.Select(
                                                     id="sample_type_selector",
                                                     data=sample_types_dp,
-                                                    w=300,
                                                     searchable=True,
                                                     placeholder="Select Sample Type",
-                                                    clearable=False,
+                                                    leftSection=DashIconify(
+                                                        icon="mdi:database-search"
+                                                    ),
+                                                    allowDeselect=False,
+                                                    size="md",
+                                                    styles={
+                                                        "input": {
+                                                            "border": f"1px solid {THEME['border']}"
+                                                        }
+                                                    },
                                                 ),
                                                 html.Div(
-                                                    id="sample_container",
+                                                    id="sample_container"
                                                 ),
                                             ],
-                                            align="center",
-                                            style={
-                                                "background-color": "white",
-                                                "border-radius": "0.5rem",
-                                                "padding": "10px",
-                                            },
+                                            gap="md",
                                         )
                                     ],
                                 ),
                                 dmc.StepperStep(
                                     id="step_input_data",
-                                    label="Input Parameters",
-                                    description="Configure the input parameters",
+                                    label="Analysis Parameters",
+                                    description="Set analysis configuration",
+                                    icon=DashIconify(
+                                        icon="mdi:tune-vertical", width=20
+                                    ),
                                     children=[
                                         dmc.Stack(
-                                            [
+                                            children=[
+                                                dmc.Title(
+                                                    "Analysis Parameters",
+                                                    order=3,
+                                                    c=THEME["secondary"],
+                                                ),
                                                 dmc.Text(
-                                                    "Step 2 Input Parameters: Fill in the input parameters for your analysis",
+                                                    "Configure the input parameters for your analysis",
+                                                    c="dimmed",
+                                                    size="sm",
                                                 ),
                                                 html.Div(
-                                                    id="input_parameters_container",
+                                                    id="input_parameters_container"
                                                 ),
                                             ],
-                                            align="center",
-                                            style={
-                                                "background-color": "white",
-                                                "border-radius": "0.5rem",
-                                                "padding": "10px",
-                                            },
+                                            gap="md",
                                         )
                                     ],
                                 ),
                                 dmc.StepperCompleted(
                                     children=[
-                                        dmc.Text(
-                                            "Review the configuration and save it",
-                                            ta="center",
-                                            mt="20",
-                                            mb="20",
-                                        ),
                                         dmc.Stack(
-                                            id="save_progress",
                                             children=[
+                                                dmc.Title(
+                                                    "Review Configuration",
+                                                    order=3,
+                                                    c=THEME["secondary"],
+                                                ),
+                                                dmc.Text(
+                                                    "Review your configuration before saving",
+                                                    c="dimmed",
+                                                    size="sm",
+                                                ),
                                                 dmc.Grid(
-                                                    [
+                                                    children=[
                                                         dmc.GridCol(
-                                                            id="sample_col",
-                                                            span="auto",
+                                                            dmc.Paper(
+                                                                children=[
+                                                                    dmc.Title(
+                                                                        "Sample Details",
+                                                                        order=4,
+                                                                    ),
+                                                                    html.Div(
+                                                                        id="sample_col"
+                                                                    ),
+                                                                ],
+                                                                p="md",
+                                                                withBorder=True,
+                                                                radius="md",
+                                                            ),
+                                                            span=6,
                                                         ),
                                                         dmc.GridCol(
-                                                            id="input_col",
-                                                            span="auto",
+                                                            dmc.Paper(
+                                                                children=[
+                                                                    dmc.Title(
+                                                                        "Input Parameters",
+                                                                        order=4,
+                                                                    ),
+                                                                    html.Div(
+                                                                        id="input_col"
+                                                                    ),
+                                                                ],
+                                                                p="md",
+                                                                withBorder=True,
+                                                                radius="md",
+                                                            ),
+                                                            span=6,
                                                         ),
                                                     ],
-                                                    justify="space-around",
+                                                    gutter="xl",
                                                 ),
                                             ],
-                                            align="center",
-                                            style={
-                                                "background-color": "white",
-                                                "border-radius": "0.5rem",
-                                                "padding": "10px",
-                                            },
+                                            gap="xl",
                                         ),
                                     ]
                                 ),
                             ],
-                            styles={
-                                "separator": {"border-color": "#189A35"},
-                                "verticalSeparator": {
-                                    "border-color": "#189A35"
-                                },
-                            },
                         ),
+                        # Navigation Buttons
                         dmc.Group(
-                            id="group_buttons",
-                            justify="center",
-                            mt="xl",
                             children=[
                                 dmc.Button(
                                     "Back",
                                     id="back-basic-usage",
-                                    # variant="default",
+                                    variant="outline",
+                                    leftSection=DashIconify(
+                                        icon="mdi:arrow-left"
+                                    ),
                                 ),
-                                dmc.Button("Next", id="next-basic-usage"),
+                                dmc.Button(
+                                    "Next",
+                                    id="next-basic-usage",
+                                    rightSection=DashIconify(
+                                        icon="mdi:arrow-right"
+                                    ),
+                                ),
                             ],
+                            justify="center",
+                            mt="xl",
                         ),
                     ],
-                    style={
-                        "margin-top": 10,
-                        "background-color": "white",
-                        "border-radius": "0.5rem",
-                        "padding": "10px",
-                        "border": "1px solid #189A35",
-                    },
+                    p="xl",
+                    radius="md",
+                    withBorder=True,
+                    mt="md",
                 ),
             ],
-            fluid=True,
-            style={
-                "background-color": "#eceff1",
-                "margin": "10px",
-                "border-radius": "0.5rem",
-                "padding": "10px",
-            },
+            size="xl",
+            px="md",
+            py="xl",
         ),
-    ]
+    ],
 )
 
 
+# Updated callback for stepper progress
 @dash_form_project.expanded_callback(
-    dash.dependencies.Output("stepper-basic-usage", "active"),
-    dash.dependencies.Output("next-basic-usage", "children"),
-    dash.dependencies.Output("next-basic-usage", "color"),
+    [
+        dash.dependencies.Output("stepper-basic-usage", "active"),
+        dash.dependencies.Output("next-basic-usage", "children"),
+        dash.dependencies.Output("next-basic-usage", "color"),
+        dash.dependencies.Output("progress-bar", "value"),
+    ],
     [
         dash.dependencies.Input("back-basic-usage", "n_clicks"),
         dash.dependencies.Input("next-basic-usage", "n_clicks"),
@@ -251,24 +309,35 @@ dash_form_project.layout = dmc.MantineProvider(
 def stepper_callback(*args, **kwargs):
     current = args[2]
     button_id = kwargs["callback_context"].triggered[0]["prop_id"]
-    step = current if current is not None else active
-    next_text = "Next"
-    next_color = "blue"
+    step = current if current is not None else 0
+
+    # Calculate progress percentage
+    progress = (step / 2) * 100
+
     if button_id == "back-basic-usage.n_clicks":
-        step = step - 1 if step > min_step else step
+        step = max(0, step - 1)
+        next_text = ["Next", DashIconify(icon="mdi:arrow-right")]
+        next_color = THEME["primary"]
     else:
         sample = args[3]
         input_parameters = args[4]
+
         if step == 0 and not dft.validate_form(sample):
-            step = 0
+            return dash.no_update, dash.no_update, dash.no_update, progress
         elif step == 1 and not dft.validate_form(input_parameters):
-            step = 1
+            return dash.no_update, dash.no_update, dash.no_update, progress
+
+        step = min(2, step + 1)
+
+        if step == 2:
+            next_text = ["Save Configuration", DashIconify(icon="mdi:check")]
+            next_color = THEME["success"]
         else:
-            if step >= 1:
-                next_text = "Save Configuration"
-                next_color = "green"
-            step = step + 1 if step < max_step else step
-    return step, next_text, next_color
+            next_text = ["Next", DashIconify(icon="mdi:arrow-right")]
+            next_color = THEME["primary"]
+
+    progress = (step / 2) * 100
+    return step, next_text, next_color, progress
 
 
 @dash_form_project.expanded_callback(
@@ -344,8 +413,8 @@ dash_form_project.clientside_callback(
 
 
 @dash_form_project.expanded_callback(
-    dash.dependencies.Output("output-data-upload", "children"),
-    dash.dependencies.Output("loading-overlay", "loading"),
+    dash.dependencies.Output("main-content", "children"),
+    dash.dependencies.Output("loading-overlay", "visible"),
     [
         dash.dependencies.Input("next-basic-usage", "n_clicks"),
         dash.dependencies.State("sample_content", "children"),
@@ -357,6 +426,9 @@ dash_form_project.clientside_callback(
 )
 def save_config_dash(*args, **kwargs):
     current = args[3]
+    if not args[4]:  # No sample type selected
+        return dash.no_update, False
+
     analysis_type = MAPPINGS[int(args[4])][2].__name__
     mm_sample = MAPPINGS[int(args[4])][0]
     mm_input_parameters = DATASET_TO_INPUT[analysis_type]
@@ -364,25 +436,53 @@ def save_config_dash(*args, **kwargs):
     input_form = args[2]
     project_id = int(kwargs["session_state"]["context"]["project_id"])
     request = kwargs["request"]
+
     if args[0] > 0 and current == 2:
         if dft.validate_form(sample_form) and dft.validate_form(input_form):
             sleep(2)
-            input_parameters = dft.extract_form_data(
-                input_form, mm_input_parameters.__class__.__name__
-            )
-            mm_input_parameters = mm_input_parameters(**input_parameters)
-            sample = dft.extract_form_data(
-                sample_form, mm_sample.__class__.__name__
-            )
-            mm_sample = mm_sample(**sample)
-            response, color = views.save_config(
-                request=request,
-                project_id=int(project_id),
-                input_parameters=mm_input_parameters,
-                sample=mm_sample,
-            )
-            return [dmc.Alert(response, color=color, title="Feedback!")], False
-        else:
-            return dash.no_update, False
-    else:
-        dash.no_update, False
+            try:
+                input_parameters = dft.extract_form_data(
+                    input_form, mm_input_parameters.class_name
+                )
+                mm_input_parameters = mm_input_parameters(**input_parameters)
+                sample = dft.extract_form_data(
+                    sample_form, mm_sample.class_name
+                )
+                mm_sample = mm_sample(**sample)
+                response, color = views.save_config(
+                    request=request,
+                    project_id=int(project_id),
+                    input_parameters=mm_input_parameters,
+                    sample=mm_sample,
+                )
+                return [
+                    dmc.Alert(
+                        children=[
+                            dmc.Title(response, order=4),
+                            dmc.Text(
+                                "Your configuration has been saved successfully.",
+                                size="sm",
+                            ),
+                        ],
+                        color=color,
+                        icon=DashIconify(icon="mdi:check-circle"),
+                        title="Success!",
+                        radius="md",
+                        withCloseButton=True,
+                    )
+                ], False
+            except Exception as e:
+                return [
+                    dmc.Alert(
+                        children=[
+                            dmc.Title("Error", order=4),
+                            dmc.Text(str(e), size="sm"),
+                        ],
+                        color="red",
+                        icon=DashIconify(icon="mdi:alert"),
+                        title="Error!",
+                        radius="md",
+                        withCloseButton=True,
+                    )
+                ], False
+    return dash.no_update, False

@@ -61,6 +61,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                     id="channel_dropdown_foi",
                                     label="Select Channel",
                                     clearable=False,
+                                    allowDeselect=False,
                                     w="300",
                                     value="0",
                                     leftSection=DashIconify(

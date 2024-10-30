@@ -72,6 +72,7 @@ dash_app_image.layout = dmc.MantineProvider(
                                                     w="auto",
                                                     value="0",
                                                     clearable=False,
+                                                    allowDeselect=False,
                                                     leftSection=DashIconify(
                                                         icon="radix-icons:magnifying-glass"
                                                     ),
@@ -128,6 +129,7 @@ dash_app_image.layout = dmc.MantineProvider(
                                         dmc.Select(
                                             id="my-dropdown2",
                                             label="Select Color",
+                                            allowDeselect=False,
                                             data=[
                                                 {
                                                     "value": "Hot",

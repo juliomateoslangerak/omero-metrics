@@ -5,6 +5,8 @@ from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 from OMERO_metrics import views
+from time import sleep
+from django.urls import reverse
 
 dashboard_name = "omero_group_dash"
 dash_app_group = DjangoDash(
@@ -13,8 +15,29 @@ dash_app_group = DjangoDash(
     external_stylesheets=dmc.styles.ALL,
 )
 
+# Theme configuration
+THEME = {
+    "primary": "#189A35",
+    "secondary": "#189A35",
+    "background": "#f8fafc",
+    "surface": "#ffffff",
+    "border": "#e2e8f0",
+    "success": "#10b981",
+    "error": "#ef4444",
+}
+
 dash_app_group.layout = dmc.MantineProvider(
-    [
+    theme={
+        "colorScheme": "light",
+        "primaryColor": "green",
+        "components": {
+            "Button": {"styles": {"root": {"fontWeight": 500}}},
+            "Title": {"styles": {"root": {"letterSpacing": "-0.5px"}}},
+        },
+    },
+    children=[
+        dmc.NotificationProvider(position="top-center"),
+        html.Div(id="notifications-container"),
         dmc.Tabs(
             [
                 dmc.TabsList(
@@ -23,60 +46,70 @@ dash_app_group.layout = dmc.MantineProvider(
                             "Microscope Health",
                             leftSection=DashIconify(icon="tabler:microscope"),
                             value="microscope_health",
-                            color="#189A35",
+                            color=THEME["primary"],
                             style={
-                                "font-size": "1.1rem",
-                                "font-weight": "bold",
-                                "color": "#189A35",
+                                "fontSize": "1.1rem",
+                                "fontWeight": "bold",
+                                "color": THEME["primary"],
                             },
                         ),
                         dmc.TabsTab(
                             "History",
                             leftSection=DashIconify(icon="bx:history"),
                             value="history",
-                            color="#189A35",
+                            color=THEME["primary"],
                             style={
-                                "font-size": "1.1rem",
-                                "font-weight": "bold",
-                                "color": "#189A35",
+                                "fontSize": "1.1rem",
+                                "fontWeight": "bold",
+                                "color": THEME["primary"],
                             },
                         ),
                     ],
-                    grow="True",
+                    grow=True,
                     justify="space-around",
                     variant="light",
-                    style={"background-color": "white"},
+                    style={"backgroundColor": THEME["surface"]},
                 ),
                 dmc.TabsPanel(
                     dmc.Container(
                         [
-                            dmc.Card(
+                            dmc.Paper(
                                 children=[
                                     dmc.Group(
                                         [
                                             html.Img(
                                                 src="/static/OMERO_metrics/images/microscope.png",
-                                                style={"width": "100px"},
+                                                style={
+                                                    "width": "100px",
+                                                    "objectFit": "contain",
+                                                },
                                             ),
-                                            dmc.Title(
-                                                "Microscope Health Dashboard",
-                                                c="#189A35",
-                                                size="h3",
-                                                mb=10,
-                                                mt=5,
+                                            dmc.Stack(
+                                                [
+                                                    dmc.Title(
+                                                        "Microscope Health Dashboard",
+                                                        c=THEME["primary"],
+                                                        size="h3",
+                                                    ),
+                                                    dmc.Text(
+                                                        "View information about your microscope group",
+                                                        c="dimmed",
+                                                        size="sm",
+                                                    ),
+                                                ],
+                                                gap=5,
                                             ),
                                         ],
                                         justify="space-between",
                                         align="center",
-                                        mt="md",
-                                        mb="xs",
                                     ),
-                                    dmc.Divider(mb="sm"),
+                                    dmc.Divider(mb="md"),
                                     html.Div(id="microscope_info"),
                                 ],
                                 withBorder=True,
                                 shadow="sm",
                                 radius="md",
+                                p="lg",
                                 style={
                                     "width": "100%",
                                     "maxWidth": "600px",
@@ -86,9 +119,9 @@ dash_app_group.layout = dmc.MantineProvider(
                         ],
                         fluid=True,
                         style={
-                            "background-color": "white",
+                            "backgroundColor": THEME["background"],
                             "margin": "10px",
-                            "border-radius": "0.5rem",
+                            "borderRadius": "0.5rem",
                             "padding": "10px",
                         },
                     ),
@@ -97,110 +130,110 @@ dash_app_group.layout = dmc.MantineProvider(
                 dmc.TabsPanel(
                     dmc.Container(
                         children=[
-                            dmc.Group(
-                                [
-                                    dmc.Button(
-                                        "Download",
-                                        variant="gradient",
-                                        gradient={
-                                            "from": "teal",
-                                            "to": "lime",
-                                            "deg": 105,
-                                        },
-                                        id="download_test",
-                                    ),
-                                    dcc.Download(id="download"),
-                                    dmc.DatePicker(
-                                        id="date-picker",
-                                        label="Select Date",
-                                        valueFormat="DD-MM-YYYY",
-                                        leftSection=DashIconify(
-                                            icon="clarity:date-line"
-                                        ),
-                                        type="range",
-                                        w="250",
-                                    ),
-                                    dmc.Select(
-                                        "select",
-                                        data=[
-                                            "File Annotation",
-                                            "Map Annotation",
-                                        ],
-                                        label="Select Annotation Type",
-                                        w="250",
-                                    ),
-                                    dmc.Button(
-                                        id="delete-all",
-                                        children="Delete All",
-                                        variant="gradient",
-                                        gradient={
-                                            "from": "teal",
-                                            "to": "lime",
-                                            "deg": 105,
-                                        },
-                                        w="250",
-                                    ),
-                                    dmc.Modal(
-                                        title="Confirm Delete",
-                                        id="confirm_delete",
-                                        children=[
-                                            dmc.Text(
-                                                "Are you sure you want to delete all annotations including ROIs?"
+                            dmc.Paper(
+                                children=[
+                                    dmc.Group(
+                                        [
+                                            dcc.Download(id="download"),
+                                            dmc.DatePicker(
+                                                id="date-picker",
+                                                label="Select Date Range",
+                                                valueFormat="DD-MM-YYYY",
+                                                type="range",
+                                                w=250,
+                                                leftSection=DashIconify(
+                                                    icon="clarity:date-line"
+                                                ),
                                             ),
-                                            dmc.Space(h=20),
-                                            dmc.Group(
-                                                [
-                                                    dmc.Button(
-                                                        "Submit",
-                                                        id="modal-submit-button",
+                                            dmc.Select(
+                                                id="select_mimetype",
+                                                label="Mime Type",
+                                                value="0",
+                                                w=250,
+                                                allowDeselect=False,
+                                            ),
+                                            dmc.Button(
+                                                id="delete-all",
+                                                children=[
+                                                    DashIconify(
+                                                        icon="ic:round-delete-forever"
                                                     ),
-                                                    dmc.Button(
-                                                        "Close",
-                                                        color="red",
-                                                        variant="outline",
-                                                        id="modal-close-button",
+                                                    "Delete All",
+                                                ],
+                                                variant="gradient",
+                                                gradient={
+                                                    "from": THEME["error"],
+                                                    "to": THEME["primary"],
+                                                    "deg": 105,
+                                                },
+                                                w=250,
+                                            ),
+                                            dmc.Modal(
+                                                title="Confirm Delete",
+                                                id="confirm_delete",
+                                                children=[
+                                                    dmc.Text(
+                                                        "Are you sure you want to delete all annotations including ROIs?"
+                                                    ),
+                                                    dmc.Space(h=20),
+                                                    dmc.Group(
+                                                        [
+                                                            dmc.Button(
+                                                                "Submit",
+                                                                id="modal-submit-button",
+                                                                color="red",
+                                                            ),
+                                                            dmc.Button(
+                                                                "Close",
+                                                                color="gray",
+                                                                variant="outline",
+                                                                id="modal-close-button",
+                                                            ),
+                                                        ],
+                                                        justify="flex-end",
                                                     ),
                                                 ],
-                                                justify="flex-end",
                                             ),
                                         ],
+                                        justify="space-between",
+                                        align="flex-end",
                                     ),
+                                    dmc.Space(h=20),
+                                    dmc.Divider(mb="md"),
+                                    dmc.Space(h=20),
+                                    dmc.Text(
+                                        "File Annotations",
+                                        c=THEME["primary"],
+                                        size="xl",
+                                    ),
+                                    html.Div(
+                                        id="project_file_annotations_table",
+                                        style={"margin": "10px"},
+                                    ),
+                                    dmc.Divider(mb="md"),
+                                    dmc.Text(
+                                        "Map Annotations",
+                                        c=THEME["primary"],
+                                        size="xl",
+                                    ),
+                                    html.Div(
+                                        id="project_map_annotations_table",
+                                        style={"margin": "10px"},
+                                    ),
+                                    html.Div(id="blank-input"),
+                                    html.Div(id="result"),
                                 ],
-                                justify="space-around",
-                                align="flex-end",
-                                style={"margin": "10px"},
+                                withBorder=True,
+                                shadow="sm",
+                                radius="md",
+                                p="lg",
                             ),
-                            dmc.Space(h=10),
-                            dmc.Divider(mb="sm"),
-                            dmc.Space(h=20),
-                            dmc.Text(
-                                "File Annotations",
-                                c="#189A35",
-                                size="xl",
-                            ),
-                            html.Div(
-                                id="project_file_annotations_table",
-                                style={"margin": "10px"},
-                            ),
-                            dmc.Divider(mb="sm"),
-                            dmc.Text(
-                                "Map Annotations",
-                                c="#189A35",
-                                size="xl",
-                            ),
-                            html.Div(
-                                id="project_map_annotations_table",
-                                style={"margin": "10px"},
-                            ),
-                            html.Div(id="notify-container"),
-                            html.Div(id="blank-input"),
-                            html.Div(id="result"),
                         ],
                         fluid=True,
                         style={
-                            "background-color": "white",
+                            "backgroundColor": THEME["background"],
                             "margin": "10px",
-                            "border-radius": "0.5rem",
+                            "borderRadius": "0.5rem",
                             "padding": "10px",
                         },
                     ),
@@ -209,8 +242,33 @@ dash_app_group.layout = dmc.MantineProvider(
             ],
             value="microscope_health",
         ),
-    ]
+    ],
 )
+
+
+@dash_app_group.expanded_callback(
+    dash.dependencies.Output("date-picker", "value"),
+    dash.dependencies.Output("date-picker", "minDate"),
+    dash.dependencies.Output("date-picker", "maxDate"),
+    [dash.dependencies.Input("blank-input", "children")],
+)
+def update_date_range(*args, **kwargs):
+    df = kwargs["session_state"]["context"]["file_ann"]
+    min_date = df.Date.min()
+    max_date = df.Date.max()
+    return [min_date, max_date], min_date, max_date
+
+
+@dash_app_group.expanded_callback(
+    dash.dependencies.Output("select_mimetype", "data"),
+    [dash.dependencies.Input("blank-input", "children")],
+)
+def update_mimetype(*args, **kwargs):
+    df = kwargs["session_state"]["context"]["file_ann"]
+    mimetype = df.Mimetype.unique()
+    data = [{"label": mt, "value": f"{i+1}"} for i, mt in enumerate(mimetype)]
+    data = [{"label": "All", "value": "0"}] + data
+    return data
 
 
 @dash_app_group.expanded_callback(
@@ -221,42 +279,71 @@ def render_content(*args, **kwargs):
     group_name = kwargs["session_state"]["context"]["group_name"]
     group_id = kwargs["session_state"]["context"]["group_id"]
     group_description = kwargs["session_state"]["context"]["group_description"]
-    result = dmc.Stack(
+    return dmc.Stack(
         [
-            dmc.Text("Microscope Information", c="#189A35", size="xl"),
-            dmc.Text(f"Group Name: {group_name}", size="xs"),
-            dmc.Text(f"Group ID: {group_id}", size="xs"),
-            dmc.Text(f"Group Description: {group_description}", size="xs"),
+            dmc.Title("Microscope Information", c=THEME["primary"], order=4),
+            dmc.Title("Microscope Information", c=THEME["primary"], order=4),
+            dmc.Text(f"Group Name: {group_name}", size="sm"),
+            dmc.Text(f"Group ID: {group_id}", size="sm"),
+            dmc.Text(f"Group Description: {group_description}", size="sm"),
         ],
         align="flex-start",
         gap="xs",
     )
-    return result
-
-
-# @dash_app_group.expanded_callback(
-#     dash.dependencies.Output("blank-input", "children"),
-#     dash.dependencies.Input("blank-input", "children"),
-# )
-# def update_filter_bar(*args, **kwargs):
-#     table_df = kwargs["session_state"]["context"]["table_df"]
-#
-#     return args[0]
 
 
 @dash_app_group.expanded_callback(
     dash.dependencies.Output("project_file_annotations_table", "children"),
     dash.dependencies.Output("project_map_annotations_table", "children"),
-    dash.dependencies.Input("blank-input", "children"),
+    [
+        dash.dependencies.Input("select_mimetype", "value"),
+        dash.dependencies.Input("date-picker", "value"),
+    ],
+    prevent_initial_call=True,
 )
 def load_table_project(*args, **kwargs):
     file_ann = kwargs["session_state"]["context"]["file_ann"]
+    data_filter = args[1]
+    if data_filter is not None:
+        file_ann = file_ann[
+            (file_ann["Date"].dt.date >= pd.to_datetime(data_filter[0]).date())
+            & (
+                file_ann["Date"].dt.date
+                <= pd.to_datetime(data_filter[1]).date()
+            )
+        ]
+
+    else:
+        pass
+    if int(args[0]) > 0 and len(file_ann.Mimetype.unique()) > 0:
+        file_ann = file_ann[
+            file_ann.Mimetype == file_ann.Mimetype.unique()[int(args[0]) - 1]
+        ]
+    else:
+        pass
     file_ann_subset = file_ann[
         file_ann.columns[~file_ann.columns.str.contains("ID")]
     ]
+    request = kwargs["request"]
+    file_ann_subset["Download"] = [
+        (
+            f"[CSV]({request.build_absolute_uri(reverse(viewname='omero_table', args=[i, 'csv']))})"
+            f" | [JSON]({request.build_absolute_uri(reverse(viewname='omero_table', args=[i, 'json']))}) "
+            if mt == "OMERO.tables"
+            else f"[YAML]({request.build_absolute_uri(reverse(viewname='download_annotation', args=[id]))})"
+        )
+        for i, mt, id in zip(file_ann.File_ID, file_ann.Mimetype, file_ann.ID)
+    ]
     file_ann_table = dash_table.DataTable(
         id="datatable-interactivity",
-        columns=[{"name": i, "id": i} for i in file_ann_subset.columns],
+        columns=[
+            (
+                {"id": x, "name": x, "presentation": "markdown"}
+                if x == "Download"
+                else {"id": x, "name": x}
+            )
+            for x in file_ann_subset.columns
+        ],
         data=file_ann_subset.to_dict("records"),
         sort_action="native",
         sort_mode="multi",
@@ -292,12 +379,12 @@ def load_table_project(*args, **kwargs):
             "borderRight": "none",
         },
         style_header={
-            "backgroundColor": "#189A35",
+            "backgroundColor": THEME["primary"],
             "fontWeight": "bold",
             "fontSize": "16px",
             "paddingTop": "12px",
             "paddingBottom": "12px",
-            "color": "white",
+            "color": THEME["surface"],
             "border": "1px solid #ddd",
             "borderLeft": "none",
             "borderRight": "none",
@@ -305,11 +392,11 @@ def load_table_project(*args, **kwargs):
         style_data_conditional=[
             {
                 "if": {"row_index": "odd"},
-                "backgroundColor": "#f9f9f9",
+                "backgroundColor": THEME["background"],
             },
             {
                 "if": {"row_index": "even"},
-                "backgroundColor": "#ffffff",
+                "backgroundColor": THEME["surface"],
             },
         ],
     )
@@ -355,12 +442,12 @@ def load_table_project(*args, **kwargs):
             "borderRight": "none",
         },
         style_header={
-            "backgroundColor": "#189A35",
+            "backgroundColor": THEME["primary"],
             "fontWeight": "bold",
             "fontSize": "16px",
             "paddingTop": "12px",
             "paddingBottom": "12px",
-            "color": "white",
+            "color": THEME["surface"],
             "border": "1px solid #ddd",
             "borderLeft": "none",
             "borderRight": "none",
@@ -368,11 +455,11 @@ def load_table_project(*args, **kwargs):
         style_data_conditional=[
             {
                 "if": {"row_index": "odd"},
-                "backgroundColor": "#f9f9f9",
+                "backgroundColor": THEME["background"],
             },
             {
                 "if": {"row_index": "even"},
-                "backgroundColor": "#ffffff",
+                "backgroundColor": THEME["surface"],
             },
         ],
     )
@@ -381,7 +468,7 @@ def load_table_project(*args, **kwargs):
 
 @dash_app_group.expanded_callback(
     dash.dependencies.Output("confirm_delete", "opened"),
-    dash.dependencies.Output("notify-container", "children"),
+    dash.dependencies.Output("notifications-container", "children"),
     [
         dash.dependencies.Input("delete-all", "n_clicks"),
         dash.dependencies.Input("modal-submit-button", "n_clicks"),
@@ -393,8 +480,17 @@ def load_table_project(*args, **kwargs):
 def delete_all_callback(*args, **kwargs):
     triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
     group_id = kwargs["session_state"]["context"]["group_id"]
+    request = kwargs["request"]
     if triggered_button == "modal-submit-button.n_clicks" and args[0] > 0:
-        message = "You have clicked the submit button"
+        sleep(1)
+        views.delete_all(request, group_id=group_id)
+        message = dmc.Notification(
+            title="Notification!",
+            id="simple-notify",
+            action="show",
+            message="All annotations have been deleted",
+            icon=DashIconify(icon="akar-icons:circle-check"),
+        )
     elif triggered_button == "modal-close-button.n_clicks" and args[1] > 0:
         message = "You have clicked the close button"
     else:
@@ -403,14 +499,14 @@ def delete_all_callback(*args, **kwargs):
     return opened, message
 
 
-@dash_app_group.expanded_callback(
-    dash.dependencies.Output("download", "data"),
-    dash.dependencies.Input("download_test", "n_clicks"),
-    prevent_initial_call=True,
-)
-def download_file(*args, **kwargs):
-    request = kwargs["request"]
-    url = views.download_file(request, file_id=691)
-    msg = "File downloaded"
-    df = pd.read_csv(url)
-    return dcc.send_data_frame(df.to_csv, "mydf.csv")
+# @dash_app_group.expanded_callback(
+#     dash.dependencies.Output("download", "data"),
+#     dash.dependencies.Input("download_test", "n_clicks"),
+#     prevent_initial_call=True,
+# )
+# def download_file(*args, **kwargs):
+#     request = kwargs["request"]
+#     url = views.download_file(request, file_id=691)
+#     msg = "File downloaded"
+#     df = pd.read_csv(url)
+#     return dcc.send_data_frame(df.to_csv, "mydf.csv")

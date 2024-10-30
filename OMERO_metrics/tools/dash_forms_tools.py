@@ -62,7 +62,7 @@ def get_dmc_field_input(
     input_field_name = getattr(dmc, type_mapping[field_info["type"]][0])
     input_field = input_field_name()
     input_field.id = (
-        mm_object.__class__.__name__
+        mm_object.class_name
         + "_"
         + field_info["field_name"].replace(" ", "_").lower()
     )
@@ -113,9 +113,7 @@ class DashForm:
         form_content = dmc.Fieldset(
             id=self.form_id,
             children=[],
-            legend=add_space_between_capitals(
-                self.mm_object.__class__.__name__
-            ),
+            legend=add_space_between_capitals(self.mm_object.class_name),
             variant="filled",
             radius="md",
         )

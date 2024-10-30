@@ -45,6 +45,11 @@ DATA_TYPE = {
 #         views.omero_table,
 #         name="omero_table",
 #     ),
+# re_path(
+#     r"^annotation/(?P<annId>[0-9]+)/$",
+#     views.download_annotation,
+#     name="download_annotation",
+# ),
 # Download annotation file like yaml http://localhost:4545/webclient/annotation/623
 
 

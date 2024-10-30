@@ -77,6 +77,7 @@ app.layout = dmc.MantineProvider(
                                                             label="Select Channel",
                                                             w="auto",
                                                             value="0",
+                                                            allowDeselect=False,
                                                             leftSection=DashIconify(
                                                                 icon="radix-icons:magnifying-glass"
                                                             ),
@@ -128,6 +129,7 @@ app.layout = dmc.MantineProvider(
                                                 dmc.Select(
                                                     id="color_selector_psf_image",
                                                     label="Select Color",
+                                                    allowDeselect=False,
                                                     data=[
                                                         {
                                                             "value": "Hot",
@@ -236,6 +238,7 @@ app.layout = dmc.MantineProvider(
                                                 },
                                             ],
                                             value="x",
+                                            allowDeselect=False,
                                             id="axis_image_psf",
                                             w="auto",
                                             leftSection=DashIconify(
