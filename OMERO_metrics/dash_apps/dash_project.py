@@ -616,23 +616,6 @@ def update_thresholds_controls(*args, **kwargs):
     return threshold_control
 
 
-# @dash_app_project.expanded_callback(
-#     dash.dependencies.Output("notifications-container", "children"),
-#     [dash.dependencies.Input("notify", "n_clicks")],
-#     prevent_initial_call=True,
-# )
-# def show(*args, **kwargs):
-#     n_clicks = args[0]
-#     return dmc.Notification(
-#         title="Hey there!",
-#         id="simple-notify",
-#         color="green",
-#         action="show",
-#         message="Notifications in Dash, Awesome!",
-#         icon=DashIconify(icon="ic:round-celebration"),
-#     )
-
-
 @dash_app_project.expanded_callback(
     dash.dependencies.Output("notifications-container", "children"),
     [
