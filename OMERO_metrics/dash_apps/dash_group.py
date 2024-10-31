@@ -134,6 +134,22 @@ dash_app_group.layout = dmc.MantineProvider(
                                 children=[
                                     dmc.Group(
                                         [
+                                            dmc.Button(
+                                                id="download_table",
+                                                children=[
+                                                    DashIconify(
+                                                        icon="ic:round-download"
+                                                    ),
+                                                    "Download",
+                                                ],
+                                                variant="gradient",
+                                                gradient={
+                                                    "from": THEME["secondary"],
+                                                    "to": THEME["primary"],
+                                                    "deg": 105,
+                                                },
+                                                w="auto",
+                                            ),
                                             dcc.Download(id="download"),
                                             dmc.DatePicker(
                                                 id="date-picker",
@@ -282,7 +298,6 @@ def render_content(*args, **kwargs):
     return dmc.Stack(
         [
             dmc.Title("Microscope Information", c=THEME["primary"], order=4),
-            dmc.Title("Microscope Information", c=THEME["primary"], order=4),
             dmc.Text(f"Group Name: {group_name}", size="sm"),
             dmc.Text(f"Group ID: {group_id}", size="sm"),
             dmc.Text(f"Group Description: {group_description}", size="sm"),
@@ -323,9 +338,9 @@ def load_table_project(*args, **kwargs):
         pass
     file_ann_subset = file_ann[
         file_ann.columns[~file_ann.columns.str.contains("ID")]
-    ]
+    ].copy()
     request = kwargs["request"]
-    file_ann_subset["Download"] = [
+    file_ann_subset.loc[file_ann_subset.index, "Download"] = [
         (
             f"[CSV]({request.build_absolute_uri(reverse(viewname='omero_table', args=[i, 'csv']))})"
             f" | [JSON]({request.build_absolute_uri(reverse(viewname='omero_table', args=[i, 'json']))}) "
@@ -335,7 +350,7 @@ def load_table_project(*args, **kwargs):
         for i, mt, id in zip(file_ann.File_ID, file_ann.Mimetype, file_ann.ID)
     ]
     file_ann_table = dash_table.DataTable(
-        id="datatable-interactivity",
+        id="datatable_file_ann",
         columns=[
             (
                 {"id": x, "name": x, "presentation": "markdown"}
@@ -499,14 +514,13 @@ def delete_all_callback(*args, **kwargs):
     return opened, message
 
 
-# @dash_app_group.expanded_callback(
-#     dash.dependencies.Output("download", "data"),
-#     dash.dependencies.Input("download_test", "n_clicks"),
-#     prevent_initial_call=True,
-# )
-# def download_file(*args, **kwargs):
-#     request = kwargs["request"]
-#     url = views.download_file(request, file_id=691)
-#     msg = "File downloaded"
-#     df = pd.read_csv(url)
-#     return dcc.send_data_frame(df.to_csv, "mydf.csv")
+@dash_app_group.expanded_callback(
+    dash.dependencies.Output("download", "data"),
+    dash.dependencies.Input("download_table", "n_clicks"),
+    dash.dependencies.State("datatable_file_ann", "data"),
+    prevent_initial_call=True,
+)
+def download_file(*args, **kwargs):
+    table_data = args[1]
+    df = pd.DataFrame(table_data)
+    return dcc.send_data_frame(df.to_csv, "FIle_annotation.csv")

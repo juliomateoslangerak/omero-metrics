@@ -7,6 +7,7 @@ from datetime import datetime
 import pandas as pd
 from microscopemetrics_schema import datamodel as mm_schema
 from OMERO_metrics.tools import dash_forms_tools as dft
+from OMERO_metrics import views
 
 
 def make_control(text, action_id):
@@ -360,9 +361,7 @@ dash_app_project.layout = dmc.MantineProvider(
                                             position="top-center"
                                         ),
                                         html.Div(id="notifications-container"),
-                                        dmc.Button(
-                                            "Show Notification", id="notify"
-                                        ),
+                                        html.Div(id="result_data"),
                                     ],
                                 ),
                             ],
@@ -431,6 +430,7 @@ def update_table(*args, **kwargs):
         .to_dict("records")[0]
         for i, df in enumerate(df_list_filtered)
     ]
+    min_date = min(dates)
     line = dmc.LineChart(
         id="line-chart",
         h=300,
@@ -442,6 +442,12 @@ def update_table(*args, **kwargs):
         curveType="natural",
         style={"padding": 20},
         xAxisLabel="Processed Date",
+        referenceLines=[
+            {"y": 1240, "label": "Upper Limit", "color": "red.6"},
+            {"x": min_date, "label": "Report out"},
+            {"y": 500, "label": "Lower Limit", "color": "yellow.6"},
+            {"x": min_date, "label": "Report out"},
+        ],
         # yAxisLabel=str(kkm[measurement]).replace("_", " ").title(),
     )
 
@@ -573,9 +579,11 @@ def update_thresholds_controls(*args, **kwargs):
                     f"action-{i}",
                 ),
                 dmc.AccordionPanel(
-                    [
+                    id=key + "_panel",
+                    children=[
                         dmc.Fieldset(
-                            [
+                            id=key + "_fieldset",
+                            children=[
                                 dmc.NumberInput(
                                     label="Upper Limit",
                                     placeholder="Enter upper limit",
@@ -598,7 +606,7 @@ def update_thresholds_controls(*args, **kwargs):
                             radius="md",
                             style={"padding": "10px", "margin": "10px"},
                         )
-                    ]
+                    ],
                 ),
             ],
             value=f"item-{i}",
@@ -608,18 +616,88 @@ def update_thresholds_controls(*args, **kwargs):
     return threshold_control
 
 
+# @dash_app_project.expanded_callback(
+#     dash.dependencies.Output("notifications-container", "children"),
+#     [dash.dependencies.Input("notify", "n_clicks")],
+#     prevent_initial_call=True,
+# )
+# def show(*args, **kwargs):
+#     n_clicks = args[0]
+#     return dmc.Notification(
+#         title="Hey there!",
+#         id="simple-notify",
+#         color="green",
+#         action="show",
+#         message="Notifications in Dash, Awesome!",
+#         icon=DashIconify(icon="ic:round-celebration"),
+#     )
+
+
 @dash_app_project.expanded_callback(
     dash.dependencies.Output("notifications-container", "children"),
-    [dash.dependencies.Input("notify", "n_clicks")],
+    [
+        dash.dependencies.Input("modal-submit-button", "n_clicks"),
+        dash.dependencies.State("accordion-compose-controls", "children"),
+    ],
     prevent_initial_call=True,
 )
-def show(*args, **kwargs):
-    n_clicks = args[0]
-    return dmc.Notification(
-        title="Hey there!",
-        id="simple-notify",
-        color="green",
-        action="show",
-        message="Notifications in Dash, Awesome!",
-        icon=DashIconify(icon="ic:round-celebration"),
-    )
+def threshold_callback1(*args, **kwargs):
+    kkm = kwargs["session_state"]["context"]["kkm"]
+    output = get_accordion_data(args[1], kkm)
+    request = kwargs["request"]
+    project_id = kwargs["session_state"]["context"]["project_id"]
+    print(output)
+    if output:
+        response, color = views.save_threshold(
+            request=request,
+            project_id=int(project_id),
+            threshold=output,
+        )
+        return dmc.Notification(
+            title="Thresholds Updated",
+            id="simple-notify",
+            color=color,
+            action="show",
+            message=response,
+            icon=(
+                DashIconify(icon="ic:round-celebration")
+                if color == "green"
+                else DashIconify(icon="ic:round-error")
+            ),
+        )
+    else:
+        return dash.no_update
+
+
+def get_accordion_data(accordion_state, kkm):
+    dict_data = {}
+    try:
+        for i in accordion_state:
+            index = i["props"]["children"][1]["props"]["children"][0]["props"][
+                "children"
+            ]
+            key = (
+                i["props"]["children"][0]["props"]["children"][0]["props"][
+                    "children"
+                ]
+                .replace(" ", "_")
+                .lower()
+            )
+            dict_data[key] = {
+                "upper_limit": (
+                    index[0]["props"]["value"]
+                    if "value" in index[0]["props"]
+                    else ""
+                ),
+                "lower_limit": (
+                    index[1]["props"]["value"]
+                    if "value" in index[1]["props"]
+                    else ""
+                ),
+            }
+    except Exception as e:
+        dict_data = {
+            key: {"upper_limit": "", "lower_limit": ""} for key in kkm
+        }
+        print(f"Error: {e}")
+    return dict_data

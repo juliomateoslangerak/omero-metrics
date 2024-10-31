@@ -166,6 +166,19 @@ def load_config_file_data(conn, project):
     return setup
 
 
+def load_thresholds_file_data(project):
+    thresholds = None
+    for ann in project.listAnnotations():
+        if isinstance(ann, FileAnnotationWrapper):
+            ns = ann.getFile().getName()
+            if ns.startswith("threshold"):
+                thresholds = yaml.load(
+                    ann.getFileInChunks().__next__().decode(),
+                    Loader=yaml.SafeLoader,
+                )
+    return thresholds
+
+
 def load_project(
     conn: BlitzGateway, project_id: int
 ) -> mm_schema.MetricsDatasetCollection:

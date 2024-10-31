@@ -1,28 +1,27 @@
 import dash
-from dash import dcc, html, dash_table
+from dash import html
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
+from dash_iconify import DashIconify
+
+# Theme Configuration
+THEME = {
+    "primary": "#189A35",
+    "secondary": "#63aa47",
+    "background": "#ffffff",
+    "surface": "#f8f9fa",
+    "border": "#e9ecef",
+    "text": {
+        "primary": "#2C3E50",
+        "secondary": "#6c757d",
+    },
+}
 
 
-primary_color = "#63aa47"
-content = dmc.Card(
-    children=[
-        dmc.Group(
-            [
-                dmc.Badge("Filled badge", variant="filled", color="lime"),
-                dmc.Text("Total Number of Beads", fw=800),
-            ],
-            justify="space-between",
-            mt="md",
-            mb="xs",
-        ),
-        dmc.Center(dmc.Badge(1, size="xl", circle=True)),
-    ],
-    withBorder=True,
-    shadow="sm",
-    radius="md",
-    w="auto",
-)
+def get_icon(icon, size=20, color=None):
+    return DashIconify(icon=icon, height=size, color=color)
+
+
 app = DjangoDash(
     "PSF_Beads",
     external_stylesheets=dmc.styles.ALL,
@@ -30,23 +29,92 @@ app = DjangoDash(
 
 
 app.layout = dmc.MantineProvider(
-    [
+    theme={
+        "colorScheme": "light",
+        "primaryColor": "green",
+        "components": {
+            "Card": {"styles": {"root": {"borderRadius": "8px"}}},
+            "Select": {"styles": {"input": {"borderRadius": "8px"}}},
+        },
+    },
+    children=[
         dmc.Container(
             [
-                html.Div(
-                    [
+                html.Div(id="blank-input"),
+                # Header Section
+                dmc.Paper(
+                    shadow="sm",
+                    p="md",
+                    radius="lg",
+                    mb="md",
+                    children=[
+                        dmc.Group(
+                            [
+                                dmc.Group(
+                                    [
+                                        html.Img(
+                                            src="/static/OMERO_metrics/images/metrics_logo.png",
+                                            style={
+                                                "width": "120px",
+                                                "height": "auto",
+                                            },
+                                        ),
+                                        dmc.Stack(
+                                            [
+                                                dmc.Title(
+                                                    "PSF Beads Analysis",
+                                                    c=THEME["primary"],
+                                                    size="h2",
+                                                ),
+                                                dmc.Text(
+                                                    "PSF Beads Analysis Dashboard",
+                                                    c=THEME["text"][
+                                                        "secondary"
+                                                    ],
+                                                    size="sm",
+                                                ),
+                                            ],
+                                            gap="xs",
+                                        ),
+                                    ],
+                                ),
+                                dmc.Badge(
+                                    "PSF Beads Analysis",
+                                    color="green",
+                                    variant="dot",
+                                    size="lg",
+                                ),
+                            ],
+                            justify="space-between",
+                        ),
+                    ],
+                ),
+                dmc.Paper(
+                    shadow="xs",
+                    p="md",
+                    radius="md",
+                    mt="md",
+                    children=[
                         dmc.Stack(
                             [
-                                dmc.Divider(variant="solid"),
-                                dmc.Center(
+                                dmc.Group(
                                     [
-                                        dmc.Title(
+                                        dmc.Text(
                                             "Key Measurements",
-                                            c="#189A35",
-                                            size="h3",
-                                            mb=10,
+                                            fw=500,
+                                            size="lg",
                                         ),
-                                    ]
+                                        dmc.Tooltip(
+                                            label="Statistical measurements for all the channels presented in the dataset",
+                                            children=[
+                                                get_icon(
+                                                    "material-symbols:info-outline",
+                                                    color=THEME["primary"],
+                                                )
+                                            ],
+                                        ),
+                                    ],
+                                    justify="space-between",
                                 ),
                                 dmc.ScrollArea(
                                     [
@@ -64,27 +132,17 @@ app.layout = dmc.MantineProvider(
                                         )
                                     ]
                                 ),
-                            ]
-                        )
+                            ],
+                            gap="xl",
+                        ),
                     ],
-                    style={
-                        "background-color": "white",
-                        "border-radius": "0.5rem",
-                        "padding": "10px",
-                    },
                 ),
-                dmc.Divider(variant="solid"),
-                html.Div(id="blank-input"),
             ],
-            fluid=True,
-            style={
-                "background-color": "#eceff1",
-                "margin": "10px",
-                "border-radius": "0.5rem",
-                "padding": "10px",
-            },
-        )
-    ]
+            size="xl",
+            p="md",
+            style={"backgroundColor": THEME["surface"]},
+        ),
+    ],
 )
 
 

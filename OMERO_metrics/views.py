@@ -11,18 +11,18 @@ from OMERO_metrics.tools.omero_tools import (
     get_ref_from_object,
 )
 from OMERO_metrics.tools.load import load_config_file_data
-from OMERO_metrics.tools.dump import dump_config_input_parameters
 from OMERO_metrics.tools.load import load_image
 from microscopemetrics_schema import datamodel as mm_schema
 from microscopemetrics.analyses import field_illumination, psf_beads
-from OMERO_metrics.tools.dump import dump_dataset
+from OMERO_metrics.tools import dump
 import omero
 import logging
 from OMERO_metrics.tools import load
-from django.shortcuts import redirect
 from django.urls import reverse
 
 logger = logging.getLogger(__name__)
+
+from omero.gateway import FileAnnotationWrapper
 
 DATA_TYPE = {
     "FieldIlluminationInputParameters": [
@@ -38,19 +38,6 @@ DATA_TYPE = {
         psf_beads.analyse_psf_beads,
     ],
 }
-
-
-# re_path(
-#         r"^omero_table/(?P<file_id>[0-9]+)/(?:(?P<mtype>(json|csv))/)?$",
-#         views.omero_table,
-#         name="omero_table",
-#     ),
-# re_path(
-#     r"^annotation/(?P<annId>[0-9]+)/$",
-#     views.download_annotation,
-#     name="download_annotation",
-# ),
-# Download annotation file like yaml http://localhost:4545/webclient/annotation/623
 
 
 @login_required(setGroupContext=True)
@@ -147,6 +134,7 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
         pm.load_data()
         pm.is_homogenized()
         pm.load_config_file()
+        pm.load_threshold_file()
         pm.check_processed_data()
         pm.visualize_data()
         context = pm.context
@@ -246,7 +234,7 @@ def save_config(request, conn=None, **kwargs):
         setup = load_config_file_data(conn, project_wrapper)
         if setup is None:
             try:
-                dump_config_input_parameters(
+                dump.dump_config_input_parameters(
                     conn, mm_input_parameters, mm_sample, project_wrapper
                 )
                 return (
@@ -321,7 +309,7 @@ def run_analysis_view(request, conn=None, **kwargs):
                     comment_type="PROCESSING",
                 )
                 mm_dataset["output"]["comment"] = mm_comment
-                dump_dataset(
+                dump.dump_dataset(
                     conn=conn,
                     dataset=mm_dataset,
                     target_project=project_wrapper,
@@ -351,5 +339,42 @@ def delete_all(request, conn=None, **kwargs):
         group_id = kwargs["group_id"]
         delete.delete_all_mm_analysis(conn, group_id)
         return "Files deleted successfully", "green"
+    except Exception as e:
+        return str(e), "red"
+
+
+@login_required(setGroupContext=True)
+def save_threshold(request, conn=None, **kwargs):
+    """Save the threshold"""
+    try:
+        project_id = kwargs["project_id"]
+        threshold = kwargs["threshold"]
+        project_wrapper = conn.getObject("Project", project_id)
+        threshold_exist = load.load_thresholds_file_data(project_wrapper)
+        if threshold:
+            if threshold_exist:
+                to_delete = []
+                for ann in project_wrapper.listAnnotations():
+                    if isinstance(ann, FileAnnotationWrapper):
+                        ns = ann.getFile().getName()
+                        if ns.startswith("threshold"):
+                            to_delete.append(ann.getId())
+                conn.deleteObjects(
+                    graph_spec="Annotation",
+                    obj_ids=to_delete,
+                    deleteAnns=True,
+                    deleteChildren=True,
+                    wait=True,
+                )
+            file = dump.dump_threshold(conn, project_wrapper, threshold)
+            return (
+                "Threshold saved successfully, Re-click on the project to see the changes",
+                "green",
+            )
+        else:
+            return (
+                "Failed to save threshold, a configuration file doesn't exist",
+                "red",
+            )
     except Exception as e:
         return str(e), "red"

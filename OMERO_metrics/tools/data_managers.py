@@ -344,6 +344,7 @@ class ProjectManager:
         self.datasets = []
         self.context = None
         self.setup = None
+        self.threshold = None
         self.datasets_types = []
         self.processed_datasets = {}
         self.unprocessed_datasets = {}
@@ -408,6 +409,7 @@ class ProjectManager:
                         self.processed_datasets.keys()
                     )
                     self.context["setup"] = self.setup
+                    self.context["threshold"] = self.threshold
                 else:
                     message = "This project contains unsupported analysis type. Unable to visualize"
                     logger.warning(message)
@@ -436,6 +438,10 @@ class ProjectManager:
     def load_config_file(self):
         if self.setup is None:
             self.setup = load.load_config_file_data(self._conn, self.project)
+
+    def load_threshold_file(self):
+        if self.threshold is None:
+            self.threshold = load.load_thresholds_file_data(self.project)
 
 
 class MicroscopeManager:

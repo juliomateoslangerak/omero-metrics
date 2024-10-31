@@ -39,6 +39,10 @@ THEME = {
     "border": "#e2e8f0",
     "success": "#10b981",
     "error": "#ef4444",
+    "text": {
+        "primary": "#2C3E50",
+        "secondary": "#6c757d",
+    },
 }
 
 dashboard_name = "omero_project_config_form"
@@ -63,38 +67,51 @@ dash_form_project.layout = dmc.MantineProvider(
             [
                 # Header Section
                 dmc.Paper(
+                    shadow="sm",
+                    p="md",
+                    radius="lg",
+                    mb="md",
                     children=[
                         dmc.Group(
                             [
-                                html.Img(
-                                    src="/static/OMERO_metrics/images/metrics_logo.png",
-                                    style={
-                                        "width": "120px",
-                                        "objectFit": "contain",
-                                    },
-                                ),
-                                dmc.Stack(
+                                dmc.Group(
                                     [
-                                        dmc.Title(
-                                            "Configuration Setup",
-                                            c=THEME["primary"],
-                                            size="h2",
+                                        html.Img(
+                                            src="/static/OMERO_metrics/images/metrics_logo.png",
+                                            style={
+                                                "width": "120px",
+                                                "height": "auto",
+                                            },
                                         ),
-                                        dmc.Text(
-                                            "Configure your microscopy analysis parameters",
-                                            c="dimmed",
-                                            size="sm",
+                                        dmc.Stack(
+                                            [
+                                                dmc.Title(
+                                                    "Configuration Setup",
+                                                    c=THEME["primary"],
+                                                    size="h2",
+                                                ),
+                                                dmc.Text(
+                                                    "Configure your sample type and input parameters",
+                                                    c=THEME["text"][
+                                                        "secondary"
+                                                    ],
+                                                    size="sm",
+                                                ),
+                                            ],
+                                            gap="xs",
                                         ),
                                     ],
-                                    gap=5,
+                                ),
+                                dmc.Badge(
+                                    "Analysis Form",
+                                    color="green",
+                                    variant="dot",
+                                    size="lg",
                                 ),
                             ],
                             justify="space-between",
                         ),
                     ],
-                    p="lg",
-                    radius="md",
-                    withBorder=True,
                 ),
                 # Main Content
                 dmc.Paper(
@@ -128,12 +145,11 @@ dash_form_project.layout = dmc.MantineProvider(
                                         icon="mdi:microscope", width=20
                                     ),
                                     children=[
-                                        dmc.Stack(
+                                        dmc.Paper(
                                             children=[
                                                 dmc.Title(
                                                     "Sample Configuration",
                                                     order=3,
-                                                    c=THEME["secondary"],
                                                 ),
                                                 dmc.Text(
                                                     "Select your sample type and configure its parameters",
@@ -150,6 +166,7 @@ dash_form_project.layout = dmc.MantineProvider(
                                                     ),
                                                     allowDeselect=False,
                                                     size="md",
+                                                    mb=10,
                                                     styles={
                                                         "input": {
                                                             "border": f"1px solid {THEME['border']}"
@@ -160,7 +177,9 @@ dash_form_project.layout = dmc.MantineProvider(
                                                     id="sample_container"
                                                 ),
                                             ],
-                                            gap="md",
+                                            p="md",
+                                            radius="md",
+                                            withBorder=True,
                                         )
                                     ],
                                 ),
@@ -172,34 +191,35 @@ dash_form_project.layout = dmc.MantineProvider(
                                         icon="mdi:tune-vertical", width=20
                                     ),
                                     children=[
-                                        dmc.Stack(
+                                        dmc.Paper(
                                             children=[
                                                 dmc.Title(
                                                     "Analysis Parameters",
                                                     order=3,
-                                                    c=THEME["secondary"],
                                                 ),
                                                 dmc.Text(
                                                     "Configure the input parameters for your analysis",
                                                     c="dimmed",
                                                     size="sm",
+                                                    mb=10,
                                                 ),
                                                 html.Div(
                                                     id="input_parameters_container"
                                                 ),
                                             ],
-                                            gap="md",
+                                            p="md",
+                                            radius="md",
+                                            withBorder=True,
                                         )
                                     ],
                                 ),
                                 dmc.StepperCompleted(
                                     children=[
-                                        dmc.Stack(
+                                        dmc.Paper(
                                             children=[
                                                 dmc.Title(
                                                     "Review Configuration",
                                                     order=3,
-                                                    c=THEME["secondary"],
                                                 ),
                                                 dmc.Text(
                                                     "Review your configuration before saving",
@@ -246,7 +266,9 @@ dash_form_project.layout = dmc.MantineProvider(
                                                     gutter="xl",
                                                 ),
                                             ],
-                                            gap="xl",
+                                            p="md",
+                                            radius="md",
+                                            withBorder=True,
                                         ),
                                     ]
                                 ),
@@ -271,7 +293,7 @@ dash_form_project.layout = dmc.MantineProvider(
                                     ),
                                 ),
                             ],
-                            justify="center",
+                            justify="space-between",
                             mt="xl",
                         ),
                     ],
@@ -279,6 +301,8 @@ dash_form_project.layout = dmc.MantineProvider(
                     radius="md",
                     withBorder=True,
                     mt="md",
+                    shadow="xs",
+                    style={"backgroundColor": "white"},
                 ),
             ],
             size="xl",
