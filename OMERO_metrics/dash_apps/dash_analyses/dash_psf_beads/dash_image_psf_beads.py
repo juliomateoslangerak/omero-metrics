@@ -8,276 +8,462 @@ import numpy as np
 import logging
 import pandas as pd
 from matplotlib.pyplot import autoscale
+from dash_iconify import DashIconify
 
 from OMERO_metrics.tools.data_preperation import (
     crop_bead_index,
     mip_graphs,
     fig_mip,
 )
-from dash_iconify import DashIconify
+
+# Theme Configuration
+THEME = {
+    "primary": "#189A35",
+    "secondary": "#63aa47",
+    "error": "#FF4136",
+    "success": "#2ECC40",
+    "warning": "#FF851B",
+    "background": "#ffffff",
+    "surface": "#f8f9fa",
+    "text": {
+        "primary": "#2C3E50",
+        "secondary": "#6c757d",
+    },
+}
+
+
+def get_icon(icon, size=20, color=None):
+    return DashIconify(icon=icon, height=size, color=color)
+
 
 logger = logging.getLogger(__name__)
-primary_color = "#63aa47"
-app = DjangoDash("PSF_Beads_image")
+app = DjangoDash("PSF_Beads_image", external_scripts=dmc.styles.ALL)
 
 app.layout = dmc.MantineProvider(
+    theme={
+        "colorScheme": "light",
+        "primaryColor": "green",
+        "components": {
+            "Card": {"styles": {"root": {"borderRadius": "8px"}}},
+            "Select": {"styles": {"input": {"borderRadius": "8px"}}},
+        },
+    },
     children=[
         dmc.Container(
             [
-                dmc.Center(
-                    [
+                # Header Section
+                dmc.Paper(
+                    shadow="sm",
+                    p="md",
+                    radius="lg",
+                    mb="md",
+                    children=[
                         dmc.Group(
                             [
-                                html.Img(
-                                    src="/static/OMERO_metrics/images/metrics_logo.png",
-                                    style={"width": "100px"},
-                                ),
-                                dmc.Title(
-                                    "Intensity Map of Beads",
-                                    c="#189A35",
-                                    size="h3",
-                                    mb=10,
-                                    mt=5,
-                                ),
-                            ]
-                        ),
-                    ],
-                    style={
-                        "background-color": "white",
-                        "border-radius": "0.5rem",
-                        "padding": "10px",
-                    },
-                ),
-                html.Div(id="blank-input"),
-                dmc.Stack(
-                    [
-                        dmc.Grid(
-                            children=[
-                                dmc.GridCol(
+                                dmc.Group(
                                     [
-                                        dcc.Graph(
-                                            figure={},
-                                            id="psf_image_graph",
+                                        html.Img(
+                                            src="/static/OMERO_metrics/images/metrics_logo.png",
                                             style={
-                                                "margin-top": "0px",
-                                                "margin-bottom": "0px",
+                                                "width": "120px",
+                                                "height": "auto",
                                             },
                                         ),
-                                    ],
-                                    span=6,
-                                ),
-                                dmc.GridCol(
-                                    [
                                         dmc.Stack(
                                             [
-                                                html.Div(
-                                                    [
-                                                        dmc.Select(
-                                                            id="channel_selector_psf_image",
-                                                            label="Select Channel",
-                                                            w="auto",
-                                                            value="0",
-                                                            allowDeselect=False,
-                                                            leftSection=DashIconify(
-                                                                icon="radix-icons:magnifying-glass"
-                                                            ),
-                                                            rightSection=DashIconify(
-                                                                icon="radix-icons:chevron-down"
-                                                            ),
-                                                            mb=10,
-                                                        ),
-                                                        dmc.Text(
-                                                            "Select Beads Location",
-                                                            size="sm",
-                                                            fw=500,
-                                                        ),
-                                                        dmc.SegmentedControl(
-                                                            id="beads_info_segmented",
-                                                            value="beads_info",
-                                                            data=[
-                                                                {
-                                                                    "value": "beads_info",
-                                                                    "label": "Beads Info",
-                                                                },
-                                                                {
-                                                                    "value": "None",
-                                                                    "label": "None",
-                                                                },
-                                                            ],
-                                                            mb=10,
-                                                        ),
-                                                    ]
+                                                dmc.Title(
+                                                    "PSF Beads Analysis",
+                                                    c=THEME["primary"],
+                                                    size="h2",
                                                 ),
-                                                dmc.Checkbox(
-                                                    id="contour_checkbox_psf_image",
-                                                    label="Contour Image",
-                                                    checked=False,
-                                                    mb=10,
-                                                ),
-                                                dmc.Checkbox(
-                                                    id="roi_checkbox_psf_image",
-                                                    label="Add ROI",
-                                                    checked=False,
-                                                    mb=10,
-                                                ),
-                                                dmc.Switch(
-                                                    id="color_switch_psf_image",
-                                                    label="Invert Color",
-                                                    checked=False,
-                                                    mb=10,
-                                                ),
-                                                dmc.Select(
-                                                    id="color_selector_psf_image",
-                                                    label="Select Color",
-                                                    allowDeselect=False,
-                                                    data=[
-                                                        {
-                                                            "value": "Hot",
-                                                            "label": "Hot",
-                                                        },
-                                                        {
-                                                            "value": "Viridis",
-                                                            "label": "Viridis",
-                                                        },
-                                                        {
-                                                            "value": "Inferno",
-                                                            "label": "Inferno",
-                                                        },
+                                                dmc.Text(
+                                                    "Advanced Microscopy Image Analysis",
+                                                    c=THEME["text"][
+                                                        "secondary"
                                                     ],
-                                                    w="auto",
-                                                    value="Hot",
-                                                    leftSection=DashIconify(
-                                                        icon="radix-icons:color-wheel"
-                                                    ),
-                                                    rightSection=DashIconify(
-                                                        icon="radix-icons:chevron-down"
-                                                    ),
+                                                    size="sm",
                                                 ),
                                             ],
+                                            gap="xs",
                                         ),
                                     ],
-                                    span="content",
+                                    gap="md",
+                                ),
+                                dmc.Badge(
+                                    "Interactive Analysis",
+                                    color="green",
+                                    variant="dot",
+                                    size="lg",
                                 ),
                             ],
-                            # gap={"base": "sm", "sm": "lg"},
-                            justify="space-around",
-                            align="center",
-                            style={
-                                "margin-top": "10px",
-                                "margin-bottom": "10px",
-                                "background-color": "white",
-                                "border-radius": "0.5rem",
-                            },
+                            justify="space-between",
                         ),
-                        dmc.Divider(variant="solid"),
-                        dmc.Grid(
-                            [
-                                dmc.GridCol(
-                                    [
-                                        dmc.Title(
-                                            "Maximum Intensity Projection",
-                                            c="#189A35",
-                                            size="h3",
-                                            mb=10,
-                                            mt=5,
-                                        )
-                                    ],
-                                    span=6,
-                                ),
-                                dmc.GridCol(
-                                    [
-                                        dmc.Title(
-                                            "Intensity Profiles Chart",
-                                            c="#189A35",
-                                            size="h3",
-                                            mb=10,
-                                            mt=5,
-                                        )
-                                    ],
-                                    span=6,
-                                ),
-                            ],
-                            align="flex-start",
-                            style={
-                                "background-color": "white",
-                                "border-radius": "0.5rem",
-                                "padding": "10px",
-                            },
-                        ),
-                        dmc.Grid(
-                            [
-                                dmc.GridCol(
-                                    [
-                                        dcc.Graph(
-                                            id="mip_image",
-                                            figure={},
-                                            style={
-                                                "display": "inline-block",
-                                                "width": "100%",
-                                                "height": "100%;",
-                                            },
-                                        ),
-                                    ],
-                                    span="6",
-                                ),
-                                dmc.GridCol(
-                                    [
-                                        dmc.Select(
-                                            data=[
-                                                {
-                                                    "label": "Axis X",
-                                                    "value": "x",
-                                                },
-                                                {
-                                                    "label": "Axis Y",
-                                                    "value": "y",
-                                                },
-                                                {
-                                                    "label": "Axis Z",
-                                                    "value": "z",
-                                                },
+                    ],
+                ),
+                html.Div(id="blank-input"),
+                # Main Content
+                dmc.Stack(
+                    [
+                        # Top Section - Image and Controls
+                        dmc.Paper(
+                            shadow="sm",
+                            p="md",
+                            radius="md",
+                            children=[
+                                dmc.Grid(
+                                    children=[
+                                        # Left side - Image Display
+                                        dmc.GridCol(
+                                            [
+                                                dmc.Text(
+                                                    "Bead Distribution Map",
+                                                    size="lg",
+                                                    fw=500,
+                                                    c=THEME["primary"],
+                                                    mb="md",
+                                                ),
+                                                dcc.Graph(
+                                                    figure={},
+                                                    id="psf_image_graph",
+                                                    config={
+                                                        "displayModeBar": True,
+                                                        "scrollZoom": True,
+                                                        "modeBarButtonsToRemove": [
+                                                            "lasso2d",
+                                                            "select2d",
+                                                        ],
+                                                    },
+                                                    style={"height": "500px"},
+                                                ),
                                             ],
-                                            value="x",
-                                            allowDeselect=False,
-                                            id="axis_image_psf",
-                                            w="auto",
-                                            leftSection=DashIconify(
-                                                icon="radix-icons:magnifying-glass"
-                                            ),
-                                            rightSection=DashIconify(
-                                                icon="radix-icons:chevron-down"
-                                            ),
-                                            mb=10,
-                                            mt=10,
+                                            span=8,
                                         ),
-                                        dcc.Graph(
-                                            id="mip_chart_image",
-                                            figure={},
+                                        # Right side - Controls
+                                        dmc.GridCol(
+                                            [
+                                                dmc.Paper(
+                                                    shadow="xs",
+                                                    p="md",
+                                                    radius="md",
+                                                    children=[
+                                                        dmc.Stack(
+                                                            [
+                                                                dmc.Text(
+                                                                    "Visualization Controls",
+                                                                    size="lg",
+                                                                    fw=500,
+                                                                    c=THEME[
+                                                                        "primary"
+                                                                    ],
+                                                                ),
+                                                                dmc.Divider(
+                                                                    label="Channel Selection",
+                                                                    labelPosition="center",
+                                                                ),
+                                                                dmc.Select(
+                                                                    id="channel_selector_psf_image",
+                                                                    label="Channel",
+                                                                    w="100%",
+                                                                    value="0",
+                                                                    allowDeselect=False,
+                                                                    leftSection=get_icon(
+                                                                        "material-symbols:layers"
+                                                                    ),
+                                                                    rightSection=get_icon(
+                                                                        "radix-icons:chevron-down"
+                                                                    ),
+                                                                ),
+                                                                dmc.Divider(
+                                                                    label="Display Options",
+                                                                    labelPosition="center",
+                                                                    mt="md",
+                                                                ),
+                                                                dmc.SegmentedControl(
+                                                                    id="beads_info_segmented",
+                                                                    value="beads_info",
+                                                                    data=[
+                                                                        {
+                                                                            "value": "beads_info",
+                                                                            "label": "Show Beads",
+                                                                        },
+                                                                        {
+                                                                            "value": "None",
+                                                                            "label": "Hide Beads",
+                                                                        },
+                                                                    ],
+                                                                    fullWidth=True,
+                                                                    color="green",
+                                                                ),
+                                                                dmc.Stack(
+                                                                    [
+                                                                        dmc.Checkbox(
+                                                                            id="contour_checkbox_psf_image",
+                                                                            label="Enable Contour View",
+                                                                            checked=False,
+                                                                        ),
+                                                                        dmc.Checkbox(
+                                                                            id="roi_checkbox_psf_image",
+                                                                            label="Show ROI Boundaries",
+                                                                            checked=False,
+                                                                        ),
+                                                                    ],
+                                                                    gap="xs",
+                                                                ),
+                                                                dmc.Divider(
+                                                                    label="Color Settings",
+                                                                    labelPosition="center",
+                                                                    mt="md",
+                                                                ),
+                                                                dmc.Select(
+                                                                    id="color_selector_psf_image",
+                                                                    label="Color Scheme",
+                                                                    allowDeselect=False,
+                                                                    data=[
+                                                                        {
+                                                                            "value": "Hot",
+                                                                            "label": "Hot",
+                                                                        },
+                                                                        {
+                                                                            "value": "Viridis",
+                                                                            "label": "Viridis",
+                                                                        },
+                                                                        {
+                                                                            "value": "Inferno",
+                                                                            "label": "Inferno",
+                                                                        },
+                                                                    ],
+                                                                    value="Hot",
+                                                                    leftSection=get_icon(
+                                                                        "material-symbols:palette"
+                                                                    ),
+                                                                ),
+                                                                dmc.Switch(
+                                                                    id="color_switch_psf_image",
+                                                                    label="Invert Colors",
+                                                                    checked=False,
+                                                                    size="md",
+                                                                ),
+                                                            ],
+                                                            gap="sm",
+                                                        ),
+                                                    ],
+                                                ),
+                                            ],
+                                            span=4,
                                         ),
                                     ],
-                                    span="6",
+                                    # gap="lg",
                                 ),
                             ],
-                            align="flex-end",
-                            style={
-                                "background-color": "white",
-                                "border-radius": "0.5rem",
-                                "padding": "10px",
-                            },
                         ),
-                    ]
+                        # Bottom Section - MIP and Profiles
+                        dmc.Paper(
+                            shadow="sm",
+                            p="md",
+                            radius="md",
+                            children=[
+                                dmc.Grid(
+                                    [
+                                        # MIP Section
+                                        dmc.GridCol(
+                                            [
+                                                dmc.Group(
+                                                    [
+                                                        dmc.Text(
+                                                            "Maximum Intensity Projection",
+                                                            size="lg",
+                                                            fw=500,
+                                                            c=THEME["primary"],
+                                                        ),
+                                                        dmc.Tooltip(
+                                                            label="Click on a bead in the main image to view its MIP",
+                                                            children=[
+                                                                get_icon(
+                                                                    "material-symbols:info"
+                                                                )
+                                                            ],
+                                                        ),
+                                                    ],
+                                                    justify="space-between",
+                                                ),
+                                                dcc.Graph(
+                                                    id="mip_image",
+                                                    figure={},
+                                                    style={"height": "400px"},
+                                                ),
+                                            ],
+                                            span=6,
+                                        ),
+                                        # Intensity Profiles
+                                        dmc.GridCol(
+                                            [
+                                                dmc.Stack(
+                                                    [
+                                                        dmc.Group(
+                                                            [
+                                                                dmc.Text(
+                                                                    "Intensity Profiles",
+                                                                    size="lg",
+                                                                    fw=500,
+                                                                    c=THEME[
+                                                                        "primary"
+                                                                    ],
+                                                                ),
+                                                                dmc.Select(
+                                                                    data=[
+                                                                        {
+                                                                            "label": "X Axis",
+                                                                            "value": "x",
+                                                                        },
+                                                                        {
+                                                                            "label": "Y Axis",
+                                                                            "value": "y",
+                                                                        },
+                                                                        {
+                                                                            "label": "Z Axis",
+                                                                            "value": "z",
+                                                                        },
+                                                                    ],
+                                                                    value="x",
+                                                                    id="axis_image_psf",
+                                                                    leftSection=get_icon(
+                                                                        "material-symbols:axis"
+                                                                    ),
+                                                                ),
+                                                            ],
+                                                            justify="space-between",
+                                                        ),
+                                                        dcc.Graph(
+                                                            id="mip_chart_image",
+                                                            figure={},
+                                                            style={
+                                                                "height": "350px"
+                                                            },
+                                                        ),
+                                                    ],
+                                                    gap="md",
+                                                ),
+                                            ],
+                                            span=6,
+                                        ),
+                                    ],
+                                    # gap="lg",
+                                ),
+                            ],
+                        ),
+                    ],
+                    gap="md",
                 ),
             ],
-            fluid=True,
-            style={
-                "background-color": "#eceff1",
-                "margin": "10px",
-                "border-radius": "0.5rem",
-                "padding": "10px",
-            },
-        )
-    ]
+            size="xl",
+            p="md",
+            style={"backgroundColor": THEME["surface"]},
+        ),
+    ],
 )
+
+
+# Update callbacks with improved styling and error handling
+@app.expanded_callback(
+    dash.dependencies.Output("psf_image_graph", "figure"),
+    [
+        dash.dependencies.Input("channel_selector_psf_image", "value"),
+        dash.dependencies.Input("color_selector_psf_image", "value"),
+        dash.dependencies.Input("color_switch_psf_image", "checked"),
+        dash.dependencies.Input("contour_checkbox_psf_image", "checked"),
+        dash.dependencies.Input("roi_checkbox_psf_image", "checked"),
+        dash.dependencies.Input("beads_info_segmented", "value"),
+    ],
+)
+def update_image(*args, **kwargs):
+    try:
+        image_omero = kwargs["session_state"]["context"]["image"]
+        channel_index = int(args[0])
+        color = args[1]
+        invert = args[2]
+        contour = args[3]
+        roi = args[4]
+        beads_info = args[5]
+
+        min_distance = kwargs["session_state"]["context"]["min_distance"]
+        bead_properties_df = kwargs["session_state"]["context"][
+            "bead_properties_df"
+        ]
+
+        df_beads_location = bead_properties_df[
+            bead_properties_df["channel_nr"] == channel_index
+        ][
+            [
+                "channel_nr",
+                "bead_id",
+                "considered_axial_edge",
+                "considered_valid",
+                "considered_self_proximity",
+                "considered_lateral_edge",
+                "considered_intensity_outlier",
+                "center_z",
+                "center_y",
+                "center_x",
+            ]
+        ].copy()
+
+        beads, roi_rect = get_beads_info(df_beads_location, min_distance)
+
+        if invert:
+            color = color + "_r"
+
+        stack = image_omero[0, :, :, :, channel_index]
+        mip_z = np.max(stack, axis=0)
+
+        fig = px.imshow(
+            mip_z,
+            zmin=mip_z.min(),
+            zmax=mip_z.max(),
+            aspect="equal",
+        )
+
+        fig.add_trace(beads)
+
+        if roi:
+            fig.update_layout(shapes=roi_rect)
+        else:
+            fig.update_layout(shapes=None)
+
+        if contour:
+            fig.update_traces(type="contour", selector=dict(type="heatmap"))
+
+        if beads_info == "beads_info":
+            fig.update_traces(
+                visible=True, selector=dict(name="Beads Locations")
+            )
+        else:
+            fig.update_traces(
+                visible=False, selector=dict(name="Beads Locations")
+            )
+
+        fig.update_layout(
+            coloraxis={
+                "colorscale": color,
+                "colorbar": dict(
+                    thickness=15,
+                    len=0.7,
+                    title=dict(text="Intensity", side="right"),
+                    tickfont=dict(size=10),
+                ),
+            },
+            margin={"l": 20, "r": 20, "t": 30, "b": 20},
+            plot_bgcolor=THEME["background"],
+            paper_bgcolor=THEME["background"],
+            xaxis_title="X Position (pixels)",
+            yaxis_title="Y Position (pixels)",
+            font={"color": THEME["text"]["primary"]},
+        )
+
+        return fig
+
+    except Exception as e:
+        logger.error(f"Error updating image: {str(e)}")
+        return px.imshow([[0]], title="Error loading image")
 
 
 @app.expanded_callback(
@@ -291,80 +477,6 @@ def update_channels_psf_image(*args, **kwargs):
         for i, c in enumerate(channel_names.channels)
     ]
     return channel_options
-
-
-@app.expanded_callback(
-    dash.dependencies.Output("psf_image_graph", "figure"),
-    [
-        dash.dependencies.Input("channel_selector_psf_image", "value"),
-        dash.dependencies.Input("color_selector_psf_image", "value"),
-        dash.dependencies.Input("color_switch_psf_image", "checked"),
-        dash.dependencies.Input("contour_checkbox_psf_image", "checked"),
-        dash.dependencies.Input("roi_checkbox_psf_image", "checked"),
-        dash.dependencies.Input("beads_info_segmented", "value"),
-    ],
-)
-def update_image(*args, **kwargs):
-    image_omero = kwargs["session_state"]["context"]["image"]
-    channel_index = int(args[0])
-    color = args[1]
-    invert = args[2]
-    contour = args[3]
-    roi = args[4]
-    beads_info = args[5]
-    min_distance = kwargs["session_state"]["context"]["min_distance"]
-    bead_properties_df = kwargs["session_state"]["context"][
-        "bead_properties_df"
-    ]
-    df_beads_location = bead_properties_df[
-        bead_properties_df["channel_nr"] == channel_index
-    ][
-        [
-            "channel_nr",
-            "bead_id",
-            "considered_axial_edge",
-            "considered_valid",
-            "considered_self_proximity",
-            "considered_lateral_edge",
-            "considered_intensity_outlier",
-            "center_z",
-            "center_y",
-            "center_x",
-        ]
-    ].copy()
-    beads, roi_rect = get_beads_info(df_beads_location, min_distance)
-    if invert:
-        color = color + "_r"
-    stack = image_omero[0, :, :, :, channel_index]
-    mip_z = np.max(stack, axis=0)
-    fig = px.imshow(mip_z, zmin=mip_z.min(), zmax=mip_z.max())
-    fig.add_trace(beads)
-    if roi:
-        fig.update_layout(shapes=roi_rect)
-    else:
-        fig.update_layout(shapes=None)
-
-    if contour:
-        fig.plotly_restyle({"type": "contour"}, 0)
-
-    if beads_info == "beads_info":
-        fig.plotly_restyle(
-            {
-                "visible": True,
-            },
-            1,
-        )
-    else:
-        fig.plotly_restyle({"visible": False}, 1)
-    fig.update_layout(
-        coloraxis={"colorscale": color},
-        margin={"l": 0, "r": 0, "t": 10, "b": 10},
-    )
-    # fig = fig.update_yaxes(automargin=False)
-    # fig.update_xaxes(range=[0, mip_z.shape[1]], scaleanchor="y", anchor='y',automargin=False)
-    # fig.update_yaxes(range=[mip_z.shape[0]+20, -40],automargin=False)
-    # fig.update_layout(autosize=True)
-    return fig
 
 
 @app.expanded_callback(

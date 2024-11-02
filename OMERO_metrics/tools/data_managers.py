@@ -195,9 +195,10 @@ class DatasetManager:
         ):
             return
         else:
-            self.analysis_config_id, self.analysis_config = (
-                load.load_analysis_config(self.omero_project)
-            )
+            (
+                self.analysis_config_id,
+                self.analysis_config,
+            ) = load.load_analysis_config(self.omero_project)
 
     def dump_analysis_config(self):
         if not self.analysis_config:
@@ -367,13 +368,13 @@ class ProjectManager:
     def check_processed_data(self):
         for dataset in self.datasets:
             if dataset.processed:
-                self.processed_datasets[dataset.omero_dataset.getId()] = (
-                    dataset
-                )
+                self.processed_datasets[
+                    dataset.omero_dataset.getId()
+                ] = dataset
             else:
-                self.unprocessed_datasets[dataset.omero_dataset.getId()] = (
-                    dataset
-                )
+                self.unprocessed_datasets[
+                    dataset.omero_dataset.getId()
+                ] = dataset
 
     def is_homogenized(self):
         # unique = set(self.datasets_types)

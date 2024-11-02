@@ -391,7 +391,6 @@ def callback_image(*args, **kwargs):
                 color="RoyalBlue",
                 width=2,
             ),
-            fillcolor="rgba(37, 99, 235, 0.1)",
         )
         for i, row in df_rects.iterrows()
     ]
