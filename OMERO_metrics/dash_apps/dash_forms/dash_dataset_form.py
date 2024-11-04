@@ -431,7 +431,7 @@ def stepper_callback(*args, **kwargs):
     button_id = kwargs["callback_context"].triggered[0]["prop_id"]
     step = current if current is not None else active
     next_text = "Next"
-    next_color = "blue"
+    next_color = "green"
     if button_id == "back-basic-usage.n_clicks":
         step = step - 1 if step > min_step else step
     else:

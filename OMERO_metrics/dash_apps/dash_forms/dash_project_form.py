@@ -320,6 +320,7 @@ dash_form_project.layout = dmc.MantineProvider(
         dash.dependencies.Output("next-basic-usage", "children"),
         dash.dependencies.Output("next-basic-usage", "color"),
         dash.dependencies.Output("progress-bar", "value"),
+        dash.dependencies.Output("next-basic-usage", "rightSection"),
     ],
     [
         dash.dependencies.Input("back-basic-usage", "n_clicks"),
@@ -340,7 +341,8 @@ def stepper_callback(*args, **kwargs):
 
     if button_id == "back-basic-usage.n_clicks":
         step = max(0, step - 1)
-        next_text = ["Next", DashIconify(icon="mdi:arrow-right")]
+        next_text = ["Next"]
+        next_icon = DashIconify(icon="mdi:arrow-right")
         next_color = THEME["primary"]
     else:
         sample = args[3]
@@ -354,14 +356,16 @@ def stepper_callback(*args, **kwargs):
         step = min(2, step + 1)
 
         if step == 2:
-            next_text = ["Save Configuration", DashIconify(icon="mdi:check")]
-            next_color = THEME["success"]
-        else:
-            next_text = ["Next", DashIconify(icon="mdi:arrow-right")]
+            next_text = ["Save Configuration"]
+            next_icon = DashIconify(icon="mdi:check")
             next_color = THEME["primary"]
+        else:
+            next_text = ["Next"]
+            next_color = THEME["primary"]
+            next_icon = DashIconify(icon="mdi:arrow-right")
 
     progress = (step / 2) * 100
-    return step, next_text, next_color, progress
+    return step, next_text, next_color, progress, next_icon
 
 
 @dash_form_project.expanded_callback(

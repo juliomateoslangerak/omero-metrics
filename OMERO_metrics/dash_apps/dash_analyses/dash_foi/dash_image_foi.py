@@ -20,6 +20,11 @@ THEME = {
     },
 }
 
+
+def get_icon(icon, size=20, color=None):
+    return DashIconify(icon=icon, height=size, color=color)
+
+
 dashboard_name = "omero_image_dash"
 dash_app_image = DjangoDash(
     name=dashboard_name,
@@ -30,6 +35,7 @@ dash_app_image = DjangoDash(
 
 def create_header():
     return dmc.Paper(
+        h="100%",
         children=[
             dmc.Group(
                 [
@@ -79,35 +85,35 @@ def create_header():
 def create_control_panel():
     return dmc.Paper(
         h="100%",
+        shadow="xs",
+        p="md",
+        radius="md",
         children=[
             dmc.Stack(
                 [
+                    dmc.Text(
+                        "Visualization Controls",
+                        size="lg",
+                        fw=500,
+                        c=THEME["primary"],
+                    ),
+                    dmc.Divider(
+                        label="Channel Selection",
+                        labelPosition="center",
+                    ),
                     dmc.Select(
                         id="my-dropdown1",
-                        label="Channel Selection",
-                        placeholder="Select channel...",
-                        value="0",
+                        label="Channel",
                         w="100%",
-                        clearable=False,
+                        value="0",
                         allowDeselect=False,
-                        leftSection=DashIconify(
-                            icon="radix-icons:magnifying-glass"
-                        ),
-                        rightSection=DashIconify(
-                            icon="radix-icons:chevron-down"
-                        ),
-                        styles={
-                            "rightSection": {"pointerEvents": "none"},
-                            "item": {"fontSize": "14px"},
-                            "input": {"borderColor": THEME["primary"]},
-                        },
+                        leftSection=get_icon("material-symbols:layers"),
+                        rightSection=get_icon("radix-icons:chevron-down"),
                     ),
-                    dmc.Divider(variant="dashed", my="sm"),
-                    dmc.Text(
-                        "ROI Visualization",
-                        size="sm",
-                        fw=500,
-                        c=THEME["text"]["primary"],
+                    dmc.Divider(
+                        label="Display Options",
+                        labelPosition="center",
+                        mt="md",
                     ),
                     dmc.SegmentedControl(
                         id="segmented",
@@ -120,59 +126,54 @@ def create_control_panel():
                             {"value": "None", "label": "None"},
                         ],
                         fullWidth=True,
-                        color=THEME["primary"],
-                        size="sm",
+                        color="green",
                     ),
-                    dmc.Divider(variant="dashed", my="sm"),
-                    dmc.Group(
+                    dmc.Stack(
                         [
                             dmc.Checkbox(
                                 id="checkbox-state",
-                                label="Show Contours",
+                                label="Enable Contour View",
                                 checked=False,
-                                color=THEME["primary"],
-                            ),
-                            dmc.Switch(
-                                id="switch-invert-colors",
-                                label="Invert Colors",
-                                checked=False,
-                                color=THEME["primary"],
-                                size="sm",
                             ),
                         ],
-                        grow=True,
+                        gap="xs",
+                    ),
+                    dmc.Divider(
+                        label="Color Settings",
+                        labelPosition="center",
+                        mt="md",
                     ),
                     dmc.Select(
                         id="my-dropdown2",
                         label="Color Scheme",
+                        allowDeselect=False,
                         data=[
-                            {"value": "Hot", "label": "Hot"},
-                            {"value": "Viridis", "label": "Viridis"},
-                            {"value": "Inferno", "label": "Inferno"},
-                            {"value": "Plasma", "label": "Plasma"},
-                            {"value": "Magma", "label": "Magma"},
+                            {
+                                "value": "Hot",
+                                "label": "Hot",
+                            },
+                            {
+                                "value": "Viridis",
+                                "label": "Viridis",
+                            },
+                            {
+                                "value": "Inferno",
+                                "label": "Inferno",
+                            },
                         ],
                         value="Hot",
-                        clearable=False,
-                        leftSection=DashIconify(
-                            icon="radix-icons:color-wheel"
-                        ),
-                        rightSection=DashIconify(
-                            icon="radix-icons:chevron-down"
-                        ),
-                        styles={
-                            "rightSection": {"pointerEvents": "none"},
-                            "input": {"borderColor": THEME["primary"]},
-                        },
+                        leftSection=get_icon("material-symbols:palette"),
+                    ),
+                    dmc.Switch(
+                        id="switch-invert-colors",
+                        label="Invert Colors",
+                        checked=False,
+                        size="md",
                     ),
                 ],
                 gap="sm",
             ),
         ],
-        p="md",
-        radius="md",
-        withBorder=True,
-        shadow="sm",
     )
 
 
@@ -184,10 +185,11 @@ def create_intensity_profile():
                 [
                     dmc.Group(
                         [
-                            dmc.Title(
+                            dmc.Text(
                                 "Intensity Profiles",
+                                size="lg",
+                                fw=500,
                                 c=THEME["primary"],
-                                size="h4",
                             ),
                             dmc.Badge(
                                 "Microscope-Metrics Analysis",
@@ -254,9 +256,18 @@ dash_app_image.layout = dmc.MantineProvider(
                         dmc.GridCol(
                             [
                                 dmc.Paper(
-                                    dcc.Graph(
-                                        id="rois-graph",
-                                    ),
+                                    [
+                                        dmc.Text(
+                                            "Intensity Map",
+                                            size="lg",
+                                            fw=500,
+                                            c=THEME["primary"],
+                                            mb="md",
+                                        ),
+                                        dcc.Graph(
+                                            id="rois-graph",
+                                        ),
+                                    ],
                                     p="md",
                                     radius="md",
                                     withBorder=True,
@@ -266,7 +277,7 @@ dash_app_image.layout = dmc.MantineProvider(
                             span=8,
                         ),
                         dmc.GridCol(
-                            [create_control_panel()],
+                            create_control_panel(),
                             span=4,
                         ),
                     ],

@@ -115,25 +115,32 @@ app.layout = dmc.MantineProvider(
                                         # Left side - Image Display
                                         dmc.GridCol(
                                             [
-                                                dmc.Text(
-                                                    "Bead Distribution Map",
-                                                    size="lg",
-                                                    fw=500,
-                                                    c=THEME["primary"],
-                                                    mb="md",
-                                                ),
-                                                dcc.Graph(
-                                                    figure={},
-                                                    id="psf_image_graph",
-                                                    config={
-                                                        "displayModeBar": True,
-                                                        "scrollZoom": True,
-                                                        "modeBarButtonsToRemove": [
-                                                            "lasso2d",
-                                                            "select2d",
-                                                        ],
-                                                    },
-                                                    style={"height": "500px"},
+                                                dmc.Paper(
+                                                    [
+                                                        dmc.Text(
+                                                            "Bead Distribution Map",
+                                                            size="lg",
+                                                            fw=500,
+                                                            c=THEME["primary"],
+                                                            mb="md",
+                                                        ),
+                                                        dcc.Graph(
+                                                            figure={},
+                                                            id="psf_image_graph",
+                                                            config={
+                                                                "displayModeBar": True,
+                                                                "scrollZoom": True,
+                                                                "modeBarButtonsToRemove": [
+                                                                    "lasso2d",
+                                                                    "select2d",
+                                                                ],
+                                                            },
+                                                        ),
+                                                    ],
+                                                    p="md",
+                                                    radius="md",
+                                                    withBorder=True,
+                                                    shadow="sm",
                                                 ),
                                             ],
                                             span=8,
@@ -142,6 +149,7 @@ app.layout = dmc.MantineProvider(
                                         dmc.GridCol(
                                             [
                                                 dmc.Paper(
+                                                    h="100%",
                                                     shadow="xs",
                                                     p="md",
                                                     radius="md",
@@ -454,8 +462,8 @@ def update_image(*args, **kwargs):
             margin={"l": 20, "r": 20, "t": 30, "b": 20},
             plot_bgcolor=THEME["background"],
             paper_bgcolor=THEME["background"],
-            xaxis_title="X Position (pixels)",
-            yaxis_title="Y Position (pixels)",
+            # xaxis_title="X Position (pixels)",
+            # yaxis_title="Y Position (pixels)",
             font={"color": THEME["text"]["primary"]},
         )
 
@@ -523,6 +531,22 @@ def callback_mip(*args, **kwargs):
         x0, xf, y0, yf = crop_bead_index(bead, min_dist, stack)
         mip_x, mip_y, mip_z = mip_graphs(x0, xf, y0, yf, stack)
         fig_mip_go = fig_mip(mip_x, mip_y, mip_z, title)
+        fig_mip_go.update_layout(
+            coloraxis={
+                "colorbar": dict(
+                    thickness=15,
+                    len=0.7,
+                    title=dict(text="Intensity", side="right"),
+                    tickfont=dict(size=10),
+                ),
+            },
+            margin={"l": 20, "r": 20, "t": 60, "b": 20},
+            plot_bgcolor=THEME["background"],
+            paper_bgcolor=THEME["background"],
+            # xaxis_title="X Position (pixels)",
+            # yaxis_title="Y Position (pixels)",
+            font={"color": THEME["text"]["primary"]},
+        )
         return (
             fig_mip_go,
             line_graph_axis(bead_index, channel_index, axis, kwargs),
