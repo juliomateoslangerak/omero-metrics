@@ -24,8 +24,8 @@ from microscopemetrics.strategies.strategies import (
     _gen_field_illumination_image,
     _gen_psf_beads_image,
 )
-from microscopemetrics.samples import numpy_to_mm_image
-from microscopemetrics.samples import field_illumination, psf_beads
+from microscopemetrics.analyses import numpy_to_mm_image
+from microscopemetrics.analyses import field_illumination, psf_beads
 from microscopemetrics_schema import datamodel as mm_schema
 
 logger = logging.getLogger(__name__)

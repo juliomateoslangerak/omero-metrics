@@ -15,7 +15,7 @@ from OMERO_metrics.tools.load import load_config_file_data
 from OMERO_metrics.tools.dump import dump_config_input_parameters
 from OMERO_metrics.tools.load import load_image
 from microscopemetrics_schema import datamodel as mm_schema
-from microscopemetrics.samples import field_illumination, psf_beads
+from microscopemetrics.analyses import field_illumination, psf_beads
 from OMERO_metrics.tools.dump import dump_dataset
 import omero
 import logging

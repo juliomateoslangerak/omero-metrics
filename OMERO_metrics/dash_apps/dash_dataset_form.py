@@ -4,13 +4,13 @@ from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 from microscopemetrics_schema import datamodel as mm_schema
-from OMERO_metrics.tools import dash_forms_tools as dft
+from omero_metrics.tools import dash_forms_tools as dft
 from time import sleep
-from microscopemetrics.samples import field_illumination, psf_beads
-from OMERO_metrics.views import run_analysis_view
+from microscopemetrics.analyses import field_illumination, psf_beads
+from omero_metrics.views import run_analysis_view
 
 DATASET_TO_ANALYSIS = {
-    "FieldIlluminationDataset": field_illumination.analise_field_illumination,
+    "FieldIlluminationDataset": field_illumination.analyse_field_illumination,
     "PSFBeadsDataset": psf_beads.analyse_psf_beads,
 }
 

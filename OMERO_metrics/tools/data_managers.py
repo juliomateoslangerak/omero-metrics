@@ -1,6 +1,6 @@
 import datetime
 import logging
-from microscopemetrics.samples import field_illumination, psf_beads
+from microscopemetrics.analyses import field_illumination, psf_beads
 from microscopemetrics_schema.datamodel import (
     microscopemetrics_schema as mm_schema,
 )
