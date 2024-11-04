@@ -1,6 +1,6 @@
 
-[![Actions Status](https://github.com/Wapaa/OMERO-project/workflows/OMERO/badge.svg)](https://github.com/Wapaa/OMERO-project/actions)
-[![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/MontpellierRessourcesImagerie/OMERO-metrics/omero_plugin.yml)
+![GitHub License](https://img.shields.io/github/license/MontpellierRessourcesImagerie/OMERO-metrics)
 
 <img alt="OMERO-metrics logo" height="100" src="docs/slides/media/logo_omero-metrics.png"/>
 
