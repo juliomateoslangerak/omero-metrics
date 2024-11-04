@@ -402,8 +402,22 @@ def update_dropdown(*args, **kwargs):
 )
 def update_table(*args, **kwargs):
     df_list = kwargs["session_state"]["context"]["key_measurements_list"]
+    threshold = kwargs["session_state"]["context"]["threshold"]
     kkm = kwargs["session_state"]["context"]["kkm"]
     measurement = int(args[0])
+    if threshold:
+        threshold_kkm = threshold[kkm[measurement]]
+        ref = [
+            {
+                "y": v,
+                "label": k.replace("_", " ").title(),
+                "color": "red.6",
+            }
+            for k, v in threshold_kkm.items()
+            if v
+        ]
+    else:
+        ref = []
     dates_range = args[1]
     dates = kwargs["session_state"]["context"]["dates"]
     df_filtering = pd.DataFrame(dates, columns=["Date"])
@@ -430,7 +444,6 @@ def update_table(*args, **kwargs):
         .to_dict("records")[0]
         for i, df in enumerate(df_list_filtered)
     ]
-    min_date = min(dates)
     line = dmc.LineChart(
         id="line-chart",
         h=300,
@@ -442,12 +455,13 @@ def update_table(*args, **kwargs):
         curveType="natural",
         style={"padding": 20},
         xAxisLabel="Processed Date",
-        referenceLines=[
-            {"y": 1240, "label": "Upper Limit", "color": "red.6"},
-            {"x": min_date, "label": "Report out"},
-            {"y": 500, "label": "Lower Limit", "color": "yellow.6"},
-            {"x": min_date, "label": "Report out"},
-        ],
+        referenceLines=ref,
+        # referenceLines=[
+        #     {"y": 1240, "label": "Upper Limit", "color": "red.6"},
+        #     {"x": min_date},
+        #     {"y": 500, "label": "Lower Limit", "color": "yellow.6"},
+        #     {"x": min_date},
+        # ],
         # yAxisLabel=str(kkm[measurement]).replace("_", " ").title(),
     )
 
@@ -570,7 +584,9 @@ def update_heart(*args, **kwargs):
 )
 def update_thresholds_controls(*args, **kwargs):
     kkm = kwargs["session_state"]["context"]["kkm"]
-    kkm = [k.replace("_", " ").title() for k in kkm]
+    threshold = kwargs["session_state"]["context"]["threshold"]
+    # kkm = [k.replace("_", " ").title() for k in kkm]
+
     threshold_control = [
         dmc.AccordionItem(
             [

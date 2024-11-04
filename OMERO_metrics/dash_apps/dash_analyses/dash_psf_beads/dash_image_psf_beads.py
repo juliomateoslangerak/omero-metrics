@@ -117,12 +117,26 @@ app.layout = dmc.MantineProvider(
                                             [
                                                 dmc.Paper(
                                                     [
-                                                        dmc.Text(
-                                                            "Bead Distribution Map",
-                                                            size="lg",
-                                                            fw=500,
-                                                            c=THEME["primary"],
-                                                            mb="md",
+                                                        dmc.Group(
+                                                            [
+                                                                dmc.Text(
+                                                                    "Bead Distribution Map",
+                                                                    size="lg",
+                                                                    fw=500,
+                                                                    c=THEME[
+                                                                        "primary"
+                                                                    ],
+                                                                ),
+                                                                dmc.Tooltip(
+                                                                    label="Click on a bead in the image to view its MIP",
+                                                                    children=[
+                                                                        get_icon(
+                                                                            "material-symbols:info"
+                                                                        )
+                                                                    ],
+                                                                ),
+                                                            ],
+                                                            justify="space-between",
                                                         ),
                                                         dcc.Graph(
                                                             figure={},

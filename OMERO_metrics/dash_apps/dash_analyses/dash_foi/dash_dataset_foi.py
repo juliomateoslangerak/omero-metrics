@@ -123,7 +123,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                                             w="200",
                                                             value="0",
                                                             leftSection=get_icon(
-                                                                "radix-icons:magnifying-glass"
+                                                                "material-symbols:layers"
                                                             ),
                                                             rightSection=get_icon(
                                                                 "radix-icons:chevron-down"
@@ -183,7 +183,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                                             size="lg",
                                                         ),
                                                         dmc.Tooltip(
-                                                            label="Statistical measurements for the selected channel",
+                                                            label="Statistical measurements for all the channels",
                                                             children=[
                                                                 get_icon(
                                                                     "material-symbols:info-outline",
