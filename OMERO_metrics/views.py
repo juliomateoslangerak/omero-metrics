@@ -215,7 +215,7 @@ def microscope_view(request, conn=None, **kwargs):
     the specified image"""
     return render(
         request,
-        template_name=template_name_dash,
+        template_name="OMERO_metrics/microscope.html",
         context={"app_name": "Microscope"},
     )
 
