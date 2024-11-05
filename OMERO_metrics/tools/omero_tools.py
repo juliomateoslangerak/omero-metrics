@@ -683,8 +683,8 @@ def _rgba_to_int(rgba_color: mm_schema.Color):
     b = rgba_color.b << 8
     a = rgba_color.alpha
     rgba_int = sum([r, g, b, a])
-    if rgba_int > (2 ** 31 - 1):  # convert to signed 32-bit int
-        rgba_int = rgba_int - 2 ** 32
+    if rgba_int > (2**31 - 1):  # convert to signed 32-bit int
+        rgba_int = rgba_int - 2**32
 
     return rgba_int
 
