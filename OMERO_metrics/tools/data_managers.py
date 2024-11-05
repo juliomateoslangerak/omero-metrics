@@ -10,7 +10,7 @@ from omero.gateway import (
     ImageWrapper,
     ProjectWrapper,
 )
-from omero_metrics.tools import load, dump, update, delete
+from OMERO_metrics.tools import load, dump, update, delete
 
 logger = logging.getLogger(__name__)
 
