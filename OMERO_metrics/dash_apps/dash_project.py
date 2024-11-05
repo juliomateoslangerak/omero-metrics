@@ -587,12 +587,16 @@ def update_thresholds_controls(*args, **kwargs):
     kkm = kwargs["session_state"]["context"]["kkm"]
     threshold = kwargs["session_state"]["context"]["threshold"]
     # kkm = [k.replace("_", " ").title() for k in kkm]
+    if threshold:
+        new_kkm = threshold
+    else:
+        new_kkm = {k: {"upper_limit": "", "lower_limit": ""} for k in kkm}
 
     threshold_control = [
         dmc.AccordionItem(
             [
                 make_control(
-                    key,
+                    key.replace("_", " ").title(),
                     f"action-{i}",
                 ),
                 dmc.AccordionPanel(
@@ -608,6 +612,7 @@ def update_thresholds_controls(*args, **kwargs):
                                         icon="hugeicons:chart-maximum",
                                         color="green",
                                     ),
+                                    value=value.get("upper_limit", ""),
                                 ),
                                 dmc.NumberInput(
                                     label="Lower Limit",
@@ -616,9 +621,10 @@ def update_thresholds_controls(*args, **kwargs):
                                         icon="hugeicons:chart-minimum",
                                         color="green",
                                     ),
+                                    value=value.get("lower_limit", ""),
                                 ),
                             ],
-                            legend=key,
+                            legend=key.replace("_", " ").title(),
                             variant="filled",
                             radius="md",
                             style={"padding": "10px", "margin": "10px"},
@@ -628,7 +634,7 @@ def update_thresholds_controls(*args, **kwargs):
             ],
             value=f"item-{i}",
         )
-        for i, key in enumerate(kkm)
+        for i, (key, value) in enumerate(new_kkm.items())
     ]
     return threshold_control
 

@@ -109,6 +109,11 @@ def create_control_panel():
                         allowDeselect=False,
                         leftSection=get_icon("material-symbols:layers"),
                         rightSection=get_icon("radix-icons:chevron-down"),
+                        styles={
+                            "rightSection": {"pointerEvents": "none"},
+                            "item": {"fontSize": "14px"},
+                            "input": {"borderColor": THEME["primary"]},
+                        },
                     ),
                     dmc.Divider(
                         label="Display Options",
@@ -134,6 +139,7 @@ def create_control_panel():
                                 id="checkbox-state",
                                 label="Enable Contour View",
                                 checked=False,
+                                color="green",
                             ),
                         ],
                         gap="xs",
@@ -163,12 +169,18 @@ def create_control_panel():
                         ],
                         value="Hot",
                         leftSection=get_icon("material-symbols:palette"),
+                        styles={
+                            "rightSection": {"pointerEvents": "none"},
+                            "item": {"fontSize": "14px"},
+                            "input": {"borderColor": THEME["primary"]},
+                        },
                     ),
                     dmc.Switch(
                         id="switch-invert-colors",
                         label="Invert Colors",
                         checked=False,
                         size="md",
+                        color="green",
                     ),
                 ],
                 gap="sm",

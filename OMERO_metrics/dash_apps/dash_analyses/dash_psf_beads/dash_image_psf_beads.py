@@ -187,6 +187,19 @@ app.layout = dmc.MantineProvider(
                                                             rightSection=get_icon(
                                                                 "radix-icons:chevron-down"
                                                             ),
+                                                            styles={
+                                                                "rightSection": {
+                                                                    "pointerEvents": "none"
+                                                                },
+                                                                "item": {
+                                                                    "fontSize": "14px"
+                                                                },
+                                                                "input": {
+                                                                    "borderColor": THEME[
+                                                                        "primary"
+                                                                    ]
+                                                                },
+                                                            },
                                                         ),
                                                         dmc.Divider(
                                                             label="Display Options",
@@ -215,11 +228,13 @@ app.layout = dmc.MantineProvider(
                                                                     id="contour_checkbox_psf_image",
                                                                     label="Enable Contour View",
                                                                     checked=False,
+                                                                    color="green",
                                                                 ),
                                                                 dmc.Checkbox(
                                                                     id="roi_checkbox_psf_image",
                                                                     label="Show ROI Boundaries",
                                                                     checked=False,
+                                                                    color="green",
                                                                 ),
                                                             ],
                                                             gap="xs",
@@ -251,12 +266,26 @@ app.layout = dmc.MantineProvider(
                                                             leftSection=get_icon(
                                                                 "material-symbols:palette"
                                                             ),
+                                                            styles={
+                                                                "rightSection": {
+                                                                    "pointerEvents": "none"
+                                                                },
+                                                                "item": {
+                                                                    "fontSize": "14px"
+                                                                },
+                                                                "input": {
+                                                                    "borderColor": THEME[
+                                                                        "primary"
+                                                                    ]
+                                                                },
+                                                            },
                                                         ),
                                                         dmc.Switch(
                                                             id="color_switch_psf_image",
                                                             label="Invert Colors",
                                                             checked=False,
                                                             size="md",
+                                                            color="green",
                                                         ),
                                                     ],
                                                     gap="sm",
