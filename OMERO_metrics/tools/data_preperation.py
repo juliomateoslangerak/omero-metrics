@@ -390,7 +390,12 @@ def fig_mip(mip_x, mip_y, mip_z, title):
 
 
 def mip_graphs(
-    x0: int, xf: int, y0: int, yf: int, stack: Union[np.array, list], do_sqrt: bool = True
+    x0: int,
+    xf: int,
+    y0: int,
+    yf: int,
+    stack: Union[np.array, list],
+    do_sqrt: bool = True,
 ):
     image_bead = stack[:, y0:yf, x0:xf]
     image_x = np.max(image_bead, axis=2)
@@ -455,6 +460,3 @@ def image_3d_chart(image_bead):
         scene_zaxis_showticklabels=False,
     )
     return fig
-
-
-# ---------------------------------------READING FROM MM_DATASET--------------------------------------------------

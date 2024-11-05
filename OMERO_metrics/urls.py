@@ -1,16 +1,23 @@
 from OMERO_metrics.views import *
 from django.urls import re_path
 from OMERO_metrics.dash_apps import (
-    dash_image_foi,
+    dash_feedback,
+    dash_group,
     dash_project,
+    dash_microscope,
+)
+from OMERO_metrics.dash_apps.dash_forms import (
+    dash_group_form,
+    dash_project_form,
+    dash_dataset_form,
+)
+from OMERO_metrics.dash_apps.dash_analyses.dash_foi import (
+    dash_dataset_foi,
+    dash_image_foi,
+)
+from OMERO_metrics.dash_apps.dash_analyses.dash_psf_beads import (
     dash_dataset_psf_beads,
     dash_image_psf_beads,
-    dash_dataset_foi,
-    dash_group,
-    dash_microscope,
-    dash_form_config,
-    dash_dataset_form,
-    dash_feedback,
 )
 
 urlpatterns = [
@@ -44,6 +51,6 @@ urlpatterns = [
         image_rois,
         name="webtest_image_rois",
     ),
+    # This url is for the app in a new tab
     re_path(r"^microscope", microscope_view, name="microscope"),
-    re_path(r"^upload_image", upload_image, name="upload_image"),
 ]

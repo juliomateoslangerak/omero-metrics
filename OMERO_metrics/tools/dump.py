@@ -807,3 +807,28 @@ def dump_config_input_parameters(
         )
 
     return file_ann
+
+
+def dump_threshold(
+    conn: BlitzGateway,
+    target_omero_obj: ProjectWrapper,
+    threshold: dict,
+):
+    dumper = YAMLDumper()
+    with tempfile.NamedTemporaryFile(
+        prefix=f"threshold_project_id{target_omero_obj.getId()}",
+        suffix=".yaml",
+        mode="w",
+        delete=False,
+    ) as f:
+        f.write(dumper.dumps(threshold))
+        f.close()
+        file_ann = omero_tools.create_file(
+            conn=conn,
+            file_path=f.name,
+            omero_object=target_omero_obj,
+            file_description="Threshold file",
+            namespace="threshold",
+            mimetype="application/yaml",
+        )
+    return file_ann

@@ -9,6 +9,9 @@ class UploadFileForm(forms.Form):
     file = forms.FileField()
 
 
+# TODO: Can we remove this?
+
+
 def dataclass_to_form(dataclass):
     form_fields = {}
     for field in fields(dataclass):

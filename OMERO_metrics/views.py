@@ -1,4 +1,5 @@
 from django.utils.datetime_safe import datetime
+from OMERO_metrics.tools import delete
 from omeroweb.webclient.decorators import login_required, render_response
 from OMERO_metrics.tools.data_managers import (
     DatasetManager,
@@ -6,22 +7,22 @@ from OMERO_metrics.tools.data_managers import (
     ImageManager,
 )
 from django.shortcuts import render
-from OMERO_metrics.forms import UploadFileForm
-import numpy as np
 from OMERO_metrics.tools.omero_tools import (
-    create_image_from_numpy_array,
     get_ref_from_object,
 )
 from OMERO_metrics.tools.load import load_config_file_data
-from OMERO_metrics.tools.dump import dump_config_input_parameters, dump_comment
 from OMERO_metrics.tools.load import load_image
 from microscopemetrics_schema import datamodel as mm_schema
 from microscopemetrics.analyses import field_illumination, psf_beads
-from OMERO_metrics.tools.dump import dump_dataset
+from OMERO_metrics.tools import dump
 import omero
 import logging
+from OMERO_metrics.tools import load
+from django.urls import reverse
 
 logger = logging.getLogger(__name__)
+
+from omero.gateway import FileAnnotationWrapper
 
 DATA_TYPE = {
     "FieldIlluminationInputParameters": [
@@ -39,40 +40,21 @@ DATA_TYPE = {
 }
 
 
-@login_required()
-def upload_image(request, conn=None, **kwargs):
-    if request.method == "POST":
-        form = UploadFileForm(request.POST, request.FILES)
-        id_image = ""
-        type_image = ""
-        if form.is_valid():
-            file = request.FILES["file"]
-            title = form.cleaned_data["title"]
-            dataset_id = form.cleaned_data["dataset_id"]
-            dataset = conn.getObject("Dataset", int(dataset_id))
-            group_id = dataset.getDetails().getGroup().getId()
-            conn.SERVICE_OPTS.setOmeroGroup(group_id)
-            type_image = file.name
-            ima = np.load(file)
-            image = ima.transpose((1, 4, 0, 2, 3))
-            ima_wrapper = create_image_from_numpy_array(
-                conn, image, title, dataset=dataset
-            )
-            id_image = ima_wrapper.getId()
-        return render(
-            request,
-            "OMERO_metrics/success.html",
-            {
-                "type": type_image,
-                "id_dataset": dataset.getId(),
-                "id_image": id_image,
-            },
-        )
-    else:
-        form = UploadFileForm()
-    return render(
-        request, "OMERO_metrics/upload_image_omero.html", {"form": form}
-    )
+@login_required(setGroupContext=True)
+def download_file(request, conn=None, **kwargs):
+    """Download a file by triggering the omero_table view"""
+    try:
+        file_id = kwargs.get("file_id")
+        if not file_id:
+            raise ValueError("File ID is required")
+
+        # Build the URL for the view you want to trigger
+        response_url = reverse("omero_table", args=[file_id, "csv"])
+        uri = request.build_absolute_uri(response_url)
+
+        return uri
+    except Exception as e:
+        return str(e)  # Or consider returning an HttpResponse with the error
 
 
 @login_required()
@@ -84,19 +66,6 @@ def index(request, conn=None, **kwargs):
         "experimenterId": experimenter.id,
     }
     return render(request, "OMERO_metrics/index.html", context)
-
-
-@login_required()
-def session_state_view(request, template_name, **kwargs):
-    "Example view that exhibits the use of sessions to store state"
-    session = request.session
-    omero_views_count = session.get("django_plotly_dash", {})
-    ind_use = omero_views_count.get("ind_use", 0)
-    ind_use += 1
-    omero_views_count["ind_use"] = ind_use
-    context = {"ind_use": ind_use}
-    session["django_plotly_dash"] = omero_views_count
-    return render(request, template_name=template_name, context=context)
 
 
 def web_gateway_templates(request, base_template):
@@ -120,12 +89,14 @@ def webclient_templates(request, base_template, **kwargs):
 def image_rois(request, image_id, conn=None, **kwargs):
     """Simply shows a page of ROI
     thumbnails for the specified image"""
-    roi_ids = image_id
     return render(
         request,
-        "OMERO_metrics/omero_views/image_rois.html",
-        {"roiIds": roi_ids},
+        "OMERO_metrics/image_rois.html",
+        {"ImageId": image_id},
     )
+
+
+template_name_dash = "OMERO_metrics/dash_template/dash_template.html"
 
 
 @login_required(setGroupContext=True)
@@ -139,12 +110,18 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
         context = im.context
         dash_context["context"] = context
         request.session["django_plotly_dash"] = dash_context
-        return render(request, template_name=im.template, context=context)
+        return render(
+            request,
+            template_name=template_name_dash,
+            context={"app_name": im.app_name},
+        )
     except Exception as e:
         dash_context["context"] = {"message": str(e)}
         request.session["django_plotly_dash"] = dash_context
         return render(
-            request, template_name="OMERO_metrics/omero_views/warning.html"
+            request,
+            template_name=template_name_dash,
+            context={"app_name": "WarningApp"},
         )
 
 
@@ -157,19 +134,25 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
         pm.load_data()
         pm.is_homogenized()
         pm.load_config_file()
+        pm.load_threshold_file()
         pm.check_processed_data()
         pm.visualize_data()
         context = pm.context
-        template = pm.template
         dash_context["context"] = context
         dash_context["context"]["project_id"] = project_id
         request.session["django_plotly_dash"] = dash_context
-        return render(request, template_name=template, context=context)
+        return render(
+            request,
+            template_name=template_name_dash,
+            context={"app_name": pm.app_name},
+        )
     except Exception as e:
         dash_context["context"] = {"message": str(e)}
         request.session["django_plotly_dash"] = dash_context
         return render(
-            request, template_name="OMERO_metrics/omero_views/warning.html"
+            request,
+            template_name=template_name_dash,
+            context={"app_name": "WarningApp"},
         )
 
 
@@ -179,7 +162,7 @@ def center_viewer_group(request, conn=None, **kwargs):
         active_group = request.session["active_group"]
     else:
         active_group = conn.getEventContext().groupId
-
+    file_ann, map_ann = load.get_annotations_tables(conn, active_group)
     dash_context = request.session.get("django_plotly_dash", dict())
     group = conn.getObject("ExperimenterGroup", active_group)
     group_name = group.getName()
@@ -188,10 +171,16 @@ def center_viewer_group(request, conn=None, **kwargs):
         "group_id": active_group,
         "group_name": group_name,
         "group_description": group_description,
+        "file_ann": file_ann,
+        "map_ann": map_ann,
     }
     dash_context["context"] = context
     request.session["django_plotly_dash"] = dash_context
-    return render(request, "OMERO_metrics/omero_views/center_view_group.html")
+    return render(
+        request,
+        template_name=template_name_dash,
+        context={"app_name": "omero_group_dash"},
+    )
 
 
 @login_required(setGroupContext=True)
@@ -204,14 +193,19 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
         dm.is_processed()
         dm.visualize_data()
         dash_context["context"] = dm.context
-        template = dm.template
         request.session["django_plotly_dash"] = dash_context
-        return render(request, template_name=template)
+        return render(
+            request,
+            template_name=template_name_dash,
+            context={"app_name": dm.app_name},
+        )
     except Exception as e:
         dash_context["context"] = {"message": str(e)}
         request.session["django_plotly_dash"] = dash_context
         return render(
-            request, template_name="OMERO_metrics/omero_views/warning.html"
+            request,
+            template_name=template_name_dash,
+            context={"app_name": "WarningApp"},
         )
 
 
@@ -219,11 +213,19 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
 def microscope_view(request, conn=None, **kwargs):
     """Simply shows a page of ROI thumbnails for
     the specified image"""
-    return render(request, "OMERO_metrics/microscope.html")
+    return render(
+        request,
+        template_name="OMERO_metrics/microscope.html",
+        context={"app_name": "Microscope"},
+    )
+
+
+# These views are called from the dash app, and they return a message and a color to display in the app.
 
 
 @login_required(setGroupContext=True)
 def save_config(request, conn=None, **kwargs):
+    """Save the configuration file"""
     try:
         project_id = kwargs["project_id"]
         mm_input_parameters = kwargs["input_parameters"]
@@ -232,7 +234,7 @@ def save_config(request, conn=None, **kwargs):
         setup = load_config_file_data(conn, project_wrapper)
         if setup is None:
             try:
-                dump_config_input_parameters(
+                dump.dump_config_input_parameters(
                     conn, mm_input_parameters, mm_sample, project_wrapper
                 )
                 return (
@@ -259,6 +261,7 @@ def save_config(request, conn=None, **kwargs):
 
 @login_required(setGroupContext=True)
 def run_analysis_view(request, conn=None, **kwargs):
+    """Run the analysis"""
     try:
         dataset_wrapper = conn.getObject("Dataset", kwargs["dataset_id"])
         project_wrapper = dataset_wrapper.getParent()
@@ -306,7 +309,7 @@ def run_analysis_view(request, conn=None, **kwargs):
                     comment_type="PROCESSING",
                 )
                 mm_dataset["output"]["comment"] = mm_comment
-                dump_dataset(
+                dump.dump_dataset(
                     conn=conn,
                     dataset=mm_dataset,
                     target_project=project_wrapper,
@@ -315,9 +318,6 @@ def run_analysis_view(request, conn=None, **kwargs):
                     dump_input_images=False,
                     dump_analysis=True,
                 )
-                # dump_comment(
-                #     conn, target_object=dataset_wrapper, comment=mm_comment
-                # )
 
                 return "Analysis completed successfully", "green"
             except Exception as e:
@@ -328,5 +328,53 @@ def run_analysis_view(request, conn=None, **kwargs):
         else:
             logger.error("Analysis failed")
             return "We couldn't process the analysis.", "red"
+    except Exception as e:
+        return str(e), "red"
+
+
+@login_required(setGroupContext=True)
+def delete_all(request, conn=None, **kwargs):
+    """Delete all the files"""
+    try:
+        group_id = kwargs["group_id"]
+        delete.delete_all_mm_analysis(conn, group_id)
+        return "Files deleted successfully", "green"
+    except Exception as e:
+        return str(e), "red"
+
+
+@login_required(setGroupContext=True)
+def save_threshold(request, conn=None, **kwargs):
+    """Save the threshold"""
+    try:
+        project_id = kwargs["project_id"]
+        threshold = kwargs["threshold"]
+        project_wrapper = conn.getObject("Project", project_id)
+        threshold_exist = load.load_thresholds_file_data(project_wrapper)
+        if threshold:
+            if threshold_exist:
+                to_delete = []
+                for ann in project_wrapper.listAnnotations():
+                    if isinstance(ann, FileAnnotationWrapper):
+                        ns = ann.getFile().getName()
+                        if ns.startswith("threshold"):
+                            to_delete.append(ann.getId())
+                conn.deleteObjects(
+                    graph_spec="Annotation",
+                    obj_ids=to_delete,
+                    deleteAnns=True,
+                    deleteChildren=True,
+                    wait=True,
+                )
+            file = dump.dump_threshold(conn, project_wrapper, threshold)
+            return (
+                "Threshold saved successfully, Re-click on the project to see the changes",
+                "green",
+            )
+        else:
+            return (
+                "Failed to save threshold, a configuration file doesn't exist",
+                "red",
+            )
     except Exception as e:
         return str(e), "red"

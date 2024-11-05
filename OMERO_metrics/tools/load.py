@@ -52,6 +52,89 @@ DATASET_IMAGES = {
 }
 
 
+def get_annotations_tables(conn, group_id):
+    all_annotations = conn.getObjects("Annotation", opts={"group": group_id})
+    file_ann_cols = [
+        "Name",
+        "ID",
+        "File_ID",
+        "Description",
+        "Date",
+        "Owner",
+        "NS",
+        "Mimetype",
+    ]
+    file_ann_rows = []
+    map_ann_cols = ["Name", "ID", "Description", "Date", "Owner", "NS"]
+    map_ann_rows = []
+    for ann in all_annotations:
+        if ann.getNs() and ann.getNs().startswith("microscopemetrics"):
+            if isinstance(ann, FileAnnotationWrapper):
+                file_ann_rows.append(
+                    [
+                        ann.getFile().getName(),
+                        ann.getId(),
+                        ann.getFile().getId(),
+                        ann.getDescription(),
+                        ann.getDate(),
+                        ann.getOwner().getName(),
+                        ann.getNs(),
+                        ann.getFile().getMimetype(),
+                    ]
+                )
+            elif isinstance(ann, omero.gateway.MapAnnotationWrapper):
+                map_ann_rows.append(
+                    [
+                        ann.getName(),
+                        ann.getId(),
+                        ann.getDescription(),
+                        ann.getDate(),
+                        ann.getOwner().getName(),
+                        ann.getNs(),
+                    ]
+                )
+    file_ann_df = pd.DataFrame(file_ann_rows, columns=file_ann_cols)
+    map_ann_df = pd.DataFrame(map_ann_rows, columns=map_ann_cols)
+    file_ann_df["Date"] = pd.to_datetime(file_ann_df["Date"])
+    map_ann_df["Date"] = pd.to_datetime(map_ann_df["Date"])
+    return file_ann_df, map_ann_df
+
+
+def get_annotations_list_group(conn, group_id):
+    projects = conn.getObjects("Project", opts={"group": group_id})
+    data = []
+    columns = [
+        "Name",
+        "ID",
+        "File_ID",
+        "Description",
+        "Date",
+        "Owner",
+        "Project_ID",
+        "Project_Name",
+        "NS",
+        "Type",
+    ]
+    for p in projects:
+        for ds in p.listAnnotations():
+            data.append(
+                [
+                    ds.getFile().getName(),
+                    ds.getId(),
+                    ds.getFile().getId(),
+                    ds.getDescription(),
+                    ds.getDate(),
+                    ds.getOwner().getName(),
+                    p.getId(),
+                    p.getName(),
+                    ds.getNs(),
+                    ds.__class__.__name__,
+                ]
+            )
+    df = pd.DataFrame(data, columns=columns)
+    return df
+
+
 def image_exist(image_id, mm_dataset):
     image_found = False
     image_location = None
@@ -81,6 +164,19 @@ def load_config_file_data(conn, project):
                     Loader=yaml.SafeLoader,
                 )
     return setup
+
+
+def load_thresholds_file_data(project):
+    thresholds = None
+    for ann in project.listAnnotations():
+        if isinstance(ann, FileAnnotationWrapper):
+            ns = ann.getFile().getName()
+            if ns.startswith("threshold"):
+                thresholds = yaml.load(
+                    ann.getFileInChunks().__next__().decode(),
+                    Loader=yaml.SafeLoader,
+                )
+    return thresholds
 
 
 def load_project(
@@ -308,7 +404,7 @@ def load_dash_data_project(
     processed_datasets: dict,
 ) -> (dict, str):
     dash_context = {}
-    template = "OMERO_metrics/omero_views/center_view_project.html"
+    app_name = "omero_project_dash"
     df_list = []
     kkm = list(processed_datasets.values())[0].kkm
     dates = []
@@ -325,7 +421,7 @@ def load_dash_data_project(
     dash_context["key_measurements_list"] = df_list
     dash_context["kkm"] = kkm
     dash_context["dates"] = dates
-    return dash_context, template
+    return dash_context, app_name
 
 
 def load_analysis_config(project=ProjectWrapper):
