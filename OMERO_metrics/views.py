@@ -27,7 +27,7 @@ DATA_TYPE = {
         "FieldIlluminationDataset",
         "FieldIlluminationInputData",
         "field_illumination_image",
-        field_illumination.analise_field_illumination,
+        field_illumination.analyse_field_illumination,
     ],
     "PSFBeadsInputParameters": [
         "PSFBeadsDataset",

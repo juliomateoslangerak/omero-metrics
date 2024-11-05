@@ -10,12 +10,12 @@ from omero.gateway import (
     ImageWrapper,
     ProjectWrapper,
 )
-from OMERO_metrics.tools import load, dump, update, delete
+from omero_metrics.tools import load, dump, update, delete
 
 logger = logging.getLogger(__name__)
 
 ANALYSIS_MAPPINGS = {
-    "analise_field_illumination": field_illumination.analise_field_illumination,
+    "analyse_field_illumination": field_illumination.analyse_field_illumination,
     "analyse_psf_beads": psf_beads.analyse_psf_beads,
 }
 

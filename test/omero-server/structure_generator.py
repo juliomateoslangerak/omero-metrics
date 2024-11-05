@@ -37,7 +37,7 @@ BIT_DEPTH_TO_DTYPE = {
 }
 
 DATASET_TO_ANALYSIS = {
-    "FieldIlluminationDataset": field_illumination.analise_field_illumination,
+    "FieldIlluminationDataset": field_illumination.analyse_field_illumination,
     "PSFBeadsDataset": psf_beads.analyse_psf_beads,
 }
 
