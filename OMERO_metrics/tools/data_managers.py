@@ -368,13 +368,13 @@ class ProjectManager:
     def check_processed_data(self):
         for dataset in self.datasets:
             if dataset.processed:
-                self.processed_datasets[dataset.omero_dataset.getId()] = (
-                    dataset
-                )
+                self.processed_datasets[
+                    dataset.omero_dataset.getId()
+                ] = dataset
             else:
-                self.unprocessed_datasets[dataset.omero_dataset.getId()] = (
-                    dataset
-                )
+                self.unprocessed_datasets[
+                    dataset.omero_dataset.getId()
+                ] = dataset
 
     def is_homogenized(self):
         # unique = set(self.datasets_types)

@@ -307,17 +307,17 @@ def load_dash_data_image(
     ):
         dash_context["image"] = image.array_data
         dash_context["channel_names"] = image.channel_series
-        dash_context["message"] = (
-            "No visualization available for output images."
-        )
+        dash_context[
+            "message"
+        ] = "No visualization available for output images."
     elif (
         isinstance(mm_dataset, PSFBeadsDataset)
         and image_location == "input_data"
     ):
         dash_context["image"] = image.array_data
-        dash_context["min_distance"] = (
-            mm_dataset.input_parameters.min_lateral_distance_factor
-        )
+        dash_context[
+            "min_distance"
+        ] = mm_dataset.input_parameters.min_lateral_distance_factor
         dash_context["channel_names"] = image.channel_series
         dash_context["bead_properties_df"] = get_table_file_id(
             conn,
@@ -346,9 +346,9 @@ def load_dash_data_image(
     ):
         dash_context["image"] = image.array_data
         dash_context["channel_names"] = image.channel_series
-        dash_context["message"] = (
-            "No visualization available for output images."
-        )
+        dash_context[
+            "message"
+        ] = "No visualization available for output images."
 
     else:
         dash_context = {}

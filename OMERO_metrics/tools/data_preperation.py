@@ -339,7 +339,7 @@ def get_intensity_map_image(image_name, list_file):
 # ---------------------------------------dash_functions--------------------------------------------------
 
 
-def fig_mip(mip_x, mip_y, mip_z, title):
+def fig_mip(mip_x, mip_y, mip_z):
     fig = make_subplots(
         rows=2,
         cols=2,
@@ -350,7 +350,7 @@ def fig_mip(mip_x, mip_y, mip_z, title):
     fig = fig.add_trace(mip_y.data[0], row=1, col=2)
     fig = fig.add_trace(mip_z.data[0], row=2, col=1)
     fig = fig.update_layout(
-        title_text=title,
+        # title_text=title,
         coloraxis=dict(colorscale="hot"),
         autosize=False,
     )

@@ -67,6 +67,7 @@ dash_app_project = DjangoDash(
     external_stylesheets=dmc.styles.ALL,
 )
 
+
 # Define the layout
 dash_app_project.layout = dmc.MantineProvider(
     theme={
@@ -99,7 +100,7 @@ dash_app_project.layout = dmc.MantineProvider(
                                     children=[
                                         html.Img(
                                             src="/static/OMERO_metrics/images/metrics_logo.png",
-                                            style={"width": "48px"},
+                                            style={"width": "120px"},
                                         ),
                                         dmc.Title(
                                             "Project Dashboard",

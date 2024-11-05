@@ -7,7 +7,6 @@ import plotly.graph_objs as go
 import numpy as np
 import logging
 import pandas as pd
-from matplotlib.pyplot import autoscale
 from dash_iconify import DashIconify
 
 from OMERO_metrics.tools.data_preperation import (
@@ -105,178 +104,170 @@ app.layout = dmc.MantineProvider(
                 dmc.Stack(
                     [
                         # Top Section - Image and Controls
-                        dmc.Paper(
-                            shadow="sm",
-                            p="md",
-                            radius="md",
+                        dmc.Grid(
                             children=[
-                                dmc.Grid(
-                                    children=[
-                                        # Left side - Image Display
-                                        dmc.GridCol(
+                                # Left side - Image Display
+                                dmc.GridCol(
+                                    [
+                                        dmc.Paper(
                                             [
-                                                dmc.Paper(
+                                                dmc.Group(
                                                     [
-                                                        dmc.Group(
-                                                            [
-                                                                dmc.Text(
-                                                                    "Bead Distribution Map",
-                                                                    size="lg",
-                                                                    fw=500,
-                                                                    c=THEME[
+                                                        dmc.Text(
+                                                            "Bead Distribution Map",
+                                                            size="lg",
+                                                            fw=500,
+                                                            c=THEME["primary"],
+                                                        ),
+                                                        dmc.Tooltip(
+                                                            label="Click on a bead in the image to view its MIP",
+                                                            children=[
+                                                                get_icon(
+                                                                    "material-symbols:info",
+                                                                    color=THEME[
                                                                         "primary"
                                                                     ],
-                                                                ),
-                                                                dmc.Tooltip(
-                                                                    label="Click on a bead in the image to view its MIP",
-                                                                    children=[
-                                                                        get_icon(
-                                                                            "material-symbols:info"
-                                                                        )
-                                                                    ],
-                                                                ),
+                                                                )
                                                             ],
-                                                            justify="space-between",
-                                                        ),
-                                                        dcc.Graph(
-                                                            figure={},
-                                                            id="psf_image_graph",
-                                                            config={
-                                                                "displayModeBar": True,
-                                                                "scrollZoom": True,
-                                                                "modeBarButtonsToRemove": [
-                                                                    "lasso2d",
-                                                                    "select2d",
-                                                                ],
-                                                            },
                                                         ),
                                                     ],
-                                                    p="md",
-                                                    radius="md",
-                                                    withBorder=True,
-                                                    shadow="sm",
+                                                    justify="space-between",
+                                                ),
+                                                dcc.Graph(
+                                                    figure={},
+                                                    id="psf_image_graph",
+                                                    config={
+                                                        "displayModeBar": True,
+                                                        "scrollZoom": True,
+                                                        "modeBarButtonsToRemove": [
+                                                            "lasso2d",
+                                                            "select2d",
+                                                        ],
+                                                    },
                                                 ),
                                             ],
-                                            span=8,
-                                        ),
-                                        # Right side - Controls
-                                        dmc.GridCol(
-                                            [
-                                                dmc.Paper(
-                                                    h="100%",
-                                                    shadow="xs",
-                                                    p="md",
-                                                    radius="md",
-                                                    children=[
-                                                        dmc.Stack(
-                                                            [
-                                                                dmc.Text(
-                                                                    "Visualization Controls",
-                                                                    size="lg",
-                                                                    fw=500,
-                                                                    c=THEME[
-                                                                        "primary"
-                                                                    ],
-                                                                ),
-                                                                dmc.Divider(
-                                                                    label="Channel Selection",
-                                                                    labelPosition="center",
-                                                                ),
-                                                                dmc.Select(
-                                                                    id="channel_selector_psf_image",
-                                                                    label="Channel",
-                                                                    w="100%",
-                                                                    value="0",
-                                                                    allowDeselect=False,
-                                                                    leftSection=get_icon(
-                                                                        "material-symbols:layers"
-                                                                    ),
-                                                                    rightSection=get_icon(
-                                                                        "radix-icons:chevron-down"
-                                                                    ),
-                                                                ),
-                                                                dmc.Divider(
-                                                                    label="Display Options",
-                                                                    labelPosition="center",
-                                                                    mt="md",
-                                                                ),
-                                                                dmc.SegmentedControl(
-                                                                    id="beads_info_segmented",
-                                                                    value="beads_info",
-                                                                    data=[
-                                                                        {
-                                                                            "value": "beads_info",
-                                                                            "label": "Show Beads",
-                                                                        },
-                                                                        {
-                                                                            "value": "None",
-                                                                            "label": "Hide Beads",
-                                                                        },
-                                                                    ],
-                                                                    fullWidth=True,
-                                                                    color="green",
-                                                                ),
-                                                                dmc.Stack(
-                                                                    [
-                                                                        dmc.Checkbox(
-                                                                            id="contour_checkbox_psf_image",
-                                                                            label="Enable Contour View",
-                                                                            checked=False,
-                                                                        ),
-                                                                        dmc.Checkbox(
-                                                                            id="roi_checkbox_psf_image",
-                                                                            label="Show ROI Boundaries",
-                                                                            checked=False,
-                                                                        ),
-                                                                    ],
-                                                                    gap="xs",
-                                                                ),
-                                                                dmc.Divider(
-                                                                    label="Color Settings",
-                                                                    labelPosition="center",
-                                                                    mt="md",
-                                                                ),
-                                                                dmc.Select(
-                                                                    id="color_selector_psf_image",
-                                                                    label="Color Scheme",
-                                                                    allowDeselect=False,
-                                                                    data=[
-                                                                        {
-                                                                            "value": "Hot",
-                                                                            "label": "Hot",
-                                                                        },
-                                                                        {
-                                                                            "value": "Viridis",
-                                                                            "label": "Viridis",
-                                                                        },
-                                                                        {
-                                                                            "value": "Inferno",
-                                                                            "label": "Inferno",
-                                                                        },
-                                                                    ],
-                                                                    value="Hot",
-                                                                    leftSection=get_icon(
-                                                                        "material-symbols:palette"
-                                                                    ),
-                                                                ),
-                                                                dmc.Switch(
-                                                                    id="color_switch_psf_image",
-                                                                    label="Invert Colors",
-                                                                    checked=False,
-                                                                    size="md",
-                                                                ),
-                                                            ],
-                                                            gap="sm",
-                                                        ),
-                                                    ],
-                                                ),
-                                            ],
-                                            span=4,
+                                            p="md",
+                                            radius="md",
+                                            withBorder=True,
+                                            shadow="sm",
                                         ),
                                     ],
-                                    # gap="lg",
+                                    span=8,
+                                ),
+                                # Right side - Controls
+                                dmc.GridCol(
+                                    [
+                                        dmc.Paper(
+                                            h="100%",
+                                            shadow="xs",
+                                            p="md",
+                                            radius="md",
+                                            children=[
+                                                dmc.Stack(
+                                                    [
+                                                        dmc.Text(
+                                                            "Visualization Controls",
+                                                            size="lg",
+                                                            fw=500,
+                                                            c=THEME["primary"],
+                                                        ),
+                                                        dmc.Divider(
+                                                            label="Channel Selection",
+                                                            labelPosition="center",
+                                                        ),
+                                                        dmc.Select(
+                                                            id="channel_selector_psf_image",
+                                                            label="Channel",
+                                                            w="100%",
+                                                            value="0",
+                                                            allowDeselect=False,
+                                                            leftSection=get_icon(
+                                                                "material-symbols:layers"
+                                                            ),
+                                                            rightSection=get_icon(
+                                                                "radix-icons:chevron-down"
+                                                            ),
+                                                        ),
+                                                        dmc.Divider(
+                                                            label="Display Options",
+                                                            labelPosition="center",
+                                                            mt="md",
+                                                        ),
+                                                        dmc.SegmentedControl(
+                                                            id="beads_info_segmented",
+                                                            value="beads_info",
+                                                            data=[
+                                                                {
+                                                                    "value": "beads_info",
+                                                                    "label": "Show Beads",
+                                                                },
+                                                                {
+                                                                    "value": "None",
+                                                                    "label": "Hide Beads",
+                                                                },
+                                                            ],
+                                                            fullWidth=True,
+                                                            color="green",
+                                                        ),
+                                                        dmc.Stack(
+                                                            [
+                                                                dmc.Checkbox(
+                                                                    id="contour_checkbox_psf_image",
+                                                                    label="Enable Contour View",
+                                                                    checked=False,
+                                                                ),
+                                                                dmc.Checkbox(
+                                                                    id="roi_checkbox_psf_image",
+                                                                    label="Show ROI Boundaries",
+                                                                    checked=False,
+                                                                ),
+                                                            ],
+                                                            gap="xs",
+                                                        ),
+                                                        dmc.Divider(
+                                                            label="Color Settings",
+                                                            labelPosition="center",
+                                                            mt="md",
+                                                        ),
+                                                        dmc.Select(
+                                                            id="color_selector_psf_image",
+                                                            label="Color Scheme",
+                                                            allowDeselect=False,
+                                                            data=[
+                                                                {
+                                                                    "value": "Hot",
+                                                                    "label": "Hot",
+                                                                },
+                                                                {
+                                                                    "value": "Viridis",
+                                                                    "label": "Viridis",
+                                                                },
+                                                                {
+                                                                    "value": "Inferno",
+                                                                    "label": "Inferno",
+                                                                },
+                                                            ],
+                                                            value="Hot",
+                                                            leftSection=get_icon(
+                                                                "material-symbols:palette"
+                                                            ),
+                                                        ),
+                                                        dmc.Switch(
+                                                            id="color_switch_psf_image",
+                                                            label="Invert Colors",
+                                                            checked=False,
+                                                            size="md",
+                                                        ),
+                                                    ],
+                                                    gap="sm",
+                                                ),
+                                            ],
+                                        ),
+                                    ],
+                                    span=4,
                                 ),
                             ],
+                            # gap="lg",
                         ),
                         # Bottom Section - MIP and Profiles
                         dmc.Paper(
@@ -301,7 +292,10 @@ app.layout = dmc.MantineProvider(
                                                             label="Click on a bead in the main image to view its MIP",
                                                             children=[
                                                                 get_icon(
-                                                                    "material-symbols:info"
+                                                                    "material-symbols:info",
+                                                                    color=THEME[
+                                                                        "primary"
+                                                                    ],
                                                                 )
                                                             ],
                                                         ),
@@ -359,7 +353,7 @@ app.layout = dmc.MantineProvider(
                                                             id="mip_chart_image",
                                                             figure={},
                                                             style={
-                                                                "height": "350px"
+                                                                "height": "400px"
                                                             },
                                                         ),
                                                     ],
@@ -536,15 +530,15 @@ def callback_mip(*args, **kwargs):
     min_dist = int(kwargs["session_state"]["context"]["min_distance"])
     if point["curveNumber"] == 1:
         bead_index = point["pointNumber"]
-        title = (
-            f"MIP for bead number: {bead_index} in channel: {channel_index}"
-        )
+        # title = (
+        #     f"MIP for bead number: {bead_index} in channel: {channel_index}"
+        # )
         bead = df_beads_location[
             df_beads_location["bead_id"] == bead_index
         ].copy()
         x0, xf, y0, yf = crop_bead_index(bead, min_dist, stack)
         mip_x, mip_y, mip_z = mip_graphs(x0, xf, y0, yf, stack)
-        fig_mip_go = fig_mip(mip_x, mip_y, mip_z, title)
+        fig_mip_go = fig_mip(mip_x, mip_y, mip_z)
         fig_mip_go.update_layout(
             coloraxis={
                 "colorbar": dict(
@@ -554,7 +548,7 @@ def callback_mip(*args, **kwargs):
                     tickfont=dict(size=10),
                 ),
             },
-            margin={"l": 20, "r": 20, "t": 60, "b": 20},
+            margin={"l": 20, "r": 20, "t": 20, "b": 20},
             plot_bgcolor=THEME["background"],
             paper_bgcolor=THEME["background"],
             # xaxis_title="X Position (pixels)",
@@ -617,13 +611,16 @@ def get_beads_info(df, min_distance):
     df["considered_intensity_outlier"] = df[
         "considered_intensity_outlier"
     ].map({0: "No", 1: "Yes"})
+    df["color"] = df["considered_valid"].map(color_map)
     beads_location_plot = go.Scatter(
         y=df["center_y"],
         x=df["center_x"],
         mode="markers",
         name="Beads Locations",
         marker=dict(
-            size=10, opacity=0.3, color=df["considered_valid"].map(color_map)
+            size=0.001,
+            opacity=0.01,
+            color=df["considered_valid"].map(color_map),
         ),
         text=df["channel_nr"],
         customdata=np.stack(
@@ -655,7 +652,7 @@ def get_beads_info(df, min_distance):
             xref="x",
             yref="y",
             line=dict(
-                color="RoyalBlue",
+                color=row["color"],
                 width=3,
             ),
         )
