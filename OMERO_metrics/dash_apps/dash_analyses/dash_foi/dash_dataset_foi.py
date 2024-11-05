@@ -153,11 +153,13 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                                         ],
                                                     },
                                                     style={
-                                                        "height": "250px",
+                                                        "height": "300px",
                                                     },
                                                 ),
                                             ],
                                             gap="md",
+                                            justify="space-between",
+                                            h="100%",
                                         ),
                                     ],
                                 ),
@@ -197,7 +199,6 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                                     justify="space-between",
                                                 ),
                                                 dmc.ScrollArea(
-                                                    h=250,
                                                     offsetScrollbars=True,
                                                     children=[
                                                         dmc.Table(
@@ -212,6 +213,8 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                                 ),
                                             ],
                                             gap="md",
+                                            justify="space-between",
+                                            h="100%",
                                         ),
                                     ],
                                 ),
@@ -257,7 +260,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                 ),
                                 dmc.LineChart(
                                     id="intensity_profile",
-                                    h=250,
+                                    h=300,
                                     dataKey="Pixel",
                                     data={},
                                     series=[
@@ -311,7 +314,7 @@ def update_dropdown_menu(*args, **kwargs):
     try:
         channel = kwargs["session_state"]["context"]["channel_names"]
         return [
-            {"label": f"{name} (Channel {i})", "value": f"{i}"}
+            {"label": f"{name}", "value": f"{i}"}
             for i, name in enumerate(channel)
         ]
     except Exception as e:
@@ -378,7 +381,6 @@ def update_visualizations(*args, **kwargs):
         df_intensity_profiles = kwargs["session_state"]["context"][
             "intensity_profiles"
         ]
-        print(df_intensity_profiles)
         # Process image data
         image = images[channel]
         image_channel = image[0, 0, :, :]

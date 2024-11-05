@@ -187,9 +187,20 @@ dash_app_project.layout = dmc.MantineProvider(
                                                             ),
                                                             allowDeselect=False,
                                                             styles={
+                                                                "rightSection": {
+                                                                    "pointerEvents": "none"
+                                                                },
+                                                                "item": {
+                                                                    "fontSize": "14px"
+                                                                },
+                                                                "input": {
+                                                                    "borderColor": COLORS[
+                                                                        "primary"
+                                                                    ]
+                                                                },
                                                                 "label": {
                                                                     "marginBottom": "8px"
-                                                                }
+                                                                },
                                                             },
                                                         ),
                                                     ],
@@ -207,9 +218,20 @@ dash_app_project.layout = dmc.MantineProvider(
                                                                 icon="ph:calendar"
                                                             ),
                                                             styles={
+                                                                "rightSection": {
+                                                                    "pointerEvents": "none"
+                                                                },
+                                                                "item": {
+                                                                    "fontSize": "14px"
+                                                                },
+                                                                "input": {
+                                                                    "borderColor": COLORS[
+                                                                        "primary"
+                                                                    ]
+                                                                },
                                                                 "label": {
                                                                     "marginBottom": "8px"
-                                                                }
+                                                                },
                                                             },
                                                         ),
                                                     ],
@@ -225,11 +247,11 @@ dash_app_project.layout = dmc.MantineProvider(
                                         dmc.Title(
                                             "Measurement Trends",
                                             order=3,
-                                            style={"marginBottom": "16px"},
+                                            style={"marginBottom": "24px"},
                                         ),
                                         html.Div(
                                             id="graph-project",
-                                            style={"height": "250px"},
+                                            style={"height": "300px"},
                                         ),
                                     ],
                                 ),
@@ -261,13 +283,14 @@ dash_app_project.layout = dmc.MantineProvider(
                                             children=[
                                                 dmc.GridCol(
                                                     id="input_parameters_container",
-                                                    span=6,
+                                                    span="6",
                                                 ),
                                                 dmc.GridCol(
                                                     id="sample_container",
-                                                    span=6,
+                                                    span="6",
                                                 ),
                                             ],
+                                            justify="space-between",
                                         ),
                                         dmc.Group(
                                             justify="flex-end",
@@ -297,42 +320,6 @@ dash_app_project.layout = dmc.MantineProvider(
                                 dmc.Paper(
                                     style={**CARD_STYLE, "marginTop": "24px"},
                                     children=[
-                                        # dmc.Grid(
-                                        #     children=[
-                                        #         dmc.GridCol(
-                                        #             span=4,
-                                        #             children=[
-                                        #                 dmc.Select(
-                                        #                     id="thresholds-dropdown",
-                                        #                     label="Select KKM",
-                                        #                     placeholder="Choose KKM",
-                                        #                 ),
-                                        #             ],
-                                        #         ),
-                                        #         dmc.GridCol(
-                                        #             span=4,
-                                        #             children=[
-                                        #                 dmc.Select(
-                                        #                     label="Threshold Type",
-                                        #                     data=[
-                                        #                         "Upper Limit",
-                                        #                         "Lower Limit",
-                                        #                     ],
-                                        #                     placeholder="Select type",
-                                        #                 ),
-                                        #             ],
-                                        #         ),
-                                        #         dmc.GridCol(
-                                        #             span=4,
-                                        #             children=[
-                                        #                 dmc.NumberInput(
-                                        #                     label="Value",
-                                        #                     placeholder="Enter threshold",
-                                        #                 ),
-                                        #             ],
-                                        #         ),
-                                        #     ],
-                                        # ),
                                         dmc.Accordion(
                                             id="accordion-compose-controls",
                                             chevron=DashIconify(
@@ -451,18 +438,13 @@ def update_table(*args, **kwargs):
         dataKey="Date",
         data=data,
         withLegend=True,
-        legendProps={"horizontalAlign": "top", "height": 50},
+        legendProps={"horizontalAlign": "top", "left": 50},
+        # yAxisProps={"tickMargin": 15, "orientation": "center"},
         series=[{"name": kkm[measurement], "color": "green.7"}],
         curveType="natural",
         style={"padding": 20},
         xAxisLabel="Processed Date",
         referenceLines=ref,
-        # referenceLines=[
-        #     {"y": 1240, "label": "Upper Limit", "color": "red.6"},
-        #     {"x": min_date},
-        #     {"y": 500, "label": "Lower Limit", "color": "yellow.6"},
-        #     {"x": min_date},
-        # ],
         # yAxisLabel=str(kkm[measurement]).replace("_", " ").title(),
     )
 

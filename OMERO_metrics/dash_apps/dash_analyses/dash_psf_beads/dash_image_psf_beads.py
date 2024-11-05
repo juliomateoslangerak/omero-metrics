@@ -221,6 +221,7 @@ app.layout = dmc.MantineProvider(
                                                             ],
                                                             fullWidth=True,
                                                             color="green",
+                                                            # w='auto'
                                                         ),
                                                         dmc.Stack(
                                                             [

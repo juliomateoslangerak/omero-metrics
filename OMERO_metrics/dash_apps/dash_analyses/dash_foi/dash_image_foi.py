@@ -130,8 +130,8 @@ def create_control_panel():
                             {"value": "All", "label": "All"},
                             {"value": "None", "label": "None"},
                         ],
-                        fullWidth=True,
                         color="green",
+                        fullWidth=True,
                     ),
                     dmc.Stack(
                         [
