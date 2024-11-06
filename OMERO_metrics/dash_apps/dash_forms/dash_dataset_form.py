@@ -7,24 +7,11 @@ from microscopemetrics_schema import datamodel as mm_schema
 from OMERO_metrics.tools import dash_forms_tools as dft
 from time import sleep
 from OMERO_metrics.views import run_analysis_view
+from OMERO_metrics.styles import (
+    THEME,
+    MANTINE_THEME,
+)
 
-# Theme Configuration
-THEME = {
-    "primary": "#189A35",
-    "secondary": "#63aa47",
-    "background": "#ffffff",
-    "surface": "#f8f9fa",
-    "border": "#e9ecef",
-    "text": {
-        "primary": "#2C3E50",
-        "secondary": "#6c757d",
-    },
-}
-# Constants and theme configuration
-THEME_COLOR = "#189A35"
-SECONDARY_COLOR = "#008080"
-ERROR_COLOR = "#FF4136"
-SUCCESS_COLOR = "#2ECC40"
 active = 0
 min_step = 0
 max_step = 2
@@ -34,7 +21,6 @@ def get_icon(icon, size=20, color=None):
     return DashIconify(icon=icon, height=size, color=color)
 
 
-# Initialize dashboard
 dashboard_name = "omero_dataset_form"
 dash_form_project = DjangoDash(
     name=dashboard_name,
@@ -42,16 +28,8 @@ dash_form_project = DjangoDash(
     external_stylesheets=dmc.styles.ALL,
 )
 
-# Layout configuration
 dash_form_project.layout = dmc.MantineProvider(
-    theme={
-        "colorScheme": "light",
-        "primaryColor": "green",
-        "components": {
-            "Button": {"styles": {"root": {"fontWeight": 500}}},
-            "Alert": {"styles": {"root": {"borderRadius": "8px"}}},
-        },
-    },
+    theme=MANTINE_THEME,
     children=[
         dmc.Container(
             [
@@ -116,7 +94,7 @@ dash_form_project.layout = dmc.MantineProvider(
                         dmc.Progress(
                             id="analysis-progress",
                             value=0,
-                            color=THEME_COLOR,
+                            color=THEME["primary"],
                             radius="xl",
                             size="sm",
                             mb="xl",
@@ -125,7 +103,7 @@ dash_form_project.layout = dmc.MantineProvider(
                         dmc.Stepper(
                             id="stepper-basic-usage",
                             active=0,
-                            color=THEME_COLOR,
+                            color=THEME["primary"],
                             size="sm",
                             iconSize=32,
                             children=[
@@ -185,7 +163,9 @@ dash_form_project.layout = dmc.MantineProvider(
                                                                             ),
                                                                             styles={
                                                                                 "input": {
-                                                                                    "borderColor": THEME_COLOR
+                                                                                    "borderColor": THEME[
+                                                                                        "border"
+                                                                                    ]
                                                                                 }
                                                                             },
                                                                         ),
@@ -197,7 +177,9 @@ dash_form_project.layout = dmc.MantineProvider(
                                                                             minRows=3,
                                                                             styles={
                                                                                 "input": {
-                                                                                    "borderColor": THEME_COLOR
+                                                                                    "borderColor": THEME[
+                                                                                        "border"
+                                                                                    ]
                                                                                 }
                                                                             },
                                                                         ),
@@ -280,7 +262,7 @@ dash_form_project.layout = dmc.MantineProvider(
                                     leftSection=get_icon(
                                         "material-symbols:arrow-back"
                                     ),
-                                    color=SECONDARY_COLOR,
+                                    color=THEME["secondary"],
                                 ),
                                 dmc.Button(
                                     "Next",
@@ -288,7 +270,7 @@ dash_form_project.layout = dmc.MantineProvider(
                                     rightSection=get_icon(
                                         "material-symbols:arrow-forward"
                                     ),
-                                    color=THEME_COLOR,
+                                    color=THEME["primary"],
                                 ),
                             ],
                             justify="space-between",
@@ -296,9 +278,7 @@ dash_form_project.layout = dmc.MantineProvider(
                         ),
                     ],
                 ),
-                # Results section
                 html.Div(id="analysis-results"),
-                # Hidden elements
                 html.Div(id="blank"),
             ],
             size="xl",
@@ -395,23 +375,6 @@ def update_review_form(*args, **kwargs):
         return dash.no_update
 
 
-# @dash_form_project.expanded_callback(
-#     dash.dependencies.Output("step_sample", "progressIcon"),
-#            dash.dependencies.Output("step_sample", "color"),
-#     [
-#         dash.dependencies.State("stepper-basic-usage", "active"),
-#        dash.dependencies.State("form_content", "children"),
-#        ],
-# )
-# def update_sample_icon(*args, **kwargs):
-#     step = args[1]
-#     form_content = args[2]
-#     if step == 0 and dft.validate_form(form_content):
-#         return get_icon(icon="mdi:cross-circle"), "red"
-#     else:
-#         return dash.no_update
-
-
 @dash_form_project.expanded_callback(
     dash.dependencies.Output("stepper-basic-usage", "active"),
     dash.dependencies.Output("next-basic-usage", "children"),
@@ -485,7 +448,7 @@ def run_analysis(*args, **kwargs):
     current = args[2]
 
     if current == 2:
-        sleep(1)  # Reduced sleep time for better UX
+        sleep(1)
         try:
             input_parameters_object = getattr(
                 mm_schema, input_parameters["type"]

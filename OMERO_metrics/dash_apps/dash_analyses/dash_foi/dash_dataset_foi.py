@@ -23,14 +23,14 @@ def get_icon(icon, size=20, color=None):
     return DashIconify(icon=icon, height=size, color=color)
 
 
-dashboard_name = "omero_dataset_metrics"
-dash_app_dataset = DjangoDash(
+dashboard_name = "omero_dataset_foi"
+omero_dataset_foi = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
     external_stylesheets=dmc.styles.ALL,
 )
 
-dash_app_dataset.layout = dmc.MantineProvider(
+omero_dataset_foi.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
         dmc.Container(
@@ -260,7 +260,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
 )
 
 
-@dash_app_dataset.expanded_callback(
+@omero_dataset_foi.expanded_callback(
     dash.dependencies.Output("channel_dropdown_foi", "data"),
     [dash.dependencies.Input("blank-input", "children")],
 )
@@ -275,7 +275,7 @@ def update_dropdown_menu(*args, **kwargs):
         return [{"label": "Error loading channels", "value": "0"}]
 
 
-@dash_app_dataset.expanded_callback(
+@omero_dataset_foi.expanded_callback(
     dash.dependencies.Output("km_table", "data"),
     [dash.dependencies.Input("blank-input", "children")],
 )
@@ -291,7 +291,6 @@ def update_km_table(*args, **kwargs):
             ]
         ].copy()
 
-        # Improve column names for readability
         column_mapping = {
             "channel_name": "Channel",
             "center_region_intensity_fraction": "Center Intensity Ratio",
@@ -317,7 +316,7 @@ def update_km_table(*args, **kwargs):
         }
 
 
-@dash_app_dataset.expanded_callback(
+@omero_dataset_foi.expanded_callback(
     dash.dependencies.Output("intensity_map", "figure"),
     dash.dependencies.Output("intensity_profile", "data"),
     [
@@ -330,12 +329,10 @@ def update_visualizations(*args, **kwargs):
         channel = int(args[0])
         curve_type = args[1]
 
-        # Get data from context
         images = kwargs["session_state"]["context"]["image"]
         df_intensity_profiles = kwargs["session_state"]["context"][
             "intensity_profiles"
         ]
-        # Process image data
         image = images[channel]
         image_channel = image[0, 0, :, :]
         image_channel = rescale_intensity(
@@ -357,7 +354,6 @@ def update_visualizations(*args, **kwargs):
             yaxis_title="Y Position (pixels)",
         )
 
-        # Process profile data
         channel_regex = f"Ch0{channel}"
         df_profile = df_intensity_profiles[
             df_intensity_profiles.columns[
@@ -385,7 +381,6 @@ def update_visualizations(*args, **kwargs):
         return fig, df_profile.to_dict("records")
 
     except Exception as e:
-        # Return empty visualizations with error message
         fig = px.imshow([[0]])
         fig.add_annotation(
             text=f"Error loading data: {str(e)}",

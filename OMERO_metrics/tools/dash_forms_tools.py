@@ -8,7 +8,6 @@ Field_TYPE_MAPPING = {
     "float": ["NumberInput", "carbon:character-decimal"],
     "int": ["NumberInput", "carbon:character-whole-number"],
     "str": ["TextInput", "carbon:string-text"],
-    # "bool": ["Checkbox", "radix-icons:ruler-horizontal"],
 }
 from typing import get_origin, get_args, Union
 
@@ -80,8 +79,7 @@ def get_dmc_field_input(
         icon=type_mapping[field_info["type"]][1]
     )
     input_field.maxWidth = "450px"
-    # if not field_info['optional']:
-    #     input_field.error = "This field is required"
+
     return input_field
 
 
@@ -124,9 +122,4 @@ class DashForm:
                     field, self.mm_object, disabled=self.disabled
                 )
             )
-        # form_content.children.append(
-        #     dmc.Button(
-        #         id="submit_id", children=["Submit"], color="green", n_clicks=0
-        #     )
-        # )
         return form_content

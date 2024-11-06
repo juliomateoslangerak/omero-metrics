@@ -8,13 +8,16 @@ from microscopemetrics_schema import datamodel as mm_schema
 from OMERO_metrics.tools import dash_forms_tools as dft
 from time import sleep
 import OMERO_metrics.views as views
+from OMERO_metrics.styles import (
+    THEME,
+    MANTINE_THEME,
+)
 
 DATASET_TO_INPUT = {
     "FieldIlluminationDataset": mm_schema.FieldIlluminationInputParameters,
     "PSFBeadsDataset": mm_schema.PSFBeadsInputParameters,
 }
 
-# Improved sample type formatting
 sample_types = [x[0] for x in MAPPINGS]
 sample_types_dp = [
     {
@@ -30,21 +33,6 @@ def get_icon(icon):
     return DashIconify(icon=icon, height=20)
 
 
-# Theme configuration
-THEME = {
-    "primary": "#189A35",
-    "secondary": "#008080",
-    "background": "#f8fafc",
-    "surface": "#ffffff",
-    "border": "#e2e8f0",
-    "success": "#10b981",
-    "error": "#ef4444",
-    "text": {
-        "primary": "#2C3E50",
-        "secondary": "#6c757d",
-    },
-}
-
 dashboard_name = "omero_project_config_form"
 dash_form_project = DjangoDash(
     name=dashboard_name,
@@ -52,20 +40,11 @@ dash_form_project = DjangoDash(
     external_stylesheets=dmc.styles.ALL,
 )
 
-# Improved layout with better visual hierarchy
 dash_form_project.layout = dmc.MantineProvider(
-    theme={
-        "colorScheme": "light",
-        "primaryColor": "green",
-        "components": {
-            "Button": {"styles": {"root": {"fontWeight": 500}}},
-            "Title": {"styles": {"root": {"letterSpacing": "-0.5px"}}},
-        },
-    },
+    theme=MANTINE_THEME,
     children=[
         dmc.Container(
             [
-                # Header Section
                 dmc.Paper(
                     shadow="sm",
                     p="md",
@@ -113,7 +92,6 @@ dash_form_project.layout = dmc.MantineProvider(
                         ),
                     ],
                 ),
-                # Main Content
                 dmc.Paper(
                     id="main-content",
                     children=[
@@ -274,7 +252,6 @@ dash_form_project.layout = dmc.MantineProvider(
                                 ),
                             ],
                         ),
-                        # Navigation Buttons
                         dmc.Group(
                             children=[
                                 dmc.Button(
@@ -313,7 +290,6 @@ dash_form_project.layout = dmc.MantineProvider(
 )
 
 
-# Updated callback for stepper progress
 @dash_form_project.expanded_callback(
     [
         dash.dependencies.Output("stepper-basic-usage", "active"),
@@ -336,7 +312,6 @@ def stepper_callback(*args, **kwargs):
     button_id = kwargs["callback_context"].triggered[0]["prop_id"]
     step = current if current is not None else 0
 
-    # Calculate progress percentage
     progress = (step / 2) * 100
 
     if button_id == "back-basic-usage.n_clicks":
@@ -488,13 +463,23 @@ def save_config_dash(*args, **kwargs):
                         children=[
                             dmc.Title(response, order=4),
                             dmc.Text(
-                                "Your configuration has been saved successfully.",
+                                (
+                                    "Your configuration has been saved successfully."
+                                    if color == "green"
+                                    else "An error occurred while saving your configuration."
+                                ),
                                 size="sm",
                             ),
                         ],
                         color=color,
-                        icon=DashIconify(icon="mdi:check-circle"),
-                        title="Success!",
+                        icon=DashIconify(
+                            icon=(
+                                "mdi:check-circle"
+                                if color == "green"
+                                else "mdi:alert-circle"
+                            )
+                        ),
+                        title="Success!" if color == "green" else "Error!",
                         radius="md",
                         withCloseButton=True,
                     )

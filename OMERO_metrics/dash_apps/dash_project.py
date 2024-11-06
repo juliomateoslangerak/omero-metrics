@@ -506,7 +506,7 @@ def update_thresholds_controls(*args, **kwargs):
                                     value=value.get("lower_limit", ""),
                                 ),
                             ],
-                            legend=key.replace("_", " ").title(),
+                            # legend=key.replace("_", " ").title(),
                             variant="filled",
                             radius="md",
                             style={"padding": "10px", "margin": "10px"},

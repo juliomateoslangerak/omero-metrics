@@ -10,19 +10,20 @@ def get_icon(icon, size=20, color=None):
     return DashIconify(icon=icon, height=size, color=color)
 
 
-app = DjangoDash(
-    "PSF_Beads",
+dashboard_name = "omero_dataset_psf_beads"
+
+omero_dataset_psf_beads = DjangoDash(
+    name=dashboard_name,
     external_stylesheets=dmc.styles.ALL,
 )
 
 
-app.layout = dmc.MantineProvider(
+omero_dataset_psf_beads.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
         dmc.Container(
             [
                 html.Div(id="blank-input"),
-                # Header Section
                 dmc.Paper(
                     shadow="sm",
                     p="md",
@@ -127,7 +128,7 @@ app.layout = dmc.MantineProvider(
 )
 
 
-@app.expanded_callback(
+@omero_dataset_psf_beads.expanded_callback(
     dash.dependencies.Output("key_values_psf", "data"),
     [
         dash.dependencies.Input("blank-input", "children"),

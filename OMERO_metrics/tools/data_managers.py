@@ -33,17 +33,17 @@ KKM_MAPPINGS = {
 }
 
 TEMPLATE_MAPPINGS_DATASET = {
-    "FieldIlluminationDataset": "omero_dataset_metrics",
-    "PSFBeadsDataset": "PSF_Beads",
+    "FieldIlluminationDataset": "omero_dataset_foi",
+    "PSFBeadsDataset": "omero_dataset_psf_beads",
 }
 
 TEMPLATE_MAPPINGS_IMAGE = {
     "FieldIlluminationDataset": {
-        "input_data": "omero_image_dash",
+        "input_data": "omero_image_foi",
         "output": "WarningApp",
     },
     "PSFBeadsDataset": {
-        "input_data": "PSF_Beads_image",
+        "input_data": "omero_image_psf_beads",
         "output": "WarningApp",
     },
 }

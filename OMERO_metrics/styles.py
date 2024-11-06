@@ -214,7 +214,11 @@ MANTINE_THEME = {
         "DatePicker": {"styles": DATEPICKER_STYLES},
         "Input": {"styles": INPUT_STYLES},
         "Paper": {"defaultProps": {"withBorder": True}},
-        "Card": {"styles": {"root": {"borderRadius": "8px"}}},
+        "Card": {
+            "styles": {"root": {"borderRadius": "8px"}},
+        },
+        "Title": {"styles": {"root": {"letterSpacing": "-0.5px"}}},
+        "Alert": {"styles": {"root": {"borderRadius": "8px"}}},
     },
 }
 

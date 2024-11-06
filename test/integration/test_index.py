@@ -54,26 +54,26 @@ class TestLoadIndexPage(IWebTest):
     def test_app_lookup_dataset_metrics(self, user1):
         """Test looking up an existing application for dataset foi"""
         from OMERO_metrics.dash_apps.dash_analyses.dash_foi.dash_dataset_foi import (
-            dash_app_dataset,
+            omero_dataset_foi,
         )
         from django_plotly_dash.models import get_stateless_by_name
 
-        app2 = get_stateless_by_name(dash_app_dataset._uid)
+        app2 = get_stateless_by_name(omero_dataset_foi._uid)
         assert app2
-        assert dash_app_dataset._uid == app2._uid
+        assert omero_dataset_foi._uid == app2._uid
 
     @pytest.mark.django_db
     def test_app_lookup_dataset_psf(self, user1):
         # TODO: rename app in dash_dataset_psf_beads.py for consistency
         """Test looking up an existing application for dataset psf"""
         from OMERO_metrics.dash_apps.dash_analyses.dash_psf_beads.dash_dataset_psf_beads import (
-            app,
+            omero_dataset_psf_beads,
         )
         from django_plotly_dash.models import get_stateless_by_name
 
-        app2 = get_stateless_by_name(app._uid)
+        app2 = get_stateless_by_name(omero_dataset_psf_beads._uid)
         assert app2
-        assert app._uid == app2._uid
+        assert omero_dataset_psf_beads._uid == app2._uid
 
     @pytest.mark.django_db
     def test_load_project(self, user1):

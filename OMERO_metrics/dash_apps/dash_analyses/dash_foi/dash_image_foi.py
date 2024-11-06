@@ -9,13 +9,7 @@ import plotly.graph_objects as go
 from OMERO_metrics.styles import (
     THEME,
     MANTINE_THEME,
-    CONTAINER_STYLE,
-    HEADER_PAPER_STYLE,
-    CONTENT_PAPER_STYLE,
-    GRAPH_STYLE,
-    PLOT_LAYOUT,
     LINE_CHART_SERIES,
-    INPUT_BASE_STYLES,
 )
 
 
@@ -23,8 +17,8 @@ def get_icon(icon, size=20, color=None):
     return DashIconify(icon=icon, height=size, color=color)
 
 
-dashboard_name = "omero_image_dash"
-dash_app_image = DjangoDash(
+dashboard_name = "omero_image_foi"
+omero_image_foi = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
     external_stylesheets=dmc.styles.ALL,
@@ -238,7 +232,7 @@ def create_intensity_profile():
     )
 
 
-dash_app_image.layout = dmc.MantineProvider(
+omero_image_foi.layout = dmc.MantineProvider(
     [
         dmc.Container(
             [
@@ -290,7 +284,7 @@ dash_app_image.layout = dmc.MantineProvider(
 )
 
 
-@dash_app_image.expanded_callback(
+@omero_image_foi.expanded_callback(
     dash.dependencies.Output("my-dropdown1", "data"),
     [dash.dependencies.Input("blank-input", "children")],
 )
@@ -303,7 +297,7 @@ def callback_channel(*args, **kwargs):
     return channel_list
 
 
-@dash_app_image.expanded_callback(
+@omero_image_foi.expanded_callback(
     dash.dependencies.Output("rois-graph", "figure"),
     [
         dash.dependencies.Input("my-dropdown1", "value"),
@@ -339,8 +333,6 @@ def callback_image(*args, **kwargs):
         zmax=image_data.max(),
         color_continuous_scale=color,
     )
-
-    # Add points with improved styling
     fig.add_trace(
         go.Scatter(
             x=df_point_channel.X,
@@ -360,7 +352,6 @@ def callback_image(*args, **kwargs):
         fig.plotly_restyle({"type": "contour"}, 0)
         fig.update_yaxes(autorange="reversed")
 
-    # Improved layout styling
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
@@ -374,8 +365,6 @@ def callback_image(*args, **kwargs):
             tickfont=dict(size=10),
         ),
     )
-
-    # Add shapes with improved styling
     corners = [
         dict(
             type="rect",
@@ -411,7 +400,6 @@ def callback_image(*args, **kwargs):
         for i, row in df_lines.iterrows()
     ]
 
-    # Update shapes based on ROI selection
     if roi == "All":
         fig.update_layout(shapes=corners + lines)
         fig.plotly_restyle({"visible": True}, 1)
@@ -431,7 +419,7 @@ def callback_image(*args, **kwargs):
     return fig
 
 
-@dash_app_image.expanded_callback(
+@omero_image_foi.expanded_callback(
     dash.dependencies.Output("intensity_profile", "data"),
     [dash.dependencies.Input("my-dropdown1", "value")],
 )

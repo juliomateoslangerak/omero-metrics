@@ -142,6 +142,7 @@ dash_app_group.layout = dmc.MantineProvider(
                                                 leftSection=DashIconify(
                                                     icon="clarity:date-line"
                                                 ),
+                                                styles=DATEPICKER_STYLES,
                                             ),
                                             dmc.Select(
                                                 id="select_mimetype",
@@ -149,6 +150,7 @@ dash_app_group.layout = dmc.MantineProvider(
                                                 value="0",
                                                 w=250,
                                                 allowDeselect=False,
+                                                styles=SELECT_STYLES,
                                             ),
                                             dmc.Button(
                                                 id="delete-all",
@@ -322,9 +324,11 @@ def load_table_project(*args, **kwargs):
             f"[CSV]({request.build_absolute_uri(reverse(viewname='omero_table', args=[i, 'csv']))})"
             f" | [JSON]({request.build_absolute_uri(reverse(viewname='omero_table', args=[i, 'json']))}) "
             if mt == "OMERO.tables"
-            else f"[YAML]({request.build_absolute_uri(reverse(viewname='download_annotation', args=[id]))})"
+            else f"[YAML]({request.build_absolute_uri(reverse(viewname='download_annotation', args=[id_f]))})"
         )
-        for i, mt, id in zip(file_ann.File_ID, file_ann.Mimetype, file_ann.ID)
+        for i, mt, id_f in zip(
+            file_ann.File_ID, file_ann.Mimetype, file_ann.ID
+        )
     ]
     file_ann_table = dash_table.DataTable(
         id="datatable_file_ann",
@@ -385,22 +389,27 @@ def delete_all_callback(*args, **kwargs):
     triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
     group_id = kwargs["session_state"]["context"]["group_id"]
     request = kwargs["request"]
+    opened = not args[3]
     if triggered_button == "modal-submit-button.n_clicks" and args[0] > 0:
         sleep(1)
-        views.delete_all(request, group_id=group_id)
+        msg, color = views.delete_all(request, group_id=group_id)
         message = dmc.Notification(
             title="Notification!",
             id="simple-notify",
             action="show",
-            message="All annotations have been deleted",
-            icon=DashIconify(icon="akar-icons:circle-check"),
+            message=msg,
+            icon=DashIconify(
+                icon=(
+                    "akar-icons:circle-check"
+                    if color == "green"
+                    else "akar-icons:circle-x"
+                )
+            ),
+            color=color,
         )
-    elif triggered_button == "modal-close-button.n_clicks" and args[1] > 0:
-        message = "You have clicked the close button"
+        return opened, message
     else:
-        message = "delete all button clicked"
-    opened = not args[3]
-    return opened, message
+        return opened, None
 
 
 @dash_app_group.expanded_callback(

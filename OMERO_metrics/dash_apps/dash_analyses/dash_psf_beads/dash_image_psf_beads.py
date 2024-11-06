@@ -25,9 +25,13 @@ def get_icon(icon, size=20, color=None):
 
 
 logger = logging.getLogger(__name__)
-app = DjangoDash("PSF_Beads_image", external_scripts=dmc.styles.ALL)
+dashboard_name = "omero_image_psf_beads"
 
-app.layout = dmc.MantineProvider(
+omero_image_psf_beads = DjangoDash(
+    name=dashboard_name, external_scripts=dmc.styles.ALL
+)
+
+omero_image_psf_beads.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
         dmc.Container(
@@ -85,10 +89,8 @@ app.layout = dmc.MantineProvider(
                 # Main Content
                 dmc.Stack(
                     [
-                        # Top Section - Image and Controls
                         dmc.Grid(
                             children=[
-                                # Left side - Image Display
                                 dmc.GridCol(
                                     [
                                         dmc.Paper(
@@ -136,7 +138,6 @@ app.layout = dmc.MantineProvider(
                                     ],
                                     span=8,
                                 ),
-                                # Right side - Controls
                                 dmc.GridCol(
                                     [
                                         dmc.Paper(
@@ -253,9 +254,7 @@ app.layout = dmc.MantineProvider(
                                     span=4,
                                 ),
                             ],
-                            # gap="lg",
                         ),
-                        # Bottom Section - MIP and Profiles
                         dmc.Paper(
                             shadow="sm",
                             p="md",
@@ -296,7 +295,6 @@ app.layout = dmc.MantineProvider(
                                             ],
                                             span=6,
                                         ),
-                                        # Intensity Profiles
                                         dmc.GridCol(
                                             [
                                                 dmc.Stack(
@@ -349,7 +347,6 @@ app.layout = dmc.MantineProvider(
                                             span=6,
                                         ),
                                     ],
-                                    # gap="lg",
                                 ),
                             ],
                         ),
@@ -365,8 +362,7 @@ app.layout = dmc.MantineProvider(
 )
 
 
-# Update callbacks with improved styling and error handling
-@app.expanded_callback(
+@omero_image_psf_beads.expanded_callback(
     dash.dependencies.Output("psf_image_graph", "figure"),
     [
         dash.dependencies.Input("channel_selector_psf_image", "value"),
@@ -468,7 +464,7 @@ def update_image(*args, **kwargs):
         return px.imshow([[0]], title="Error loading image")
 
 
-@app.expanded_callback(
+@omero_image_psf_beads.expanded_callback(
     dash.dependencies.Output("channel_selector_psf_image", "data"),
     [dash.dependencies.Input("blank-input", "children")],
 )
@@ -481,7 +477,7 @@ def update_channels_psf_image(*args, **kwargs):
     return channel_options
 
 
-@app.expanded_callback(
+@omero_image_psf_beads.expanded_callback(
     dash.dependencies.Output("mip_image", "figure"),
     dash.dependencies.Output("mip_chart_image", "figure"),
     [
