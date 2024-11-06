@@ -77,7 +77,7 @@ def delete_dataset_file_ann(
         id_to_del = dataset.data_reference.omero_object_id
     except AttributeError:
         logger.error(
-            "No file annotation reference associated with dataset. Unable to delete"
+            "No file annotation reference associated with dataset. Unable to delete."
         )
         return False
     del_success = omero_tools.del_object(
@@ -117,8 +117,11 @@ def delete_all_mm_analysis(conn, group_id):
     except Exception as e:
         if isinstance(e, omero.CmdError):
             return (
-                "You don't have the necessary permissions to delete the annotations",
+                "You don't have the necessary permissions to delete the annotations.",
                 "red",
             )
         else:
-            return str(e), "red"
+            return (
+                "Something happened. Couldn't delete the annotations.",
+                "red",
+            )

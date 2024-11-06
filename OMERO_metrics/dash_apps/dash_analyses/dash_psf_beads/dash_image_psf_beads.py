@@ -581,18 +581,20 @@ def line_graph_axis(bead_index, channel_index, axis, kwargs):
 def get_beads_info(df, min_distance):
     color_map = {"Yes": "green", "No": "red"}
     df["considered_axial_edge"] = df["considered_axial_edge"].map(
-        {0: "No", 1: "Yes"}
+        {"False": "No", "True": "Yes"}
     )
-    df["considered_valid"] = df["considered_valid"].map({0: "No", 1: "Yes"})
+    df["considered_valid"] = df["considered_valid"].map(
+        {"False": "No", "True": "Yes"}
+    )
     df["considered_self_proximity"] = df["considered_self_proximity"].map(
-        {0: "No", 1: "Yes"}
+        {"False": "No", "True": "Yes"}
     )
     df["considered_lateral_edge"] = df["considered_lateral_edge"].map(
-        {0: "No", 1: "Yes"}
+        {"False": "No", "True": "Yes"}
     )
     df["considered_intensity_outlier"] = df[
         "considered_intensity_outlier"
-    ].map({0: "No", 1: "Yes"})
+    ].map({"False": "No", "True": "Yes"})
     df["color"] = df["considered_valid"].map(color_map)
     beads_location_plot = go.Scatter(
         y=df["center_y"],

@@ -1,4 +1,3 @@
-# Color Theme Definition
 THEME = {
     "primary": "#189A35",
     "primary_light": "#1FB344",
@@ -17,7 +16,6 @@ THEME = {
 }
 
 
-# Tab Styles
 TAB_STYLES = {
     "tab": {
         "fontSize": "14px",
@@ -38,7 +36,6 @@ TAB_ITEM_STYLE = {
 }
 
 
-# Form Input Styles
 INPUT_STYLES = {
     "rightSection": {"pointerEvents": "none"},
     "item": {"fontSize": "14px"},
@@ -46,7 +43,6 @@ INPUT_STYLES = {
     "label": {"marginBottom": "8px"},
 }
 
-# Table Styles
 TABLE_MANTINE_STYLE = {
     "backgroundColor": "white",
     "width": "98%",
@@ -55,7 +51,6 @@ TABLE_MANTINE_STYLE = {
     "borderRadius": "0.5rem",
     "align": "center",
 }
-# Table Styles
 TABLE_STYLE = {
     "overflowX": "auto",
     "borderRadius": "0.5rem",
@@ -116,14 +111,12 @@ PAPER_STYLE = {
     "margin": "auto",
 }
 
-# Fieldset Styles
 FIELDSET_STYLE = {
     "padding": "10px",
     "margin": "10px",
 }
 
 
-# Consistent Input Heights and Styles with Centered Text
 INPUT_BASE_STYLES = {
     "wrapper": {
         "height": "40px",
@@ -159,7 +152,6 @@ INPUT_BASE_STYLES = {
     },
 }
 
-# Form Controls Specific Styles
 SELECT_STYLES = {
     **INPUT_BASE_STYLES,
     "dropdown": {
@@ -184,7 +176,6 @@ DATEPICKER_STYLES = {
     },
 }
 
-# Rest of your existing styles...
 CARD_STYLE = {
     "backgroundColor": THEME["surface"],
     "borderRadius": "8px",
@@ -204,7 +195,6 @@ BUTTON_STYLE = {
     "borderRadius": "6px",
 }
 
-# Mantine Theme Configuration
 MANTINE_THEME = {
     "colorScheme": "light",
     "primaryColor": "green",
@@ -223,7 +213,6 @@ MANTINE_THEME = {
 }
 
 
-# Container Styles
 CONTAINER_STYLE = {
     "backgroundColor": THEME["surface"],
     "margin": "10px",
@@ -231,7 +220,6 @@ CONTAINER_STYLE = {
     "padding": "10px",
 }
 
-# Paper Styles
 HEADER_PAPER_STYLE = {
     "shadow": "sm",
     "p": "md",
@@ -246,7 +234,6 @@ CONTENT_PAPER_STYLE = {
     "h": "100%",
 }
 
-# Chart Styles
 GRAPH_STYLE = {
     "height": "300px",
 }
@@ -262,7 +249,6 @@ PLOT_LAYOUT = {
 }
 
 
-# Line Chart Series
 LINE_CHART_SERIES = [
     {"name": "Diagonal (↘)", "color": "violet.9"},
     {"name": "Diagonal (↗)", "color": "blue.9"},

@@ -319,27 +319,42 @@ def load_dash_data_image(
             mm_dataset.input_parameters.min_lateral_distance_factor
         )
         dash_context["channel_names"] = image.channel_series
-        dash_context["bead_properties_df"] = get_table_file_id(
-            conn,
-            mm_dataset.output.bead_properties.data_reference.omero_object_id,
+        dash_context["bead_properties_df"] = load_table_mm_metrics(
+            mm_dataset, "bead_properties"
+        )
+        dash_context["bead_km_df"] = get_km_mm_metrics_dataset(
+            mm_dataset=mm_dataset, table_name="key_measurements"
+        )
+        dash_context["bead_x_profiles_df"] = load_table_mm_metrics(
+            mm_dataset=mm_dataset, table_name="bead_profiles_x"
+        )
+        dash_context["bead_y_profiles_df"] = load_table_mm_metrics(
+            mm_dataset=mm_dataset, table_name="bead_profiles_y"
+        )
+        dash_context["bead_z_profiles_df"] = load_table_mm_metrics(
+            mm_dataset=mm_dataset, table_name="bead_profiles_z"
         )
 
-        dash_context["bead_km_df"] = get_table_file_id(
-            conn,
-            mm_dataset.output.key_measurements.data_reference.omero_object_id,
-        )
-        dash_context["bead_x_profiles_df"] = get_table_file_id(
-            conn,
-            mm_dataset.output.bead_profiles_x.data_reference.omero_object_id,
-        )
-        dash_context["bead_y_profiles_df"] = get_table_file_id(
-            conn,
-            mm_dataset.output.bead_profiles_y.data_reference.omero_object_id,
-        )
-        dash_context["bead_z_profiles_df"] = get_table_file_id(
-            conn,
-            mm_dataset.output.bead_profiles_z.data_reference.omero_object_id,
-        )
+        # dash_context["bead_properties_df"] = get_table_file_id(
+        #     conn,
+        #     mm_dataset.output.bead_properties.data_reference.omero_object_id,
+        # )
+        # dash_context["bead_km_df"] = get_table_file_id(
+        #     conn,
+        #     mm_dataset.output.key_measurements.data_reference.omero_object_id,
+        # )
+        # dash_context["bead_x_profiles_df"] = get_table_file_id(
+        #     conn,
+        #     mm_dataset.output.bead_profiles_x.data_reference.omero_object_id,
+        # )
+        # dash_context["bead_y_profiles_df"] = get_table_file_id(
+        #     conn,
+        #     mm_dataset.output.bead_profiles_y.data_reference.omero_object_id,
+        # )
+        # dash_context["bead_z_profiles_df"] = get_table_file_id(
+        #     conn,
+        #     mm_dataset.output.bead_profiles_z.data_reference.omero_object_id)
+
         dash_context["image_id"] = image.data_reference.omero_object_id
     elif (
         isinstance(mm_dataset, PSFBeadsDataset) and image_location == "output"
@@ -374,9 +389,8 @@ def load_dash_data_dataset(
         dash_context["intensity_profiles"] = get_all_intensity_profiles(
             conn, df
         )
-        dash_context["key_values_df"] = get_table_file_id(
-            conn,
-            dataset.output.key_measurements.data_reference.omero_object_id,
+        dash_context["key_values_df"] = get_km_mm_metrics_dataset(
+            mm_dataset=dataset, table_name="key_measurements"
         )
         dash_context["timeline_data"] = [
             {
@@ -389,10 +403,14 @@ def load_dash_data_dataset(
 
     elif isinstance(dataset, PSFBeadsDataset):
 
-        dash_context["bead_km_df"] = get_table_file_id(
-            conn,
-            dataset.output.key_measurements.data_reference.omero_object_id,
+        dash_context["bead_km_df"] = get_km_mm_metrics_dataset(
+            mm_dataset=dataset, table_name="key_measurements"
         )
+
+        # dash_context["bead_km_df"] = get_table_file_id(
+        #     conn,
+        #     dataset.output.key_measurements.data_reference.omero_object_id,
+        # )
 
     else:
         dash_context = {}
@@ -484,12 +502,6 @@ def load_image(
 
 def _load_image_intensities(image: ImageWrapper) -> np.ndarray:
     return omero_tools.get_image_intensities(image).transpose((2, 0, 3, 4, 1))
-
-
-def load_dataset_data(
-    conn: BlitzGateway, dataset: DatasetWrapper
-) -> mm_schema.MetricsDataset:
-    pass
 
 
 def get_project_data(
@@ -739,3 +751,37 @@ def get_rois_mm_dataset(mm_dataset: mm_schema.MetricsDataset):
                         roi["data"]
                     )
     return images_info
+
+
+# -----------------------------------------------------------------------------------------
+
+
+def get_km_mm_metrics_dataset(
+    mm_dataset,
+    table_name,
+    columns_exceptions=[
+        "omero_object_type",
+        "data_reference",
+        "name",
+        "description",
+        "linked_references",
+        "class_class_name",
+        "table_data",
+    ],
+):
+    table = mm_dataset.output[table_name]
+    table_date = {
+        k: v
+        for k, v in table.__dict__.items()
+        if k not in columns_exceptions and v
+    }
+    df = pd.DataFrame(table_date)
+    return df
+
+
+def load_table_mm_metrics(mm_dataset, table_name):
+    table = mm_dataset.output[table_name]
+    table_date = {v.name: v.values for v in table.columns if v}
+    df = pd.DataFrame(table_date)
+    df = df.apply(lambda col: pd.to_numeric(col, errors="ignore"))
+    return df
