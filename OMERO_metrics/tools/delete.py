@@ -1,5 +1,7 @@
 import logging
 
+import omero
+
 logger = logging.getLogger(__name__)
 from typing import Union
 from OMERO_metrics.tools import omero_tools
@@ -111,6 +113,12 @@ def delete_all_mm_analysis(conn, group_id):
             )
         if len(rois_ids) > 0:
             conn.deleteObjects(graph_spec="Roi", obj_ids=rois_ids, wait=True)
-        return "All microscopemetrics analysis deleted"
+        return "All microscopemetrics analysis deleted", "green"
     except Exception as e:
-        return str(e)
+        if isinstance(e, omero.CmdError):
+            return (
+                "You don't have the necessary permissions to delete the annotations",
+                "red",
+            )
+        else:
+            return str(e), "red"

@@ -337,8 +337,8 @@ def delete_all(request, conn=None, **kwargs):
     """Delete all the files"""
     try:
         group_id = kwargs["group_id"]
-        delete.delete_all_mm_analysis(conn, group_id)
-        return "Files deleted successfully", "green"
+        message, color = delete.delete_all_mm_analysis(conn, group_id)
+        return message, color
     except Exception as e:
         return str(e), "red"
 
