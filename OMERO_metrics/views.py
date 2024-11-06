@@ -377,4 +377,15 @@ def save_threshold(request, conn=None, **kwargs):
                 "red",
             )
     except Exception as e:
-        return str(e), "red"
+        if isinstance(e, omero.SecurityViolation):
+            return (
+                "You don't have the necessary permissions to save the threshold. ",
+                "red",
+            )
+        elif isinstance(e, omero.CmdError):
+            return (
+                "You don't have the necessary permissions to save the threshold. ",
+                "red",
+            )
+        else:
+            return "Something happened. Couldn't save thresholds.", "red"
