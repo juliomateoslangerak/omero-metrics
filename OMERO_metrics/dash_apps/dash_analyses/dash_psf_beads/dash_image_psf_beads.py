@@ -14,21 +14,10 @@ from OMERO_metrics.tools.data_preperation import (
     mip_graphs,
     fig_mip,
 )
-
-# Theme Configuration
-THEME = {
-    "primary": "#189A35",
-    "secondary": "#63aa47",
-    "error": "#FF4136",
-    "success": "#2ECC40",
-    "warning": "#FF851B",
-    "background": "#ffffff",
-    "surface": "#f8f9fa",
-    "text": {
-        "primary": "#2C3E50",
-        "secondary": "#6c757d",
-    },
-}
+from OMERO_metrics.styles import (
+    THEME,
+    MANTINE_THEME,
+)
 
 
 def get_icon(icon, size=20, color=None):
@@ -39,14 +28,7 @@ logger = logging.getLogger(__name__)
 app = DjangoDash("PSF_Beads_image", external_scripts=dmc.styles.ALL)
 
 app.layout = dmc.MantineProvider(
-    theme={
-        "colorScheme": "light",
-        "primaryColor": "green",
-        "components": {
-            "Card": {"styles": {"root": {"borderRadius": "8px"}}},
-            "Select": {"styles": {"input": {"borderRadius": "8px"}}},
-        },
-    },
+    theme=MANTINE_THEME,
     children=[
         dmc.Container(
             [
@@ -187,19 +169,6 @@ app.layout = dmc.MantineProvider(
                                                             rightSection=get_icon(
                                                                 "radix-icons:chevron-down"
                                                             ),
-                                                            styles={
-                                                                "rightSection": {
-                                                                    "pointerEvents": "none"
-                                                                },
-                                                                "item": {
-                                                                    "fontSize": "14px"
-                                                                },
-                                                                "input": {
-                                                                    "borderColor": THEME[
-                                                                        "primary"
-                                                                    ]
-                                                                },
-                                                            },
                                                         ),
                                                         dmc.Divider(
                                                             label="Display Options",
@@ -267,19 +236,6 @@ app.layout = dmc.MantineProvider(
                                                             leftSection=get_icon(
                                                                 "material-symbols:palette"
                                                             ),
-                                                            styles={
-                                                                "rightSection": {
-                                                                    "pointerEvents": "none"
-                                                                },
-                                                                "item": {
-                                                                    "fontSize": "14px"
-                                                                },
-                                                                "input": {
-                                                                    "borderColor": THEME[
-                                                                        "primary"
-                                                                    ]
-                                                                },
-                                                            },
                                                         ),
                                                         dmc.Switch(
                                                             id="color_switch_psf_image",

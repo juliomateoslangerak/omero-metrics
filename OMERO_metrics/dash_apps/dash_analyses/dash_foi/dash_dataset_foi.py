@@ -6,19 +6,17 @@ import plotly.express as px
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 from skimage.exposure import rescale_intensity
-
-# Theme Configuration
-THEME = {
-    "primary": "#189A35",
-    "secondary": "#63aa47",
-    "background": "#ffffff",
-    "surface": "#f8f9fa",
-    "border": "#e9ecef",
-    "text": {
-        "primary": "#2C3E50",
-        "secondary": "#6c757d",
-    },
-}
+from OMERO_metrics.styles import (
+    THEME,
+    MANTINE_THEME,
+    CONTAINER_STYLE,
+    HEADER_PAPER_STYLE,
+    CONTENT_PAPER_STYLE,
+    GRAPH_STYLE,
+    PLOT_LAYOUT,
+    LINE_CHART_SERIES,
+    INPUT_BASE_STYLES,
+)
 
 
 def get_icon(icon, size=20, color=None):
@@ -33,23 +31,12 @@ dash_app_dataset = DjangoDash(
 )
 
 dash_app_dataset.layout = dmc.MantineProvider(
-    theme={
-        "colorScheme": "light",
-        "primaryColor": "green",
-        "components": {
-            "Card": {"styles": {"root": {"borderRadius": "8px"}}},
-            "Select": {"styles": {"input": {"borderRadius": "8px"}}},
-        },
-    },
+    theme=MANTINE_THEME,
     children=[
         dmc.Container(
             [
                 # Header Section
                 dmc.Paper(
-                    shadow="sm",
-                    p="md",
-                    radius="lg",
-                    mb="md",
                     children=[
                         dmc.Group(
                             [
@@ -91,6 +78,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                             justify="space-between",
                         ),
                     ],
+                    **HEADER_PAPER_STYLE,
                 ),
                 # Main Content
                 dmc.Grid(
@@ -102,10 +90,6 @@ dash_app_dataset.layout = dmc.MantineProvider(
                             span=6,
                             children=[
                                 dmc.Paper(
-                                    h="100%",
-                                    shadow="xs",
-                                    p="md",
-                                    radius="md",
                                     children=[
                                         dmc.Stack(
                                             [
@@ -128,16 +112,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                                             rightSection=get_icon(
                                                                 "radix-icons:chevron-down"
                                                             ),
-                                                            styles={
-                                                                "label": {
-                                                                    "fontWeight": 500
-                                                                },
-                                                                "input": {
-                                                                    "borderColor": THEME[
-                                                                        "primary"
-                                                                    ]
-                                                                },
-                                                            },
+                                                            styles=INPUT_BASE_STYLES,
                                                         ),
                                                     ],
                                                     justify="space-between",
@@ -152,9 +127,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                                             "select2d",
                                                         ],
                                                     },
-                                                    style={
-                                                        "height": "300px",
-                                                    },
+                                                    style=GRAPH_STYLE,
                                                 ),
                                             ],
                                             gap="md",
@@ -162,6 +135,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                             h="100%",
                                         ),
                                     ],
+                                    **CONTENT_PAPER_STYLE,
                                 ),
                             ],
                         ),
@@ -170,10 +144,6 @@ dash_app_dataset.layout = dmc.MantineProvider(
                             span=6,
                             children=[
                                 dmc.Paper(
-                                    h="100%",
-                                    shadow="xs",
-                                    p="md",
-                                    radius="md",
                                     children=[
                                         dmc.Stack(
                                             [
@@ -217,6 +187,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                             h="100%",
                                         ),
                                     ],
+                                    **CONTENT_PAPER_STYLE,
                                 ),
                             ],
                         ),
@@ -226,10 +197,6 @@ dash_app_dataset.layout = dmc.MantineProvider(
                 html.Div(id="blank-input"),
                 # Intensity Profiles Section
                 dmc.Paper(
-                    shadow="xs",
-                    p="md",
-                    radius="md",
-                    mt="md",
                     children=[
                         dmc.Stack(
                             [
@@ -263,24 +230,7 @@ dash_app_dataset.layout = dmc.MantineProvider(
                                     h=300,
                                     dataKey="Pixel",
                                     data={},
-                                    series=[
-                                        {
-                                            "name": "Diagonal (↘)",
-                                            "color": "violet.9",
-                                        },
-                                        {
-                                            "name": "Diagonal (↗)",
-                                            "color": "blue.9",
-                                        },
-                                        {
-                                            "name": "Horizontal (→)",
-                                            "color": "pink.9",
-                                        },
-                                        {
-                                            "name": "Vertical (↓)",
-                                            "color": "teal.9",
-                                        },
-                                    ],
+                                    series=LINE_CHART_SERIES,
                                     xAxisLabel="Position (pixels)",
                                     yAxisLabel="Intensity",
                                     tickLine="y",
@@ -296,11 +246,15 @@ dash_app_dataset.layout = dmc.MantineProvider(
                             gap="xl",
                         ),
                     ],
+                    shadow="xs",
+                    p="md",
+                    radius="md",
+                    mt="md",
                 ),
             ],
             size="xl",
             p="md",
-            style={"backgroundColor": THEME["surface"]},
+            style=CONTAINER_STYLE,
         ),
     ],
 )
@@ -398,15 +352,9 @@ def update_visualizations(*args, **kwargs):
         )
 
         fig.update_layout(
-            margin=dict(l=40, r=40, t=40, b=40),
-            plot_bgcolor=THEME["background"],
-            paper_bgcolor=THEME["background"],
+            **PLOT_LAYOUT,
             xaxis_title="X Position (pixels)",
             yaxis_title="Y Position (pixels)",
-            xaxis_showgrid=False,
-            yaxis_showgrid=False,
-            xaxis_zeroline=False,
-            yaxis_zeroline=False,
         )
 
         # Process profile data

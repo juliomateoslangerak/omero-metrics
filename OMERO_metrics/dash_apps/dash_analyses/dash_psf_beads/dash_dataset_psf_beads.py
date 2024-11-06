@@ -3,19 +3,7 @@ from dash import html
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
-
-# Theme Configuration
-THEME = {
-    "primary": "#189A35",
-    "secondary": "#63aa47",
-    "background": "#ffffff",
-    "surface": "#f8f9fa",
-    "border": "#e9ecef",
-    "text": {
-        "primary": "#2C3E50",
-        "secondary": "#6c757d",
-    },
-}
+from OMERO_metrics.styles import THEME, MANTINE_THEME
 
 
 def get_icon(icon, size=20, color=None):
@@ -29,14 +17,7 @@ app = DjangoDash(
 
 
 app.layout = dmc.MantineProvider(
-    theme={
-        "colorScheme": "light",
-        "primaryColor": "green",
-        "components": {
-            "Card": {"styles": {"root": {"borderRadius": "8px"}}},
-            "Select": {"styles": {"input": {"borderRadius": "8px"}}},
-        },
-    },
+    theme=MANTINE_THEME,
     children=[
         dmc.Container(
             [

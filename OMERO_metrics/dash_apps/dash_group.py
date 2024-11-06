@@ -7,6 +7,21 @@ from dash_iconify import DashIconify
 from OMERO_metrics import views
 from time import sleep
 from django.urls import reverse
+from OMERO_metrics.styles import (
+    THEME,
+    MANTINE_THEME,
+    CONTAINER_STYLE,
+    PAPER_STYLE,
+    TABLE_STYLE,
+    TABLE_CELL_STYLE,
+    TABLE_HEADER_STYLE,
+    TAB_STYLES,
+    TAB_ITEM_STYLE,
+    STYLE_DATA_CONDITIONAL,
+    SELECT_STYLES,
+    DATEPICKER_STYLES,
+)
+
 
 dashboard_name = "omero_group_dash"
 dash_app_group = DjangoDash(
@@ -15,31 +30,15 @@ dash_app_group = DjangoDash(
     external_stylesheets=dmc.styles.ALL,
 )
 
-# Theme configuration
-THEME = {
-    "primary": "#189A35",
-    "secondary": "#189A35",
-    "background": "#f8fafc",
-    "surface": "#ffffff",
-    "border": "#e2e8f0",
-    "success": "#10b981",
-    "error": "#ef4444",
-}
 
 dash_app_group.layout = dmc.MantineProvider(
-    theme={
-        "colorScheme": "light",
-        "primaryColor": "green",
-        "components": {
-            "Button": {"styles": {"root": {"fontWeight": 500}}},
-            "Title": {"styles": {"root": {"letterSpacing": "-0.5px"}}},
-        },
-    },
+    theme=MANTINE_THEME,
     children=[
         dmc.NotificationProvider(position="top-center"),
         html.Div(id="notifications-container"),
         dmc.Tabs(
-            [
+            styles=TAB_STYLES,
+            children=[
                 dmc.TabsList(
                     [
                         dmc.TabsTab(
@@ -47,22 +46,14 @@ dash_app_group.layout = dmc.MantineProvider(
                             leftSection=DashIconify(icon="tabler:microscope"),
                             value="microscope_health",
                             color=THEME["primary"],
-                            style={
-                                "fontSize": "1.1rem",
-                                "fontWeight": "bold",
-                                "color": THEME["primary"],
-                            },
+                            style=TAB_ITEM_STYLE,
                         ),
                         dmc.TabsTab(
                             "History",
                             leftSection=DashIconify(icon="bx:history"),
                             value="history",
                             color=THEME["primary"],
-                            style={
-                                "fontSize": "1.1rem",
-                                "fontWeight": "bold",
-                                "color": THEME["primary"],
-                            },
+                            style=TAB_ITEM_STYLE,
                         ),
                     ],
                     grow=True,
@@ -110,20 +101,11 @@ dash_app_group.layout = dmc.MantineProvider(
                                 shadow="sm",
                                 radius="md",
                                 p="lg",
-                                style={
-                                    "width": "100%",
-                                    "maxWidth": "600px",
-                                    "margin": "auto",
-                                },
+                                style=PAPER_STYLE,
                             ),
                         ],
                         fluid=True,
-                        style={
-                            "backgroundColor": THEME["background"],
-                            "margin": "10px",
-                            "borderRadius": "0.5rem",
-                            "padding": "10px",
-                        },
+                        style=CONTAINER_STYLE,
                     ),
                     value="microscope_health",
                 ),
@@ -246,12 +228,7 @@ dash_app_group.layout = dmc.MantineProvider(
                             ),
                         ],
                         fluid=True,
-                        style={
-                            "backgroundColor": THEME["background"],
-                            "margin": "10px",
-                            "borderRadius": "0.5rem",
-                            "padding": "10px",
-                        },
+                        style=CONTAINER_STYLE,
                     ),
                     value="history",
                 ),
@@ -366,54 +343,10 @@ def load_table_project(*args, **kwargs):
         page_action="native",
         page_current=0,
         page_size=5,
-        style_table={
-            "overflowX": "auto",
-            "borderRadius": "0.5rem",
-            "fontFamily": "'Arial', 'Helvetica', sans-serif",
-            "borderCollapse": "collapse",
-            "boxShadow": "0 4px 8px rgba(0, 0, 0, 0.1)",
-            "margin": "20px 0",
-            "borderLeft": "none",
-            "borderRight": "none",
-        },
-        style_cell={
-            "whiteSpace": "normal",
-            "height": "30px",
-            "minWidth": "100px",
-            "width": "100px",
-            "maxWidth": "100px",
-            "textAlign": "left",
-            "textOverflow": "ellipsis",
-            "fontSize": "12px",
-            "fontFamily": "'Arial', 'Helvetica', sans-serif",
-            "color": "#333",
-            "fontWeight": "500",
-            "padding": "10px",
-            "border": "1px solid #ddd",
-            "borderLeft": "none",
-            "borderRight": "none",
-        },
-        style_header={
-            "backgroundColor": THEME["primary"],
-            "fontWeight": "bold",
-            "fontSize": "16px",
-            "paddingTop": "12px",
-            "paddingBottom": "12px",
-            "color": THEME["surface"],
-            "border": "1px solid #ddd",
-            "borderLeft": "none",
-            "borderRight": "none",
-        },
-        style_data_conditional=[
-            {
-                "if": {"row_index": "odd"},
-                "backgroundColor": THEME["background"],
-            },
-            {
-                "if": {"row_index": "even"},
-                "backgroundColor": THEME["surface"],
-            },
-        ],
+        style_table=TABLE_STYLE,
+        style_cell=TABLE_CELL_STYLE,
+        style_header=TABLE_HEADER_STYLE,
+        style_data_conditional=STYLE_DATA_CONDITIONAL,
     )
     map_ann = kwargs["session_state"]["context"]["map_ann"]
     map_ann_subset = map_ann[
@@ -429,54 +362,10 @@ def load_table_project(*args, **kwargs):
         page_action="native",
         page_current=0,
         page_size=5,
-        style_table={
-            "overflowX": "auto",
-            "borderRadius": "0.5rem",
-            "fontFamily": "'Arial', 'Helvetica', sans-serif",
-            "borderCollapse": "collapse",
-            "boxShadow": "0 4px 8px rgba(0, 0, 0, 0.1)",
-            "margin": "20px 0",
-            "borderLeft": "none",
-            "borderRight": "none",
-        },
-        style_cell={
-            "whiteSpace": "normal",
-            "height": "30px",
-            "minWidth": "100px",
-            "width": "100px",
-            "maxWidth": "100px",
-            "textAlign": "left",
-            "textOverflow": "ellipsis",
-            "fontSize": "12px",
-            "fontFamily": "'Arial', 'Helvetica', sans-serif",
-            "color": "#333",
-            "fontWeight": "500",
-            "padding": "10px",
-            "border": "1px solid #ddd",
-            "borderLeft": "none",
-            "borderRight": "none",
-        },
-        style_header={
-            "backgroundColor": THEME["primary"],
-            "fontWeight": "bold",
-            "fontSize": "16px",
-            "paddingTop": "12px",
-            "paddingBottom": "12px",
-            "color": THEME["surface"],
-            "border": "1px solid #ddd",
-            "borderLeft": "none",
-            "borderRight": "none",
-        },
-        style_data_conditional=[
-            {
-                "if": {"row_index": "odd"},
-                "backgroundColor": THEME["background"],
-            },
-            {
-                "if": {"row_index": "even"},
-                "backgroundColor": THEME["surface"],
-            },
-        ],
+        style_table=TABLE_STYLE,
+        style_cell=TABLE_CELL_STYLE,
+        style_header=TABLE_HEADER_STYLE,
+        style_data_conditional=STYLE_DATA_CONDITIONAL,
     )
     return file_ann_table, map_table
 

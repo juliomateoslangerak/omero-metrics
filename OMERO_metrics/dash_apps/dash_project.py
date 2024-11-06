@@ -8,6 +8,18 @@ import pandas as pd
 from microscopemetrics_schema import datamodel as mm_schema
 from OMERO_metrics.tools import dash_forms_tools as dft
 from OMERO_metrics import views
+from OMERO_metrics.styles import (
+    THEME,
+    CARD_STYLE,
+    BUTTON_STYLE,
+    TAB_STYLES,
+    TAB_ITEM_STYLE,
+    CONTAINER_STYLE,
+    SELECT_STYLES,
+    DATEPICKER_STYLES,
+    TABLE_MANTINE_STYLE,
+    MANTINE_THEME,
+)
 
 
 def make_control(text, action_id):
@@ -27,38 +39,6 @@ def make_control(text, action_id):
     )
 
 
-# Modern color palette
-COLORS = {
-    "primary": "#10B981",  # Emerald-500
-    "primary_light": "#D1FAE5",  # Emerald-100
-    "secondary": "#1E293B",  # Slate-800
-    "background": "#F8FAFC",  # Slate-50
-    "surface": "#FFFFFF",
-    "border": "#E2E8F0",  # Slate-200
-    "text": "#334155",  # Slate-700
-    "text_light": "#64748B",  # Slate-500
-}
-
-# Consistent styling
-CARD_STYLE = {
-    "backgroundColor": COLORS["surface"],
-    "borderRadius": "8px",
-    "border": f'1px solid {COLORS["border"]}',
-    "padding": "24px",
-    "height": "100%",
-    "boxShadow": "0 1px 3px 0 rgb(0 0 0 / 0.1)",
-}
-
-BUTTON_STYLE = {
-    "backgroundColor": COLORS["primary"],
-    "color": "white",
-    "fontSize": "14px",
-    "fontWeight": 500,
-    "height": "40px",
-    "padding": "0 16px",
-    "borderRadius": "6px",
-}
-
 # Initialize the Dash app
 dashboard_name = "omero_project_dash"
 dash_app_project = DjangoDash(
@@ -70,291 +50,218 @@ dash_app_project = DjangoDash(
 
 # Define the layout
 dash_app_project.layout = dmc.MantineProvider(
-    theme={
-        "primaryColor": "teal",
-        "components": {
-            "Button": {"styles": {"root": {"fontWeight": 500}}},
-            "Select": {"styles": {"input": {"height": "40px"}}},
-            "DatePicker": {"styles": {"input": {"height": "40px"}}},
-        },
-    },
+    theme=MANTINE_THEME,
     children=[
-        dmc.Container(
-            fluid=True,
-            style={
-                "backgroundColor": COLORS["background"],
-                "minHeight": "100vh",
-                "padding": "24px",
-            },
+        html.Div(id="blank-input"),
+        dmc.Tabs(
+            value="dashboard",
+            styles=TAB_STYLES,
             children=[
-                html.Div(id="blank-input"),
-                # Header Section
-                dmc.Paper(
-                    style={**CARD_STYLE, "marginBottom": "24px"},
+                dmc.TabsList(
                     children=[
-                        dmc.Group(
-                            justify="space-between",
-                            align="center",
-                            children=[
-                                dmc.Group(
-                                    children=[
-                                        html.Img(
-                                            src="/static/OMERO_metrics/images/metrics_logo.png",
-                                            style={"width": "120px"},
-                                        ),
-                                        dmc.Title(
-                                            "Project Dashboard",
-                                            order=2,
-                                            style={
-                                                "color": COLORS["secondary"]
-                                            },
-                                        ),
-                                    ]
-                                ),
-                                dmc.Text(
-                                    f"Last updated: {datetime.now().strftime('%B %d, %Y %H:%M')}",
-                                    c="dimmed",
-                                    size="sm",
-                                ),
-                            ],
-                        ),
-                    ],
-                ),
-                # Navigation Tabs
-                dmc.Tabs(
-                    value="dashboard",
-                    styles={
-                        "tab": {
-                            "fontSize": "14px",
-                            "fontWeight": 500,
-                            "height": "40px",
-                            "borderRadius": "6px",
-                            "&[data-active]": {
-                                "backgroundColor": COLORS["primary_light"],
-                                "color": COLORS["primary"],
-                            },
-                        }
-                    },
-                    children=[
-                        dmc.TabsList(
-                            children=[
-                                dmc.TabsTab(
-                                    "Dashboard",
-                                    value="dashboard",
-                                    leftSection=DashIconify(
-                                        icon="ph:chart-line-bold"
-                                    ),
-                                ),
-                                dmc.TabsTab(
-                                    "Settings",
-                                    value="settings",
-                                    leftSection=DashIconify(
-                                        icon="ph:gear-bold"
-                                    ),
-                                ),
-                                dmc.TabsTab(
-                                    "Thresholds",
-                                    value="thresholds",
-                                    leftSection=DashIconify(
-                                        icon="ph:ruler-bold"
-                                    ),
-                                ),
-                            ],
-                        ),
-                        # Dashboard Panel
-                        dmc.TabsPanel(
+                        dmc.TabsTab(
+                            "Dashboard",
                             value="dashboard",
-                            children=[
-                                # Filters Section
-                                dmc.Paper(
-                                    style={**CARD_STYLE, "marginTop": "24px"},
-                                    children=[
-                                        dmc.Grid(
-                                            children=[
-                                                dmc.GridCol(
-                                                    span=6,
-                                                    children=[
-                                                        dmc.Select(
-                                                            id="project-dropdown",
-                                                            label="Select Measurement",
-                                                            placeholder="Choose a measurement",
-                                                            leftSection=DashIconify(
-                                                                icon="ph:magnifying-glass"
-                                                            ),
-                                                            value="0",
-                                                            rightSection=DashIconify(
-                                                                icon="ph:caret-down"
-                                                            ),
-                                                            allowDeselect=False,
-                                                            styles={
-                                                                "rightSection": {
-                                                                    "pointerEvents": "none"
-                                                                },
-                                                                "item": {
-                                                                    "fontSize": "14px"
-                                                                },
-                                                                "input": {
-                                                                    "borderColor": COLORS[
-                                                                        "primary"
-                                                                    ]
-                                                                },
-                                                                "label": {
-                                                                    "marginBottom": "8px"
-                                                                },
-                                                            },
-                                                        ),
-                                                    ],
-                                                ),
-                                                dmc.GridCol(
-                                                    span=6,
-                                                    children=[
-                                                        dmc.DatePicker(
-                                                            id="date-picker",
-                                                            label="Date Range",
-                                                            type="range",
-                                                            valueFormat="DD-MM-YYYY",
-                                                            placeholder="Select date range",
-                                                            leftSection=DashIconify(
-                                                                icon="ph:calendar"
-                                                            ),
-                                                            styles={
-                                                                "rightSection": {
-                                                                    "pointerEvents": "none"
-                                                                },
-                                                                "item": {
-                                                                    "fontSize": "14px"
-                                                                },
-                                                                "input": {
-                                                                    "borderColor": COLORS[
-                                                                        "primary"
-                                                                    ]
-                                                                },
-                                                                "label": {
-                                                                    "marginBottom": "8px"
-                                                                },
-                                                            },
-                                                        ),
-                                                    ],
-                                                ),
-                                            ],
-                                        ),
-                                    ],
-                                ),
-                                # Chart Section
-                                dmc.Paper(
-                                    style={**CARD_STYLE, "marginTop": "24px"},
-                                    children=[
-                                        dmc.Title(
-                                            "Measurement Trends",
-                                            order=3,
-                                            style={"marginBottom": "24px"},
-                                        ),
-                                        html.Div(
-                                            id="graph-project",
-                                            style={"height": "300px"},
-                                        ),
-                                    ],
-                                ),
-                                # Data Table Section
-                                dmc.Paper(
-                                    style={**CARD_STYLE, "marginTop": "24px"},
-                                    children=[
-                                        dmc.Text(
-                                            id="text_km",
-                                            c="#189A35",
-                                            mt=10,
-                                            ml=10,
-                                            mr=10,
-                                            fw="bold",
-                                        ),
-                                        html.Div(id="click_data"),
-                                    ],
-                                ),
-                            ],
+                            leftSection=DashIconify(icon="ph:chart-line-bold"),
+                            color=THEME["primary"],
+                            style=TAB_ITEM_STYLE,
                         ),
-                        # Settings Panel
-                        dmc.TabsPanel(
+                        dmc.TabsTab(
+                            "Settings",
                             value="settings",
-                            children=[
-                                dmc.Paper(
-                                    style={**CARD_STYLE, "marginTop": "24px"},
-                                    children=[
-                                        dmc.Grid(
-                                            children=[
-                                                dmc.GridCol(
-                                                    id="input_parameters_container",
-                                                    span="6",
-                                                ),
-                                                dmc.GridCol(
-                                                    id="sample_container",
-                                                    span="6",
-                                                ),
-                                            ],
-                                            justify="space-between",
-                                        ),
-                                        dmc.Group(
-                                            justify="flex-end",
-                                            mt="xl",
-                                            children=[
-                                                dmc.Button(
-                                                    "Reset",
-                                                    id="modal-close-button",
-                                                    variant="outline",
-                                                    color="red",
-                                                ),
-                                                dmc.Button(
-                                                    "Update",
-                                                    id="modal-submit-button",
-                                                    style=BUTTON_STYLE,
-                                                ),
-                                            ],
-                                        ),
-                                    ],
-                                ),
-                            ],
+                            leftSection=DashIconify(icon="ph:gear-bold"),
+                            color=THEME["primary"],
+                            style=TAB_ITEM_STYLE,
                         ),
-                        # Thresholds Panel
-                        dmc.TabsPanel(
+                        dmc.TabsTab(
+                            "Thresholds",
                             value="thresholds",
-                            children=[
-                                dmc.Paper(
-                                    style={**CARD_STYLE, "marginTop": "24px"},
-                                    children=[
-                                        dmc.Accordion(
-                                            id="accordion-compose-controls",
-                                            chevron=DashIconify(
-                                                icon="ant-design:plus-outlined"
-                                            ),
-                                            disableChevronRotation=True,
-                                            children=[],
-                                        ),
-                                        dmc.Group(
-                                            justify="flex-end",
-                                            mt="xl",
-                                            children=[
-                                                dmc.Button(
-                                                    "Reset",
-                                                    id="modal-close-button",
-                                                    variant="outline",
-                                                    color="red",
-                                                ),
-                                                dmc.Button(
-                                                    "Update",
-                                                    id="modal-submit-button",
-                                                    style=BUTTON_STYLE,
-                                                ),
-                                            ],
-                                        ),
-                                        dmc.NotificationProvider(
-                                            position="top-center"
-                                        ),
-                                        html.Div(id="notifications-container"),
-                                        html.Div(id="result_data"),
-                                    ],
-                                ),
-                            ],
+                            leftSection=DashIconify(icon="ph:ruler-bold"),
+                            color=THEME["primary"],
+                            style=TAB_ITEM_STYLE,
                         ),
                     ],
+                    grow=True,
+                    justify="space-around",
+                    variant="light",
+                    style={"backgroundColor": THEME["surface"]},
+                ),
+                # Dashboard Panel
+                dmc.TabsPanel(
+                    value="dashboard",
+                    children=dmc.Container(
+                        children=[
+                            # Filters Section
+                            dmc.Paper(
+                                style={
+                                    **CARD_STYLE,
+                                },
+                                children=[
+                                    dmc.Grid(
+                                        children=[
+                                            dmc.GridCol(
+                                                span=6,
+                                                children=[
+                                                    dmc.Select(
+                                                        id="project-dropdown",
+                                                        label="Select Measurement",
+                                                        placeholder="Choose a measurement",
+                                                        leftSection=DashIconify(
+                                                            icon="ph:magnifying-glass"
+                                                        ),
+                                                        value="0",
+                                                        rightSection=DashIconify(
+                                                            icon="ph:caret-down"
+                                                        ),
+                                                        allowDeselect=False,
+                                                        styles=SELECT_STYLES,
+                                                    ),
+                                                ],
+                                            ),
+                                            dmc.GridCol(
+                                                span=6,
+                                                children=[
+                                                    dmc.DatePicker(
+                                                        id="date-picker",
+                                                        label="Date Range",
+                                                        type="range",
+                                                        valueFormat="DD-MM-YYYY",
+                                                        placeholder="Select date range",
+                                                        leftSection=DashIconify(
+                                                            icon="ph:calendar"
+                                                        ),
+                                                        styles=DATEPICKER_STYLES,
+                                                    ),
+                                                ],
+                                            ),
+                                        ],
+                                    ),
+                                ],
+                            ),
+                            # Chart Section
+                            dmc.Paper(
+                                style={**CARD_STYLE, "marginTop": "12px"},
+                                children=[
+                                    dmc.Title(
+                                        "Measurement Trends",
+                                        order=3,
+                                        style={"marginBottom": "12px"},
+                                    ),
+                                    html.Div(
+                                        id="graph-project",
+                                        style={"height": "300px"},
+                                    ),
+                                ],
+                            ),
+                            # Data Table Section
+                            dmc.Paper(
+                                style={**CARD_STYLE, "marginTop": "12px"},
+                                children=[
+                                    dmc.Text(
+                                        id="text_km",
+                                        c="#189A35",
+                                        mt=10,
+                                        ml=10,
+                                        mr=10,
+                                        fw="bold",
+                                    ),
+                                    html.Div(id="click_data"),
+                                ],
+                            ),
+                        ],
+                        fluid=True,
+                        style=CONTAINER_STYLE,
+                    ),
+                ),
+                # Settings Panel
+                dmc.TabsPanel(
+                    value="settings",
+                    children=dmc.Container(
+                        children=[
+                            dmc.Paper(
+                                style={**CARD_STYLE, "marginTop": "12px"},
+                                children=[
+                                    dmc.Grid(
+                                        children=[
+                                            dmc.GridCol(
+                                                id="input_parameters_container",
+                                                span="6",
+                                            ),
+                                            dmc.GridCol(
+                                                id="sample_container",
+                                                span="6",
+                                            ),
+                                        ],
+                                        justify="space-between",
+                                    ),
+                                    dmc.Group(
+                                        justify="flex-end",
+                                        mt="xl",
+                                        children=[
+                                            dmc.Button(
+                                                "Reset",
+                                                id="modal-close-button",
+                                                variant="outline",
+                                                color="red",
+                                            ),
+                                            dmc.Button(
+                                                "Update",
+                                                id="modal-submit-button",
+                                                style=BUTTON_STYLE,
+                                            ),
+                                        ],
+                                    ),
+                                ],
+                            ),
+                        ],
+                        fluid=True,
+                        style=CONTAINER_STYLE,
+                    ),
+                ),
+                # Thresholds Panel
+                dmc.TabsPanel(
+                    value="thresholds",
+                    children=dmc.Container(
+                        children=[
+                            dmc.Paper(
+                                style={**CARD_STYLE, "marginTop": "12px"},
+                                children=[
+                                    dmc.Accordion(
+                                        id="accordion-compose-controls",
+                                        chevron=DashIconify(
+                                            icon="ant-design:plus-outlined"
+                                        ),
+                                        disableChevronRotation=True,
+                                        children=[],
+                                    ),
+                                    dmc.Group(
+                                        justify="flex-end",
+                                        mt="xl",
+                                        children=[
+                                            dmc.Button(
+                                                "Reset",
+                                                id="modal-close-button",
+                                                variant="outline",
+                                                color="red",
+                                            ),
+                                            dmc.Button(
+                                                "Update",
+                                                id="modal-submit-button",
+                                                style=BUTTON_STYLE,
+                                            ),
+                                        ],
+                                    ),
+                                    dmc.NotificationProvider(
+                                        position="top-center"
+                                    ),
+                                    html.Div(id="notifications-container"),
+                                    html.Div(id="result_data"),
+                                ],
+                            ),
+                        ],
+                        fluid=True,
+                        style=CONTAINER_STYLE,
+                    ),
                 ),
             ],
         ),
@@ -478,14 +385,7 @@ def update_project_view(*args, **kwargs):
                         "caption": "Key Measurements for the selected dataset",
                     },
                     highlightOnHover=True,
-                    style={
-                        "background-color": "white",
-                        "width": "98%",
-                        "height": "auto",
-                        "margin": "5px",
-                        "border-radius": "0.5rem",
-                        "align": "center",
-                    },
+                    style=TABLE_MANTINE_STYLE,
                 )
             ]
         )

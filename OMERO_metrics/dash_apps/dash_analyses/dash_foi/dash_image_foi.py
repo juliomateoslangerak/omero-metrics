@@ -6,19 +6,17 @@ from plotly.express.imshow_utils import rescale_intensity
 import dash_mantine_components as dmc
 import plotly.express as px
 import plotly.graph_objects as go
-
-THEME = {
-    "primary": "#189A35",
-    "secondary": "#63aa47",
-    "accent": "#14b8a6",
-    "background": "#ffffff",
-    "surface": "#f8f9fa",
-    "border": "#e9ecef",
-    "text": {
-        "primary": "#2C3E50",
-        "secondary": "#6c757d",
-    },
-}
+from OMERO_metrics.styles import (
+    THEME,
+    MANTINE_THEME,
+    CONTAINER_STYLE,
+    HEADER_PAPER_STYLE,
+    CONTENT_PAPER_STYLE,
+    GRAPH_STYLE,
+    PLOT_LAYOUT,
+    LINE_CHART_SERIES,
+    INPUT_BASE_STYLES,
+)
 
 
 def get_icon(icon, size=20, color=None):
@@ -217,24 +215,7 @@ def create_intensity_profile():
                         h=250,
                         dataKey="Pixel",
                         data={},
-                        series=[
-                            {
-                                "name": "Diagonal (↘)",
-                                "color": "violet.9",
-                            },
-                            {
-                                "name": "Diagonal (↗)",
-                                "color": "blue.9",
-                            },
-                            {
-                                "name": "Horizontal (→)",
-                                "color": "pink.9",
-                            },
-                            {
-                                "name": "Vertical (↓)",
-                                "color": "teal.9",
-                            },
-                        ],
+                        series=LINE_CHART_SERIES,
                         xAxisLabel="Position (pixels)",
                         yAxisLabel="Intensity",
                         tickLine="y",
@@ -305,13 +286,7 @@ dash_app_image.layout = dmc.MantineProvider(
             style={"backgroundColor": THEME["background"]},
         )
     ],
-    theme={
-        "colorScheme": "light",
-        "primaryColor": "blue",
-        "components": {
-            "Paper": {"defaultProps": {"withBorder": True}},
-        },
-    },
+    theme=MANTINE_THEME,
 )
 
 
