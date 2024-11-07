@@ -1,0 +1,160 @@
+# Why to monitor<br>microscope condition?
+
+Microscopes are sophisticated optical instruments that take extremely precise measurements on biologic samples.
+Therefore, it is essential not only to keep them in good condition but also to know what their condition is.
+
+>Every careful measurement in science is always given with the probable error ...
+>every observer admits that he is likely wrong,
+>and knows about how much wrong he is likely to be.
+>
+><span class="quote_author">Bertrand Russell</span>
+
+## Key objectives<br>when monitoring microscope condition
+
+1. Ensure that performance degradation is detected as soon as possible
+2. Help the core staff to diagnose the problem and react accordingly
+3. Provide evidence serving in the dialogue with microscope manufacturers and service providers
+4. Calibrate hardware
+5. Provide quality assurance and analysis data and meta-data to the users of the facility
+
+
+# When to monitor<br>microscope condition?
+The monitoring of the microscope condition should be done at different moments to ensure
+that the equipment is performing according to a predefined specifications chart.
+
+- **During the installation** of new equipment to ensure the acceptance of the installation
+and establish the baseline for the future.
+- **During the service life** of the system:
+  - after the periodic maintenance is carried out either by the core facility staff or by an
+  external service provider.
+  - when there is a doubt about the performance of the equipment.
+  - when there is a change in the equipment or its environment.
+
+# *OMERO-metrics* is a new web tool<br>for microscope performance monitoring
+
+OMERO-metrics aims to provide a comprehensive solution for monitoring the performance of microscopes.
+
+- It draws on the experience of MetroloJ-QC: it is tested
+- uses the OMERO platform to store and manage metrology data: it is FAIR
+- uses OMERO-web's visualization capabilities to provide an interface: it is user-friendly
+
+# How does it work?
+
+1. First time **configuration** of the analysis you want to perform
+2. **Import images** into OMERO in a well defined structure
+3. **Run** the analysis using the pre-configured parameters
+4. **Visualize** the results in a dashboard
+
+## UML diagram
+
+If you whish to see the UML diagram, here it is:
+
+```{mermaid}
+flowchart LR
+    C0[Create project]
+    T1[Select project]
+    T2{has config?}
+    C1[Create config]
+    V3[Render timecourse view]
+    V4[Render add datasets view]
+    T1 --> T2
+    T2 -- no --> C1
+    T2 -- yes --> V2
+    subgraph CONFIGURATION
+    C1 --> T2
+    end
+    subgraph IMPORT
+    end
+    subgraph RUN
+    end
+    subgraph VISUALIZE
+    V2{has datasets?}
+    V2 -- yes --> V3
+    V2 -- no --> V4
+    end
+   ```
+
+# 1. Configure the analysis
+
+The first step, and only to be the first time, is to configure the analysis that you plan to run.
+
+- Create a new OMERO Project for every analysis you want to perform
+- For each Project/Analysis define its type
+- Once the analysis type is chosen, define the parameters that will be used to run the analysis using a form
+- Save the parameters
+
+# 2. Import image data into OMERO
+
+OMERO is a server-client platform for managing, visualizing, and analyzing microscope images and metadata.
+
+## 2.1. Importing images
+
+Acquired images are imported into OMERO following a well defined structure.
+
+::: {.r-stack}
+![](./media/import_image_data_full){.fragment}
+
+![](./media/import_image_data_group){.fragment}
+
+![](./media/import_image_data_project){.fragment}
+
+![](./media/import_image_data_dataset){.fragment}
+
+![](./media/import_image_data_images){.fragment}
+:::
+
+# 3. Run the analysis
+
+Now that the images are imported into OMERO, the next step is to run the analysis.
+
+## 3.1. Run the analysis
+If a dataset has not been analyzed yet, the user will have the possibility to trigger the analysis.
+
+## 3.2. Parametrize the analysis
+The user will be able to parametrize the analysis defaulting to the parameters defined in the configuration step.
+
+# 4. Visualize the results
+
+OMERO-metrics provides a dashboard to visualize the results of the analysis at different levels.
+
+## 4.1. Group level
+At the group level, the user will be able to see a summary of the status of the microscope.
+
+## 4.2. Project level
+At the project level, the user will be able to see the results of the analysis for all the datasets in the project.
+The user will be able to browse, across time, the results of the analysis.
+
+## 4.3. Dataset level
+At the dataset level, the user will be able to see the results of the analysis for all the images in the dataset,
+providing a more detailed view of the state of the microscope at that time.
+
+## 4.4. Image level
+At the image level, the user will be able to see the results of the analysis for a single image.
+
+# Attributions
+
+* FBI-core facility integration Cedric
+* FBI-data: Guillaume
+* Project responsible: Julio
+* Project developer: Oumou
+* WG-microscope-metrics: WGMM
+    * Dauphin Aurelien
+    * Sylvain Derossi
+    * Audrey Salles
+    * Erwan GRANDGIRARD
+
+# Documentation
+
+Further documentation will come soon at [https://microscopemetrics.readthedocs.io](https://microscopemetrics.readthedocs.io)
+
+# Licensing
+
+The code is distributed as open source under GPL 3.0. The main reason being that it is the license used by the OME consortium.
+
+# References
+
+\[1\] Cédric Matthews and Fabrice P. Cordelieres, MetroloJ : an ImageJ plugin to help monitor microscopes' health, in ImageJ User & Developer Conference 2010 proceedings.
+
+\[2\] Theer, P., Mongis, C. & Knop, M. PSFj: know your fluorescence microscope. Nat Methods 11, 981–982 (2014). [doi.org/10.1038/nmeth.3102](https://doi.org/10.1038/nmeth.3102)
+
+\[3\] [argolight.com/measure-microscopes-performances-detect-issues-with-daybook](http://argolight.com/measure-microscopes-performances-detect-issues-with-daybook/)
