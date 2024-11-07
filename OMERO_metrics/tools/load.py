@@ -719,6 +719,7 @@ def get_image_info_mm_dataset(mm_dataset: mm_schema.MetricsDataset):
             "id": i.data_reference.omero_object_id,
             "n_channel": i.shape_c,
             "roi": {"Rectangle": [], "Line": [], "Point": []},
+            "intensity_profiles": [],
         }
         for i in mm_images
     }
@@ -751,9 +752,6 @@ def get_rois_mm_dataset(mm_dataset: mm_schema.MetricsDataset):
                         roi["data"]
                     )
     return images_info
-
-
-# -----------------------------------------------------------------------------------------
 
 
 def get_km_mm_metrics_dataset(

@@ -52,12 +52,12 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                         dmc.Stack(
                                             [
                                                 dmc.Title(
-                                                    "Field of Illumination Analysis",
+                                                    "Field of Illumination Dataset Analysis",
                                                     c=THEME["primary"],
                                                     size="h2",
                                                 ),
                                                 dmc.Text(
-                                                    "Microscopy Image Analysis Dashboard",
+                                                    "Dataset Dashboard",
                                                     c=THEME["text"][
                                                         "secondary"
                                                     ],

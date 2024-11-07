@@ -8,10 +8,10 @@ from microscopemetrics_schema import datamodel as mm_schema
 from OMERO_metrics.tools import dash_forms_tools as dft
 from time import sleep
 import OMERO_metrics.views as views
-from OMERO_metrics.styles import (
-    THEME,
-    MANTINE_THEME,
-)
+from OMERO_metrics.styles import MANTINE_THEME, THEME
+
+# TODO: change the styles import
+
 
 DATASET_TO_INPUT = {
     "FieldIlluminationDataset": mm_schema.FieldIlluminationInputParameters,

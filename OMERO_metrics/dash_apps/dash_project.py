@@ -19,6 +19,7 @@ from OMERO_metrics.styles import (
     DATEPICKER_STYLES,
     TABLE_MANTINE_STYLE,
     MANTINE_THEME,
+    HEADER_PAPER_STYLE,
 )
 
 
@@ -53,6 +54,48 @@ dash_app_project.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
         html.Div(id="blank-input"),
+        dmc.Paper(
+            children=[
+                dmc.Group(
+                    [
+                        dmc.Group(
+                            [
+                                html.Img(
+                                    src="/static/OMERO_metrics/images/metrics_logo.png",
+                                    style={
+                                        "width": "120px",
+                                        "height": "auto",
+                                    },
+                                ),
+                                dmc.Stack(
+                                    [
+                                        dmc.Title(
+                                            "Project Dashboard",
+                                            c=THEME["primary"],
+                                            size="h2",
+                                        ),
+                                        dmc.Text(
+                                            "Microscopy Image Analysis Dashboard",
+                                            c=THEME["text"]["secondary"],
+                                            size="sm",
+                                        ),
+                                    ],
+                                    gap="xs",
+                                ),
+                            ],
+                        ),
+                        dmc.Badge(
+                            "Project Analysis",
+                            color="green",
+                            variant="dot",
+                            size="lg",
+                        ),
+                    ],
+                    justify="space-between",
+                ),
+            ],
+            **HEADER_PAPER_STYLE,
+        ),
         dmc.Tabs(
             value="dashboard",
             styles=TAB_STYLES,
@@ -200,13 +243,13 @@ dash_app_project.layout = dmc.MantineProvider(
                                         children=[
                                             dmc.Button(
                                                 "Reset",
-                                                id="modal-close-button",
+                                                id="reset_config",
                                                 variant="outline",
                                                 color="red",
                                             ),
                                             dmc.Button(
                                                 "Update",
-                                                id="modal-submit-button",
+                                                id="submit_config",
                                                 style=BUTTON_STYLE,
                                             ),
                                         ],
