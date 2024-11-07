@@ -263,12 +263,14 @@ class DatasetManager:
         try:
             logger.warning("Deleting processed data...")
             delete.delete_dataset_output(self._conn, self.mm_dataset)
-            self.mm_dataset.validated = False
-            self.mm_dataset.processed = False
         except Exception as e:
             logger.error(f"Error deleting processed data: {e}")
             self.mm_dataset.validated = False
             return False
+        else:
+            self.mm_dataset.validated = False
+            self.mm_dataset.processed = False
+            logger.info("Processed data deleted.")
 
         return True
 

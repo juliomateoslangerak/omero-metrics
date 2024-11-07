@@ -34,6 +34,13 @@ def delete_data_references(mm_obj: mm_schema.MetricsObject) -> None:
 def delete_dataset_output(
     conn: BlitzGateway, dataset: mm_schema.MetricsDataset
 ):
+    object_types = (
+        [
+            "Annotation",
+            "Roi",
+            "Image/Pixels/Channel",
+        ],
+    )
     ids_to_del = []
     for field in fields(dataset.output):
         try:
@@ -44,30 +51,23 @@ def delete_dataset_output(
         except AttributeError:
             continue
 
-    del_success = omero_tools.del_objects(
+    if not omero_tools.have_delete_permission(
         conn=conn,
         object_ids=ids_to_del,
-        object_types=[
-            "Annotation",
-            "Roi",
-            "Image/Pixels/Channel",
-        ],
+        object_types=object_types,
+    ):
+        raise PermissionError(
+            "You don't have the necessary permissions to delete the dataset output."
+        )
+
+    omero_tools.del_objects(
+        conn=conn,
+        object_types=object_types,
+        object_ids=ids_to_del,
         delete_anns=True,
         delete_children=True,
         dry_run_first=True,
     )
-
-    if del_success:
-        dataset.output = None
-        dataset.validated = False
-        dataset.processed = False
-        return True
-
-    else:
-        logger.error(
-            f"Error deleting dataset (id:{dataset.data_reference.omero_object_id}) output"
-        )
-        return False
 
 
 def delete_dataset_file_ann(

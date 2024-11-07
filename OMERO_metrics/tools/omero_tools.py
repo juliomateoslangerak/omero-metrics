@@ -1144,15 +1144,33 @@ def _link_image_to_dataset(
     conn.getUpdateService().saveObject(link)
 
 
+def have_delete_permission(
+    conn: BlitzGateway,
+    object_types: list,
+    object_ids: list[int],
+):
+    return all(
+        conn.getObject(ot, oid).canDelete()
+        for ot, oid in zip(object_types, object_ids)
+    )
+
+
 def del_objects(
     conn: BlitzGateway,
-    object_ids: list[int],
     object_types: list,
+    object_ids: list[int],
     delete_anns: bool = True,
     delete_children: bool = True,
+    check_permission: bool = False,
     dry_run_first: bool = True,
 ):
-    """Delete objects from OMERO"""
+    if check_permission and not have_delete_permission(
+        conn, object_types, object_ids
+    ):
+        raise PermissionError(
+            "You do not have permission to delete the object"
+        )
+
     if dry_run_first:
         try:
             conn.deleteObjects(
@@ -1161,10 +1179,12 @@ def del_objects(
                 deleteAnns=delete_anns,
                 deleteChildren=delete_children,
                 dryRun=True,
+                wait=True,
             )
         except Exception as e:
             logger.error(f"Error during dry run deletion: {e}")
-            return False
+            raise e
+
     try:
         conn.deleteObjects(
             graph_spec="/".join(object_types),
@@ -1173,10 +1193,9 @@ def del_objects(
             deleteChildren=delete_children,
             dryRun=False,
         )
-        return True
     except Exception as e:
         logger.error(f"Error during deletion: {e}")
-        return False
+        raise e
 
 
 def del_object(
@@ -1187,7 +1206,7 @@ def del_object(
     delete_children: bool = True,
     dry_run_first: bool = True,
 ):
-    return del_objects(
+    del_objects(
         conn=conn,
         object_ids=[object_id],
         object_types=object_type,
