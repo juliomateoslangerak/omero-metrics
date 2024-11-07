@@ -18,7 +18,7 @@
 #
 from setuptools import setup, find_packages
 
-url = "https://github.com/Wapaa/OMERO-metrics"
+url = "https://github.com/MontpellierRessourcesImagerie/OMERO-metrics"
 version = "0.1.0.dev0"
 
 setup(

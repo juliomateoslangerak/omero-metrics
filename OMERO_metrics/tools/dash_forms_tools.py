@@ -3,17 +3,21 @@ from dataclasses import fields
 from dash_iconify import DashIconify
 import re
 
+
 Field_TYPE_MAPPING = {
-    "float": "NumberInput",
-    "int": "NumberInput",
-    "str": "TextInput",
-    "bool": "Checkbox",
+    "float": ["NumberInput", "carbon:character-decimal"],
+    "int": ["NumberInput", "carbon:character-whole-number"],
+    "str": ["TextInput", "carbon:string-text"],
 }
 from typing import get_origin, get_args, Union
 
 
-def extract_form_data(form_content):
-    return {i["props"]["id"]: i["props"]["value"] for i in form_content}
+def extract_form_data(form_content, class_name):
+    replace_str = class_name + "_"
+    return {
+        i["props"]["id"].replace(replace_str, ""): i["props"]["value"]
+        for i in form_content
+    }
 
 
 def disable_all_fields_dash_form(form):
@@ -54,9 +58,13 @@ def get_dmc_field_input(
     field, mm_object, type_mapping=Field_TYPE_MAPPING, disabled=False
 ):
     field_info = get_field_types(field)
-    input_field_name = getattr(dmc, type_mapping[field_info["type"]])
+    input_field_name = getattr(dmc, type_mapping[field_info["type"]][0])
     input_field = input_field_name()
-    input_field.id = field_info["field_name"].replace(" ", "_").lower()
+    input_field.id = (
+        mm_object.class_name
+        + "_"
+        + field_info["field_name"].replace(" ", "_").lower()
+    )
     input_field.label = field_info["field_name"]
     input_field.placeholder = "Enter " + field_info["field_name"]
     input_field.value = (
@@ -64,12 +72,14 @@ def get_dmc_field_input(
         if getattr(mm_object, field.name) is None
         else getattr(mm_object, field.name)
     )
-    input_field.w = "300"
+    input_field.w = "auto"
     input_field.disabled = disabled
     input_field.required = not field_info["optional"]
-    input_field.leftSection = DashIconify(icon="radix-icons:ruler-horizontal")
-    # if not field_info['optional']:
-    #     input_field.error = "This field is required"
+    input_field.leftSection = DashIconify(
+        icon=type_mapping[field_info["type"]][1]
+    )
+    input_field.maxWidth = "450px"
+
     return input_field
 
 
@@ -86,7 +96,9 @@ def validate_form(state):
 
 
 def add_space_between_capitals(s: str) -> str:
-    return re.sub(r"(?<!^)(?=[A-Z])", " ", s)
+    label = re.sub(r"(?<!^)(?=[A-Z])", " ", s)
+    label = label.replace("P S F", "PSF")
+    return label
 
 
 class DashForm:
@@ -97,17 +109,12 @@ class DashForm:
         self.form = self.get_form()
 
     def get_form(self):
-        form_content = dmc.Stack(
+        form_content = dmc.Fieldset(
             id=self.form_id,
             children=[],
-            align="center",
-            style={
-                "width": "auto",
-                "height": "auto",
-                "padding": "10px",
-                "border-radius": "0.5rem",
-                "border": "1px solid #189A35",
-            },
+            legend=add_space_between_capitals(self.mm_object.class_name),
+            variant="filled",
+            radius="md",
         )
         for field in fields(self.mm_object):
             form_content.children.append(
@@ -115,9 +122,4 @@ class DashForm:
                     field, self.mm_object, disabled=self.disabled
                 )
             )
-        # form_content.children.append(
-        #     dmc.Button(
-        #         id="submit_id", children=["Submit"], color="green", n_clicks=0
-        #     )
-        # )
         return form_content

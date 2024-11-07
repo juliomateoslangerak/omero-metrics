@@ -23,7 +23,7 @@ min_step = 0
 max_step = 3
 active = 0
 
-formManager = dft.DashForm(
+formManager = dft.dashForm(
     mm_schema.Sample, disabled=False, form_id="form_content"
 )
 sampleFORM = formManager.form
@@ -47,6 +47,7 @@ stylesheets = [
     "https://unpkg.com/@mantine/carousel@7/styles.css",
     "https://unpkg.com/@mantine/notifications@7/styles.css",
     "https://unpkg.com/@mantine/nprogress@7/styles.css",
+    "./assets/omero_metrics.css",
 ]
 dashboard_name = "omero_dataset_form"
 dash_form_project = DjangoDash(
@@ -279,7 +280,7 @@ def update_setup(*args, **kwargs):
     input_parameters_mm = input_parameters_object(
         **input_parameters["input_parameters"]
     )
-    form = dft.DashForm(
+    form = dft.dashForm(
         input_parameters_mm, disabled=True, form_id="input_parameters_form"
     )
     return form.form

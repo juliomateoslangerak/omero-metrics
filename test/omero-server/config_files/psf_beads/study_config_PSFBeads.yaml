@@ -1,0 +1,20 @@
+input_parameters:
+  type: PSFBeadsInputParameters
+  fields:
+    min_lateral_distance_factor: 20.0
+    sigma_z: 1.0
+    sigma_y: 1.0
+    sigma_x: 1.0
+    snr_threshold: 10.0
+    fitting_r2_threshold: 0.85
+    intensity_robust_z_score_threshold: 2.0
+    bit_depth: 16
+    saturation_threshold: 0.01
+sample:
+  type: PSFBeads
+  fields:
+    name: PSF beads
+    description: 100 nm PS-Speck™ Microscope Point Source in 4 wavelengths
+    protocol: https://www.protocols.io/view/monitoring-the-point-spread-function-for-quality-bp2l61ww1vqe/v1
+    manufacturer: Thermophisher
+    bead_diameter_micron: 0.1

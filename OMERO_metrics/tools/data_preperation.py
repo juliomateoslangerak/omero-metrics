@@ -339,7 +339,7 @@ def get_intensity_map_image(image_name, list_file):
 # ---------------------------------------dash_functions--------------------------------------------------
 
 
-def fig_mip(mip_x, mip_y, mip_z, title):
+def fig_mip(mip_x, mip_y, mip_z):
     fig = make_subplots(
         rows=2,
         cols=2,
@@ -350,7 +350,7 @@ def fig_mip(mip_x, mip_y, mip_z, title):
     fig = fig.add_trace(mip_y.data[0], row=1, col=2)
     fig = fig.add_trace(mip_z.data[0], row=2, col=1)
     fig = fig.update_layout(
-        title_text=title,
+        # title_text=title,
         coloraxis=dict(colorscale="hot"),
         autosize=False,
     )
@@ -390,12 +390,21 @@ def fig_mip(mip_x, mip_y, mip_z, title):
 
 
 def mip_graphs(
-    x0: int, xf: int, y0: int, yf: int, stack: Union[np.array, list]
+    x0: int,
+    xf: int,
+    y0: int,
+    yf: int,
+    stack: Union[np.array, list],
+    do_sqrt: bool = True,
 ):
     image_bead = stack[:, y0:yf, x0:xf]
     image_x = np.max(image_bead, axis=2)
     image_y = np.max(image_bead, axis=1)
     image_z = np.max(image_bead, axis=0)
+    if do_sqrt:
+        image_x = np.sqrt(image_x)
+        image_y = np.sqrt(image_y)
+        image_z = np.sqrt(image_z)
     image_x = image_x / image_x.max()
     image_y = image_y / image_y.max()
     image_z = image_z / image_z.max()
@@ -451,6 +460,3 @@ def image_3d_chart(image_bead):
         scene_zaxis_showticklabels=False,
     )
     return fig
-
-
-# ---------------------------------------READING FROM MM_DATASET--------------------------------------------------

@@ -51,13 +51,11 @@ services:
       - type: bind
         source: ./config_files/config.omero
         target: /opt/omero/web/config/config.omero
-      - type: bind
-        source: ./logs
-        target: /opt/omero/web/OMERO.web/var/logs
     networks:
       - omero
     ports:
       - "5080:4080"
+
 
 networks:
   omero:

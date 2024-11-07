@@ -96,7 +96,7 @@ COLUMN_TYPES = {
 }
 
 
-def set_group(conn: BlitzGateway, obj: BlitzObjectWrapper) -> None:
+def can_write(conn: BlitzGateway, obj: BlitzObjectWrapper) -> None:
     """
     This function is bluntly and shamelessly copied from ezomero:
     https://github.com/TheJacksonLaboratory/ezomero/
@@ -109,7 +109,6 @@ def set_group(conn: BlitzGateway, obj: BlitzObjectWrapper) -> None:
     owner_ids = [e.getId() for e in owners]
     member_ids = [e.getId() for e in members]
     if (user_id in owner_ids) or (user_id in member_ids):
-        conn.setGroupForSession(obj_group_id)
         return True
     else:
         logging.warning(
@@ -660,7 +659,6 @@ def _get_tile_list(zct_list, data_shape, tile_size):
 def create_roi(
     conn: BlitzGateway, image: ImageWrapper, shapes: list, name, description
 ):
-    # set_group(conn, image)
     # create an ROI, link it to Image
     roi = RoiI()
     # use the omero.model.ImageI that underlies the 'image' wrapper
@@ -672,7 +670,10 @@ def create_roi(
     for shape in shapes:
         roi.addShape(shape)
 
-    return RoiWrapper(conn, conn.getUpdateService().saveAndReturnObject(roi))
+    return RoiWrapper(
+        conn,
+        conn.getUpdateService().saveAndReturnObject(roi, conn.SERVICE_OPTS),
+    )
 
 
 def _rgba_to_int(rgba_color: mm_schema.Color):
@@ -1029,13 +1030,17 @@ def create_table(
 ):
     """Creates a table annotation from a pandas dataframe or a list of columns as dictionaries."""
     # We need to change the connection group in order to be able to save the table.
-
+    if isinstance(omero_object, list):
+        group_id = omero_object[0].getDetails().getGroup().getId()
+    else:
+        group_id = omero_object.getDetails().getGroup().getId()
     table_name = f'{table_name}_{"".join([choice(ascii_letters) for _ in range(32)])}.h5'
     columns = _create_columns(table)
     resources = conn.c.sf.sharedResources()
-
     repository_id = resources.repositories().descriptions[0].getId().getValue()
-    table = resources.newTable(repository_id, table_name)
+    table = resources.newTable(
+        repository_id, table_name, {"omero.group": str(group_id)}
+    )
     table.initialize(columns)
     table.addData(columns)
     original_file = table.getOriginalFile()

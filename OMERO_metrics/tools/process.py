@@ -6,7 +6,7 @@ from typing import Union
 from microscopemetrics.analyses import (
     argolight,
     field_illumination,
-    numpy_to_image_byref,
+    # numpy_to_image_byref,
 )
 from microscopemetrics_schema.datamodel import (
     microscopemetrics_schema as mm_schema,
