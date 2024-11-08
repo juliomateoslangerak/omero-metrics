@@ -10,6 +10,8 @@ from OMERO_metrics.views import run_analysis_view
 from OMERO_metrics.styles import (
     THEME,
     MANTINE_THEME,
+    HEADER_PAPER_STYLE,
+    CONTAINER_STYLE,
 )
 
 active = 0
@@ -31,64 +33,57 @@ dash_form_project = DjangoDash(
 dash_form_project.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
-        dmc.Container(
-            [
-                # Header Section
-                dmc.Paper(
-                    shadow="sm",
-                    p="md",
-                    radius="lg",
-                    mb="md",
-                    children=[
+        # Header Section
+        dmc.Paper(
+            children=[
+                dmc.Group(
+                    [
                         dmc.Group(
                             [
-                                dmc.Group(
+                                html.Img(
+                                    src="/static/OMERO_metrics/images/metrics_logo.png",
+                                    style={
+                                        "width": "120px",
+                                        "height": "auto",
+                                    },
+                                ),
+                                dmc.Stack(
                                     [
-                                        html.Img(
-                                            src="/static/OMERO_metrics/images/metrics_logo.png",
-                                            style={
-                                                "width": "120px",
-                                                "height": "auto",
-                                            },
+                                        dmc.Title(
+                                            "Analysis Dashboard",
+                                            c=THEME["primary"],
+                                            size="h2",
                                         ),
-                                        dmc.Stack(
-                                            [
-                                                dmc.Title(
-                                                    "Analysis Dashboard",
-                                                    c=THEME["primary"],
-                                                    size="h2",
-                                                ),
-                                                dmc.Text(
-                                                    "Configure and run your analysis",
-                                                    c=THEME["text"][
-                                                        "secondary"
-                                                    ],
-                                                    size="sm",
-                                                ),
-                                            ],
-                                            gap="xs",
+                                        dmc.Text(
+                                            "Configure and run your analysis",
+                                            c=THEME["text"]["secondary"],
+                                            size="sm",
                                         ),
                                     ],
-                                ),
-                                dmc.Badge(
-                                    "Analysis Form",
-                                    color="green",
-                                    variant="dot",
-                                    size="lg",
+                                    gap="xs",
                                 ),
                             ],
-                            justify="space-between",
+                        ),
+                        dmc.Badge(
+                            "Analysis Form",
+                            color=THEME["primary"],
+                            variant="dot",
+                            size="lg",
                         ),
                     ],
+                    justify="space-between",
                 ),
+            ],
+            **HEADER_PAPER_STYLE,
+        ),
+        dmc.Container(
+            [
                 # Main content
                 dmc.Paper(
                     id="main-content",
                     shadow="xs",
-                    p="xl",
-                    mt="md",
+                    p="md",
                     radius="md",
-                    style={"backgroundColor": "white"},
                     children=[
                         # Progress indicator
                         dmc.Progress(
@@ -282,8 +277,8 @@ dash_form_project.layout = dmc.MantineProvider(
                 html.Div(id="blank"),
             ],
             size="xl",
-            px="md",
-            py="xl",
+            p="md",
+            style=CONTAINER_STYLE,
         ),
     ],
 )

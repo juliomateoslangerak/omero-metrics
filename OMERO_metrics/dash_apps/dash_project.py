@@ -84,11 +84,33 @@ dash_app_project.layout = dmc.MantineProvider(
                                 ),
                             ],
                         ),
-                        dmc.Badge(
-                            "Project Analysis",
-                            color="green",
-                            variant="dot",
-                            size="lg",
+                        dmc.Group(
+                            [
+                                dmc.Button(
+                                    id="download_project_data",
+                                    children="Download",
+                                    color="blue",
+                                    variant="filled",
+                                    leftSection=DashIconify(
+                                        icon="ic:round-cloud-download"
+                                    ),
+                                ),
+                                dmc.Button(
+                                    id="delete_project_data",
+                                    children="Delete",
+                                    color="red",
+                                    variant="filled",
+                                    leftSection=DashIconify(
+                                        icon="ic:round-delete-forever"
+                                    ),
+                                ),
+                                dmc.Badge(
+                                    "Project Analysis",
+                                    color=THEME["primary"],
+                                    variant="dot",
+                                    size="lg",
+                                ),
+                            ]
                         ),
                     ],
                     justify="space-between",
@@ -535,7 +557,7 @@ def update_thresholds_controls(*args, **kwargs):
                                     placeholder="Enter upper limit",
                                     leftSection=DashIconify(
                                         icon="hugeicons:chart-maximum",
-                                        color="green",
+                                        color=THEME["primary"],
                                     ),
                                     value=value.get("upper_limit", ""),
                                 ),
@@ -544,7 +566,7 @@ def update_thresholds_controls(*args, **kwargs):
                                     placeholder="Enter lower limit",
                                     leftSection=DashIconify(
                                         icon="hugeicons:chart-minimum",
-                                        color="green",
+                                        color=THEME["primary"],
                                     ),
                                     value=value.get("lower_limit", ""),
                                 ),
