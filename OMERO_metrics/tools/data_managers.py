@@ -108,7 +108,6 @@ class ImageManager:
                         self.dataset_manager.mm_dataset.__class__.__name__
                     )[self.image_location]
                     self.context = load.load_dash_data_image(
-                        self._conn,
                         self.dataset_manager.mm_dataset,
                         self.mm_image,
                         self.image_index,
@@ -296,9 +295,7 @@ class DatasetManager:
                 self.app_name = TEMPLATE_MAPPINGS_DATASET.get(
                     self.mm_dataset.__class__.__name__
                 )
-                self.context = load.load_dash_data_dataset(
-                    self._conn, self.mm_dataset
-                )
+                self.context = load.load_dash_data_dataset(self.mm_dataset)
             else:
                 message = "Unknown analysis type. Unable to visualize"
                 logger.warning(message)
@@ -400,7 +397,7 @@ class ProjectManager:
                     in TEMPLATE_MAPPINGS_DATASET
                 ):
                     self.context, self.app_name = load.load_dash_data_project(
-                        self._conn, self.processed_datasets
+                        self.processed_datasets
                     )
                     self.context["unprocessed_datasets"] = list(
                         self.unprocessed_datasets.keys()

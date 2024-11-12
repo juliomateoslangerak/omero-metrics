@@ -17,13 +17,9 @@ import microscopemetrics_schema.datamodel as mm_schema
 from linkml_runtime.loaders import yaml_loader
 import pandas as pd
 from OMERO_metrics.tools import omero_tools
-from OMERO_metrics.tools.data_preperation import (
-    get_table_original_file_id,
-)
+import re
 
-# Creating logging services
 logger = logging.getLogger(__name__)
-import collections
 import omero
 from datetime import datetime
 
@@ -268,7 +264,6 @@ def load_dataset(
 
 
 def load_dash_data_image(
-    conn: BlitzGateway,
     mm_dataset: mm_schema.MetricsDataset,
     image: mm_schema.Image,
     image_index: int,
@@ -281,14 +276,6 @@ def load_dash_data_image(
     ):
         dash_context["image"] = image.array_data
         dash_context["channel_names"] = image.channel_series
-        ann_id = mm_dataset.output.__dict__["intensity_profiles"][
-            image_index
-        ].data_reference.omero_object_id
-        # roi_service = conn.getRoiService()
-        # result = roi_service.findByImage(
-        #     int(image.data_reference.omero_object_id), None, conn.SERVICE_OPTS
-        # )
-        # shapes_rectangle, shapes_line, shapes_point = get_rois_omero(result)
         image_id = int(image.data_reference.omero_object_id)
         rois = get_rois_mm_dataset(mm_dataset)
         df_lines_omero = pd.DataFrame(rois[image_id]["roi"]["Line"])
@@ -300,7 +287,9 @@ def load_dash_data_image(
         dash_context["df_lines"] = df_lines_omero
         dash_context["df_rects"] = df_rects_omero
         dash_context["df_points"] = df_points_omero
-        dash_context["df_intensity_profiles"] = get_table_file_id(conn, ann_id)
+        dash_context["df_intensity_profiles"] = load_table_mm_metrics(
+            mm_dataset.output["intensity_profiles"][image_index]
+        )
     elif (
         isinstance(mm_dataset, FieldIlluminationDataset)
         and image_location == "output"
@@ -320,41 +309,20 @@ def load_dash_data_image(
         )
         dash_context["channel_names"] = image.channel_series
         dash_context["bead_properties_df"] = load_table_mm_metrics(
-            mm_dataset, "bead_properties"
+            mm_dataset.output["bead_properties"]
         )
         dash_context["bead_km_df"] = get_km_mm_metrics_dataset(
             mm_dataset=mm_dataset, table_name="key_measurements"
         )
         dash_context["bead_x_profiles_df"] = load_table_mm_metrics(
-            mm_dataset=mm_dataset, table_name="bead_profiles_x"
+            mm_dataset.output["bead_profiles_x"]
         )
         dash_context["bead_y_profiles_df"] = load_table_mm_metrics(
-            mm_dataset=mm_dataset, table_name="bead_profiles_y"
+            mm_dataset.output["bead_profiles_y"]
         )
         dash_context["bead_z_profiles_df"] = load_table_mm_metrics(
-            mm_dataset=mm_dataset, table_name="bead_profiles_z"
+            mm_dataset.output["bead_profiles_z"]
         )
-
-        # dash_context["bead_properties_df"] = get_table_file_id(
-        #     conn,
-        #     mm_dataset.output.bead_properties.data_reference.omero_object_id,
-        # )
-        # dash_context["bead_km_df"] = get_table_file_id(
-        #     conn,
-        #     mm_dataset.output.key_measurements.data_reference.omero_object_id,
-        # )
-        # dash_context["bead_x_profiles_df"] = get_table_file_id(
-        #     conn,
-        #     mm_dataset.output.bead_profiles_x.data_reference.omero_object_id,
-        # )
-        # dash_context["bead_y_profiles_df"] = get_table_file_id(
-        #     conn,
-        #     mm_dataset.output.bead_profiles_y.data_reference.omero_object_id,
-        # )
-        # dash_context["bead_z_profiles_df"] = get_table_file_id(
-        #     conn,
-        #     mm_dataset.output.bead_profiles_z.data_reference.omero_object_id)
-
         dash_context["image_id"] = image.data_reference.omero_object_id
     elif (
         isinstance(mm_dataset, PSFBeadsDataset) and image_location == "output"
@@ -371,7 +339,6 @@ def load_dash_data_image(
 
 
 def load_dash_data_dataset(
-    conn: BlitzGateway,
     dataset: mm_schema.MetricsDataset,
 ) -> dict:
     dash_context = {}
@@ -386,8 +353,8 @@ def load_dash_data_dataset(
             dataset.input_data.field_illumination_image
         )
         dash_context["channel_names"] = channel_series
-        dash_context["intensity_profiles"] = get_all_intensity_profiles(
-            conn, df
+        dash_context["intensity_profiles"] = load_table_mm_metrics(
+            dataset.output["intensity_profiles"]
         )
         dash_context["key_values_df"] = get_km_mm_metrics_dataset(
             mm_dataset=dataset, table_name="key_measurements"
@@ -406,19 +373,12 @@ def load_dash_data_dataset(
         dash_context["bead_km_df"] = get_km_mm_metrics_dataset(
             mm_dataset=dataset, table_name="key_measurements"
         )
-
-        # dash_context["bead_km_df"] = get_table_file_id(
-        #     conn,
-        #     dataset.output.key_measurements.data_reference.omero_object_id,
-        # )
-
     else:
         dash_context = {}
     return dash_context
 
 
 def load_dash_data_project(
-    conn: BlitzGateway,
     processed_datasets: dict,
 ) -> (dict, str):
     dash_context = {}
@@ -427,9 +387,8 @@ def load_dash_data_project(
     kkm = list(processed_datasets.values())[0].kkm
     dates = []
     for key, value in processed_datasets.items():
-        df = get_table_file_id(
-            conn,
-            value.mm_dataset.output.key_measurements.data_reference.omero_object_id,
+        df = get_km_mm_metrics_dataset(
+            mm_dataset=value.mm_dataset, table_name="key_measurements"
         )
         date = datetime.strptime(
             value.mm_dataset.acquisition_datetime, "%Y-%m-%dT%H:%M:%S"
@@ -587,22 +546,6 @@ def get_key_values(var: FieldIlluminationDataset.output) -> pd.DataFrame:
     return df
 
 
-# def concatenate_images(images: list):
-#     if len(images) > 1:
-#         image_array_0 = images[0].array_data
-#         channels = images[0].channel_series
-#         result = image_array_0
-#         for i in range(1, len(images)):
-#             image_array = images[i].array_data
-#             channels.channels.extend(images[i].channel_series.channels)
-#             result = np.concatenate((result, image_array), axis=-1)
-#         return result, channels
-#     elif len(images) == 1:
-#         return images[0].array_data, images[0].channel_series
-#     else:
-#         return None
-
-
 def concatenate_images(images: list):
     list_images = []
     list_channels = []
@@ -613,47 +556,6 @@ def concatenate_images(images: list):
         list_images.extend(result)
         list_channels.extend(channels)
     return list_images, list_channels
-
-
-def get_all_intensity_profiles(conn, data_df):
-    df_01 = pd.DataFrame()
-    for i, row in data_df.iterrows():
-        file_id = (
-            conn.getObject("FileAnnotation", row.Intensity_profiles)
-            .getFile()
-            .getId()
-        )
-        data = get_table_original_file_id(conn, str(file_id))
-        for j in range(row.Channel):
-            regx_find = f"ch0{j}"
-            ch = i + j
-            regx_repl = f"Ch0{ch}"
-            data.columns = data.columns.str.replace(regx_find, regx_repl)
-        df_01 = pd.concat([df_01, data], axis=1)
-    return df_01
-
-
-def get_table_file_id(conn, file_annotation_id):
-    file_id = (
-        conn.getObject("FileAnnotation", file_annotation_id).getFile().getId()
-    )
-    ctx = conn.createServiceOptsDict()
-    ctx.setOmeroGroup("-1")
-    r = conn.getSharedResources()
-    t = r.openTable(omero.model.OriginalFileI(file_id), ctx)
-    data_buffer = collections.defaultdict(list)
-    heads = t.getHeaders()
-    target_cols = range(len(heads))
-    index_buffer = []
-    num_rows = t.getNumberOfRows()
-    for start in range(0, num_rows):
-        data = t.read(target_cols, start, start)
-        for col in data.columns:
-            data_buffer[col.name] += col.values
-        index_buffer += data.rowNumbers
-    df = pd.DataFrame.from_dict(data_buffer)
-    df.index = index_buffer[0 : len(df)]
-    return df
 
 
 # -----------------------------------------------------------------------------------
@@ -777,9 +679,33 @@ def get_km_mm_metrics_dataset(
     return df
 
 
-def load_table_mm_metrics(mm_dataset, table_name):
-    table = mm_dataset.output[table_name]
-    table_date = {v.name: v.values for v in table.columns if v}
-    df = pd.DataFrame(table_date)
-    df = df.apply(lambda col: pd.to_numeric(col, errors="ignore"))
-    return df
+def load_table_mm_metrics(table):
+    if table and isinstance(table, mm_schema.Table):
+        table_date = {v.name: v.values for v in table.columns if v}
+        df = pd.DataFrame(table_date)
+        df = df.apply(lambda col: pd.to_numeric(col, errors="ignore"))
+        return df
+    elif (
+        table
+        and isinstance(table, list)
+        and isinstance(table[0], mm_schema.Table)
+    ):
+        df_list = []
+        for i, t in enumerate(table):
+            table_date = {v.name: v.values for v in t.columns if v}
+            df = pd.DataFrame(table_date)
+            df = df.apply(lambda col: pd.to_numeric(col, errors="ignore"))
+            df.columns = [modify_column_name(col, i) for col in df.columns]
+            df_list.append(df)
+        return pd.concat(df_list, axis=1)
+    else:
+        return None
+
+
+def modify_column_name(col, i):
+    match = re.search(r"ch(\d+)", col)
+    if match:
+        new_ch = int(match.group(1)) + i
+        print(col.replace(match.group(0), f"ch{new_ch:02d}"))
+        return col.replace(match.group(0), f"ch{new_ch:02d}")
+    return col

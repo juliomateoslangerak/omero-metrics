@@ -374,7 +374,7 @@ def update_visualizations(*args, **kwargs):
             yaxis_title="Y Position (pixels)",
         )
 
-        channel_regex = f"Ch0{channel}"
+        channel_regex = f"ch0{channel}"
         df_profile = df_intensity_profiles[
             df_intensity_profiles.columns[
                 df_intensity_profiles.columns.str.startswith(channel_regex)
@@ -382,7 +382,7 @@ def update_visualizations(*args, **kwargs):
         ].copy()
 
         df_profile.columns = df_profile.columns.str.replace(
-            "Ch\d{2}_", "", regex=True
+            "ch\d{2}_", "", regex=True
         )
         df_profile = restyle_dataframe(df_profile, "columns")
         df_profile = df_profile.reset_index()
