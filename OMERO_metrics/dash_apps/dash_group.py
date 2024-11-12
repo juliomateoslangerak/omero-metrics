@@ -20,6 +20,7 @@ from OMERO_metrics.styles import (
     STYLE_DATA_CONDITIONAL,
     SELECT_STYLES,
     DATEPICKER_STYLES,
+    HEADER_PAPER_STYLE,
 )
 
 
@@ -36,6 +37,61 @@ dash_app_group.layout = dmc.MantineProvider(
     children=[
         dmc.NotificationProvider(position="top-center"),
         html.Div(id="notifications-container"),
+        dmc.Paper(
+            children=[
+                dmc.Group(
+                    [
+                        dmc.Group(
+                            [
+                                html.Img(
+                                    src="/static/OMERO_metrics/images/metrics_logo.png",
+                                    style={
+                                        "width": "120px",
+                                        "height": "auto",
+                                    },
+                                ),
+                                dmc.Stack(
+                                    [
+                                        dmc.Title(
+                                            "Group Dashboard",
+                                            c=THEME["primary"],
+                                            size="h2",
+                                        ),
+                                        dmc.Text(
+                                            "Group Analysis Dashboard",
+                                            c=THEME["text"]["secondary"],
+                                            size="sm",
+                                        ),
+                                    ],
+                                    gap="xs",
+                                ),
+                            ],
+                        ),
+                        dmc.Group(
+                            [
+                                dmc.Button(
+                                    id="delete_group_data",
+                                    children="Delete",
+                                    color="red",
+                                    variant="filled",
+                                    leftSection=DashIconify(
+                                        icon="ic:round-delete-forever"
+                                    ),
+                                ),
+                                dmc.Badge(
+                                    "Group Analysis",
+                                    color=THEME["primary"],
+                                    variant="dot",
+                                    size="lg",
+                                ),
+                            ]
+                        ),
+                    ],
+                    justify="space-between",
+                ),
+            ],
+            **HEADER_PAPER_STYLE,
+        ),
         dmc.Tabs(
             styles=TAB_STYLES,
             children=[
@@ -210,16 +266,16 @@ dash_app_group.layout = dmc.MantineProvider(
                                         id="project_file_annotations_table",
                                         style={"margin": "10px"},
                                     ),
-                                    dmc.Divider(mb="md"),
-                                    dmc.Text(
-                                        "Map Annotations",
-                                        c=THEME["primary"],
-                                        size="xl",
-                                    ),
-                                    html.Div(
-                                        id="project_map_annotations_table",
-                                        style={"margin": "10px"},
-                                    ),
+                                    # dmc.Divider(mb="md"),
+                                    # dmc.Text(
+                                    #     "Map Annotations",
+                                    #     c=THEME["primary"],
+                                    #     size="xl",
+                                    # ),
+                                    # html.Div(
+                                    #     id="project_map_annotations_table",
+                                    #     style={"margin": "10px"},
+                                    # ),
                                     html.Div(id="blank-input"),
                                     html.Div(id="result"),
                                 ],
@@ -288,7 +344,7 @@ def render_content(*args, **kwargs):
 
 @dash_app_group.expanded_callback(
     dash.dependencies.Output("project_file_annotations_table", "children"),
-    dash.dependencies.Output("project_map_annotations_table", "children"),
+    # dash.dependencies.Output("project_map_annotations_table", "children"),
     [
         dash.dependencies.Input("select_mimetype", "value"),
         dash.dependencies.Input("date-picker", "value"),
@@ -352,26 +408,26 @@ def load_table_project(*args, **kwargs):
         style_header=TABLE_HEADER_STYLE,
         style_data_conditional=STYLE_DATA_CONDITIONAL,
     )
-    map_ann = kwargs["session_state"]["context"]["map_ann"]
-    map_ann_subset = map_ann[
-        map_ann.columns[~map_ann.columns.str.contains("ID")]
-    ]
-    map_table = dash_table.DataTable(
-        id="datatable-interactivity",
-        columns=[{"name": i, "id": i} for i in map_ann_subset.columns],
-        data=map_ann_subset.to_dict("records"),
-        sort_action="native",
-        sort_mode="multi",
-        row_selectable="multi",
-        page_action="native",
-        page_current=0,
-        page_size=5,
-        style_table=TABLE_STYLE,
-        style_cell=TABLE_CELL_STYLE,
-        style_header=TABLE_HEADER_STYLE,
-        style_data_conditional=STYLE_DATA_CONDITIONAL,
-    )
-    return file_ann_table, map_table
+    # map_ann = kwargs["session_state"]["context"]["map_ann"]
+    # map_ann_subset = map_ann[
+    #     map_ann.columns[~map_ann.columns.str.contains("ID")]
+    # ]
+    # map_table = dash_table.DataTable(
+    #     id="datatable-interactivity",
+    #     columns=[{"name": i, "id": i} for i in map_ann_subset.columns],
+    #     data=map_ann_subset.to_dict("records"),
+    #     sort_action="native",
+    #     sort_mode="multi",
+    #     row_selectable="multi",
+    #     page_action="native",
+    #     page_current=0,
+    #     page_size=5,
+    #     style_table=TABLE_STYLE,
+    #     style_cell=TABLE_CELL_STYLE,
+    #     style_header=TABLE_HEADER_STYLE,
+    #     style_data_conditional=STYLE_DATA_CONDITIONAL,
+    # )
+    return file_ann_table
 
 
 @dash_app_group.expanded_callback(

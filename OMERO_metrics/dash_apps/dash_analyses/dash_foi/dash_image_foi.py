@@ -10,6 +10,7 @@ from OMERO_metrics.styles import (
     THEME,
     MANTINE_THEME,
     LINE_CHART_SERIES,
+    HEADER_PAPER_STYLE,
 )
 
 
@@ -27,7 +28,6 @@ omero_image_foi = DjangoDash(
 
 def create_header():
     return dmc.Paper(
-        h="100%",
         children=[
             dmc.Group(
                 [
@@ -59,7 +59,7 @@ def create_header():
                     ),
                     dmc.Badge(
                         "FOI Analysis",
-                        color="green",
+                        color=THEME["primary"],
                         variant="dot",
                         size="lg",
                     ),
@@ -67,10 +67,7 @@ def create_header():
                 justify="space-between",
             ),
         ],
-        p="md",
-        radius="md",
-        withBorder=True,
-        shadow="sm",
+        **HEADER_PAPER_STYLE,
     )
 
 
@@ -122,7 +119,7 @@ def create_control_panel():
                             {"value": "All", "label": "All"},
                             {"value": "None", "label": "None"},
                         ],
-                        color="green",
+                        color=THEME["primary"],
                         fullWidth=True,
                     ),
                     dmc.Stack(
@@ -131,7 +128,7 @@ def create_control_panel():
                                 id="checkbox-state",
                                 label="Enable Contour View",
                                 checked=False,
-                                color="green",
+                                color=THEME["primary"],
                             ),
                         ],
                         gap="xs",
@@ -172,7 +169,7 @@ def create_control_panel():
                         label="Invert Colors",
                         checked=False,
                         size="md",
-                        color="green",
+                        color=THEME["primary"],
                     ),
                 ],
                 gap="sm",
@@ -234,10 +231,9 @@ def create_intensity_profile():
 
 omero_image_foi.layout = dmc.MantineProvider(
     [
+        create_header(),
         dmc.Container(
             [
-                create_header(),
-                dmc.Space(h="md"),
                 dmc.Grid(
                     [
                         dmc.GridCol(
@@ -278,7 +274,7 @@ omero_image_foi.layout = dmc.MantineProvider(
             px="md",
             py="md",
             style={"backgroundColor": THEME["background"]},
-        )
+        ),
     ],
     theme=MANTINE_THEME,
 )

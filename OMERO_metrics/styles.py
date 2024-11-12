@@ -223,7 +223,7 @@ CONTAINER_STYLE = {
 HEADER_PAPER_STYLE = {
     "shadow": "sm",
     "p": "md",
-    "radius": "lg",
+    # "radius": "lg",
     "mb": "md",
 }
 

@@ -33,53 +33,73 @@ omero_dataset_foi = DjangoDash(
 omero_dataset_foi.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
-        dmc.Container(
-            [
-                # Header Section
-                dmc.Paper(
-                    children=[
+        dmc.Paper(
+            children=[
+                dmc.Group(
+                    [
                         dmc.Group(
                             [
-                                dmc.Group(
+                                html.Img(
+                                    src="/static/OMERO_metrics/images/metrics_logo.png",
+                                    style={
+                                        "width": "120px",
+                                        "height": "auto",
+                                    },
+                                ),
+                                dmc.Stack(
                                     [
-                                        html.Img(
-                                            src="/static/OMERO_metrics/images/metrics_logo.png",
-                                            style={
-                                                "width": "120px",
-                                                "height": "auto",
-                                            },
+                                        dmc.Title(
+                                            "Field of Illumination Dataset Analysis",
+                                            c=THEME["primary"],
+                                            size="h2",
                                         ),
-                                        dmc.Stack(
-                                            [
-                                                dmc.Title(
-                                                    "Field of Illumination Dataset Analysis",
-                                                    c=THEME["primary"],
-                                                    size="h2",
-                                                ),
-                                                dmc.Text(
-                                                    "Dataset Dashboard",
-                                                    c=THEME["text"][
-                                                        "secondary"
-                                                    ],
-                                                    size="sm",
-                                                ),
-                                            ],
-                                            gap="xs",
+                                        dmc.Text(
+                                            "Dataset Dashboard",
+                                            c=THEME["text"]["secondary"],
+                                            size="sm",
                                         ),
                                     ],
+                                    gap="xs",
+                                ),
+                            ],
+                        ),
+                        dmc.Group(
+                            [
+                                dmc.Button(
+                                    id="download_dataset_data",
+                                    children="Download",
+                                    color="blue",
+                                    variant="filled",
+                                    leftSection=DashIconify(
+                                        icon="ic:round-cloud-download"
+                                    ),
+                                ),
+                                dmc.Button(
+                                    id="delete_dataset_data",
+                                    children="Delete",
+                                    color="red",
+                                    variant="filled",
+                                    leftSection=DashIconify(
+                                        icon="ic:round-delete-forever"
+                                    ),
                                 ),
                                 dmc.Badge(
                                     "FOI Analysis",
-                                    color="green",
+                                    color=THEME["primary"],
                                     variant="dot",
                                     size="lg",
                                 ),
-                            ],
-                            justify="space-between",
+                            ]
                         ),
                     ],
-                    **HEADER_PAPER_STYLE,
+                    justify="space-between",
                 ),
+            ],
+            **HEADER_PAPER_STYLE,
+        ),
+        dmc.Container(
+            [
+                # Header Section
                 # Main Content
                 dmc.Grid(
                     gutter="md",
@@ -220,7 +240,7 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                                 },
                                             ],
                                             value="natural",
-                                            color="green",
+                                            color=THEME["primary"],
                                         ),
                                     ],
                                     justify="space-between",
@@ -354,7 +374,7 @@ def update_visualizations(*args, **kwargs):
             yaxis_title="Y Position (pixels)",
         )
 
-        channel_regex = f"Ch0{channel}"
+        channel_regex = f"ch0{channel}"
         df_profile = df_intensity_profiles[
             df_intensity_profiles.columns[
                 df_intensity_profiles.columns.str.startswith(channel_regex)
@@ -362,7 +382,7 @@ def update_visualizations(*args, **kwargs):
         ].copy()
 
         df_profile.columns = df_profile.columns.str.replace(
-            "Ch\d{2}_", "", regex=True
+            "ch\d{2}_", "", regex=True
         )
         df_profile = restyle_dataframe(df_profile, "columns")
         df_profile = df_profile.reset_index()

@@ -3,7 +3,7 @@ from dash import html
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
-from OMERO_metrics.styles import THEME, MANTINE_THEME
+from OMERO_metrics.styles import THEME, HEADER_PAPER_STYLE, MANTINE_THEME
 
 
 def get_icon(icon, size=20, color=None):
@@ -21,56 +21,73 @@ omero_dataset_psf_beads = DjangoDash(
 omero_dataset_psf_beads.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
-        dmc.Container(
-            [
-                html.Div(id="blank-input"),
-                dmc.Paper(
-                    shadow="sm",
-                    p="md",
-                    radius="lg",
-                    mb="md",
-                    children=[
+        dmc.Paper(
+            children=[
+                dmc.Group(
+                    [
                         dmc.Group(
                             [
-                                dmc.Group(
+                                html.Img(
+                                    src="/static/OMERO_metrics/images/metrics_logo.png",
+                                    style={
+                                        "width": "120px",
+                                        "height": "auto",
+                                    },
+                                ),
+                                dmc.Stack(
                                     [
-                                        html.Img(
-                                            src="/static/OMERO_metrics/images/metrics_logo.png",
-                                            style={
-                                                "width": "120px",
-                                                "height": "auto",
-                                            },
+                                        dmc.Title(
+                                            "PSF Beads Analysis",
+                                            c=THEME["primary"],
+                                            size="h2",
                                         ),
-                                        dmc.Stack(
-                                            [
-                                                dmc.Title(
-                                                    "PSF Beads Analysis",
-                                                    c=THEME["primary"],
-                                                    size="h2",
-                                                ),
-                                                dmc.Text(
-                                                    "PSF Beads Analysis Dashboard",
-                                                    c=THEME["text"][
-                                                        "secondary"
-                                                    ],
-                                                    size="sm",
-                                                ),
-                                            ],
-                                            gap="xs",
+                                        dmc.Text(
+                                            "PSF Beads Analysis Dashboard",
+                                            c=THEME["text"]["secondary"],
+                                            size="sm",
                                         ),
                                     ],
+                                    gap="xs",
+                                ),
+                            ],
+                        ),
+                        dmc.Group(
+                            [
+                                dmc.Button(
+                                    id="download_dataset_data",
+                                    children="Download",
+                                    color="blue",
+                                    variant="filled",
+                                    leftSection=DashIconify(
+                                        icon="ic:round-cloud-download"
+                                    ),
+                                ),
+                                dmc.Button(
+                                    id="delete_dataset_data",
+                                    children="Delete",
+                                    color="red",
+                                    variant="filled",
+                                    leftSection=DashIconify(
+                                        icon="ic:round-delete-forever"
+                                    ),
                                 ),
                                 dmc.Badge(
                                     "PSF Beads Analysis",
-                                    color="green",
+                                    color=THEME["primary"],
                                     variant="dot",
                                     size="lg",
                                 ),
-                            ],
-                            justify="space-between",
+                            ]
                         ),
                     ],
+                    justify="space-between",
                 ),
+            ],
+            **HEADER_PAPER_STYLE,
+        ),
+        dmc.Container(
+            [
+                html.Div(id="blank-input"),
                 dmc.Paper(
                     shadow="xs",
                     p="md",
