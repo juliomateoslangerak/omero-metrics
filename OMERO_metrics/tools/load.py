@@ -22,30 +22,11 @@ import re
 logger = logging.getLogger(__name__)
 import omero
 from datetime import datetime
-
-
-DATASET_TYPES = ["FieldIlluminationDataset", "PSFBeadsDataset"]
-
-INPUT_IMAGES_MAPPING = {
-    "FieldIlluminationDataset": "field_illumination_image",
-    "PSFBeadsDataset": "psf_beads_images",
-}
-
-OUTPUT_DATA = {
-    "FieldIlluminationDataset": "intensity_profiles",
-    "PSFBeadsDataset": "psf_beads",
-}
-
-DATASET_IMAGES = {
-    "FieldIlluminationDataset": {
-        "input_data": ["field_illumination_image"],
-        "output": [],
-    },
-    "PSFBeadsDataset": {
-        "input_data": ["psf_beads_images"],
-        "output": ["average_bead"],
-    },
-}
+from OMERO_metrics.tools.data_type import (
+    DATASET_IMAGES,
+    DATASET_TYPES,
+    INPUT_IMAGES_MAPPING,
+)
 
 
 def get_annotations_tables(conn, group_id):
@@ -691,11 +672,13 @@ def load_table_mm_metrics(table):
         and isinstance(table[0], mm_schema.Table)
     ):
         df_list = []
+        start = 0
         for i, t in enumerate(table):
             table_date = {v.name: v.values for v in t.columns if v}
             df = pd.DataFrame(table_date)
             df = df.apply(lambda col: pd.to_numeric(col, errors="ignore"))
-            df.columns = [modify_column_name(col, i) for col in df.columns]
+            df.columns = [modify_column_name(col, start) for col in df.columns]
+            start = df.columns.str.extract(r"ch(\d+)").astype(int)[0].max() + 1
             df_list.append(df)
         return pd.concat(df_list, axis=1)
     else:

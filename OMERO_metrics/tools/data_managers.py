@@ -10,43 +10,14 @@ from omero.gateway import (
     ProjectWrapper,
 )
 from OMERO_metrics.tools import load, dump, update, delete
+from OMERO_metrics.tools.data_type import (
+    KKM_MAPPINGS,
+    TEMPLATE_MAPPINGS_DATASET,
+    TEMPLATE_MAPPINGS_IMAGE,
+)
+
 
 logger = logging.getLogger(__name__)
-
-
-KKM_MAPPINGS = {
-    "FieldIlluminationDataset": [
-        "max_intensity",
-        "center_region_intensity_fraction",
-        "center_region_area_fraction",
-    ],
-    "PSFBeadsDataset": [
-        "intensity_max_median",
-        "intensity_max_std",
-        "intensity_min_mean",
-        "intensity_min_median",
-        "intensity_min_std",
-        "intensity_std_mean",
-        "intensity_std_median",
-        "intensity_std_std",
-    ],
-}
-
-TEMPLATE_MAPPINGS_DATASET = {
-    "FieldIlluminationDataset": "omero_dataset_foi",
-    "PSFBeadsDataset": "omero_dataset_psf_beads",
-}
-
-TEMPLATE_MAPPINGS_IMAGE = {
-    "FieldIlluminationDataset": {
-        "input_data": "omero_image_foi",
-        "output": "WarningApp",
-    },
-    "PSFBeadsDataset": {
-        "input_data": "omero_image_psf_beads",
-        "output": "WarningApp",
-    },
-}
 
 
 def warning_message(msg):
@@ -181,6 +152,9 @@ class DatasetManager:
                 self.omero_dataset, self.load_images
             )
             self.kkm = KKM_MAPPINGS.get(self.mm_dataset.__class__.__name__)
+            self.processed = (
+                self.mm_dataset.processed if self.mm_dataset else False
+            )
         else:
             raise NotImplementedError(
                 "partial loading of data from OMERO is not yet implemented"
@@ -261,9 +235,10 @@ class DatasetManager:
             return False
         try:
             logger.warning("Deleting processed data...")
-            delete.delete_dataset_output(self._conn, self.mm_dataset)
+            rsp = delete.delete_dataset_output(self._conn, self.mm_dataset)
             self.mm_dataset.validated = False
             self.mm_dataset.processed = False
+            return rsp
         except Exception as e:
             logger.error(f"Error deleting processed data: {e}")
             self.mm_dataset.validated = False
@@ -374,7 +349,6 @@ class ProjectManager:
                 )
 
     def is_homogenized(self):
-        # unique = set(self.datasets_types)
         unique = set(
             [
                 dataset.mm_dataset.__class__.__name__

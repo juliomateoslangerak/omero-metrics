@@ -1,9 +1,7 @@
 import logging
-
 import omero
 
 logger = logging.getLogger(__name__)
-from typing import Union
 from OMERO_metrics.tools import omero_tools
 import microscopemetrics_schema.datamodel as mm_schema
 from omero.gateway import BlitzGateway
@@ -99,7 +97,7 @@ def delete_all_mm_analysis(conn, group_id):
     rois = conn.getObjects("Roi", opts={"group": group_id})
     rois_ids = [roi.getId() for roi in rois if roi.canDelete()]
     obj_ids = []
-    # TODO:
+    # TODO: Delete output images
     for ann in all_annotations:
         if ann.getNs() and ann.getNs().startswith("microscopemetrics"):
             obj_ids.append(ann.getId())
