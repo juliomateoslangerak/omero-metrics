@@ -343,7 +343,7 @@ def callback_image(*args, **kwargs):
             hovertemplate="<b>%{customdata}</b><br>X: %{x}<br>Y: %{y}<extra></extra>",
         )
     )
-
+    # TODO: it can make the page unresponsive, fix the bug
     if checked_contour:
         fig.plotly_restyle({"type": "contour"}, 0)
         fig.update_yaxes(autorange="reversed")
@@ -423,7 +423,7 @@ def update_intensity_profiles(*args, **kwargs):
     df_intensity_profiles = kwargs["session_state"]["context"][
         "df_intensity_profiles"
     ]
-    ch = "ch0" + args[0]
+    ch = f"ch{int(args[0]):02d}"
     df_profile = df_intensity_profiles[
         df_intensity_profiles.columns[
             df_intensity_profiles.columns.str.startswith(ch)

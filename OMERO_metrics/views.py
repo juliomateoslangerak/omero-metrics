@@ -190,9 +190,9 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
         dataset_wrapper = conn.getObject("Dataset", dataset_id)
         dm = DatasetManager(conn, dataset_wrapper, load_images=True)
         dm.load_data()
-        dm.is_processed()
         dm.visualize_data()
         dash_context["context"] = dm.context
+        dash_context["context"]["dataset_id"] = dataset_id
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
@@ -303,12 +303,13 @@ def run_analysis_view(request, conn=None, **kwargs):
         run_status = DATA_TYPE[mm_input_parameters.class_name][3](mm_dataset)
         if run_status and mm_dataset.processed:
             try:
-                mm_comment = mm_schema.Comment(
-                    datetime=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    text=comment,
-                    comment_type="PROCESSING",
-                )
-                mm_dataset["output"]["comment"] = mm_comment
+                if comment:
+                    mm_comment = mm_schema.Comment(
+                        datetime=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        text=comment,
+                        comment_type="PROCESSING",
+                    )
+                    mm_dataset["output"]["comment"] = mm_comment
                 dump.dump_dataset(
                     conn=conn,
                     dataset=mm_dataset,
@@ -339,6 +340,24 @@ def delete_all(request, conn=None, **kwargs):
         group_id = kwargs["group_id"]
         message, color = delete.delete_all_mm_analysis(conn, group_id)
         return message, color
+    except Exception as e:
+        return (str(e), "red")
+
+
+@login_required(setGroupContext=True)
+def delete_dataset(request, conn=None, **kwargs):
+    """Delete the dataset outputs"""
+    try:
+        dataset_id = kwargs["dataset_id"]
+        dataset_wrapper = conn.getObject("Dataset", dataset_id)
+        dm = DatasetManager(conn, dataset_wrapper, load_images=False)
+        dm.load_data()
+        mm_dataset = dm.mm_dataset
+        rsp = delete.delete_dataset_output(conn, mm_dataset)
+        if rsp:
+            return "Output deleted successfully", "green"
+        else:
+            return "Failed to delete output", "red"
     except Exception as e:
         return str(e), "red"
 

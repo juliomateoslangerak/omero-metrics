@@ -19,10 +19,6 @@ from OMERO_metrics.styles import (
 )
 
 
-def get_icon(icon, size=20, color=None):
-    return DashIconify(icon=icon, height=size, color=color)
-
-
 dashboard_name = "omero_dataset_foi"
 omero_dataset_foi = DjangoDash(
     name=dashboard_name,
@@ -126,11 +122,13 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                                             allowDeselect=False,
                                                             w="200",
                                                             value="0",
-                                                            leftSection=get_icon(
-                                                                "material-symbols:layers"
+                                                            leftSection=DashIconify(
+                                                                icon="material-symbols:layers",
+                                                                height=20,
                                                             ),
-                                                            rightSection=get_icon(
-                                                                "radix-icons:chevron-down"
+                                                            rightSection=DashIconify(
+                                                                icon="radix-icons:chevron-down",
+                                                                height=20,
                                                             ),
                                                             styles=INPUT_BASE_STYLES,
                                                         ),
@@ -177,8 +175,9 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                                         dmc.Tooltip(
                                                             label="Statistical measurements for all the channels",
                                                             children=[
-                                                                get_icon(
-                                                                    "material-symbols:info-outline",
+                                                                DashIconify(
+                                                                    icon="material-symbols:info-outline",
+                                                                    height=20,
                                                                     color=THEME[
                                                                         "primary"
                                                                     ],
@@ -260,7 +259,6 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                     withLegend=True,
                                     strokeWidth=2,
                                     withDots=False,
-                                    curveType="natural",
                                 ),
                             ],
                             gap="xl",
@@ -311,18 +309,10 @@ def update_km_table(*args, **kwargs):
             ]
         ].copy()
 
-        column_mapping = {
-            "channel_name": "Channel",
-            "center_region_intensity_fraction": "Center Intensity Ratio",
-            "center_region_area_fraction": "Center Area Ratio",
-            "max_intensity": "Peak Intensity",
-        }
-
         metrics_df = metrics_df.round(3)
-        metrics_df.columns = [
-            column_mapping.get(col, col) for col in metrics_df.columns
-        ]
-
+        metrics_df.columns = metrics_df.columns.str.replace(
+            "_", " ", regex=True
+        ).str.title()
         return {
             "head": metrics_df.columns.tolist(),
             "body": metrics_df.values.tolist(),
@@ -338,21 +328,14 @@ def update_km_table(*args, **kwargs):
 
 @omero_dataset_foi.expanded_callback(
     dash.dependencies.Output("intensity_map", "figure"),
-    dash.dependencies.Output("intensity_profile", "data"),
     [
         dash.dependencies.Input("channel_dropdown_foi", "value"),
-        dash.dependencies.Input("profile-type", "value"),
     ],
 )
-def update_visualizations(*args, **kwargs):
+def update_intensity_map(*args, **kwargs):
     try:
         channel = int(args[0])
-        curve_type = args[1]
-
         images = kwargs["session_state"]["context"]["image"]
-        df_intensity_profiles = kwargs["session_state"]["context"][
-            "intensity_profiles"
-        ]
         image = images[channel]
         image_channel = image[0, 0, :, :]
         image_channel = rescale_intensity(
@@ -360,21 +343,47 @@ def update_visualizations(*args, **kwargs):
             in_range=(0, image_channel.max()),
             out_range=(0.0, 1.0),
         )
-
         # Create intensity map
         fig = px.imshow(
             image_channel,
             color_continuous_scale="hot",
             labels={"color": "Intensity"},
         )
-
         fig.update_layout(
             **PLOT_LAYOUT,
             xaxis_title="X Position (pixels)",
             yaxis_title="Y Position (pixels)",
         )
+        return fig
+    except Exception as e:
+        fig = px.imshow([[0]])
+        fig.add_annotation(
+            text=f"Error loading data: {str(e)}",
+            xref="paper",
+            yref="paper",
+            x=0.5,
+            y=0.5,
+            showarrow=False,
+        )
+        return fig
 
-        channel_regex = f"ch0{channel}"
+
+@omero_dataset_foi.expanded_callback(
+    dash.dependencies.Output("intensity_profile", "data"),
+    dash.dependencies.Output("intensity_profile", "curveType"),
+    [
+        dash.dependencies.Input("channel_dropdown_foi", "value"),
+        dash.dependencies.Input("profile-type", "value"),
+    ],
+)
+def update_profile_type(*args, **kwargs):
+    try:
+        channel = int(args[0])
+        curveType = args[1]
+        df_intensity_profiles = kwargs["session_state"]["context"][
+            "intensity_profiles"
+        ]
+        channel_regex = f"ch{channel:02d}"
         df_profile = df_intensity_profiles[
             df_intensity_profiles.columns[
                 df_intensity_profiles.columns.str.startswith(channel_regex)
@@ -398,19 +407,10 @@ def update_visualizations(*args, **kwargs):
         df_profile.columns = df_profile.columns.str.replace(
             "Center Vertical", "Vertical (↓)"
         )
-        return fig, df_profile.to_dict("records")
+        return df_profile.to_dict("records"), curveType
 
     except Exception as e:
-        fig = px.imshow([[0]])
-        fig.add_annotation(
-            text=f"Error loading data: {str(e)}",
-            xref="paper",
-            yref="paper",
-            x=0.5,
-            y=0.5,
-            showarrow=False,
-        )
-        return fig, []
+        return [{"Pixel": 0}], "natural"
 
 
 def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:

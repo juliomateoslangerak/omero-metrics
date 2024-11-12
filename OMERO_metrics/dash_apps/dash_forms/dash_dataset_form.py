@@ -19,10 +19,6 @@ min_step = 0
 max_step = 2
 
 
-def get_icon(icon, size=20, color=None):
-    return DashIconify(icon=icon, height=size, color=color)
-
-
 dashboard_name = "omero_dataset_form"
 dash_form_project = DjangoDash(
     name=dashboard_name,
@@ -106,8 +102,9 @@ dash_form_project.layout = dmc.MantineProvider(
                                     id="step_sample",
                                     label="Sample Configuration",
                                     description="Define sample parameters",
-                                    icon=get_icon(
-                                        "material-symbols:science-outline"
+                                    icon=DashIconify(
+                                        icon="material-symbols:science-outline",
+                                        height=20,
                                     ),
                                     children=[
                                         dmc.Paper(
@@ -132,8 +129,9 @@ dash_form_project.layout = dmc.MantineProvider(
                                     id="step_input_data",
                                     label="Data Selection",
                                     description="Choose input images",
-                                    icon=get_icon(
-                                        "material-symbols:image-search"
+                                    icon=DashIconify(
+                                        icon="material-symbols:image-search",
+                                        height=20,
                                     ),
                                     children=[
                                         dmc.Paper(
@@ -153,8 +151,9 @@ dash_form_project.layout = dmc.MantineProvider(
                                                                             id="framework-multi-select",
                                                                             clearable=True,
                                                                             searchable=True,
-                                                                            leftSection=get_icon(
-                                                                                "material-symbols-light:image"
+                                                                            leftSection=DashIconify(
+                                                                                icon="material-symbols-light:image",
+                                                                                height=20,
                                                                             ),
                                                                             styles={
                                                                                 "input": {
@@ -254,16 +253,18 @@ dash_form_project.layout = dmc.MantineProvider(
                                     "Back",
                                     id="back-basic-usage",
                                     variant="outline",
-                                    leftSection=get_icon(
-                                        "material-symbols:arrow-back"
+                                    leftSection=DashIconify(
+                                        icon="material-symbols:arrow-back",
+                                        height=20,
                                     ),
                                     color=THEME["secondary"],
                                 ),
                                 dmc.Button(
                                     "Next",
                                     id="next-basic-usage",
-                                    rightSection=get_icon(
-                                        "material-symbols:arrow-forward"
+                                    rightSection=DashIconify(
+                                        icon="material-symbols:arrow-forward",
+                                        height=20,
                                     ),
                                     color=THEME["primary"],
                                 ),
