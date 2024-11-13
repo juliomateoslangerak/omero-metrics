@@ -209,7 +209,6 @@ def create_intensity_profile():
                         series=LINE_CHART_SERIES,
                         xAxisLabel="Position (pixels)",
                         yAxisLabel="Intensity",
-                        tickLine="y",
                         gridAxis="x",
                         withXAxis=True,
                         withYAxis=True,
