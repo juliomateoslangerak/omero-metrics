@@ -21,6 +21,7 @@ from OMERO_metrics.styles import (
     MANTINE_THEME,
     HEADER_PAPER_STYLE,
 )
+import math
 
 
 def make_control(text, action_id):
@@ -230,7 +231,28 @@ dash_app_project.layout = dmc.MantineProvider(
                                         mr=10,
                                         fw="bold",
                                     ),
-                                    html.Div(id="click_data"),
+                                    dmc.ScrollArea(
+                                        [
+                                            dmc.Table(
+                                                id="kkm_table",
+                                                striped=True,
+                                                data={},  # data will be updated by the callback
+                                                highlightOnHover=True,
+                                                style=TABLE_MANTINE_STYLE,
+                                            ),
+                                            dmc.Group(
+                                                mt="md",
+                                                children=[
+                                                    dmc.Pagination(
+                                                        id="pagination",
+                                                        total=1,
+                                                        value=1,
+                                                    )
+                                                ],
+                                                justify="center",
+                                            ),
+                                        ]
+                                    ),
                                 ],
                             ),
                         ],
@@ -425,12 +447,17 @@ def update_table(*args, **kwargs):
 
 @dash_app_project.expanded_callback(
     dash.dependencies.Output("text_km", "children"),
-    dash.dependencies.Output("click_data", "children"),
-    [dash.dependencies.Input("line-chart", "clickData")],
+    dash.dependencies.Output("kkm_table", "data"),
+    dash.dependencies.Output("pagination", "total"),
+    [
+        dash.dependencies.Input("line-chart", "clickData"),
+        dash.dependencies.Input("pagination", "value"),
+    ],
     prevent_initial_call=True,
 )
 def update_project_view(*args, **kwargs):
     if args[0]:
+        page = args[1]
         table = kwargs["session_state"]["context"]["key_measurements_list"]
         dates = kwargs["session_state"]["context"]["dates"]
         kkm = kwargs["session_state"]["context"]["kkm"]
@@ -438,26 +465,18 @@ def update_project_view(*args, **kwargs):
         df_selected = table[selected_dataset]
         table_kkm = df_selected[kkm].copy()
         table_kkm = table_kkm.round(3)
+        total = math.ceil(len(table_kkm) / 4)
+        start_idx = (page - 1) * 4
+        end_idx = start_idx + 4
         table_kkm.columns = table_kkm.columns.str.replace("_", " ").str.title()
         date = dates[selected_dataset]
-        grid = dmc.ScrollArea(
-            [
-                dmc.Table(
-                    striped=True,
-                    data={
-                        "head": table_kkm.columns.tolist(),
-                        "body": table_kkm.values.tolist(),
-                        "caption": "Key Measurements for the selected dataset",
-                    },
-                    highlightOnHover=True,
-                    style=TABLE_MANTINE_STYLE,
-                )
-            ]
-        )
-        return (
-            "Key Measurements" " processed at " + str(date),
-            grid,
-        )
+        page_data = table_kkm.iloc[start_idx:end_idx]
+        grid = {
+            "head": page_data.columns.tolist(),
+            "body": page_data.values.tolist(),
+            "caption": "Key Measurements for the selected dataset",
+        }
+        return ("Key Measurements" " processed at " + str(date), grid, total)
 
     else:
         return dash.no_update

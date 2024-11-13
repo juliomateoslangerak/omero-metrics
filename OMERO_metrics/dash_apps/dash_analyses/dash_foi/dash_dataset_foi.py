@@ -17,7 +17,7 @@ from OMERO_metrics.styles import (
     LINE_CHART_SERIES,
     INPUT_BASE_STYLES,
 )
-
+import math
 
 dashboard_name = "omero_dataset_foi"
 omero_dataset_foi = DjangoDash(
@@ -198,6 +198,17 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                                             withColumnBorders=True,
                                                             fz="sm",
                                                         ),
+                                                        dmc.Group(
+                                                            mt="md",
+                                                            children=[
+                                                                dmc.Pagination(
+                                                                    id="pagination",
+                                                                    total=1,
+                                                                    value=1,
+                                                                )
+                                                            ],
+                                                            justify="center",
+                                                        ),
                                                     ],
                                                 ),
                                             ],
@@ -295,11 +306,17 @@ def update_dropdown_menu(*args, **kwargs):
 
 @omero_dataset_foi.expanded_callback(
     dash.dependencies.Output("km_table", "data"),
-    [dash.dependencies.Input("blank-input", "children")],
+    dash.dependencies.Output("pagination", "total"),
+    [
+        dash.dependencies.Input("pagination", "value"),
+    ],
 )
 def update_km_table(*args, **kwargs):
     try:
+        page = int(args[0])
         table = kwargs["session_state"]["context"]["key_values_df"]
+        start_idx = (page - 1) * 4
+        end_idx = start_idx + 4
         metrics_df = table[
             [
                 "channel_name",
@@ -313,17 +330,18 @@ def update_km_table(*args, **kwargs):
         metrics_df.columns = metrics_df.columns.str.replace(
             "_", " ", regex=True
         ).str.title()
+        page_data = metrics_df.iloc[start_idx:end_idx]
         return {
-            "head": metrics_df.columns.tolist(),
-            "body": metrics_df.values.tolist(),
+            "head": page_data.columns.tolist(),
+            "body": page_data.values.tolist(),
             "caption": "Statistical measurements across channels",
-        }
+        }, math.ceil(len(metrics_df) / 4)
     except Exception as e:
         return {
             "head": ["Error"],
             "body": [[str(e)]],
             "caption": "Error loading measurements",
-        }
+        }, 1
 
 
 @omero_dataset_foi.expanded_callback(

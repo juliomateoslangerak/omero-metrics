@@ -6,6 +6,7 @@ from dash_iconify import DashIconify
 from OMERO_metrics.styles import THEME, HEADER_PAPER_STYLE, MANTINE_THEME
 from OMERO_metrics import views
 from time import sleep
+import math
 
 
 def get_icon(icon, size=20, color=None):
@@ -158,7 +159,18 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
                                                 "height": "auto",
                                                 "overflow-X": "auto",
                                             },
-                                        )
+                                        ),
+                                        dmc.Group(
+                                            mt="md",
+                                            children=[
+                                                dmc.Pagination(
+                                                    id="pagination",
+                                                    total=1,
+                                                    value=1,
+                                                )
+                                            ],
+                                            justify="center",
+                                        ),
                                     ]
                                 ),
                             ],
@@ -177,12 +189,14 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
 
 @omero_dataset_psf_beads.expanded_callback(
     dash.dependencies.Output("key_values_psf", "data"),
+    dash.dependencies.Output("pagination", "total"),
     [
-        dash.dependencies.Input("blank-input", "children"),
+        dash.dependencies.Input("pagination", "value"),
     ],
 )
 def func_psf_callback(*args, **kwargs):
     table_km = kwargs["session_state"]["context"]["bead_km_df"]
+    page = int(args[0])
     kkm = [
         "channel_name",
         "considered_valid_count",
@@ -198,12 +212,16 @@ def func_psf_callback(*args, **kwargs):
     table_kkm = table_km[kkm].copy()
     table_kkm = table_kkm.round(3)
     table_kkm.columns = table_kkm.columns.str.replace("_", " ").str.title()
+    total = math.ceil(len(table_kkm) / 4)
+    start_idx = (page - 1) * 4
+    end_idx = start_idx + 4
+    table_page = table_kkm.iloc[start_idx:end_idx]
     data = {
-        "head": table_kkm.columns.tolist(),
-        "body": table_kkm.values.tolist(),
+        "head": table_page.columns.tolist(),
+        "body": table_page.values.tolist(),
         "caption": "Key Measurements for the selected dataset",
     }
-    return data
+    return data, total
 
 
 @omero_dataset_psf_beads.expanded_callback(
