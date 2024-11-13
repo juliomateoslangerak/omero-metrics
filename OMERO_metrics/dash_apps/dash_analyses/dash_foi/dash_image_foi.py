@@ -210,7 +210,7 @@ def create_intensity_profile():
                         xAxisLabel="Position (pixels)",
                         yAxisLabel="Intensity",
                         tickLine="y",
-                        gridAxis="xy",
+                        gridAxis="x",
                         withXAxis=True,
                         withYAxis=True,
                         withLegend=True,
