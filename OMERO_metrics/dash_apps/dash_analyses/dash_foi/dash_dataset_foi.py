@@ -177,7 +177,7 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                                             label="Statistical measurements for all the channels",
                                                             children=[
                                                                 DashIconify(
-                                                                    icon="material-symbols:info-outline",
+                                                                    icon="material-symbols:info",
                                                                     height=20,
                                                                     color=THEME[
                                                                         "primary"
