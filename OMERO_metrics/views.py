@@ -232,29 +232,36 @@ def save_config(request, conn=None, **kwargs):
         mm_sample = kwargs["sample"]
         project_wrapper = conn.getObject("Project", project_id)
         setup = load_config_file_data(conn, project_wrapper)
-        if setup is None:
-            try:
-                dump.dump_config_input_parameters(
-                    conn, mm_input_parameters, mm_sample, project_wrapper
+        try:
+            if setup:
+                to_delete = []
+                for ann in project_wrapper.listAnnotations():
+                    if isinstance(ann, FileAnnotationWrapper):
+                        ns = ann.getFile().getName()
+                        if ns.startswith("study_config"):
+                            to_delete.append(ann.getId())
+                conn.deleteObjects(
+                    graph_spec="Annotation",
+                    obj_ids=to_delete,
+                    deleteAnns=True,
+                    deleteChildren=True,
+                    wait=True,
                 )
-                return (
-                    "File saved successfully, Re-click on the project to see the changes",
-                    "green",
-                )
-            except Exception as e:
-                if isinstance(e, omero.SecurityViolation):
-                    return (
-                        "You don't have the necessary permissions to save the configuration. ",
-                        "red",
-                    )
-                else:
-                    return str(e), "red"
-
-        else:
-            return (
-                "Failed to save file, a configuration file already exists",
-                "red",
+            dump.dump_config_input_parameters(
+                conn, mm_input_parameters, mm_sample, project_wrapper
             )
+            return (
+                "File saved successfully, Re-click on the project to see the changes",
+                "green",
+            )
+        except Exception as e:
+            if isinstance(e, omero.SecurityViolation):
+                return (
+                    "You don't have the necessary permissions to save the configuration. ",
+                    "red",
+                )
+            else:
+                return str(e), "red"
     except Exception as e:
         return str(e), "red"
 

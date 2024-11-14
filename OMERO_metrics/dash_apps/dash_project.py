@@ -11,6 +11,7 @@ from OMERO_metrics import views
 from OMERO_metrics.styles import (
     THEME,
     CARD_STYLE,
+    CARD_STYLE1,
     BUTTON_STYLE,
     TAB_STYLES,
     TAB_ITEM_STYLE,
@@ -22,6 +23,19 @@ from OMERO_metrics.styles import (
     HEADER_PAPER_STYLE,
 )
 import math
+from microscopemetrics.analyses.mappings import MAPPINGS
+
+from time import sleep
+
+sample_types = [x[0] for x in MAPPINGS]
+sample_types_dp = [
+    {
+        "label": dft.add_space_between_capitals(x.__name__),
+        "value": f"{i}",
+        "description": f"Configure analysis for {x.__name__}",  # Added descriptions
+    }
+    for i, x in enumerate(sample_types)
+]
 
 
 def make_control(text, action_id):
@@ -55,6 +69,7 @@ dash_app_project.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
         html.Div(id="blank-input"),
+        html.Div(id="save_config_result"),
         dmc.Paper(
             children=[
                 dmc.Group(
@@ -157,11 +172,9 @@ dash_app_project.layout = dmc.MantineProvider(
                     value="dashboard",
                     children=dmc.Container(
                         children=[
-                            # Filters Section
+                            # Chart Section
                             dmc.Paper(
-                                style={
-                                    **CARD_STYLE,
-                                },
+                                style={**CARD_STYLE1, "marginTop": "12px"},
                                 children=[
                                     dmc.Grid(
                                         children=[
@@ -202,26 +215,23 @@ dash_app_project.layout = dmc.MantineProvider(
                                             ),
                                         ],
                                     ),
-                                ],
-                            ),
-                            # Chart Section
-                            dmc.Paper(
-                                style={**CARD_STYLE, "marginTop": "12px"},
-                                children=[
                                     dmc.Title(
                                         "Measurement Trends",
                                         order=3,
-                                        style={"marginBottom": "12px"},
+                                        style={
+                                            "marginBottom": "12px",
+                                            "marginTop": "12px",
+                                        },
                                     ),
                                     html.Div(
                                         id="graph-project",
-                                        style={"height": "300px"},
+                                        style={"height": "250px"},
                                     ),
                                 ],
                             ),
                             # Data Table Section
                             dmc.Paper(
-                                style={**CARD_STYLE, "marginTop": "12px"},
+                                style={**CARD_STYLE1, "marginTop": "12px"},
                                 children=[
                                     dmc.Text(
                                         id="text_km",
@@ -245,8 +255,9 @@ dash_app_project.layout = dmc.MantineProvider(
                                                 children=[
                                                     dmc.Pagination(
                                                         id="pagination",
-                                                        total=1,
+                                                        total=0,
                                                         value=1,
+                                                        withEdges=True,
                                                     )
                                                 ],
                                                 justify="center",
@@ -265,8 +276,12 @@ dash_app_project.layout = dmc.MantineProvider(
                     value="settings",
                     children=dmc.Container(
                         children=[
+                            dmc.LoadingOverlay(
+                                id="loading-overlay",
+                                overlayProps={"radius": "sm", "blur": 2},
+                            ),
                             dmc.Paper(
-                                style={**CARD_STYLE, "marginTop": "12px"},
+                                style={**CARD_STYLE1, "marginTop": "12px"},
                                 children=[
                                     dmc.Grid(
                                         children=[
@@ -286,12 +301,6 @@ dash_app_project.layout = dmc.MantineProvider(
                                         mt="xl",
                                         children=[
                                             dmc.Button(
-                                                "Reset",
-                                                id="reset_config",
-                                                variant="outline",
-                                                color="red",
-                                            ),
-                                            dmc.Button(
                                                 "Update",
                                                 id="submit_config",
                                                 style=BUTTON_STYLE,
@@ -310,8 +319,12 @@ dash_app_project.layout = dmc.MantineProvider(
                     value="thresholds",
                     children=dmc.Container(
                         children=[
+                            dmc.LoadingOverlay(
+                                id="loading-overlay-threshold",
+                                overlayProps={"radius": "sm", "blur": 2},
+                            ),
                             dmc.Paper(
-                                style={**CARD_STYLE, "marginTop": "12px"},
+                                style={**CARD_STYLE1, "marginTop": "12px"},
                                 children=[
                                     dmc.Accordion(
                                         id="accordion-compose-controls",
@@ -325,12 +338,6 @@ dash_app_project.layout = dmc.MantineProvider(
                                         justify="flex-end",
                                         mt="xl",
                                         children=[
-                                            dmc.Button(
-                                                "Reset",
-                                                id="modal-close-button",
-                                                variant="outline",
-                                                color="red",
-                                            ),
                                             dmc.Button(
                                                 "Update",
                                                 id="modal-submit-button",
@@ -381,6 +388,7 @@ def update_dropdown(*args, **kwargs):
         dash.dependencies.Input("project-dropdown", "value"),
         dash.dependencies.Input("date-picker", "value"),
     ],
+    prevent_initial_call=True,
 )
 def update_table(*args, **kwargs):
     df_list = kwargs["session_state"]["context"]["key_measurements_list"]
@@ -508,19 +516,148 @@ def update_modal(*args, **kwargs):
     )
 
 
+dash_app_project.clientside_callback(
+    """
+    function updateLoadingState(n_clicks) {
+        if (n_clicks > 0 ) {
+            return true;
+        }
+        return false;
+    }
+
+
+    """,
+    dash.dependencies.Output(
+        "loading-overlay", "visible", allow_duplicate=True
+    ),
+    dash.dependencies.Input("submit_config", "n_clicks"),
+    prevent_initial_call=True,
+)
+dash_app_project.clientside_callback(
+    """
+    function updateLoadingThresholdState(n_clicks) {
+        if (n_clicks > 0) {
+            return true;
+        }
+        return false;
+    }
+
+
+    """,
+    dash.dependencies.Output(
+        "loading-overlay-threshold", "visible", allow_duplicate=True
+    ),
+    dash.dependencies.Input("modal-submit-button", "n_clicks"),
+    prevent_initial_call=True,
+)
+
+
 @dash_app_project.expanded_callback(
-    dash.dependencies.Output("modal-simple", "opened"),
+    dash.dependencies.Output("save_config_result", "children"),
+    dash.dependencies.Output("loading-overlay", "visible"),
     [
-        dash.dependencies.Input("modal-demo-button", "n_clicks"),
-        dash.dependencies.Input("modal-close-button", "n_clicks"),
-        dash.dependencies.Input("modal-submit-button", "n_clicks"),
-        dash.dependencies.State("modal-simple", "opened"),
+        dash.dependencies.Input("submit_config", "n_clicks"),
+        dash.dependencies.State("sample_form", "children"),
+        dash.dependencies.State("input_parameters_form", "children"),
     ],
     prevent_initial_call=True,
 )
-def modal_demo(*args, **kwargs):
-    opened = args[3]
-    return not opened
+def update_config_project(*args, **kwargs):
+    sample_form = args[1]
+    input_form = args[2]
+    project_id = int(kwargs["session_state"]["context"]["project_id"])
+    request = kwargs["request"]
+    setup = kwargs["session_state"]["context"]["setup"]
+    sample = setup["sample"]
+    mm_sample = getattr(mm_schema, sample["type"])
+    input_parameters = setup["input_parameters"]
+    mm_input_parameters = getattr(mm_schema, input_parameters["type"])
+    if dft.validate_form(sample_form) and dft.validate_form(input_form):
+        try:
+            input_parameters = dft.extract_form_data(
+                input_form, mm_input_parameters.class_name
+            )
+            mm_input_parameters = mm_input_parameters(**input_parameters)
+            sample = dft.extract_form_data(sample_form, mm_sample.class_name)
+            mm_sample = mm_sample(**sample)
+            response, color = views.save_config(
+                request=request,
+                project_id=int(project_id),
+                input_parameters=mm_input_parameters,
+                sample=mm_sample,
+            )
+            sleep(1)
+            return [
+                dmc.Alert(
+                    children=[
+                        dmc.Title(response, order=4),
+                        dmc.Text(
+                            (
+                                "Your configuration has been saved successfully."
+                                if color == "green"
+                                else "An error occurred while saving your configuration."
+                            ),
+                            size="sm",
+                        ),
+                    ],
+                    color=color,
+                    icon=DashIconify(
+                        icon=(
+                            "mdi:check-circle"
+                            if color == "green"
+                            else "mdi:alert-circle"
+                        )
+                    ),
+                    title="Success!" if color == "green" else "Error!",
+                    radius="md",
+                    withCloseButton=True,
+                    duration=3000,
+                )
+            ], False
+        except Exception as e:
+            return [
+                dmc.Alert(
+                    children=[
+                        dmc.Title("Error", order=4),
+                        dmc.Text(str(e), size="sm"),
+                    ],
+                    color="red",
+                    icon=DashIconify(icon="mdi:alert"),
+                    title="Error!",
+                    radius="md",
+                    withCloseButton=True,
+                    duration=3000,
+                )
+            ], False
+    else:
+        return [
+            dmc.Alert(
+                children=[
+                    dmc.Text("Please fill in all fields", size="sm"),
+                ],
+                color="red",
+                icon=DashIconify(icon="mdi:alert"),
+                title="Error!",
+                radius="md",
+                withCloseButton=True,
+                duration=3000,
+            )
+        ], False
+
+
+# @dash_app_project.expanded_callback(
+#     dash.dependencies.Output("modal-simple", "opened"),
+#     [
+#         dash.dependencies.Input("modal-demo-button", "n_clicks"),
+#         dash.dependencies.Input("modal-close-button", "n_clicks"),
+#         dash.dependencies.Input("modal-submit-button", "n_clicks"),
+#         dash.dependencies.State("modal-simple", "opened"),
+#     ],
+#     prevent_initial_call=True,
+# )
+# def modal_demo(*args, **kwargs):
+#     opened = args[3]
+#     return not opened
 
 
 @dash_app_project.expanded_callback(
@@ -607,6 +744,7 @@ def update_thresholds_controls(*args, **kwargs):
 
 @dash_app_project.expanded_callback(
     dash.dependencies.Output("notifications-container", "children"),
+    dash.dependencies.Output("loading-overlay-threshold", "visible"),
     [
         dash.dependencies.Input("modal-submit-button", "n_clicks"),
         dash.dependencies.State("accordion-compose-controls", "children"),
@@ -625,20 +763,23 @@ def threshold_callback1(*args, **kwargs):
             project_id=int(project_id),
             threshold=output,
         )
-        return dmc.Notification(
-            title="Thresholds Updated",
-            id="simple-notify",
-            color=color,
-            action="show",
-            message=response,
-            icon=(
-                DashIconify(icon="ic:round-celebration")
-                if color == "green"
-                else DashIconify(icon="ic:round-error")
+        return (
+            dmc.Notification(
+                title="Thresholds Updated",
+                id="simple-notify",
+                color=color,
+                action="show",
+                message=response,
+                icon=(
+                    DashIconify(icon="ic:round-celebration")
+                    if color == "green"
+                    else DashIconify(icon="ic:round-error")
+                ),
             ),
+            False,
         )
     else:
-        return dash.no_update
+        return dash.no_update, False
 
 
 def get_accordion_data(accordion_state, kkm):
