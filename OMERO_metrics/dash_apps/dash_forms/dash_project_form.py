@@ -439,7 +439,7 @@ def save_config_dash(*args, **kwargs):
 
     if args[0] > 0 and current == 2:
         if dft.validate_form(sample_form) and dft.validate_form(input_form):
-            sleep(2)
+            sleep(1)
             try:
                 input_parameters = dft.extract_form_data(
                     input_form, mm_input_parameters.class_name

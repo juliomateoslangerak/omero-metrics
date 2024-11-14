@@ -7,6 +7,7 @@ from OMERO_metrics.styles import THEME, HEADER_PAPER_STYLE, MANTINE_THEME
 from OMERO_metrics import views
 from time import sleep
 import math
+from OMERO_metrics.styles import TABLE_MANTINE_STYLE
 
 
 def get_icon(icon, size=20, color=None):
@@ -153,20 +154,16 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
                                             striped=True,
                                             highlightOnHover=True,
                                             className="table table-striped table-bordered",
-                                            styles={
-                                                "background-color": "white",
-                                                "width": "auto",
-                                                "height": "auto",
-                                                "overflow-X": "auto",
-                                            },
+                                            style=TABLE_MANTINE_STYLE,
                                         ),
                                         dmc.Group(
                                             mt="md",
                                             children=[
                                                 dmc.Pagination(
                                                     id="pagination",
-                                                    total=1,
+                                                    total=0,
                                                     value=1,
+                                                    withEdges=True,
                                                 )
                                             ],
                                             justify="center",

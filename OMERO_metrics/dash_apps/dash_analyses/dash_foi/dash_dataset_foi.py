@@ -16,6 +16,7 @@ from OMERO_metrics.styles import (
     PLOT_LAYOUT,
     LINE_CHART_SERIES,
     INPUT_BASE_STYLES,
+    TABLE_MANTINE_STYLE,
 )
 import math
 
@@ -197,14 +198,16 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                                             withTableBorder=True,
                                                             withColumnBorders=True,
                                                             fz="sm",
+                                                            style=TABLE_MANTINE_STYLE,
                                                         ),
                                                         dmc.Group(
                                                             mt="md",
                                                             children=[
                                                                 dmc.Pagination(
                                                                     id="pagination",
-                                                                    total=1,
+                                                                    total=0,
                                                                     value=1,
+                                                                    withEdges=True,
                                                                 )
                                                             ],
                                                             justify="center",

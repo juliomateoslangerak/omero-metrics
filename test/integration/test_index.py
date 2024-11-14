@@ -90,3 +90,18 @@ class TestLoadIndexPage(IWebTest):
         response = get(django_client, index_url)
         html_str = response.content.decode()
         assert "Omero Metrics" in html_str
+
+    # @pytest.mark.django_db
+    # def test_template_tag_use(self, user1):
+    #     'Check use of template tag'
+    #     for name in ['demo-one', 'demo-two', 'demo-three', 'demo-four', 'demo-five', 'demo-six',]:
+    #         url = reverse(name, kwargs={})
+    #
+    #         response = client.get(url)
+    #
+    #         assert response.content
+    #         assert response.status_code == 200
+    #
+    #         for src in re.findall('iframe src="(.*?)"', response.content.decode("utf-8")):
+    #             response = client.get(src + "_dash-layout")
+    #             assert response.status_code == 200, ""

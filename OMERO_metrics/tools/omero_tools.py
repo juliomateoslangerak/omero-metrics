@@ -142,7 +142,7 @@ def get_omero_obj_id_from_mm_obj(
         return [get_omero_obj_id_from_mm_obj(obj) for obj in mm_obj]
     else:
         raise ValueError(
-            "Input should be a metrics object or a list of metrics objects"
+            f"Input {mm_obj} should be a metrics object or a list of metrics objects"
         )
 
 

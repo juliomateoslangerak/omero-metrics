@@ -21,7 +21,8 @@ TAB_STYLES = {
         "fontSize": "14px",
         "fontWeight": 500,
         "height": "40px",
-        "borderRadius": "6px",
+        "borderRadiusBottom": "6px",
+        "backgroundColor": "white",
         "&[data-active]": {
             "backgroundColor": THEME["primary_light"],
             "color": THEME["primary"],
@@ -33,6 +34,7 @@ TAB_ITEM_STYLE = {
     "fontSize": "1.1rem",
     "fontWeight": "bold",
     "color": THEME["primary"],
+    "backgroundColor": "#e2ffe2",
 }
 
 
@@ -44,7 +46,7 @@ INPUT_STYLES = {
 }
 
 TABLE_MANTINE_STYLE = {
-    "backgroundColor": "white",
+    "backgroundColor": "#e2ffe2",
     "width": "98%",
     "height": "auto",
     "margin": "5px",
@@ -178,6 +180,15 @@ DATEPICKER_STYLES = {
 
 CARD_STYLE = {
     "backgroundColor": THEME["surface"],
+    "borderRadius": "8px",
+    "border": f'1px solid {THEME["border"]}',
+    "padding": "24px",
+    "height": "100%",
+    "boxShadow": "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+}
+
+CARD_STYLE1 = {
+    "backgroundColor": "white",
     "borderRadius": "8px",
     "border": f'1px solid {THEME["border"]}',
     "padding": "24px",

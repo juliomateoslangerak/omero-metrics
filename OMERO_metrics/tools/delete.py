@@ -25,7 +25,7 @@ def delete_data_references(mm_obj: mm_schema.MetricsObject) -> None:
         return [delete_data_references(obj) for obj in mm_obj]
     else:
         raise ValueError(
-            "Input should be a metrics object or a list of metrics objects"
+            f"Input ({mm_obj}) should be a metrics object or a list of metrics objects"
         )
 
 
