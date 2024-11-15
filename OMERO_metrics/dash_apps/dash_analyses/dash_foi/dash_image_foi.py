@@ -248,6 +248,7 @@ omero_image_foi.layout = dmc.MantineProvider(
                                         ),
                                         dcc.Graph(
                                             id="rois-graph",
+                                            style={"height": "400px"},
                                         ),
                                     ],
                                     p="md",

@@ -111,6 +111,21 @@ dash_app_project.layout = dmc.MantineProvider(
                                         icon="ic:round-cloud-download"
                                     ),
                                 ),
+                                # dmc.Select(
+                                #     label="Select your favorite library",
+                                #     placeholder="Select value",
+                                #     id="select-opened",
+                                #     value="pd",
+                                #     data=[
+                                #         {"value": "pd", "label": "Pandas"},
+                                #         {"value": "np", "label": "NumPy"},
+                                #         {"value": "tf", "label": "TensorFlow"},
+                                #         {"value": "torch", "label": "PyTorch"},
+                                #     ],
+                                #     w=100,
+                                #     mb=10,
+                                #
+                                # ),
                                 dmc.Button(
                                     id="delete_project_data",
                                     children="Delete",
@@ -176,6 +191,13 @@ dash_app_project.layout = dmc.MantineProvider(
                             dmc.Paper(
                                 style={**CARD_STYLE1, "marginTop": "12px"},
                                 children=[
+                                    dmc.Title(
+                                        "Measurement Trends",
+                                        order=3,
+                                        style={
+                                            "marginBottom": "12px",
+                                        },
+                                    ),
                                     dmc.Grid(
                                         children=[
                                             dmc.GridCol(
@@ -214,18 +236,28 @@ dash_app_project.layout = dmc.MantineProvider(
                                                 ],
                                             ),
                                         ],
-                                    ),
-                                    dmc.Title(
-                                        "Measurement Trends",
-                                        order=3,
                                         style={
                                             "marginBottom": "12px",
-                                            "marginTop": "12px",
                                         },
                                     ),
                                     html.Div(
                                         id="graph-project",
                                         style={"height": "250px"},
+                                        children=dmc.LineChart(
+                                            id="line-chart",
+                                            h=300,
+                                            data=[],
+                                            dataKey="Date",
+                                            withLegend=True,
+                                            legendProps={
+                                                "horizontalAlign": "top",
+                                                "left": 50,
+                                            },
+                                            series=[],
+                                            curveType="natural",
+                                            style={"padding": 20},
+                                            xAxisLabel="Processed Date",
+                                        ),
                                     ),
                                 ],
                             ),
@@ -383,7 +415,9 @@ def update_dropdown(*args, **kwargs):
 
 
 @dash_app_project.expanded_callback(
-    dash.dependencies.Output("graph-project", "children"),
+    dash.dependencies.Output("line-chart", "data"),
+    dash.dependencies.Output("line-chart", "series"),
+    dash.dependencies.Output("line-chart", "referenceLines"),
     [
         dash.dependencies.Input("project-dropdown", "value"),
         dash.dependencies.Input("date-picker", "value"),
@@ -409,6 +443,7 @@ def update_table(*args, **kwargs):
     else:
         ref = []
     dates_range = args[1]
+    print(f"Dates range: {dates_range}")
     dates = kwargs["session_state"]["context"]["dates"]
     df_filtering = pd.DataFrame(dates, columns=["Date"])
     df_dates = df_filtering[
@@ -434,23 +469,13 @@ def update_table(*args, **kwargs):
         .to_dict("records")[0]
         for i, df in enumerate(df_list_filtered)
     ]
-    line = dmc.LineChart(
-        id="line-chart",
-        h=300,
-        dataKey="Date",
-        data=data,
-        withLegend=True,
-        legendProps={"horizontalAlign": "top", "left": 50},
-        # yAxisProps={"tickMargin": 15, "orientation": "center"},
-        series=[{"name": kkm[measurement], "color": "green.7"}],
-        curveType="natural",
-        style={"padding": 20},
-        xAxisLabel="Processed Date",
-        referenceLines=ref,
-        # yAxisLabel=str(kkm[measurement]).replace("_", " ").title(),
-    )
-
-    return line
+    series = [
+        {
+            "name": kkm[measurement],
+            "color": "green.7",
+        }
+    ]
+    return data, series, ref
 
 
 @dash_app_project.expanded_callback(
@@ -565,6 +590,8 @@ dash_app_project.clientside_callback(
 def update_config_project(*args, **kwargs):
     sample_form = args[1]
     input_form = args[2]
+    print(f"Sample form valid: {sample_form}")
+    print(f"Input form valid: {input_form}")
     project_id = int(kwargs["session_state"]["context"]["project_id"])
     request = kwargs["request"]
     setup = kwargs["session_state"]["context"]["setup"]
@@ -634,6 +661,14 @@ def update_config_project(*args, **kwargs):
             dmc.Alert(
                 children=[
                     dmc.Text("Please fill in all fields", size="sm"),
+                    dmc.Text(
+                        f"Sample form valid: {dft.validate_form(sample_form)}",
+                        size="sm",
+                    ),
+                    dmc.Text(
+                        f"Input parameter form valid: {dft.validate_form(input_form)}",
+                        size="sm",
+                    ),
                 ],
                 color="red",
                 icon=DashIconify(icon="mdi:alert"),

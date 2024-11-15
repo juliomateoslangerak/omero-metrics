@@ -24,7 +24,7 @@ TAB_STYLES = {
         "borderRadiusBottom": "6px",
         "backgroundColor": "white",
         "&[data-active]": {
-            "backgroundColor": THEME["primary_light"],
+            "backgroundColor": "#e2ffe2",
             "color": THEME["primary"],
         },
     }
@@ -34,7 +34,11 @@ TAB_ITEM_STYLE = {
     "fontSize": "1.1rem",
     "fontWeight": "bold",
     "color": THEME["primary"],
-    "backgroundColor": "#e2ffe2",
+    "backgroundColor": THEME["surface"],
+    "&[data-active]": {
+        "backgroundColor": "#e2ffe2",
+        "color": THEME["primary"],
+    },
 }
 
 
@@ -188,7 +192,7 @@ CARD_STYLE = {
 }
 
 CARD_STYLE1 = {
-    "backgroundColor": "white",
+    "backgroundColor": "#e2ffe2",
     "borderRadius": "8px",
     "border": f'1px solid {THEME["border"]}',
     "padding": "24px",

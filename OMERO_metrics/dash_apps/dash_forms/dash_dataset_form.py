@@ -467,7 +467,12 @@ def run_analysis(*args, **kwargs):
             return dmc.Alert(
                 children=[
                     dmc.Title(
-                        "Your analysis completed successfully!", order=4
+                        children=(
+                            "Your analysis completed successfully!"
+                            if color == "green"
+                            else "Oops! something happened"
+                        ),
+                        order=4,
                     ),
                     dmc.Text(
                         msg,
@@ -475,10 +480,13 @@ def run_analysis(*args, **kwargs):
                     ),
                 ],
                 color=color,
-                icon=DashIconify(icon="mdi:check-circle"),
-                title="Success!",
+                icon=DashIconify(
+                    icon=(
+                        "mdi:check-circle" if color == "green" else "mdi:alert"
+                    )
+                ),
+                title="Success!" if color == "green" else "Error!",
                 radius="md",
-                withCloseButton=True,
             )
         except Exception as e:
             return dmc.Alert(
@@ -490,7 +498,6 @@ def run_analysis(*args, **kwargs):
                 icon=DashIconify(icon="mdi:alert"),
                 title="Error!",
                 radius="md",
-                withCloseButton=True,
             )
     return dash.no_update
 

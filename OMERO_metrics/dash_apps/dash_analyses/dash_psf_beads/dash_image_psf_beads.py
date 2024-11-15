@@ -112,21 +112,15 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                 ),
                                                 dcc.Graph(
                                                     figure={},
+                                                    style={"height": "400px"},
                                                     id="psf_image_graph",
-                                                    config={
-                                                        "displayModeBar": True,
-                                                        "scrollZoom": True,
-                                                        "modeBarButtonsToRemove": [
-                                                            "lasso2d",
-                                                            "select2d",
-                                                        ],
-                                                    },
                                                 ),
                                             ],
                                             p="md",
                                             radius="md",
                                             withBorder=True,
                                             shadow="sm",
+                                            h="100%",
                                         ),
                                     ],
                                     span=8,
@@ -236,6 +230,9 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                             leftSection=get_icon(
                                                                 "material-symbols:palette"
                                                             ),
+                                                            rightSection=get_icon(
+                                                                "radix-icons:chevron-down"
+                                                            ),
                                                         ),
                                                         dmc.Switch(
                                                             id="color_switch_psf_image",
@@ -257,6 +254,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                             ],
                         ),
                         dmc.Paper(
+                            id="paper_mip",
                             shadow="sm",
                             p="md",
                             radius="md",
@@ -273,17 +271,6 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                             size="lg",
                                                             fw=500,
                                                             c=THEME["primary"],
-                                                        ),
-                                                        dmc.Tooltip(
-                                                            label="Click on a bead in the main image to view its MIP",
-                                                            children=[
-                                                                get_icon(
-                                                                    "material-symbols:info",
-                                                                    color=THEME[
-                                                                        "primary"
-                                                                    ],
-                                                                )
-                                                            ],
                                                         ),
                                                     ],
                                                     justify="space-between",
@@ -326,9 +313,13 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                                         },
                                                                     ],
                                                                     value="x",
+                                                                    allowDeselect=False,
                                                                     id="axis_image_psf",
+                                                                    rightSection=get_icon(
+                                                                        "radix-icons:chevron-down"
+                                                                    ),
                                                                     leftSection=get_icon(
-                                                                        "material-symbols:axis"
+                                                                        icon="mdi:axis-x-arrow"
                                                                     ),
                                                                 ),
                                                             ],
@@ -361,6 +352,15 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
         ),
     ],
 )
+
+
+@omero_image_psf_beads.expanded_callback(
+    dash.dependencies.Output("axis_image_psf", "leftSection"),
+    [dash.dependencies.Input("axis_image_psf", "value")],
+)
+def update_icon(*args, **kwargs):
+    icon = f"mdi:axis-{args[0]}-arrow"
+    return get_icon(icon=icon)
 
 
 @omero_image_psf_beads.expanded_callback(
@@ -531,7 +531,7 @@ def callback_mip(*args, **kwargs):
                     tickfont=dict(size=10),
                 ),
             },
-            margin={"l": 20, "r": 20, "t": 20, "b": 20},
+            margin={"l": 20, "r": 20, "t": 30, "b": 20},
             plot_bgcolor=THEME["background"],
             paper_bgcolor=THEME["background"],
             # xaxis_title="X Position (pixels)",
@@ -575,6 +575,11 @@ def line_graph_axis(bead_index, channel_index, axis, kwargs):
     fig_ip_x = px.line(df_x)
     fig_ip_x.update_traces(
         patch={"line": {"dash": "dot"}}, selector={"name": "fitted"}
+    )
+    fig_ip_x.update_layout(
+        plot_bgcolor=THEME["background"],
+        paper_bgcolor=THEME["background"],
+        font={"color": THEME["text"]["primary"]},
     )
     return fig_ip_x
 

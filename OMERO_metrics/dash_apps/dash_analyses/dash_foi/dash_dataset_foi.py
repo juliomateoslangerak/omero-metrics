@@ -374,6 +374,8 @@ def update_intensity_map(*args, **kwargs):
             **PLOT_LAYOUT,
             xaxis_title="X Position (pixels)",
             yaxis_title="Y Position (pixels)",
+            xaxis=dict(visible=False),
+            yaxis=dict(visible=False),
         )
         return fig
     except Exception as e:
