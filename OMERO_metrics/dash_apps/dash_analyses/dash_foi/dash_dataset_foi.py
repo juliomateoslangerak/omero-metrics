@@ -5,6 +5,7 @@ from django_plotly_dash import DjangoDash
 import plotly.express as px
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
+from linkml_runtime.dumpers import YAMLDumper
 from skimage.exposure import rescale_intensity
 from OMERO_metrics.styles import (
     THEME,
@@ -67,18 +68,42 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                     children="Download",
                                     color="blue",
                                     variant="filled",
-                                    leftSection=DashIconify(
-                                        icon="ic:round-cloud-download"
+                                    rightSection=DashIconify(
+                                        icon="line-md:download",
+                                        height=20,
                                     ),
                                 ),
+                                dcc.Download(id="download"),
                                 dmc.Button(
                                     id="delete_dataset_data",
                                     children="Delete",
                                     color="red",
                                     variant="filled",
-                                    leftSection=DashIconify(
-                                        icon="ic:round-delete-forever"
+                                    rightSection=DashIconify(
+                                        icon="line-md:document-delete-twotone",
+                                        height=20,
                                     ),
+                                ),
+                                dmc.Select(
+                                    data=[
+                                        "Pandas",
+                                        "NumPy",
+                                        "TensorFlow",
+                                        "PyTorch",
+                                    ],
+                                    value="Pandas",
+                                    comboboxProps={
+                                        "withinPortal": False,
+                                        "zIndex": 1000,
+                                    },
+                                    style={
+                                        "backgroundColor": THEME["primary"],
+                                        "color": "green",
+                                        "background-color": "green",
+                                    },
+                                    styles={
+                                        "root": {"backgroundColor": "red"},
+                                    },
                                 ),
                                 dmc.Badge(
                                     "FOI Analysis",
@@ -441,3 +466,14 @@ def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:
     value = getattr(df, col).str.replace("_", " ", regex=True).str.title()
     setattr(df, col, value)
     return df
+
+
+@omero_dataset_foi.expanded_callback(
+    dash.dependencies.Output("download", "data"),
+    [dash.dependencies.Input("download_dataset_data", "n_clicks")],
+    prevent_initial_call=True,
+)
+def download_dataset_data(*args, **kwargs):
+    mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
+    dumper = YAMLDumper()
+    return dict(content=dumper.dumps(mm_dataset), filename="dataset.yaml")

@@ -7,6 +7,8 @@ from OMERO_metrics.tools.data_managers import (
     ImageManager,
 )
 from django.shortcuts import render
+
+from OMERO_metrics.tools.dump import _remove_unsupported_types
 from OMERO_metrics.tools.omero_tools import (
     get_ref_from_object,
 )
@@ -192,7 +194,13 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
         dm.load_data()
         dm.visualize_data()
         dash_context["context"] = dm.context
+        mm_dataset = dm.mm_dataset
+        _remove_unsupported_types(mm_dataset.input_data)
+        _remove_unsupported_types(mm_dataset.input_parameters)
+        if mm_dataset.output:
+            _remove_unsupported_types(mm_dataset.output)
         dash_context["context"]["dataset_id"] = dataset_id
+        dash_context["context"]["mm_dataset"] = mm_dataset
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
