@@ -84,27 +84,27 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                         height=20,
                                     ),
                                 ),
-                                dmc.Select(
-                                    data=[
-                                        "Pandas",
-                                        "NumPy",
-                                        "TensorFlow",
-                                        "PyTorch",
-                                    ],
-                                    value="Pandas",
-                                    comboboxProps={
-                                        "withinPortal": False,
-                                        "zIndex": 1000,
-                                    },
-                                    style={
-                                        "backgroundColor": THEME["primary"],
-                                        "color": "green",
-                                        "background-color": "green",
-                                    },
-                                    styles={
-                                        "root": {"backgroundColor": "red"},
-                                    },
-                                ),
+                                # dmc.Select(
+                                #     data=[
+                                #         "Pandas",
+                                #         "NumPy",
+                                #         "TensorFlow",
+                                #         "PyTorch",
+                                #     ],
+                                #     value="Pandas",
+                                #     comboboxProps={
+                                #         "withinPortal": False,
+                                #         "zIndex": 1000,
+                                #     },
+                                #     style={
+                                #         "backgroundColor": THEME["primary"],
+                                #         "color": "green",
+                                #         "background-color": "green",
+                                #     },
+                                #     styles={
+                                #         "root": {"backgroundColor": "red"},
+                                #     },
+                                # ),
                                 dmc.Badge(
                                     "FOI Analysis",
                                     color=THEME["primary"],
