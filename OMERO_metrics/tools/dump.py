@@ -512,28 +512,28 @@ def dump_image(
 def dump_roi(
     conn: BlitzGateway,
     roi: mm_schema.Roi,
-    target_images: Union[ImageWrapper, list[ImageWrapper]] = None,
+    target_image: ImageWrapper = None,
 ):
-    if target_images is None:
+    if target_image is None:
         try:
-            target_images = [
-                omero_tools.get_omero_obj_from_mm_obj(conn=conn, mm_obj=ref)
-                for ref in roi.linked_references
-                if isinstance(ref, mm_schema.DataReference)
-            ]
+            target_image = omero_tools.get_omero_obj_from_mm_obj(
+                conn=conn, mm_obj=roi.linked_references
+            )
         except AttributeError:
             logger.error(
                 f"ROI {roi.name} must be linked to an image. No image provided."
             )
             return None
-
-    if not target_images or not all(
-        isinstance(i, ImageWrapper) for i in target_images
-    ):
-        logger.error(
-            f"ROI {roi.name} must be linked to an image. {target_images} object provided is not an image."
-        )
-        return None
+        if len(target_image) > 1:
+            logger.error(
+                f"ROI {roi.name} must be linked to a single image. More than one image provided."
+            )
+            return None
+        if len(target_image) == 0:
+            logger.error(
+                f"ROI {roi.name} must be linked to an image. No image provided."
+            )
+            return None
 
     handler = {
         "points": lambda shape: omero_tools.create_shape_point(shape),
@@ -558,22 +558,17 @@ def dump_roi(
             shape_handler(shape) for shape in getattr(roi, shape_field.name)
         ]
 
-    omero_rois = []
-    for target_image in target_images:
-        omero_roi = omero_tools.create_roi(
-            conn=conn,
-            image=target_image,
-            shapes=shapes,
-            name=roi.name,
-            description=roi.description,
-        )
-        omero_rois.append(omero_roi)
+    omero_roi = omero_tools.create_roi(
+        conn=conn,
+        image=target_image,
+        shapes=shapes,
+        name=roi.name,
+        description=roi.description,
+    )
 
-    roi.linked_references = [
-        omero_tools.get_ref_from_object(r) for r in omero_rois
-    ]
+    roi.data_reference = omero_tools.get_ref_from_object(omero_roi)
 
-    return omero_rois
+    return omero_roi
 
 
 def dump_tag(

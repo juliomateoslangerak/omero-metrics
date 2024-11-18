@@ -262,7 +262,11 @@ class DatasetManager:
             return False
         try:
             logger.warning("Deleting processed data...")
-            delete.delete_dataset_output(self._conn, self.mm_dataset)
+            delete.delete_mm_obj_omero_refs(self._conn, self.mm_dataset.output)
+            self.mm_dataset.validated = False
+            self.mm_dataset.processed = False
+            self.mm_dataset.output = None
+            self.processed = False
         except Exception as e:
             logger.error(f"Error deleting processed data: {e}")
             self.mm_dataset.validated = False

@@ -1,3 +1,5 @@
+import contextlib
+import dataclasses
 import datetime
 import json
 import logging
@@ -131,19 +133,44 @@ def get_object_ids_from_url(url: str) -> list[tuple[str, int]]:
         return [(tail.split("-")[0], int(tail.split("-")[-1]))]
 
 
-def get_omero_obj_id_from_mm_obj(
+def get_omero_obj_ids_from_mm_obj(
     mm_obj: mm_schema.MetricsObject,
-) -> Union[ImageWrapper, DatasetWrapper, ProjectWrapper]:
-    if isinstance(mm_obj, mm_schema.DataReference):
-        return mm_obj.omero_object_id
-    elif isinstance(mm_obj, mm_schema.MetricsObject):
-        return mm_obj.data_reference.omero_object_id
-    elif isinstance(mm_obj, list):
-        return [get_omero_obj_id_from_mm_obj(obj) for obj in mm_obj]
-    else:
-        raise ValueError(
-            "Input should be a metrics object or a list of metrics objects"
-        )
+) -> list[int]:
+    try:
+        if isinstance(mm_obj, mm_schema.DataReference):
+            return [mm_obj.omero_object_id]
+        elif isinstance(mm_obj, mm_schema.MetricsObject):
+            return [mm_obj.data_reference.omero_object_id]
+        elif isinstance(mm_obj, list):
+            result = []
+            for obj in mm_obj:
+                result.extend(get_omero_obj_ids_from_mm_obj(obj))
+            return result
+        else:
+            raise TypeError(
+                f"Input {mm_obj} should be a metrics object or a list of metrics objects"
+            )
+    except AttributeError as e:
+        raise AttributeError(
+            f"Object {mm_obj} does not have an OMERO object ID"
+        ) from e
+
+
+def get_refs_from_mm_obj(mm_obj: mm_schema.MetricsObject) -> list:
+    refs = []
+    with contextlib.suppress(AttributeError):
+        refs.append(mm_obj.data_reference)
+        if isinstance(mm_obj, dataclasses.dataclass):
+            for field in dataclasses.fields(mm_obj):
+                field_obj = getattr(mm_obj, field.name)
+                if isinstance(field_obj, list):
+                    refs.extend(get_refs_from_mm_obj(obj) for obj in field_obj)
+                elif isinstance(field_obj, mm_schema.MetricsObject):
+                    refs.extend(get_refs_from_mm_obj(field_obj))
+        elif isinstance(mm_obj, list):
+            refs.extend(get_refs_from_mm_obj(obj) for obj in mm_obj)
+
+    return refs
 
 
 def get_omero_obj_from_mm_obj(
@@ -1163,6 +1190,7 @@ def del_objects(
     delete_children: bool = True,
     check_permission: bool = False,
     dry_run_first: bool = True,
+    wait: bool = True,
 ):
     if check_permission and not have_delete_permission(
         conn, object_types, object_ids
@@ -1192,6 +1220,7 @@ def del_objects(
             deleteAnns=delete_anns,
             deleteChildren=delete_children,
             dryRun=False,
+            wait=wait,
         )
     except Exception as e:
         logger.error(f"Error during deletion: {e}")
