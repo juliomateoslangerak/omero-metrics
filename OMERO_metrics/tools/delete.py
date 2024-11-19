@@ -1,7 +1,7 @@
 import logging
+import omero
 
 logger = logging.getLogger(__name__)
-from typing import Union
 from OMERO_metrics.tools import omero_tools
 import microscopemetrics_schema.datamodel as mm_schema
 from omero.gateway import BlitzGateway
@@ -25,7 +25,7 @@ def delete_data_references(mm_obj: mm_schema.MetricsObject) -> None:
         return [delete_data_references(obj) for obj in mm_obj]
     else:
         raise ValueError(
-            "Input should be a metrics object or a list of metrics objects"
+            f"Input ({mm_obj}) should be a metrics object or a list of metrics objects"
         )
 
 
@@ -75,7 +75,7 @@ def delete_dataset_file_ann(
         id_to_del = dataset.data_reference.omero_object_id
     except AttributeError:
         logger.error(
-            "No file annotation reference associated with dataset. Unable to delete"
+            "No file annotation reference associated with dataset. Unable to delete."
         )
         return False
     del_success = omero_tools.del_object(
@@ -97,6 +97,7 @@ def delete_all_mm_analysis(conn, group_id):
     rois = conn.getObjects("Roi", opts={"group": group_id})
     rois_ids = [roi.getId() for roi in rois if roi.canDelete()]
     obj_ids = []
+    # TODO: Delete output images
     for ann in all_annotations:
         if ann.getNs() and ann.getNs().startswith("microscopemetrics"):
             obj_ids.append(ann.getId())
@@ -111,6 +112,15 @@ def delete_all_mm_analysis(conn, group_id):
             )
         if len(rois_ids) > 0:
             conn.deleteObjects(graph_spec="Roi", obj_ids=rois_ids, wait=True)
-        return "All microscopemetrics analysis deleted"
+        return "All microscopemetrics analysis deleted", "green"
     except Exception as e:
-        return str(e)
+        if isinstance(e, omero.CmdError):
+            return (
+                "You don't have the necessary permissions to delete the annotations.",
+                "red",
+            )
+        else:
+            return (
+                "Something happened. Couldn't delete the annotations.",
+                "red",
+            )

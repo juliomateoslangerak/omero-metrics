@@ -1,0 +1,36 @@
+project:
+  output-dir: _output
+
+#toc: true
+#number-sections: true
+#bibliography: references.bib
+from: markdown+emoji
+date: today
+date-format: "MMMM YYYY"
+
+execute:
+  freeze: auto
+
+format:
+  revealjs:
+    title: OMERO Metrics slides
+    theme: [simple, custom.scss]
+    embed-resources: true
+    margin: 0.15
+    stretch: false
+    centre: true
+    center-title-slide: true
+    center: false
+    logo: ./media/logo_FBI.png
+#    footer: "OMERO Metrics"
+    transition: slide
+    background-transition: fade
+    navigation-mode: vertical
+    controls-layout: bottom-right
+    controls-tutorial: true
+    overview: true
+
+    title-slide-attributes:
+      data-background-image: ./media/logo_omero-metrics.png
+      data-background-size: 17%
+      data-background-position: 50% 10%

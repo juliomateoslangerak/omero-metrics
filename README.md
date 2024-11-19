@@ -1,8 +1,12 @@
 
-[![Actions Status](https://github.com/Wapaa/OMERO-project/workflows/OMERO/badge.svg)](https://github.com/Wapaa/OMERO-project/actions)
-[![GPLv2 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/MontpellierRessourcesImagerie/OMERO-metrics/omero_plugin.yml)
+![GitHub License](https://img.shields.io/github/license/MontpellierRessourcesImagerie/OMERO-metrics)
 
-<img alt="Logo" height="100" src="https://raw.githubusercontent.com/Wapaa/OMERO-metrics/dev/OMERO_metrics/static/OMERO_metrics/images/logo.png" width="150"/>
+<img alt="OMERO-metrics logo" height="100" src="OMERO_metrics/static/OMERO_metrics/images/metrics_logo.png"/>
+
+This project is financed by [France BioImaging](https://france-bioimaging.org/).
+
+<img alt="FBI logo" height="100" src="docs/slides/media/logo_FBI.png"/>
 
 OMERO.metrics with Docker
 =========================
@@ -36,10 +40,6 @@ Execute this code to generate some test data:
 
 Now restart your `omero-web` server and go to
 <http://localhost:5080/omero_metrics/> in your browser.
-
-
-
-
 
 # OMERO-metrics with a local omero-web
 
@@ -110,5 +110,5 @@ licensed under the terms of the AGPL v3.
 Copyright
 =========
 
-2024 University of Dundee
+2024 CNRS
 

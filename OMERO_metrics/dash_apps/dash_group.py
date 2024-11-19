@@ -7,6 +7,22 @@ from dash_iconify import DashIconify
 from OMERO_metrics import views
 from time import sleep
 from django.urls import reverse
+from OMERO_metrics.styles import (
+    THEME,
+    MANTINE_THEME,
+    CONTAINER_STYLE,
+    PAPER_STYLE,
+    TABLE_STYLE,
+    TABLE_CELL_STYLE,
+    TABLE_HEADER_STYLE,
+    TAB_STYLES,
+    TAB_ITEM_STYLE,
+    STYLE_DATA_CONDITIONAL,
+    SELECT_STYLES,
+    DATEPICKER_STYLES,
+    HEADER_PAPER_STYLE,
+)
+
 
 dashboard_name = "omero_group_dash"
 dash_app_group = DjangoDash(
@@ -15,31 +31,70 @@ dash_app_group = DjangoDash(
     external_stylesheets=dmc.styles.ALL,
 )
 
-# Theme configuration
-THEME = {
-    "primary": "#189A35",
-    "secondary": "#189A35",
-    "background": "#f8fafc",
-    "surface": "#ffffff",
-    "border": "#e2e8f0",
-    "success": "#10b981",
-    "error": "#ef4444",
-}
 
 dash_app_group.layout = dmc.MantineProvider(
-    theme={
-        "colorScheme": "light",
-        "primaryColor": "green",
-        "components": {
-            "Button": {"styles": {"root": {"fontWeight": 500}}},
-            "Title": {"styles": {"root": {"letterSpacing": "-0.5px"}}},
-        },
-    },
+    theme=MANTINE_THEME,
     children=[
         dmc.NotificationProvider(position="top-center"),
         html.Div(id="notifications-container"),
+        dmc.Paper(
+            children=[
+                dmc.Group(
+                    [
+                        dmc.Group(
+                            [
+                                html.Img(
+                                    src="/static/OMERO_metrics/images/metrics_logo.png",
+                                    style={
+                                        "width": "120px",
+                                        "height": "auto",
+                                    },
+                                ),
+                                dmc.Stack(
+                                    [
+                                        dmc.Title(
+                                            "Group Dashboard",
+                                            c=THEME["primary"],
+                                            size="h2",
+                                        ),
+                                        dmc.Text(
+                                            "Group Analysis Dashboard",
+                                            c=THEME["text"]["secondary"],
+                                            size="sm",
+                                        ),
+                                    ],
+                                    gap="xs",
+                                ),
+                            ],
+                        ),
+                        dmc.Group(
+                            [
+                                dmc.Button(
+                                    id="delete_group_data",
+                                    children="Delete",
+                                    color="red",
+                                    variant="filled",
+                                    leftSection=DashIconify(
+                                        icon="ic:round-delete-forever"
+                                    ),
+                                ),
+                                dmc.Badge(
+                                    "Group Analysis",
+                                    color=THEME["primary"],
+                                    variant="dot",
+                                    size="lg",
+                                ),
+                            ]
+                        ),
+                    ],
+                    justify="space-between",
+                ),
+            ],
+            **HEADER_PAPER_STYLE,
+        ),
         dmc.Tabs(
-            [
+            styles=TAB_STYLES,
+            children=[
                 dmc.TabsList(
                     [
                         dmc.TabsTab(
@@ -47,22 +102,14 @@ dash_app_group.layout = dmc.MantineProvider(
                             leftSection=DashIconify(icon="tabler:microscope"),
                             value="microscope_health",
                             color=THEME["primary"],
-                            style={
-                                "fontSize": "1.1rem",
-                                "fontWeight": "bold",
-                                "color": THEME["primary"],
-                            },
+                            style=TAB_ITEM_STYLE,
                         ),
                         dmc.TabsTab(
                             "History",
                             leftSection=DashIconify(icon="bx:history"),
                             value="history",
                             color=THEME["primary"],
-                            style={
-                                "fontSize": "1.1rem",
-                                "fontWeight": "bold",
-                                "color": THEME["primary"],
-                            },
+                            style=TAB_ITEM_STYLE,
                         ),
                     ],
                     grow=True,
@@ -110,20 +157,11 @@ dash_app_group.layout = dmc.MantineProvider(
                                 shadow="sm",
                                 radius="md",
                                 p="lg",
-                                style={
-                                    "width": "100%",
-                                    "maxWidth": "600px",
-                                    "margin": "auto",
-                                },
+                                style=PAPER_STYLE,
                             ),
                         ],
                         fluid=True,
-                        style={
-                            "backgroundColor": THEME["background"],
-                            "margin": "10px",
-                            "borderRadius": "0.5rem",
-                            "padding": "10px",
-                        },
+                        style=CONTAINER_STYLE,
                     ),
                     value="microscope_health",
                 ),
@@ -160,6 +198,7 @@ dash_app_group.layout = dmc.MantineProvider(
                                                 leftSection=DashIconify(
                                                     icon="clarity:date-line"
                                                 ),
+                                                styles=DATEPICKER_STYLES,
                                             ),
                                             dmc.Select(
                                                 id="select_mimetype",
@@ -167,6 +206,7 @@ dash_app_group.layout = dmc.MantineProvider(
                                                 value="0",
                                                 w=250,
                                                 allowDeselect=False,
+                                                styles=SELECT_STYLES,
                                             ),
                                             dmc.Button(
                                                 id="delete-all",
@@ -226,16 +266,16 @@ dash_app_group.layout = dmc.MantineProvider(
                                         id="project_file_annotations_table",
                                         style={"margin": "10px"},
                                     ),
-                                    dmc.Divider(mb="md"),
-                                    dmc.Text(
-                                        "Map Annotations",
-                                        c=THEME["primary"],
-                                        size="xl",
-                                    ),
-                                    html.Div(
-                                        id="project_map_annotations_table",
-                                        style={"margin": "10px"},
-                                    ),
+                                    # dmc.Divider(mb="md"),
+                                    # dmc.Text(
+                                    #     "Map Annotations",
+                                    #     c=THEME["primary"],
+                                    #     size="xl",
+                                    # ),
+                                    # html.Div(
+                                    #     id="project_map_annotations_table",
+                                    #     style={"margin": "10px"},
+                                    # ),
                                     html.Div(id="blank-input"),
                                     html.Div(id="result"),
                                 ],
@@ -246,12 +286,7 @@ dash_app_group.layout = dmc.MantineProvider(
                             ),
                         ],
                         fluid=True,
-                        style={
-                            "backgroundColor": THEME["background"],
-                            "margin": "10px",
-                            "borderRadius": "0.5rem",
-                            "padding": "10px",
-                        },
+                        style=CONTAINER_STYLE,
                     ),
                     value="history",
                 ),
@@ -309,7 +344,7 @@ def render_content(*args, **kwargs):
 
 @dash_app_group.expanded_callback(
     dash.dependencies.Output("project_file_annotations_table", "children"),
-    dash.dependencies.Output("project_map_annotations_table", "children"),
+    # dash.dependencies.Output("project_map_annotations_table", "children"),
     [
         dash.dependencies.Input("select_mimetype", "value"),
         dash.dependencies.Input("date-picker", "value"),
@@ -345,9 +380,11 @@ def load_table_project(*args, **kwargs):
             f"[CSV]({request.build_absolute_uri(reverse(viewname='omero_table', args=[i, 'csv']))})"
             f" | [JSON]({request.build_absolute_uri(reverse(viewname='omero_table', args=[i, 'json']))}) "
             if mt == "OMERO.tables"
-            else f"[YAML]({request.build_absolute_uri(reverse(viewname='download_annotation', args=[id]))})"
+            else f"[YAML]({request.build_absolute_uri(reverse(viewname='download_annotation', args=[id_f]))})"
         )
-        for i, mt, id in zip(file_ann.File_ID, file_ann.Mimetype, file_ann.ID)
+        for i, mt, id_f in zip(
+            file_ann.File_ID, file_ann.Mimetype, file_ann.ID
+        )
     ]
     file_ann_table = dash_table.DataTable(
         id="datatable_file_ann",
@@ -366,119 +403,31 @@ def load_table_project(*args, **kwargs):
         page_action="native",
         page_current=0,
         page_size=5,
-        style_table={
-            "overflowX": "auto",
-            "borderRadius": "0.5rem",
-            "fontFamily": "'Arial', 'Helvetica', sans-serif",
-            "borderCollapse": "collapse",
-            "boxShadow": "0 4px 8px rgba(0, 0, 0, 0.1)",
-            "margin": "20px 0",
-            "borderLeft": "none",
-            "borderRight": "none",
-        },
-        style_cell={
-            "whiteSpace": "normal",
-            "height": "30px",
-            "minWidth": "100px",
-            "width": "100px",
-            "maxWidth": "100px",
-            "textAlign": "left",
-            "textOverflow": "ellipsis",
-            "fontSize": "12px",
-            "fontFamily": "'Arial', 'Helvetica', sans-serif",
-            "color": "#333",
-            "fontWeight": "500",
-            "padding": "10px",
-            "border": "1px solid #ddd",
-            "borderLeft": "none",
-            "borderRight": "none",
-        },
-        style_header={
-            "backgroundColor": THEME["primary"],
-            "fontWeight": "bold",
-            "fontSize": "16px",
-            "paddingTop": "12px",
-            "paddingBottom": "12px",
-            "color": THEME["surface"],
-            "border": "1px solid #ddd",
-            "borderLeft": "none",
-            "borderRight": "none",
-        },
-        style_data_conditional=[
-            {
-                "if": {"row_index": "odd"},
-                "backgroundColor": THEME["background"],
-            },
-            {
-                "if": {"row_index": "even"},
-                "backgroundColor": THEME["surface"],
-            },
-        ],
+        style_table=TABLE_STYLE,
+        style_cell=TABLE_CELL_STYLE,
+        style_header=TABLE_HEADER_STYLE,
+        style_data_conditional=STYLE_DATA_CONDITIONAL,
     )
-    map_ann = kwargs["session_state"]["context"]["map_ann"]
-    map_ann_subset = map_ann[
-        map_ann.columns[~map_ann.columns.str.contains("ID")]
-    ]
-    map_table = dash_table.DataTable(
-        id="datatable-interactivity",
-        columns=[{"name": i, "id": i} for i in map_ann_subset.columns],
-        data=map_ann_subset.to_dict("records"),
-        sort_action="native",
-        sort_mode="multi",
-        row_selectable="multi",
-        page_action="native",
-        page_current=0,
-        page_size=5,
-        style_table={
-            "overflowX": "auto",
-            "borderRadius": "0.5rem",
-            "fontFamily": "'Arial', 'Helvetica', sans-serif",
-            "borderCollapse": "collapse",
-            "boxShadow": "0 4px 8px rgba(0, 0, 0, 0.1)",
-            "margin": "20px 0",
-            "borderLeft": "none",
-            "borderRight": "none",
-        },
-        style_cell={
-            "whiteSpace": "normal",
-            "height": "30px",
-            "minWidth": "100px",
-            "width": "100px",
-            "maxWidth": "100px",
-            "textAlign": "left",
-            "textOverflow": "ellipsis",
-            "fontSize": "12px",
-            "fontFamily": "'Arial', 'Helvetica', sans-serif",
-            "color": "#333",
-            "fontWeight": "500",
-            "padding": "10px",
-            "border": "1px solid #ddd",
-            "borderLeft": "none",
-            "borderRight": "none",
-        },
-        style_header={
-            "backgroundColor": THEME["primary"],
-            "fontWeight": "bold",
-            "fontSize": "16px",
-            "paddingTop": "12px",
-            "paddingBottom": "12px",
-            "color": THEME["surface"],
-            "border": "1px solid #ddd",
-            "borderLeft": "none",
-            "borderRight": "none",
-        },
-        style_data_conditional=[
-            {
-                "if": {"row_index": "odd"},
-                "backgroundColor": THEME["background"],
-            },
-            {
-                "if": {"row_index": "even"},
-                "backgroundColor": THEME["surface"],
-            },
-        ],
-    )
-    return file_ann_table, map_table
+    # map_ann = kwargs["session_state"]["context"]["map_ann"]
+    # map_ann_subset = map_ann[
+    #     map_ann.columns[~map_ann.columns.str.contains("ID")]
+    # ]
+    # map_table = dash_table.DataTable(
+    #     id="datatable-interactivity",
+    #     columns=[{"name": i, "id": i} for i in map_ann_subset.columns],
+    #     data=map_ann_subset.to_dict("records"),
+    #     sort_action="native",
+    #     sort_mode="multi",
+    #     row_selectable="multi",
+    #     page_action="native",
+    #     page_current=0,
+    #     page_size=5,
+    #     style_table=TABLE_STYLE,
+    #     style_cell=TABLE_CELL_STYLE,
+    #     style_header=TABLE_HEADER_STYLE,
+    #     style_data_conditional=STYLE_DATA_CONDITIONAL,
+    # )
+    return file_ann_table
 
 
 @dash_app_group.expanded_callback(
@@ -496,22 +445,27 @@ def delete_all_callback(*args, **kwargs):
     triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
     group_id = kwargs["session_state"]["context"]["group_id"]
     request = kwargs["request"]
+    opened = not args[3]
     if triggered_button == "modal-submit-button.n_clicks" and args[0] > 0:
         sleep(1)
-        views.delete_all(request, group_id=group_id)
+        msg, color = views.delete_all(request, group_id=group_id)
         message = dmc.Notification(
             title="Notification!",
             id="simple-notify",
             action="show",
-            message="All annotations have been deleted",
-            icon=DashIconify(icon="akar-icons:circle-check"),
+            message=msg,
+            icon=DashIconify(
+                icon=(
+                    "akar-icons:circle-check"
+                    if color == "green"
+                    else "akar-icons:circle-x"
+                )
+            ),
+            color=color,
         )
-    elif triggered_button == "modal-close-button.n_clicks" and args[1] > 0:
-        message = "You have clicked the close button"
+        return opened, message
     else:
-        message = "delete all button clicked"
-    opened = not args[3]
-    return opened, message
+        return opened, None
 
 
 @dash_app_group.expanded_callback(

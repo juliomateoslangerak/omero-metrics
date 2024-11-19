@@ -7,34 +7,18 @@ from microscopemetrics_schema import datamodel as mm_schema
 from OMERO_metrics.tools import dash_forms_tools as dft
 from time import sleep
 from OMERO_metrics.views import run_analysis_view
+from OMERO_metrics.styles import (
+    THEME,
+    MANTINE_THEME,
+    HEADER_PAPER_STYLE,
+    CONTAINER_STYLE,
+)
 
-# Theme Configuration
-THEME = {
-    "primary": "#189A35",
-    "secondary": "#63aa47",
-    "background": "#ffffff",
-    "surface": "#f8f9fa",
-    "border": "#e9ecef",
-    "text": {
-        "primary": "#2C3E50",
-        "secondary": "#6c757d",
-    },
-}
-# Constants and theme configuration
-THEME_COLOR = "#189A35"
-SECONDARY_COLOR = "#008080"
-ERROR_COLOR = "#FF4136"
-SUCCESS_COLOR = "#2ECC40"
 active = 0
 min_step = 0
 max_step = 2
 
 
-def get_icon(icon, size=20, color=None):
-    return DashIconify(icon=icon, height=size, color=color)
-
-
-# Initialize dashboard
 dashboard_name = "omero_dataset_form"
 dash_form_project = DjangoDash(
     name=dashboard_name,
@@ -42,81 +26,66 @@ dash_form_project = DjangoDash(
     external_stylesheets=dmc.styles.ALL,
 )
 
-# Layout configuration
 dash_form_project.layout = dmc.MantineProvider(
-    theme={
-        "colorScheme": "light",
-        "primaryColor": "green",
-        "components": {
-            "Button": {"styles": {"root": {"fontWeight": 500}}},
-            "Alert": {"styles": {"root": {"borderRadius": "8px"}}},
-        },
-    },
+    theme=MANTINE_THEME,
     children=[
-        dmc.Container(
-            [
-                # Header Section
-                dmc.Paper(
-                    shadow="sm",
-                    p="md",
-                    radius="lg",
-                    mb="md",
-                    children=[
+        # Header Section
+        dmc.Paper(
+            children=[
+                dmc.Group(
+                    [
                         dmc.Group(
                             [
-                                dmc.Group(
+                                html.Img(
+                                    src="/static/OMERO_metrics/images/metrics_logo.png",
+                                    style={
+                                        "width": "120px",
+                                        "height": "auto",
+                                    },
+                                ),
+                                dmc.Stack(
                                     [
-                                        html.Img(
-                                            src="/static/OMERO_metrics/images/metrics_logo.png",
-                                            style={
-                                                "width": "120px",
-                                                "height": "auto",
-                                            },
+                                        dmc.Title(
+                                            "Analysis Dashboard",
+                                            c=THEME["primary"],
+                                            size="h2",
                                         ),
-                                        dmc.Stack(
-                                            [
-                                                dmc.Title(
-                                                    "Analysis Dashboard",
-                                                    c=THEME["primary"],
-                                                    size="h2",
-                                                ),
-                                                dmc.Text(
-                                                    "Configure and run your analysis",
-                                                    c=THEME["text"][
-                                                        "secondary"
-                                                    ],
-                                                    size="sm",
-                                                ),
-                                            ],
-                                            gap="xs",
+                                        dmc.Text(
+                                            "Configure and run your analysis",
+                                            c=THEME["text"]["secondary"],
+                                            size="sm",
                                         ),
                                     ],
-                                ),
-                                dmc.Badge(
-                                    "Analysis Form",
-                                    color="green",
-                                    variant="dot",
-                                    size="lg",
+                                    gap="xs",
                                 ),
                             ],
-                            justify="space-between",
+                        ),
+                        dmc.Badge(
+                            "Analysis Form",
+                            color=THEME["primary"],
+                            variant="dot",
+                            size="lg",
                         ),
                     ],
+                    justify="space-between",
                 ),
+            ],
+            **HEADER_PAPER_STYLE,
+        ),
+        dmc.Container(
+            [
                 # Main content
                 dmc.Paper(
                     id="main-content",
                     shadow="xs",
-                    p="xl",
-                    mt="md",
+                    p="md",
                     radius="md",
-                    style={"backgroundColor": "white"},
                     children=[
                         # Progress indicator
                         dmc.Progress(
                             id="analysis-progress",
                             value=0,
-                            color=THEME_COLOR,
+                            color=THEME["primary"],
                             radius="xl",
                             size="sm",
                             mb="xl",
@@ -125,7 +94,7 @@ dash_form_project.layout = dmc.MantineProvider(
                         dmc.Stepper(
                             id="stepper-basic-usage",
                             active=0,
-                            color=THEME_COLOR,
+                            color=THEME["primary"],
                             size="sm",
                             iconSize=32,
                             children=[
@@ -133,8 +102,9 @@ dash_form_project.layout = dmc.MantineProvider(
                                     id="step_sample",
                                     label="Sample Configuration",
                                     description="Define sample parameters",
-                                    icon=get_icon(
-                                        "material-symbols:science-outline"
+                                    icon=DashIconify(
+                                        icon="material-symbols:science-outline",
+                                        height=20,
                                     ),
                                     children=[
                                         dmc.Paper(
@@ -159,8 +129,9 @@ dash_form_project.layout = dmc.MantineProvider(
                                     id="step_input_data",
                                     label="Data Selection",
                                     description="Choose input images",
-                                    icon=get_icon(
-                                        "material-symbols:image-search"
+                                    icon=DashIconify(
+                                        icon="material-symbols:image-search",
+                                        height=20,
                                     ),
                                     children=[
                                         dmc.Paper(
@@ -180,12 +151,15 @@ dash_form_project.layout = dmc.MantineProvider(
                                                                             id="framework-multi-select",
                                                                             clearable=True,
                                                                             searchable=True,
-                                                                            leftSection=get_icon(
-                                                                                "material-symbols-light:image"
+                                                                            leftSection=DashIconify(
+                                                                                icon="material-symbols-light:image",
+                                                                                height=20,
                                                                             ),
                                                                             styles={
                                                                                 "input": {
-                                                                                    "borderColor": THEME_COLOR
+                                                                                    "borderColor": THEME[
+                                                                                        "border"
+                                                                                    ]
                                                                                 }
                                                                             },
                                                                         ),
@@ -197,7 +171,9 @@ dash_form_project.layout = dmc.MantineProvider(
                                                                             minRows=3,
                                                                             styles={
                                                                                 "input": {
-                                                                                    "borderColor": THEME_COLOR
+                                                                                    "borderColor": THEME[
+                                                                                        "border"
+                                                                                    ]
                                                                                 }
                                                                             },
                                                                         ),
@@ -277,18 +253,20 @@ dash_form_project.layout = dmc.MantineProvider(
                                     "Back",
                                     id="back-basic-usage",
                                     variant="outline",
-                                    leftSection=get_icon(
-                                        "material-symbols:arrow-back"
+                                    leftSection=DashIconify(
+                                        icon="material-symbols:arrow-back",
+                                        height=20,
                                     ),
-                                    color=SECONDARY_COLOR,
+                                    color=THEME["secondary"],
                                 ),
                                 dmc.Button(
                                     "Next",
                                     id="next-basic-usage",
-                                    rightSection=get_icon(
-                                        "material-symbols:arrow-forward"
+                                    rightSection=DashIconify(
+                                        icon="material-symbols:arrow-forward",
+                                        height=20,
                                     ),
-                                    color=THEME_COLOR,
+                                    color=THEME["primary"],
                                 ),
                             ],
                             justify="space-between",
@@ -296,14 +274,12 @@ dash_form_project.layout = dmc.MantineProvider(
                         ),
                     ],
                 ),
-                # Results section
                 html.Div(id="analysis-results"),
-                # Hidden elements
                 html.Div(id="blank"),
             ],
             size="xl",
-            px="md",
-            py="xl",
+            p="md",
+            style=CONTAINER_STYLE,
         ),
     ],
 )
@@ -395,23 +371,6 @@ def update_review_form(*args, **kwargs):
         return dash.no_update
 
 
-# @dash_form_project.expanded_callback(
-#     dash.dependencies.Output("step_sample", "progressIcon"),
-#            dash.dependencies.Output("step_sample", "color"),
-#     [
-#         dash.dependencies.State("stepper-basic-usage", "active"),
-#        dash.dependencies.State("form_content", "children"),
-#        ],
-# )
-# def update_sample_icon(*args, **kwargs):
-#     step = args[1]
-#     form_content = args[2]
-#     if step == 0 and dft.validate_form(form_content):
-#         return get_icon(icon="mdi:cross-circle"), "red"
-#     else:
-#         return dash.no_update
-
-
 @dash_form_project.expanded_callback(
     dash.dependencies.Output("stepper-basic-usage", "active"),
     dash.dependencies.Output("next-basic-usage", "children"),
@@ -485,7 +444,7 @@ def run_analysis(*args, **kwargs):
     current = args[2]
 
     if current == 2:
-        sleep(1)  # Reduced sleep time for better UX
+        sleep(1)
         try:
             input_parameters_object = getattr(
                 mm_schema, input_parameters["type"]
@@ -508,7 +467,12 @@ def run_analysis(*args, **kwargs):
             return dmc.Alert(
                 children=[
                     dmc.Title(
-                        "Your analysis completed successfully!", order=4
+                        children=(
+                            "Your analysis completed successfully!"
+                            if color == "green"
+                            else "Oops! something happened"
+                        ),
+                        order=4,
                     ),
                     dmc.Text(
                         msg,
@@ -516,10 +480,13 @@ def run_analysis(*args, **kwargs):
                     ),
                 ],
                 color=color,
-                icon=DashIconify(icon="mdi:check-circle"),
-                title="Success!",
+                icon=DashIconify(
+                    icon=(
+                        "mdi:check-circle" if color == "green" else "mdi:alert"
+                    )
+                ),
+                title="Success!" if color == "green" else "Error!",
                 radius="md",
-                withCloseButton=True,
             )
         except Exception as e:
             return dmc.Alert(
@@ -531,7 +498,6 @@ def run_analysis(*args, **kwargs):
                 icon=DashIconify(icon="mdi:alert"),
                 title="Error!",
                 radius="md",
-                withCloseButton=True,
             )
     return dash.no_update
 

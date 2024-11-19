@@ -6,27 +6,20 @@ from plotly.express.imshow_utils import rescale_intensity
 import dash_mantine_components as dmc
 import plotly.express as px
 import plotly.graph_objects as go
-
-THEME = {
-    "primary": "#189A35",
-    "secondary": "#63aa47",
-    "accent": "#14b8a6",
-    "background": "#ffffff",
-    "surface": "#f8f9fa",
-    "border": "#e9ecef",
-    "text": {
-        "primary": "#2C3E50",
-        "secondary": "#6c757d",
-    },
-}
+from OMERO_metrics.styles import (
+    THEME,
+    MANTINE_THEME,
+    LINE_CHART_SERIES,
+    HEADER_PAPER_STYLE,
+)
 
 
 def get_icon(icon, size=20, color=None):
     return DashIconify(icon=icon, height=size, color=color)
 
 
-dashboard_name = "omero_image_dash"
-dash_app_image = DjangoDash(
+dashboard_name = "omero_image_foi"
+omero_image_foi = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
     external_stylesheets=dmc.styles.ALL,
@@ -35,7 +28,6 @@ dash_app_image = DjangoDash(
 
 def create_header():
     return dmc.Paper(
-        h="100%",
         children=[
             dmc.Group(
                 [
@@ -67,7 +59,7 @@ def create_header():
                     ),
                     dmc.Badge(
                         "FOI Analysis",
-                        color="green",
+                        color=THEME["primary"],
                         variant="dot",
                         size="lg",
                     ),
@@ -75,10 +67,7 @@ def create_header():
                 justify="space-between",
             ),
         ],
-        p="md",
-        radius="md",
-        withBorder=True,
-        shadow="sm",
+        **HEADER_PAPER_STYLE,
     )
 
 
@@ -109,6 +98,11 @@ def create_control_panel():
                         allowDeselect=False,
                         leftSection=get_icon("material-symbols:layers"),
                         rightSection=get_icon("radix-icons:chevron-down"),
+                        styles={
+                            "rightSection": {"pointerEvents": "none"},
+                            "item": {"fontSize": "14px"},
+                            "input": {"borderColor": THEME["primary"]},
+                        },
                     ),
                     dmc.Divider(
                         label="Display Options",
@@ -125,8 +119,8 @@ def create_control_panel():
                             {"value": "All", "label": "All"},
                             {"value": "None", "label": "None"},
                         ],
+                        color=THEME["primary"],
                         fullWidth=True,
-                        color="green",
                     ),
                     dmc.Stack(
                         [
@@ -134,6 +128,7 @@ def create_control_panel():
                                 id="checkbox-state",
                                 label="Enable Contour View",
                                 checked=False,
+                                color=THEME["primary"],
                             ),
                         ],
                         gap="xs",
@@ -163,12 +158,18 @@ def create_control_panel():
                         ],
                         value="Hot",
                         leftSection=get_icon("material-symbols:palette"),
+                        styles={
+                            "rightSection": {"pointerEvents": "none"},
+                            "item": {"fontSize": "14px"},
+                            "input": {"borderColor": THEME["primary"]},
+                        },
                     ),
                     dmc.Switch(
                         id="switch-invert-colors",
                         label="Invert Colors",
                         checked=False,
                         size="md",
+                        color=THEME["primary"],
                     ),
                 ],
                 gap="sm",
@@ -205,28 +206,10 @@ def create_intensity_profile():
                         h=250,
                         dataKey="Pixel",
                         data={},
-                        series=[
-                            {
-                                "name": "Diagonal (↘)",
-                                "color": "violet.9",
-                            },
-                            {
-                                "name": "Diagonal (↗)",
-                                "color": "blue.9",
-                            },
-                            {
-                                "name": "Horizontal (→)",
-                                "color": "pink.9",
-                            },
-                            {
-                                "name": "Vertical (↓)",
-                                "color": "teal.9",
-                            },
-                        ],
+                        series=LINE_CHART_SERIES,
                         xAxisLabel="Position (pixels)",
                         yAxisLabel="Intensity",
-                        tickLine="y",
-                        gridAxis="xy",
+                        gridAxis="x",
                         withXAxis=True,
                         withYAxis=True,
                         withLegend=True,
@@ -245,12 +228,11 @@ def create_intensity_profile():
     )
 
 
-dash_app_image.layout = dmc.MantineProvider(
+omero_image_foi.layout = dmc.MantineProvider(
     [
+        create_header(),
         dmc.Container(
             [
-                create_header(),
-                dmc.Space(h="md"),
                 dmc.Grid(
                     [
                         dmc.GridCol(
@@ -266,6 +248,7 @@ dash_app_image.layout = dmc.MantineProvider(
                                         ),
                                         dcc.Graph(
                                             id="rois-graph",
+                                            style={"height": "400px"},
                                         ),
                                     ],
                                     p="md",
@@ -291,19 +274,13 @@ dash_app_image.layout = dmc.MantineProvider(
             px="md",
             py="md",
             style={"backgroundColor": THEME["background"]},
-        )
+        ),
     ],
-    theme={
-        "colorScheme": "light",
-        "primaryColor": "blue",
-        "components": {
-            "Paper": {"defaultProps": {"withBorder": True}},
-        },
-    },
+    theme=MANTINE_THEME,
 )
 
 
-@dash_app_image.expanded_callback(
+@omero_image_foi.expanded_callback(
     dash.dependencies.Output("my-dropdown1", "data"),
     [dash.dependencies.Input("blank-input", "children")],
 )
@@ -316,7 +293,7 @@ def callback_channel(*args, **kwargs):
     return channel_list
 
 
-@dash_app_image.expanded_callback(
+@omero_image_foi.expanded_callback(
     dash.dependencies.Output("rois-graph", "figure"),
     [
         dash.dependencies.Input("my-dropdown1", "value"),
@@ -352,8 +329,6 @@ def callback_image(*args, **kwargs):
         zmax=image_data.max(),
         color_continuous_scale=color,
     )
-
-    # Add points with improved styling
     fig.add_trace(
         go.Scatter(
             x=df_point_channel.X,
@@ -368,18 +343,17 @@ def callback_image(*args, **kwargs):
             hovertemplate="<b>%{customdata}</b><br>X: %{x}<br>Y: %{y}<extra></extra>",
         )
     )
-
+    # TODO: it can make the page unresponsive, fix the bug
     if checked_contour:
         fig.plotly_restyle({"type": "contour"}, 0)
         fig.update_yaxes(autorange="reversed")
 
-    # Improved layout styling
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         margin=dict(l=20, r=20, t=20, b=20),
-        xaxis=dict(showgrid=False, zeroline=False),
-        yaxis=dict(showgrid=False, zeroline=False),
+        xaxis=dict(showgrid=False, zeroline=False, visible=False),
+        yaxis=dict(showgrid=False, zeroline=False, visible=False),
         coloraxis_colorbar=dict(
             thickness=15,
             len=0.7,
@@ -387,8 +361,6 @@ def callback_image(*args, **kwargs):
             tickfont=dict(size=10),
         ),
     )
-
-    # Add shapes with improved styling
     corners = [
         dict(
             type="rect",
@@ -424,7 +396,6 @@ def callback_image(*args, **kwargs):
         for i, row in df_lines.iterrows()
     ]
 
-    # Update shapes based on ROI selection
     if roi == "All":
         fig.update_layout(shapes=corners + lines)
         fig.plotly_restyle({"visible": True}, 1)
@@ -444,7 +415,7 @@ def callback_image(*args, **kwargs):
     return fig
 
 
-@dash_app_image.expanded_callback(
+@omero_image_foi.expanded_callback(
     dash.dependencies.Output("intensity_profile", "data"),
     [dash.dependencies.Input("my-dropdown1", "value")],
 )
@@ -452,7 +423,7 @@ def update_intensity_profiles(*args, **kwargs):
     df_intensity_profiles = kwargs["session_state"]["context"][
         "df_intensity_profiles"
     ]
-    ch = "ch0" + args[0]
+    ch = f"ch{int(args[0]):02d}"
     df_profile = df_intensity_profiles[
         df_intensity_profiles.columns[
             df_intensity_profiles.columns.str.startswith(ch)
