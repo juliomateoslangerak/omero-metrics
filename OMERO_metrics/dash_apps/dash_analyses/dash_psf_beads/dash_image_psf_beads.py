@@ -418,7 +418,7 @@ def update_image(*args, **kwargs):
             mip_z,
             zmin=mip_z.min(),
             zmax=mip_z.max(),
-            aspect="equal",
+            color_continuous_scale=color,
         )
 
         fig.add_trace(beads)
@@ -429,7 +429,8 @@ def update_image(*args, **kwargs):
             fig.update_layout(shapes=None)
 
         if contour:
-            fig.update_traces(type="contour", selector=dict(type="heatmap"))
+            fig.plotly_restyle({"type": "contour"}, 0)
+            fig.update_yaxes(autorange="reversed")
 
         if beads_info == "beads_info":
             fig.update_traces(
@@ -441,21 +442,19 @@ def update_image(*args, **kwargs):
             )
 
         fig.update_layout(
-            coloraxis={
-                "colorscale": color,
-                "colorbar": dict(
-                    thickness=15,
-                    len=0.7,
-                    title=dict(text="Intensity", side="right"),
-                    tickfont=dict(size=10),
-                ),
-            },
-            margin={"l": 20, "r": 20, "t": 30, "b": 20},
-            plot_bgcolor=THEME["background"],
-            paper_bgcolor=THEME["background"],
-            # xaxis_title="X Position (pixels)",
-            # yaxis_title="Y Position (pixels)",
-            font={"color": THEME["text"]["primary"]},
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            margin=dict(l=20, r=20, t=20, b=20),
+            xaxis=dict(showgrid=False, zeroline=False, visible=False),
+            yaxis=dict(showgrid=False, zeroline=False, visible=False),
+            xaxis1=dict(showgrid=False, zeroline=False, visible=False),
+            yaxis1=dict(showgrid=False, zeroline=False, visible=False),
+            coloraxis_colorbar=dict(
+                thickness=15,
+                len=0.7,
+                title=dict(text="Intensity", side="right"),
+                tickfont=dict(size=10),
+            ),
         )
 
         return fig

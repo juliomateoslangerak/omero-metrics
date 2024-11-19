@@ -194,13 +194,14 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
         dm.load_data()
         dm.visualize_data()
         dash_context["context"] = dm.context
-        mm_dataset = dm.mm_dataset
-        _remove_unsupported_types(mm_dataset.input_data)
-        _remove_unsupported_types(mm_dataset.input_parameters)
-        if mm_dataset.output:
-            _remove_unsupported_types(mm_dataset.output)
+        if dm.processed:
+            mm_dataset = dm.mm_dataset
+            _remove_unsupported_types(mm_dataset.input_data)
+            _remove_unsupported_types(mm_dataset.input_parameters)
+            if mm_dataset.output:
+                _remove_unsupported_types(mm_dataset.output)
+            dash_context["context"]["mm_dataset"] = mm_dataset
         dash_context["context"]["dataset_id"] = dataset_id
-        dash_context["context"]["mm_dataset"] = mm_dataset
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
@@ -400,7 +401,7 @@ def save_threshold(request, conn=None, **kwargs):
                     deleteChildren=True,
                     wait=True,
                 )
-            file = dump.dump_threshold(conn, project_wrapper, threshold)
+            dump.dump_threshold(conn, project_wrapper, threshold)
             return (
                 "Threshold saved successfully, Re-click on the project to see the changes",
                 "green",

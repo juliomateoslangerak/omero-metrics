@@ -352,8 +352,8 @@ def callback_image(*args, **kwargs):
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         margin=dict(l=20, r=20, t=20, b=20),
-        xaxis=dict(showgrid=False, zeroline=False),
-        yaxis=dict(showgrid=False, zeroline=False),
+        xaxis=dict(showgrid=False, zeroline=False, visible=False),
+        yaxis=dict(showgrid=False, zeroline=False, visible=False),
         coloraxis_colorbar=dict(
             thickness=15,
             len=0.7,

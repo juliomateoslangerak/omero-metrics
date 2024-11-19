@@ -220,7 +220,7 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                                             id="km_table",
                                                             striped=True,
                                                             highlightOnHover=True,
-                                                            withTableBorder=True,
+                                                            withTableBorder=False,
                                                             withColumnBorders=True,
                                                             fz="sm",
                                                             style=TABLE_MANTINE_STYLE,
@@ -401,6 +401,12 @@ def update_intensity_map(*args, **kwargs):
             yaxis_title="Y Position (pixels)",
             xaxis=dict(visible=False),
             yaxis=dict(visible=False),
+            coloraxis_colorbar=dict(
+                thickness=15,
+                len=0.7,
+                title=dict(text="Intensity", side="right"),
+                tickfont=dict(size=10),
+            ),
         )
         return fig
     except Exception as e:

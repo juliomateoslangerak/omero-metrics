@@ -50,7 +50,7 @@ INPUT_STYLES = {
 }
 
 TABLE_MANTINE_STYLE = {
-    "backgroundColor": "#e2ffe2",
+    # "backgroundColor": "#e2ffe2",
     "width": "98%",
     "height": "auto",
     "margin": "5px",
