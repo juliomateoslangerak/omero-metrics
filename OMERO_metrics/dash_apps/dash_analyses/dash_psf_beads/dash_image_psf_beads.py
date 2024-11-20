@@ -14,10 +14,7 @@ from OMERO_metrics.tools.data_preperation import (
     mip_graphs,
     fig_mip,
 )
-from OMERO_metrics.styles import (
-    THEME,
-    MANTINE_THEME,
-)
+from OMERO_metrics.styles import THEME, MANTINE_THEME, HEADER_PAPER_STYLE
 
 
 def get_icon(icon, size=20, color=None):
@@ -34,57 +31,53 @@ omero_image_psf_beads = DjangoDash(
 omero_image_psf_beads.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
-        dmc.Container(
-            [
-                # Header Section
-                dmc.Paper(
-                    shadow="sm",
-                    p="md",
-                    radius="lg",
-                    mb="md",
-                    children=[
+        # Header Section
+        dmc.Paper(
+            children=[
+                dmc.Group(
+                    [
                         dmc.Group(
                             [
-                                dmc.Group(
+                                html.Img(
+                                    src="/static/OMERO_metrics/images/metrics_logo.png",
+                                    style={
+                                        "width": "120px",
+                                        "height": "auto",
+                                    },
+                                ),
+                                dmc.Stack(
                                     [
-                                        html.Img(
-                                            src="/static/OMERO_metrics/images/metrics_logo.png",
-                                            style={
-                                                "width": "120px",
-                                                "height": "auto",
-                                            },
+                                        dmc.Title(
+                                            "PSF Beads Analysis",
+                                            c=THEME["primary"],
+                                            size="h2",
                                         ),
-                                        dmc.Stack(
-                                            [
-                                                dmc.Title(
-                                                    "PSF Beads Analysis",
-                                                    c=THEME["primary"],
-                                                    size="h2",
-                                                ),
-                                                dmc.Text(
-                                                    "Advanced Microscopy Image Analysis",
-                                                    c=THEME["text"][
-                                                        "secondary"
-                                                    ],
-                                                    size="sm",
-                                                ),
-                                            ],
-                                            gap="xs",
+                                        dmc.Text(
+                                            "Advanced Microscopy Image Analysis",
+                                            c=THEME["text"]["secondary"],
+                                            size="sm",
                                         ),
                                     ],
-                                    gap="md",
-                                ),
-                                dmc.Badge(
-                                    "Interactive Analysis",
-                                    color="green",
-                                    variant="dot",
-                                    size="lg",
+                                    gap="xs",
                                 ),
                             ],
-                            justify="space-between",
+                            gap="md",
+                        ),
+                        dmc.Badge(
+                            "Interactive Analysis",
+                            color=THEME["primary"],
+                            variant="dot",
+                            size="lg",
                         ),
                     ],
+                    justify="space-between",
                 ),
+            ],
+            **HEADER_PAPER_STYLE,
+        ),
+        # Main Content
+        dmc.Container(
+            [
                 html.Div(id="blank-input"),
                 # Main Content
                 dmc.Stack(
@@ -119,21 +112,15 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                 ),
                                                 dcc.Graph(
                                                     figure={},
+                                                    style={"height": "400px"},
                                                     id="psf_image_graph",
-                                                    config={
-                                                        "displayModeBar": True,
-                                                        "scrollZoom": True,
-                                                        "modeBarButtonsToRemove": [
-                                                            "lasso2d",
-                                                            "select2d",
-                                                        ],
-                                                    },
                                                 ),
                                             ],
                                             p="md",
                                             radius="md",
                                             withBorder=True,
                                             shadow="sm",
+                                            h="100%",
                                         ),
                                     ],
                                     span=8,
@@ -190,7 +177,9 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                                 },
                                                             ],
                                                             fullWidth=True,
-                                                            color="green",
+                                                            color=THEME[
+                                                                "primary"
+                                                            ],
                                                             # w='auto'
                                                         ),
                                                         dmc.Stack(
@@ -199,13 +188,17 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                                     id="contour_checkbox_psf_image",
                                                                     label="Enable Contour View",
                                                                     checked=False,
-                                                                    color="green",
+                                                                    color=THEME[
+                                                                        "primary"
+                                                                    ],
                                                                 ),
                                                                 dmc.Checkbox(
                                                                     id="roi_checkbox_psf_image",
                                                                     label="Show ROI Boundaries",
                                                                     checked=False,
-                                                                    color="green",
+                                                                    color=THEME[
+                                                                        "primary"
+                                                                    ],
                                                                 ),
                                                             ],
                                                             gap="xs",
@@ -237,13 +230,18 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                             leftSection=get_icon(
                                                                 "material-symbols:palette"
                                                             ),
+                                                            rightSection=get_icon(
+                                                                "radix-icons:chevron-down"
+                                                            ),
                                                         ),
                                                         dmc.Switch(
                                                             id="color_switch_psf_image",
                                                             label="Invert Colors",
                                                             checked=False,
                                                             size="md",
-                                                            color="green",
+                                                            color=THEME[
+                                                                "primary"
+                                                            ],
                                                         ),
                                                     ],
                                                     gap="sm",
@@ -256,6 +254,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                             ],
                         ),
                         dmc.Paper(
+                            id="paper_mip",
                             shadow="sm",
                             p="md",
                             radius="md",
@@ -272,17 +271,6 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                             size="lg",
                                                             fw=500,
                                                             c=THEME["primary"],
-                                                        ),
-                                                        dmc.Tooltip(
-                                                            label="Click on a bead in the main image to view its MIP",
-                                                            children=[
-                                                                get_icon(
-                                                                    "material-symbols:info",
-                                                                    color=THEME[
-                                                                        "primary"
-                                                                    ],
-                                                                )
-                                                            ],
                                                         ),
                                                     ],
                                                     justify="space-between",
@@ -325,9 +313,13 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                                         },
                                                                     ],
                                                                     value="x",
+                                                                    allowDeselect=False,
                                                                     id="axis_image_psf",
+                                                                    rightSection=get_icon(
+                                                                        "radix-icons:chevron-down"
+                                                                    ),
                                                                     leftSection=get_icon(
-                                                                        "material-symbols:axis"
+                                                                        icon="mdi:axis-x-arrow"
                                                                     ),
                                                                 ),
                                                             ],
@@ -360,6 +352,15 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
         ),
     ],
 )
+
+
+@omero_image_psf_beads.expanded_callback(
+    dash.dependencies.Output("axis_image_psf", "leftSection"),
+    [dash.dependencies.Input("axis_image_psf", "value")],
+)
+def update_icon(*args, **kwargs):
+    icon = f"mdi:axis-{args[0]}-arrow"
+    return get_icon(icon=icon)
 
 
 @omero_image_psf_beads.expanded_callback(
@@ -417,7 +418,7 @@ def update_image(*args, **kwargs):
             mip_z,
             zmin=mip_z.min(),
             zmax=mip_z.max(),
-            aspect="equal",
+            color_continuous_scale=color,
         )
 
         fig.add_trace(beads)
@@ -428,7 +429,8 @@ def update_image(*args, **kwargs):
             fig.update_layout(shapes=None)
 
         if contour:
-            fig.update_traces(type="contour", selector=dict(type="heatmap"))
+            fig.plotly_restyle({"type": "contour"}, 0)
+            fig.update_yaxes(autorange="reversed")
 
         if beads_info == "beads_info":
             fig.update_traces(
@@ -440,21 +442,19 @@ def update_image(*args, **kwargs):
             )
 
         fig.update_layout(
-            coloraxis={
-                "colorscale": color,
-                "colorbar": dict(
-                    thickness=15,
-                    len=0.7,
-                    title=dict(text="Intensity", side="right"),
-                    tickfont=dict(size=10),
-                ),
-            },
-            margin={"l": 20, "r": 20, "t": 30, "b": 20},
-            plot_bgcolor=THEME["background"],
-            paper_bgcolor=THEME["background"],
-            # xaxis_title="X Position (pixels)",
-            # yaxis_title="Y Position (pixels)",
-            font={"color": THEME["text"]["primary"]},
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            margin=dict(l=20, r=20, t=20, b=20),
+            xaxis=dict(showgrid=False, zeroline=False, visible=False),
+            yaxis=dict(showgrid=False, zeroline=False, visible=False),
+            xaxis1=dict(showgrid=False, zeroline=False, visible=False),
+            yaxis1=dict(showgrid=False, zeroline=False, visible=False),
+            coloraxis_colorbar=dict(
+                thickness=15,
+                len=0.7,
+                title=dict(text="Intensity", side="right"),
+                tickfont=dict(size=10),
+            ),
         )
 
         return fig
@@ -530,7 +530,7 @@ def callback_mip(*args, **kwargs):
                     tickfont=dict(size=10),
                 ),
             },
-            margin={"l": 20, "r": 20, "t": 20, "b": 20},
+            margin={"l": 20, "r": 20, "t": 30, "b": 20},
             plot_bgcolor=THEME["background"],
             paper_bgcolor=THEME["background"],
             # xaxis_title="X Position (pixels)",
@@ -574,6 +574,11 @@ def line_graph_axis(bead_index, channel_index, axis, kwargs):
     fig_ip_x = px.line(df_x)
     fig_ip_x.update_traces(
         patch={"line": {"dash": "dot"}}, selector={"name": "fitted"}
+    )
+    fig_ip_x.update_layout(
+        plot_bgcolor=THEME["background"],
+        paper_bgcolor=THEME["background"],
+        font={"color": THEME["text"]["primary"]},
     )
     return fig_ip_x
 

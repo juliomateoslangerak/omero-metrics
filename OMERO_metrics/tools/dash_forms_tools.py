@@ -88,8 +88,7 @@ def validate_form(state):
         i["props"]["id"] == "submit_id"
         or not (
             i["props"]["required"]
-            and i["props"]["value"] is None
-            or i["props"]["value"] == ""
+            and (i["props"]["value"] is None or i["props"]["value"] == "")
         )
         for i in state
     )

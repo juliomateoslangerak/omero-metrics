@@ -3,7 +3,11 @@ from dash import html
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
-from OMERO_metrics.styles import THEME, MANTINE_THEME
+from OMERO_metrics.styles import THEME, HEADER_PAPER_STYLE, MANTINE_THEME
+from OMERO_metrics import views
+from time import sleep
+import math
+from OMERO_metrics.styles import TABLE_MANTINE_STYLE
 
 
 def get_icon(icon, size=20, color=None):
@@ -21,56 +25,101 @@ omero_dataset_psf_beads = DjangoDash(
 omero_dataset_psf_beads.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
-        dmc.Container(
-            [
-                html.Div(id="blank-input"),
-                dmc.Paper(
-                    shadow="sm",
-                    p="md",
-                    radius="lg",
-                    mb="md",
-                    children=[
+        dmc.NotificationProvider(position="top-center"),
+        html.Div(id="notifications-container"),
+        dmc.Modal(
+            title="Confirm Delete",
+            id="confirm_delete",
+            children=[
+                dmc.Text(
+                    "Are you sure you want to delete this dataset outputs?"
+                ),
+                dmc.Space(h=20),
+                dmc.Group(
+                    [
+                        dmc.Button(
+                            "Submit",
+                            id="modal-submit-button",
+                            color="red",
+                        ),
+                        dmc.Button(
+                            "Close",
+                            color="gray",
+                            variant="outline",
+                            id="modal-close-button",
+                        ),
+                    ],
+                    justify="flex-end",
+                ),
+            ],
+        ),
+        dmc.Paper(
+            children=[
+                dmc.Group(
+                    [
                         dmc.Group(
                             [
-                                dmc.Group(
+                                html.Img(
+                                    src="/static/OMERO_metrics/images/metrics_logo.png",
+                                    style={
+                                        "width": "120px",
+                                        "height": "auto",
+                                    },
+                                ),
+                                dmc.Stack(
                                     [
-                                        html.Img(
-                                            src="/static/OMERO_metrics/images/metrics_logo.png",
-                                            style={
-                                                "width": "120px",
-                                                "height": "auto",
-                                            },
+                                        dmc.Title(
+                                            "PSF Beads Analysis",
+                                            c=THEME["primary"],
+                                            size="h2",
                                         ),
-                                        dmc.Stack(
-                                            [
-                                                dmc.Title(
-                                                    "PSF Beads Analysis",
-                                                    c=THEME["primary"],
-                                                    size="h2",
-                                                ),
-                                                dmc.Text(
-                                                    "PSF Beads Analysis Dashboard",
-                                                    c=THEME["text"][
-                                                        "secondary"
-                                                    ],
-                                                    size="sm",
-                                                ),
-                                            ],
-                                            gap="xs",
+                                        dmc.Text(
+                                            "PSF Beads Analysis Dashboard",
+                                            c=THEME["text"]["secondary"],
+                                            size="sm",
                                         ),
                                     ],
+                                    gap="xs",
+                                ),
+                            ],
+                        ),
+                        dmc.Group(
+                            [
+                                dmc.Button(
+                                    id="download_dataset_data",
+                                    children="Download",
+                                    color="blue",
+                                    variant="filled",
+                                    leftSection=DashIconify(
+                                        icon="ic:round-cloud-download"
+                                    ),
+                                ),
+                                dmc.Button(
+                                    id="delete_dataset_data",
+                                    children="Delete",
+                                    color="red",
+                                    variant="filled",
+                                    leftSection=DashIconify(
+                                        icon="ic:round-delete-forever"
+                                    ),
                                 ),
                                 dmc.Badge(
                                     "PSF Beads Analysis",
-                                    color="green",
+                                    color=THEME["primary"],
                                     variant="dot",
                                     size="lg",
                                 ),
-                            ],
-                            justify="space-between",
+                            ]
                         ),
                     ],
+                    justify="space-between",
                 ),
+            ],
+            **HEADER_PAPER_STYLE,
+        ),
+        dmc.Container(
+            [
+                html.Div(id="blank-input"),
                 dmc.Paper(
                     shadow="xs",
                     p="md",
@@ -105,13 +154,20 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
                                             striped=True,
                                             highlightOnHover=True,
                                             className="table table-striped table-bordered",
-                                            styles={
-                                                "background-color": "white",
-                                                "width": "auto",
-                                                "height": "auto",
-                                                "overflow-X": "auto",
-                                            },
-                                        )
+                                            style=TABLE_MANTINE_STYLE,
+                                        ),
+                                        dmc.Group(
+                                            mt="md",
+                                            children=[
+                                                dmc.Pagination(
+                                                    id="pagination",
+                                                    total=0,
+                                                    value=1,
+                                                    withEdges=True,
+                                                )
+                                            ],
+                                            justify="center",
+                                        ),
                                     ]
                                 ),
                             ],
@@ -130,12 +186,14 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
 
 @omero_dataset_psf_beads.expanded_callback(
     dash.dependencies.Output("key_values_psf", "data"),
+    dash.dependencies.Output("pagination", "total"),
     [
-        dash.dependencies.Input("blank-input", "children"),
+        dash.dependencies.Input("pagination", "value"),
     ],
 )
 def func_psf_callback(*args, **kwargs):
     table_km = kwargs["session_state"]["context"]["bead_km_df"]
+    page = int(args[0])
     kkm = [
         "channel_name",
         "considered_valid_count",
@@ -151,9 +209,51 @@ def func_psf_callback(*args, **kwargs):
     table_kkm = table_km[kkm].copy()
     table_kkm = table_kkm.round(3)
     table_kkm.columns = table_kkm.columns.str.replace("_", " ").str.title()
+    total = math.ceil(len(table_kkm) / 4)
+    start_idx = (page - 1) * 4
+    end_idx = start_idx + 4
+    table_page = table_kkm.iloc[start_idx:end_idx]
     data = {
-        "head": table_kkm.columns.tolist(),
-        "body": table_kkm.values.tolist(),
+        "head": table_page.columns.tolist(),
+        "body": table_page.values.tolist(),
         "caption": "Key Measurements for the selected dataset",
     }
-    return data
+    return data, total
+
+
+@omero_dataset_psf_beads.expanded_callback(
+    dash.dependencies.Output("confirm_delete", "opened"),
+    dash.dependencies.Output("notifications-container", "children"),
+    [
+        dash.dependencies.Input("delete_dataset_data", "n_clicks"),
+        dash.dependencies.Input("modal-submit-button", "n_clicks"),
+        dash.dependencies.Input("modal-close-button", "n_clicks"),
+        dash.dependencies.State("confirm_delete", "opened"),
+    ],
+    prevent_initial_call=True,
+)
+def delete_dataset(*args, **kwargs):
+    triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
+    dataset_id = kwargs["session_state"]["context"]["dataset_id"]
+    request = kwargs["request"]
+    opened = not args[3]
+    if triggered_button == "modal-submit-button.n_clicks" and args[0] > 0:
+        sleep(1)
+        msg, color = views.delete_dataset(request, dataset_id=dataset_id)
+        message = dmc.Notification(
+            title="Notification!",
+            id="simple-notify",
+            action="show",
+            message=msg,
+            icon=DashIconify(
+                icon=(
+                    "akar-icons:circle-check"
+                    if color == "green"
+                    else "akar-icons:circle-x"
+                )
+            ),
+            color=color,
+        )
+        return opened, message
+    else:
+        return opened, None

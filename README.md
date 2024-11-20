@@ -2,7 +2,7 @@
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/MontpellierRessourcesImagerie/OMERO-metrics/omero_plugin.yml)
 ![GitHub License](https://img.shields.io/github/license/MontpellierRessourcesImagerie/OMERO-metrics)
 
-<img alt="OMERO-metrics logo" height="100" src="docs/slides/media/logo_omero-metrics.png"/>
+<img alt="OMERO-metrics logo" height="100" src="OMERO_metrics/static/OMERO_metrics/images/metrics_logo.png"/>
 
 This project is financed by [France BioImaging](https://france-bioimaging.org/).
 

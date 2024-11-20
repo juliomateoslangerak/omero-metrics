@@ -21,9 +21,10 @@ TAB_STYLES = {
         "fontSize": "14px",
         "fontWeight": 500,
         "height": "40px",
-        "borderRadius": "6px",
+        "borderRadiusBottom": "6px",
+        "backgroundColor": "white",
         "&[data-active]": {
-            "backgroundColor": THEME["primary_light"],
+            "backgroundColor": "#e2ffe2",
             "color": THEME["primary"],
         },
     }
@@ -33,6 +34,11 @@ TAB_ITEM_STYLE = {
     "fontSize": "1.1rem",
     "fontWeight": "bold",
     "color": THEME["primary"],
+    "backgroundColor": THEME["surface"],
+    "&[data-active]": {
+        "backgroundColor": "#e2ffe2",
+        "color": THEME["primary"],
+    },
 }
 
 
@@ -44,7 +50,7 @@ INPUT_STYLES = {
 }
 
 TABLE_MANTINE_STYLE = {
-    "backgroundColor": "white",
+    # "backgroundColor": "#e2ffe2",
     "width": "98%",
     "height": "auto",
     "margin": "5px",
@@ -185,6 +191,15 @@ CARD_STYLE = {
     "boxShadow": "0 1px 3px 0 rgb(0 0 0 / 0.1)",
 }
 
+CARD_STYLE1 = {
+    "backgroundColor": "#e2ffe2",
+    "borderRadius": "8px",
+    "border": f'1px solid {THEME["border"]}',
+    "padding": "24px",
+    "height": "100%",
+    "boxShadow": "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+}
+
 BUTTON_STYLE = {
     "backgroundColor": THEME["primary"],
     "color": "white",
@@ -223,7 +238,7 @@ CONTAINER_STYLE = {
 HEADER_PAPER_STYLE = {
     "shadow": "sm",
     "p": "md",
-    "radius": "lg",
+    # "radius": "lg",
     "mb": "md",
 }
 

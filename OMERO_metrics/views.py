@@ -7,6 +7,8 @@ from OMERO_metrics.tools.data_managers import (
     ImageManager,
 )
 from django.shortcuts import render
+
+from OMERO_metrics.tools.dump import _remove_unsupported_types
 from OMERO_metrics.tools.omero_tools import (
     get_ref_from_object,
 )
@@ -190,9 +192,16 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
         dataset_wrapper = conn.getObject("Dataset", dataset_id)
         dm = DatasetManager(conn, dataset_wrapper, load_images=True)
         dm.load_data()
-        dm.is_processed()
         dm.visualize_data()
         dash_context["context"] = dm.context
+        if dm.processed:
+            mm_dataset = dm.mm_dataset
+            _remove_unsupported_types(mm_dataset.input_data)
+            _remove_unsupported_types(mm_dataset.input_parameters)
+            if mm_dataset.output:
+                _remove_unsupported_types(mm_dataset.output)
+            dash_context["context"]["mm_dataset"] = mm_dataset
+        dash_context["context"]["dataset_id"] = dataset_id
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
@@ -232,29 +241,36 @@ def save_config(request, conn=None, **kwargs):
         mm_sample = kwargs["sample"]
         project_wrapper = conn.getObject("Project", project_id)
         setup = load_config_file_data(conn, project_wrapper)
-        if setup is None:
-            try:
-                dump.dump_config_input_parameters(
-                    conn, mm_input_parameters, mm_sample, project_wrapper
+        try:
+            if setup:
+                to_delete = []
+                for ann in project_wrapper.listAnnotations():
+                    if isinstance(ann, FileAnnotationWrapper):
+                        ns = ann.getFile().getName()
+                        if ns.startswith("study_config"):
+                            to_delete.append(ann.getId())
+                conn.deleteObjects(
+                    graph_spec="Annotation",
+                    obj_ids=to_delete,
+                    deleteAnns=True,
+                    deleteChildren=True,
+                    wait=True,
                 )
-                return (
-                    "File saved successfully, Re-click on the project to see the changes",
-                    "green",
-                )
-            except Exception as e:
-                if isinstance(e, omero.SecurityViolation):
-                    return (
-                        "You don't have the necessary permissions to save the configuration. ",
-                        "red",
-                    )
-                else:
-                    return str(e), "red"
-
-        else:
-            return (
-                "Failed to save file, a configuration file already exists",
-                "red",
+            dump.dump_config_input_parameters(
+                conn, mm_input_parameters, mm_sample, project_wrapper
             )
+            return (
+                "File saved successfully, Re-click on the project to see the changes",
+                "green",
+            )
+        except Exception as e:
+            if isinstance(e, omero.SecurityViolation):
+                return (
+                    "You don't have the necessary permissions to save the configuration. ",
+                    "red",
+                )
+            else:
+                return str(e), "red"
     except Exception as e:
         return str(e), "red"
 
@@ -303,12 +319,13 @@ def run_analysis_view(request, conn=None, **kwargs):
         run_status = DATA_TYPE[mm_input_parameters.class_name][3](mm_dataset)
         if run_status and mm_dataset.processed:
             try:
-                mm_comment = mm_schema.Comment(
-                    datetime=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    text=comment,
-                    comment_type="PROCESSING",
-                )
-                mm_dataset["output"]["comment"] = mm_comment
+                if comment:
+                    mm_comment = mm_schema.Comment(
+                        datetime=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        text=comment,
+                        comment_type="PROCESSING",
+                    )
+                    mm_dataset["output"]["comment"] = mm_comment
                 dump.dump_dataset(
                     conn=conn,
                     dataset=mm_dataset,
@@ -340,6 +357,24 @@ def delete_all(request, conn=None, **kwargs):
         message, color = delete.delete_all_mm_analysis(conn, group_id)
         return message, color
     except Exception as e:
+        return (str(e), "red")
+
+
+@login_required(setGroupContext=True)
+def delete_dataset(request, conn=None, **kwargs):
+    """Delete the dataset outputs"""
+    try:
+        dataset_id = kwargs["dataset_id"]
+        dataset_wrapper = conn.getObject("Dataset", dataset_id)
+        dm = DatasetManager(conn, dataset_wrapper, load_images=False)
+        dm.load_data()
+        mm_dataset = dm.mm_dataset
+        rsp = delete.delete_dataset_output(conn, mm_dataset)
+        if rsp:
+            return "Output deleted successfully", "green"
+        else:
+            return "Failed to delete output", "red"
+    except Exception as e:
         return str(e), "red"
 
 
@@ -366,7 +401,7 @@ def save_threshold(request, conn=None, **kwargs):
                     deleteChildren=True,
                     wait=True,
                 )
-            file = dump.dump_threshold(conn, project_wrapper, threshold)
+            dump.dump_threshold(conn, project_wrapper, threshold)
             return (
                 "Threshold saved successfully, Re-click on the project to see the changes",
                 "green",

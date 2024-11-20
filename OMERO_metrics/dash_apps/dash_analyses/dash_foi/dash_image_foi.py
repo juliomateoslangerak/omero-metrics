@@ -10,6 +10,7 @@ from OMERO_metrics.styles import (
     THEME,
     MANTINE_THEME,
     LINE_CHART_SERIES,
+    HEADER_PAPER_STYLE,
 )
 
 
@@ -27,7 +28,6 @@ omero_image_foi = DjangoDash(
 
 def create_header():
     return dmc.Paper(
-        h="100%",
         children=[
             dmc.Group(
                 [
@@ -59,7 +59,7 @@ def create_header():
                     ),
                     dmc.Badge(
                         "FOI Analysis",
-                        color="green",
+                        color=THEME["primary"],
                         variant="dot",
                         size="lg",
                     ),
@@ -67,10 +67,7 @@ def create_header():
                 justify="space-between",
             ),
         ],
-        p="md",
-        radius="md",
-        withBorder=True,
-        shadow="sm",
+        **HEADER_PAPER_STYLE,
     )
 
 
@@ -122,7 +119,7 @@ def create_control_panel():
                             {"value": "All", "label": "All"},
                             {"value": "None", "label": "None"},
                         ],
-                        color="green",
+                        color=THEME["primary"],
                         fullWidth=True,
                     ),
                     dmc.Stack(
@@ -131,7 +128,7 @@ def create_control_panel():
                                 id="checkbox-state",
                                 label="Enable Contour View",
                                 checked=False,
-                                color="green",
+                                color=THEME["primary"],
                             ),
                         ],
                         gap="xs",
@@ -172,7 +169,7 @@ def create_control_panel():
                         label="Invert Colors",
                         checked=False,
                         size="md",
-                        color="green",
+                        color=THEME["primary"],
                     ),
                 ],
                 gap="sm",
@@ -212,8 +209,7 @@ def create_intensity_profile():
                         series=LINE_CHART_SERIES,
                         xAxisLabel="Position (pixels)",
                         yAxisLabel="Intensity",
-                        tickLine="y",
-                        gridAxis="xy",
+                        gridAxis="x",
                         withXAxis=True,
                         withYAxis=True,
                         withLegend=True,
@@ -234,10 +230,9 @@ def create_intensity_profile():
 
 omero_image_foi.layout = dmc.MantineProvider(
     [
+        create_header(),
         dmc.Container(
             [
-                create_header(),
-                dmc.Space(h="md"),
                 dmc.Grid(
                     [
                         dmc.GridCol(
@@ -253,6 +248,7 @@ omero_image_foi.layout = dmc.MantineProvider(
                                         ),
                                         dcc.Graph(
                                             id="rois-graph",
+                                            style={"height": "400px"},
                                         ),
                                     ],
                                     p="md",
@@ -278,7 +274,7 @@ omero_image_foi.layout = dmc.MantineProvider(
             px="md",
             py="md",
             style={"backgroundColor": THEME["background"]},
-        )
+        ),
     ],
     theme=MANTINE_THEME,
 )
@@ -347,7 +343,7 @@ def callback_image(*args, **kwargs):
             hovertemplate="<b>%{customdata}</b><br>X: %{x}<br>Y: %{y}<extra></extra>",
         )
     )
-
+    # TODO: it can make the page unresponsive, fix the bug
     if checked_contour:
         fig.plotly_restyle({"type": "contour"}, 0)
         fig.update_yaxes(autorange="reversed")
@@ -356,8 +352,8 @@ def callback_image(*args, **kwargs):
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         margin=dict(l=20, r=20, t=20, b=20),
-        xaxis=dict(showgrid=False, zeroline=False),
-        yaxis=dict(showgrid=False, zeroline=False),
+        xaxis=dict(showgrid=False, zeroline=False, visible=False),
+        yaxis=dict(showgrid=False, zeroline=False, visible=False),
         coloraxis_colorbar=dict(
             thickness=15,
             len=0.7,
@@ -427,7 +423,7 @@ def update_intensity_profiles(*args, **kwargs):
     df_intensity_profiles = kwargs["session_state"]["context"][
         "df_intensity_profiles"
     ]
-    ch = "ch0" + args[0]
+    ch = f"ch{int(args[0]):02d}"
     df_profile = df_intensity_profiles[
         df_intensity_profiles.columns[
             df_intensity_profiles.columns.str.startswith(ch)

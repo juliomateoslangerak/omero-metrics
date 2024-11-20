@@ -1,5 +1,6 @@
 import dash
-from dash import dcc, html
+from dash import html
+from dash_iconify import DashIconify
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 
@@ -14,6 +15,7 @@ warning_app.layout = dmc.MantineProvider(
                 dmc.Alert(
                     title="Error!",
                     color="red",
+                    icon=DashIconify(icon="mdi:alert-circle", height=20),
                     id="warning_msg",
                     style={"margin": "10px"},
                 ),

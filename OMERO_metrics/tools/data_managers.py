@@ -10,43 +10,14 @@ from omero.gateway import (
     ProjectWrapper,
 )
 from OMERO_metrics.tools import load, dump, update, delete
+from OMERO_metrics.tools.data_type import (
+    KKM_MAPPINGS,
+    TEMPLATE_MAPPINGS_DATASET,
+    TEMPLATE_MAPPINGS_IMAGE,
+)
+
 
 logger = logging.getLogger(__name__)
-
-
-KKM_MAPPINGS = {
-    "FieldIlluminationDataset": [
-        "max_intensity",
-        "center_region_intensity_fraction",
-        "center_region_area_fraction",
-    ],
-    "PSFBeadsDataset": [
-        "intensity_max_median",
-        "intensity_max_std",
-        "intensity_min_mean",
-        "intensity_min_median",
-        "intensity_min_std",
-        "intensity_std_mean",
-        "intensity_std_median",
-        "intensity_std_std",
-    ],
-}
-
-TEMPLATE_MAPPINGS_DATASET = {
-    "FieldIlluminationDataset": "omero_dataset_foi",
-    "PSFBeadsDataset": "omero_dataset_psf_beads",
-}
-
-TEMPLATE_MAPPINGS_IMAGE = {
-    "FieldIlluminationDataset": {
-        "input_data": "omero_image_foi",
-        "output": "WarningApp",
-    },
-    "PSFBeadsDataset": {
-        "input_data": "omero_image_psf_beads",
-        "output": "WarningApp",
-    },
-}
 
 
 def warning_message(msg):
@@ -108,7 +79,6 @@ class ImageManager:
                         self.dataset_manager.mm_dataset.__class__.__name__
                     )[self.image_location]
                     self.context = load.load_dash_data_image(
-                        self._conn,
                         self.dataset_manager.mm_dataset,
                         self.mm_image,
                         self.image_index,
@@ -182,6 +152,9 @@ class DatasetManager:
                 self.omero_dataset, self.load_images
             )
             self.kkm = KKM_MAPPINGS.get(self.mm_dataset.__class__.__name__)
+            self.processed = (
+                self.mm_dataset.processed if self.mm_dataset else False
+            )
         else:
             raise NotImplementedError(
                 "partial loading of data from OMERO is not yet implemented"
@@ -302,9 +275,7 @@ class DatasetManager:
                 self.app_name = TEMPLATE_MAPPINGS_DATASET.get(
                     self.mm_dataset.__class__.__name__
                 )
-                self.context = load.load_dash_data_dataset(
-                    self._conn, self.mm_dataset
-                )
+                self.context = load.load_dash_data_dataset(self.mm_dataset)
             else:
                 message = "Unknown analysis type. Unable to visualize"
                 logger.warning(message)
@@ -383,7 +354,6 @@ class ProjectManager:
                 )
 
     def is_homogenized(self):
-        # unique = set(self.datasets_types)
         unique = set(
             [
                 dataset.mm_dataset.__class__.__name__
@@ -406,7 +376,7 @@ class ProjectManager:
                     in TEMPLATE_MAPPINGS_DATASET
                 ):
                     self.context, self.app_name = load.load_dash_data_project(
-                        self._conn, self.processed_datasets
+                        self.processed_datasets
                     )
                     self.context["unprocessed_datasets"] = list(
                         self.unprocessed_datasets.keys()

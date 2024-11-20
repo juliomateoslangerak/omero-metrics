@@ -1,7 +1,6 @@
 import contextlib
 import dataclasses
 import logging
-
 import omero
 from OMERO_metrics.tools import omero_tools
 import microscopemetrics_schema.datamodel as mm_schema
@@ -28,7 +27,7 @@ def delete_data_references(mm_obj: mm_schema.MetricsObject) -> None:
         return [delete_data_references(obj) for obj in mm_obj]
     else:
         raise ValueError(
-            "Input should be a metrics object or a list of metrics objects"
+            f"Input ({mm_obj}) should be a metrics object or a list of metrics objects"
         )
 
 
@@ -101,7 +100,7 @@ def delete_all_mm_analysis(conn, group_id):
     rois = conn.getObjects("Roi", opts={"group": group_id})
     rois_ids = [roi.getId() for roi in rois if roi.canDelete()]
     obj_ids = []
-    # TODO:
+    # TODO: Delete output images
     for ann in all_annotations:
         if ann.getNs() and ann.getNs().startswith("microscopemetrics"):
             obj_ids.append(ann.getId())

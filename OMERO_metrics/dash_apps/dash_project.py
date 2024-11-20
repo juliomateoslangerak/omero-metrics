@@ -11,6 +11,7 @@ from OMERO_metrics import views
 from OMERO_metrics.styles import (
     THEME,
     CARD_STYLE,
+    CARD_STYLE1,
     BUTTON_STYLE,
     TAB_STYLES,
     TAB_ITEM_STYLE,
@@ -21,6 +22,20 @@ from OMERO_metrics.styles import (
     MANTINE_THEME,
     HEADER_PAPER_STYLE,
 )
+import math
+from microscopemetrics.analyses.mappings import MAPPINGS
+
+from time import sleep
+
+sample_types = [x[0] for x in MAPPINGS]
+sample_types_dp = [
+    {
+        "label": dft.add_space_between_capitals(x.__name__),
+        "value": f"{i}",
+        "description": f"Configure analysis for {x.__name__}",  # Added descriptions
+    }
+    for i, x in enumerate(sample_types)
+]
 
 
 def make_control(text, action_id):
@@ -54,6 +69,7 @@ dash_app_project.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
         html.Div(id="blank-input"),
+        html.Div(id="save_config_result"),
         dmc.Paper(
             children=[
                 dmc.Group(
@@ -84,11 +100,48 @@ dash_app_project.layout = dmc.MantineProvider(
                                 ),
                             ],
                         ),
-                        dmc.Badge(
-                            "Project Analysis",
-                            color="green",
-                            variant="dot",
-                            size="lg",
+                        dmc.Group(
+                            [
+                                dmc.Button(
+                                    id="download_project_data",
+                                    children="Download",
+                                    color="blue",
+                                    variant="filled",
+                                    leftSection=DashIconify(
+                                        icon="ic:round-cloud-download"
+                                    ),
+                                ),
+                                # dmc.Select(
+                                #     label="Select your favorite library",
+                                #     placeholder="Select value",
+                                #     id="select-opened",
+                                #     value="pd",
+                                #     data=[
+                                #         {"value": "pd", "label": "Pandas"},
+                                #         {"value": "np", "label": "NumPy"},
+                                #         {"value": "tf", "label": "TensorFlow"},
+                                #         {"value": "torch", "label": "PyTorch"},
+                                #     ],
+                                #     w=100,
+                                #     mb=10,
+                                #
+                                # ),
+                                dmc.Button(
+                                    id="delete_project_data",
+                                    children="Delete",
+                                    color="red",
+                                    variant="filled",
+                                    leftSection=DashIconify(
+                                        icon="ic:round-delete-forever"
+                                    ),
+                                ),
+                                dmc.Badge(
+                                    "Project Analysis",
+                                    color=THEME["primary"],
+                                    variant="dot",
+                                    size="lg",
+                                ),
+                            ]
                         ),
                     ],
                     justify="space-between",
@@ -134,12 +187,17 @@ dash_app_project.layout = dmc.MantineProvider(
                     value="dashboard",
                     children=dmc.Container(
                         children=[
-                            # Filters Section
+                            # Chart Section
                             dmc.Paper(
-                                style={
-                                    **CARD_STYLE,
-                                },
+                                style={**CARD_STYLE1, "marginTop": "12px"},
                                 children=[
+                                    dmc.Title(
+                                        "Measurement Trends",
+                                        order=3,
+                                        style={
+                                            "marginBottom": "12px",
+                                        },
+                                    ),
                                     dmc.Grid(
                                         children=[
                                             dmc.GridCol(
@@ -178,27 +236,34 @@ dash_app_project.layout = dmc.MantineProvider(
                                                 ],
                                             ),
                                         ],
-                                    ),
-                                ],
-                            ),
-                            # Chart Section
-                            dmc.Paper(
-                                style={**CARD_STYLE, "marginTop": "12px"},
-                                children=[
-                                    dmc.Title(
-                                        "Measurement Trends",
-                                        order=3,
-                                        style={"marginBottom": "12px"},
+                                        style={
+                                            "marginBottom": "12px",
+                                        },
                                     ),
                                     html.Div(
                                         id="graph-project",
-                                        style={"height": "300px"},
+                                        style={"height": "250px"},
+                                        children=dmc.LineChart(
+                                            id="line-chart",
+                                            h=300,
+                                            data=[],
+                                            dataKey="Date",
+                                            withLegend=True,
+                                            legendProps={
+                                                "horizontalAlign": "top",
+                                                "left": 50,
+                                            },
+                                            series=[],
+                                            curveType="natural",
+                                            style={"padding": 20},
+                                            xAxisLabel="Processed Date",
+                                        ),
                                     ),
                                 ],
                             ),
                             # Data Table Section
                             dmc.Paper(
-                                style={**CARD_STYLE, "marginTop": "12px"},
+                                style={**CARD_STYLE1, "marginTop": "12px"},
                                 children=[
                                     dmc.Text(
                                         id="text_km",
@@ -208,7 +273,29 @@ dash_app_project.layout = dmc.MantineProvider(
                                         mr=10,
                                         fw="bold",
                                     ),
-                                    html.Div(id="click_data"),
+                                    dmc.ScrollArea(
+                                        [
+                                            dmc.Table(
+                                                id="kkm_table",
+                                                striped=True,
+                                                data={},  # data will be updated by the callback
+                                                highlightOnHover=True,
+                                                style=TABLE_MANTINE_STYLE,
+                                            ),
+                                            dmc.Group(
+                                                mt="md",
+                                                children=[
+                                                    dmc.Pagination(
+                                                        id="pagination",
+                                                        total=0,
+                                                        value=1,
+                                                        withEdges=True,
+                                                    )
+                                                ],
+                                                justify="center",
+                                            ),
+                                        ]
+                                    ),
                                 ],
                             ),
                         ],
@@ -221,8 +308,12 @@ dash_app_project.layout = dmc.MantineProvider(
                     value="settings",
                     children=dmc.Container(
                         children=[
+                            dmc.LoadingOverlay(
+                                id="loading-overlay",
+                                overlayProps={"radius": "sm", "blur": 2},
+                            ),
                             dmc.Paper(
-                                style={**CARD_STYLE, "marginTop": "12px"},
+                                style={**CARD_STYLE1, "marginTop": "12px"},
                                 children=[
                                     dmc.Grid(
                                         children=[
@@ -242,12 +333,6 @@ dash_app_project.layout = dmc.MantineProvider(
                                         mt="xl",
                                         children=[
                                             dmc.Button(
-                                                "Reset",
-                                                id="reset_config",
-                                                variant="outline",
-                                                color="red",
-                                            ),
-                                            dmc.Button(
                                                 "Update",
                                                 id="submit_config",
                                                 style=BUTTON_STYLE,
@@ -266,8 +351,12 @@ dash_app_project.layout = dmc.MantineProvider(
                     value="thresholds",
                     children=dmc.Container(
                         children=[
+                            dmc.LoadingOverlay(
+                                id="loading-overlay-threshold",
+                                overlayProps={"radius": "sm", "blur": 2},
+                            ),
                             dmc.Paper(
-                                style={**CARD_STYLE, "marginTop": "12px"},
+                                style={**CARD_STYLE1, "marginTop": "12px"},
                                 children=[
                                     dmc.Accordion(
                                         id="accordion-compose-controls",
@@ -281,12 +370,6 @@ dash_app_project.layout = dmc.MantineProvider(
                                         justify="flex-end",
                                         mt="xl",
                                         children=[
-                                            dmc.Button(
-                                                "Reset",
-                                                id="modal-close-button",
-                                                variant="outline",
-                                                color="red",
-                                            ),
                                             dmc.Button(
                                                 "Update",
                                                 id="modal-submit-button",
@@ -332,11 +415,14 @@ def update_dropdown(*args, **kwargs):
 
 
 @dash_app_project.expanded_callback(
-    dash.dependencies.Output("graph-project", "children"),
+    dash.dependencies.Output("line-chart", "data"),
+    dash.dependencies.Output("line-chart", "series"),
+    dash.dependencies.Output("line-chart", "referenceLines"),
     [
         dash.dependencies.Input("project-dropdown", "value"),
         dash.dependencies.Input("date-picker", "value"),
     ],
+    prevent_initial_call=True,
 )
 def update_table(*args, **kwargs):
     df_list = kwargs["session_state"]["context"]["key_measurements_list"]
@@ -357,6 +443,7 @@ def update_table(*args, **kwargs):
     else:
         ref = []
     dates_range = args[1]
+    print(f"Dates range: {dates_range}")
     dates = kwargs["session_state"]["context"]["dates"]
     df_filtering = pd.DataFrame(dates, columns=["Date"])
     df_dates = df_filtering[
@@ -382,33 +469,28 @@ def update_table(*args, **kwargs):
         .to_dict("records")[0]
         for i, df in enumerate(df_list_filtered)
     ]
-    line = dmc.LineChart(
-        id="line-chart",
-        h=300,
-        dataKey="Date",
-        data=data,
-        withLegend=True,
-        legendProps={"horizontalAlign": "top", "left": 50},
-        # yAxisProps={"tickMargin": 15, "orientation": "center"},
-        series=[{"name": kkm[measurement], "color": "green.7"}],
-        curveType="natural",
-        style={"padding": 20},
-        xAxisLabel="Processed Date",
-        referenceLines=ref,
-        # yAxisLabel=str(kkm[measurement]).replace("_", " ").title(),
-    )
-
-    return line
+    series = [
+        {
+            "name": kkm[measurement],
+            "color": "green.7",
+        }
+    ]
+    return data, series, ref
 
 
 @dash_app_project.expanded_callback(
     dash.dependencies.Output("text_km", "children"),
-    dash.dependencies.Output("click_data", "children"),
-    [dash.dependencies.Input("line-chart", "clickData")],
+    dash.dependencies.Output("kkm_table", "data"),
+    dash.dependencies.Output("pagination", "total"),
+    [
+        dash.dependencies.Input("line-chart", "clickData"),
+        dash.dependencies.Input("pagination", "value"),
+    ],
     prevent_initial_call=True,
 )
 def update_project_view(*args, **kwargs):
     if args[0]:
+        page = args[1]
         table = kwargs["session_state"]["context"]["key_measurements_list"]
         dates = kwargs["session_state"]["context"]["dates"]
         kkm = kwargs["session_state"]["context"]["kkm"]
@@ -416,26 +498,18 @@ def update_project_view(*args, **kwargs):
         df_selected = table[selected_dataset]
         table_kkm = df_selected[kkm].copy()
         table_kkm = table_kkm.round(3)
+        total = math.ceil(len(table_kkm) / 4)
+        start_idx = (page - 1) * 4
+        end_idx = start_idx + 4
         table_kkm.columns = table_kkm.columns.str.replace("_", " ").str.title()
         date = dates[selected_dataset]
-        grid = dmc.ScrollArea(
-            [
-                dmc.Table(
-                    striped=True,
-                    data={
-                        "head": table_kkm.columns.tolist(),
-                        "body": table_kkm.values.tolist(),
-                        "caption": "Key Measurements for the selected dataset",
-                    },
-                    highlightOnHover=True,
-                    style=TABLE_MANTINE_STYLE,
-                )
-            ]
-        )
-        return (
-            "Key Measurements" " processed at " + str(date),
-            grid,
-        )
+        page_data = table_kkm.iloc[start_idx:end_idx]
+        grid = {
+            "head": page_data.columns.tolist(),
+            "body": page_data.values.tolist(),
+            "caption": "Key Measurements for the selected dataset",
+        }
+        return ("Key Measurements" " processed at " + str(date), grid, total)
 
     else:
         return dash.no_update
@@ -467,19 +541,158 @@ def update_modal(*args, **kwargs):
     )
 
 
+dash_app_project.clientside_callback(
+    """
+    function updateLoadingState(n_clicks) {
+        if (n_clicks > 0 ) {
+            return true;
+        }
+        return false;
+    }
+
+
+    """,
+    dash.dependencies.Output(
+        "loading-overlay", "visible", allow_duplicate=True
+    ),
+    dash.dependencies.Input("submit_config", "n_clicks"),
+    prevent_initial_call=True,
+)
+dash_app_project.clientside_callback(
+    """
+    function updateLoadingThresholdState(n_clicks) {
+        if (n_clicks > 0) {
+            return true;
+        }
+        return false;
+    }
+
+
+    """,
+    dash.dependencies.Output(
+        "loading-overlay-threshold", "visible", allow_duplicate=True
+    ),
+    dash.dependencies.Input("modal-submit-button", "n_clicks"),
+    prevent_initial_call=True,
+)
+
+
 @dash_app_project.expanded_callback(
-    dash.dependencies.Output("modal-simple", "opened"),
+    dash.dependencies.Output("save_config_result", "children"),
+    dash.dependencies.Output("loading-overlay", "visible"),
     [
-        dash.dependencies.Input("modal-demo-button", "n_clicks"),
-        dash.dependencies.Input("modal-close-button", "n_clicks"),
-        dash.dependencies.Input("modal-submit-button", "n_clicks"),
-        dash.dependencies.State("modal-simple", "opened"),
+        dash.dependencies.Input("submit_config", "n_clicks"),
+        dash.dependencies.State("sample_form", "children"),
+        dash.dependencies.State("input_parameters_form", "children"),
     ],
     prevent_initial_call=True,
 )
-def modal_demo(*args, **kwargs):
-    opened = args[3]
-    return not opened
+def update_config_project(*args, **kwargs):
+    sample_form = args[1]
+    input_form = args[2]
+    print(f"Sample form valid: {sample_form}")
+    print(f"Input form valid: {input_form}")
+    project_id = int(kwargs["session_state"]["context"]["project_id"])
+    request = kwargs["request"]
+    setup = kwargs["session_state"]["context"]["setup"]
+    sample = setup["sample"]
+    mm_sample = getattr(mm_schema, sample["type"])
+    input_parameters = setup["input_parameters"]
+    mm_input_parameters = getattr(mm_schema, input_parameters["type"])
+    if dft.validate_form(sample_form) and dft.validate_form(input_form):
+        try:
+            input_parameters = dft.extract_form_data(
+                input_form, mm_input_parameters.class_name
+            )
+            mm_input_parameters = mm_input_parameters(**input_parameters)
+            sample = dft.extract_form_data(sample_form, mm_sample.class_name)
+            mm_sample = mm_sample(**sample)
+            response, color = views.save_config(
+                request=request,
+                project_id=int(project_id),
+                input_parameters=mm_input_parameters,
+                sample=mm_sample,
+            )
+            sleep(1)
+            return [
+                dmc.Alert(
+                    children=[
+                        dmc.Title(response, order=4),
+                        dmc.Text(
+                            (
+                                "Your configuration has been saved successfully."
+                                if color == "green"
+                                else "An error occurred while saving your configuration."
+                            ),
+                            size="sm",
+                        ),
+                    ],
+                    color=color,
+                    icon=DashIconify(
+                        icon=(
+                            "mdi:check-circle"
+                            if color == "green"
+                            else "mdi:alert-circle"
+                        )
+                    ),
+                    title="Success!" if color == "green" else "Error!",
+                    radius="md",
+                    withCloseButton=True,
+                    duration=3000,
+                )
+            ], False
+        except Exception as e:
+            return [
+                dmc.Alert(
+                    children=[
+                        dmc.Title("Error", order=4),
+                        dmc.Text(str(e), size="sm"),
+                    ],
+                    color="red",
+                    icon=DashIconify(icon="mdi:alert"),
+                    title="Error!",
+                    radius="md",
+                    withCloseButton=True,
+                    duration=3000,
+                )
+            ], False
+    else:
+        return [
+            dmc.Alert(
+                children=[
+                    dmc.Text("Please fill in all fields", size="sm"),
+                    dmc.Text(
+                        f"Sample form valid: {dft.validate_form(sample_form)}",
+                        size="sm",
+                    ),
+                    dmc.Text(
+                        f"Input parameter form valid: {dft.validate_form(input_form)}",
+                        size="sm",
+                    ),
+                ],
+                color="red",
+                icon=DashIconify(icon="mdi:alert"),
+                title="Error!",
+                radius="md",
+                withCloseButton=True,
+                duration=3000,
+            )
+        ], False
+
+
+# @dash_app_project.expanded_callback(
+#     dash.dependencies.Output("modal-simple", "opened"),
+#     [
+#         dash.dependencies.Input("modal-demo-button", "n_clicks"),
+#         dash.dependencies.Input("modal-close-button", "n_clicks"),
+#         dash.dependencies.Input("modal-submit-button", "n_clicks"),
+#         dash.dependencies.State("modal-simple", "opened"),
+#     ],
+#     prevent_initial_call=True,
+# )
+# def modal_demo(*args, **kwargs):
+#     opened = args[3]
+#     return not opened
 
 
 @dash_app_project.expanded_callback(
@@ -535,7 +748,7 @@ def update_thresholds_controls(*args, **kwargs):
                                     placeholder="Enter upper limit",
                                     leftSection=DashIconify(
                                         icon="hugeicons:chart-maximum",
-                                        color="green",
+                                        color=THEME["primary"],
                                     ),
                                     value=value.get("upper_limit", ""),
                                 ),
@@ -544,7 +757,7 @@ def update_thresholds_controls(*args, **kwargs):
                                     placeholder="Enter lower limit",
                                     leftSection=DashIconify(
                                         icon="hugeicons:chart-minimum",
-                                        color="green",
+                                        color=THEME["primary"],
                                     ),
                                     value=value.get("lower_limit", ""),
                                 ),
@@ -566,6 +779,7 @@ def update_thresholds_controls(*args, **kwargs):
 
 @dash_app_project.expanded_callback(
     dash.dependencies.Output("notifications-container", "children"),
+    dash.dependencies.Output("loading-overlay-threshold", "visible"),
     [
         dash.dependencies.Input("modal-submit-button", "n_clicks"),
         dash.dependencies.State("accordion-compose-controls", "children"),
@@ -584,20 +798,23 @@ def threshold_callback1(*args, **kwargs):
             project_id=int(project_id),
             threshold=output,
         )
-        return dmc.Notification(
-            title="Thresholds Updated",
-            id="simple-notify",
-            color=color,
-            action="show",
-            message=response,
-            icon=(
-                DashIconify(icon="ic:round-celebration")
-                if color == "green"
-                else DashIconify(icon="ic:round-error")
+        return (
+            dmc.Notification(
+                title="Thresholds Updated",
+                id="simple-notify",
+                color=color,
+                action="show",
+                message=response,
+                icon=(
+                    DashIconify(icon="ic:round-celebration")
+                    if color == "green"
+                    else DashIconify(icon="ic:round-error")
+                ),
             ),
+            False,
         )
     else:
-        return dash.no_update
+        return dash.no_update, False
 
 
 def get_accordion_data(accordion_state, kkm):
