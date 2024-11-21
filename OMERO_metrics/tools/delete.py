@@ -4,8 +4,10 @@ import logging
 import omero
 from OMERO_metrics.tools import omero_tools
 import microscopemetrics_schema.datamodel as mm_schema
-from omero.gateway import BlitzGateway
+from omero.gateway import BlitzGateway, FileAnnotationWrapper, DatasetWrapper
 from dataclasses import fields
+
+from OMERO_metrics.tools.data_type import DATASET_TYPES
 
 logger = logging.getLogger(__name__)
 
@@ -34,21 +36,15 @@ def delete_data_references(mm_obj: mm_schema.MetricsObject) -> None:
 def delete_mm_obj_omero_refs(
     conn: BlitzGateway, mm_obj: mm_schema.MetricsObject
 ):
-    object_types = (
-        [
-            "Annotation",
-            "Roi",
-            "Image/Pixels/Channel",
-        ],
-    )
-    ids_to_del = [
-        ref.omero_object_id for ref in omero_tools.get_refs_from_mm_obj(mm_obj)
+    refs_to_del = omero_tools.get_refs_from_mm_obj(mm_obj)
+    refs_to_del = [
+        (ref.omero_object_type.code.text, ref.omero_object_id) for ref in refs_to_del
+        if all([ref, ref.omero_object_type, ref.omero_object_id])
     ]
 
     if not omero_tools.have_delete_permission(
         conn=conn,
-        object_ids=ids_to_del,
-        object_types=object_types,
+        object_refs=refs_to_del
     ):
         raise PermissionError(
             "You don't have the necessary permissions to delete the dataset output."
@@ -57,8 +53,7 @@ def delete_mm_obj_omero_refs(
     try:
         omero_tools.del_objects(
             conn=conn,
-            object_types=object_types,
-            object_ids=ids_to_del,
+            object_refs=refs_to_del,
             delete_anns=True,
             delete_children=True,
             dry_run_first=True,
@@ -66,33 +61,28 @@ def delete_mm_obj_omero_refs(
         )
 
     except Exception as e:
-        logger.error(f"Error deleting dataset {mm_obj.name} output: {e}")
+        logger.error(f"Error deleting object {mm_obj}: {e}")
         raise e
 
 
 def delete_dataset_file_ann(
-    conn: BlitzGateway, dataset: mm_schema.MetricsDataset
-) -> bool:
-    try:
-        id_to_del = dataset.data_reference.omero_object_id
-    except AttributeError as e:
-        logger.error(
-            f"No file annotation reference associated with dataset {dataset.name}. Unable to delete."
-        )
-        raise e
-
-    omero_tools.del_object(
-        conn=conn,
-        object_id=id_to_del,
-        object_type="FileAnnotation",
-        delete_anns=False,
-        delete_children=False,
-        dry_run_first=True,
-    )
-
-    if del_success:
-        delete_data_references(dataset)
-        return True
+    conn: BlitzGateway, dataset: DatasetWrapper
+):
+    logger.info(f"Deleting file annotations for dataset {dataset.getId()}")
+    for ann in dataset.listAnnotations():
+        if isinstance(ann, FileAnnotationWrapper):
+            ns = ann.getNs()
+            if ns.startswith("microscopemetrics_schema:analyses"):
+                ds_type = ns.split("/")[-1]
+                logger.info(f"Deleting {ds_type} file annotation {ann.getId()}")
+                if ds_type in DATASET_TYPES:
+                    omero_tools.del_object(
+                        conn=conn,
+                        object_ref=("Annotation", ann.getId()),
+                        delete_anns=True,
+                        delete_children=True,
+                        dry_run_first=True,
+                    )
 
 
 def delete_all_mm_analysis(conn, group_id):

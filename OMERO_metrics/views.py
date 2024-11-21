@@ -363,17 +363,20 @@ def delete_all(request, conn=None, **kwargs):
 @login_required(setGroupContext=True)
 def delete_dataset(request, conn=None, **kwargs):
     """Delete the dataset outputs"""
+    dataset_id = kwargs["dataset_id"]
+    logger.info(f"Deleting dataset {dataset_id}")
+    dataset_wrapper = conn.getObject("Dataset", dataset_id)
+    dm = DatasetManager(conn, dataset_wrapper, load_images=False)
+    dm.load_data()
     try:
-        dataset_id = kwargs["dataset_id"]
-        dataset_wrapper = conn.getObject("Dataset", dataset_id)
-        dm = DatasetManager(conn, dataset_wrapper, load_images=False)
-        dm.load_data()
-        mm_dataset = dm.mm_dataset
-        rsp = delete.delete_dataset_output(conn, mm_dataset)
-        if rsp:
-            return "Output deleted successfully", "green"
-        else:
-            return "Failed to delete output", "red"
+        delete.delete_mm_obj_omero_refs(conn, dm.mm_dataset.output)
+        delete.delete_dataset_file_ann(conn, dm.omero_dataset)
+        dm.mm_dataset.validated = False
+        dm.mm_dataset.processed = False
+        dm.mm_dataset.output = None
+        dm.processed = False
+
+        return "Output deleted successfully", "green"
     except Exception as e:
         return str(e), "red"
 

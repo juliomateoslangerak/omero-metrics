@@ -2,6 +2,7 @@ import datetime
 import json
 import logging
 import mimetypes
+from dataclasses import fields, is_dataclass
 from itertools import product
 from random import choice
 from string import ascii_letters
@@ -154,20 +155,25 @@ def get_omero_obj_ids_from_mm_obj(
         ) from e
 
 
-def get_refs_from_mm_obj(mm_obj: mm_schema.MetricsObject) -> list:
+def get_refs_from_mm_obj(mm_obj) -> list:
     refs = []
-    with contextlib.suppress(AttributeError):
-        refs.append(mm_obj.data_reference)
-        if isinstance(mm_obj, dataclasses.dataclass):
-            for field in dataclasses.fields(mm_obj):
-                field_obj = getattr(mm_obj, field.name)
-                if isinstance(field_obj, list):
-                    refs.extend(get_refs_from_mm_obj(obj) for obj in field_obj)
-                elif isinstance(field_obj, mm_schema.MetricsObject):
-                    refs.extend(get_refs_from_mm_obj(field_obj))
-        elif isinstance(mm_obj, list):
-            refs.extend(get_refs_from_mm_obj(obj) for obj in mm_obj)
 
+    def _extract_refs(obj):
+        if is_dataclass(obj):
+            for field in fields(obj):
+                field_obj = getattr(obj, field.name)
+                if isinstance(field_obj, mm_schema.DataReference):
+                    refs.append(field_obj)
+                elif isinstance(field_obj, list):
+                    for item in field_obj:
+                        _extract_refs(item)
+                elif is_dataclass(field_obj):
+                    _extract_refs(field_obj)
+        elif isinstance(obj, list):
+            for item in obj:
+                _extract_refs(item)
+
+    _extract_refs(mm_obj)
     return refs
 
 
@@ -1171,19 +1177,17 @@ def _link_image_to_dataset(
 
 def have_delete_permission(
     conn: BlitzGateway,
-    object_types: list,
-    object_ids: list[int],
+    object_refs: list[tuple[str, int]],
 ):
     return all(
         conn.getObject(ot, oid).canDelete()
-        for ot, oid in zip(object_types, object_ids)
+        for ot, oid in object_refs
     )
 
 
 def del_objects(
     conn: BlitzGateway,
-    object_types: list,
-    object_ids: list[int],
+    object_refs: list[tuple[str, int]],
     delete_anns: bool = True,
     delete_children: bool = True,
     check_permission: bool = False,
@@ -1191,35 +1195,46 @@ def del_objects(
     wait: bool = True,
 ):
     if check_permission and not have_delete_permission(
-        conn, object_types, object_ids
+        conn, object_refs
     ):
         raise PermissionError(
             "You do not have permission to delete the object"
         )
 
+    object_types = {
+        "Annotation": [id for ot, id in object_refs if ot.upper() == "ANNOTATION"],
+        "FileAnnotation": [id for ot, id in object_refs if ot.upper() == "FILEANNOTATION"],
+        "Roi": [id for ot, id in object_refs if ot.upper() == "ROI"],
+        "Image": [id for ot, id in object_refs if ot.upper() == "IMAGE"],
+    }
+
     if dry_run_first:
         try:
-            conn.deleteObjects(
-                graph_spec="/".join(object_types),
-                obj_ids=object_ids,
-                deleteAnns=delete_anns,
-                deleteChildren=delete_children,
-                dryRun=True,
-                wait=True,
-            )
+            for ot, oids in object_types.items():
+                if len(oids) > 0:
+                    conn.deleteObjects(
+                        graph_spec=ot,
+                        obj_ids=oids,
+                        deleteAnns=delete_anns,
+                        deleteChildren=delete_children,
+                        dryRun=True,
+                        wait=True,
+                    )
         except Exception as e:
             logger.error(f"Error during dry run deletion: {e}")
             raise e
 
     try:
-        conn.deleteObjects(
-            graph_spec="/".join(object_types),
-            obj_ids=object_ids,
-            deleteAnns=delete_anns,
-            deleteChildren=delete_children,
-            dryRun=False,
-            wait=wait,
-        )
+        for ot, oids in object_types.items():
+            if len(oids) > 0:
+                conn.deleteObjects(
+                    graph_spec=ot,
+                    obj_ids=oids,
+                    deleteAnns=delete_anns,
+                    deleteChildren=delete_children,
+                    dryRun=False,
+                    wait=wait,
+                )
     except Exception as e:
         logger.error(f"Error during deletion: {e}")
         raise e
@@ -1227,16 +1242,14 @@ def del_objects(
 
 def del_object(
     conn: BlitzGateway,
-    object_id: int,
-    object_type: str,
+    object_ref: tuple[str, int],
     delete_anns: bool = True,
     delete_children: bool = True,
     dry_run_first: bool = True,
 ):
     del_objects(
         conn=conn,
-        object_ids=[object_id],
-        object_types=object_type,
+        object_refs=[object_ref],
         delete_anns=delete_anns,
         delete_children=delete_children,
         dry_run_first=dry_run_first,
