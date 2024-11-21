@@ -228,14 +228,15 @@ class DatasetManager:
 
         return True
 
-    def delete_processed_data(self):
+    def delete_processed_data(self, conn: BlitzGateway):
         """This function deletes the output of the dataset"""
+        logger.debug(f"Deleting processed data for dataset {self.omero_dataset.getId()}")
         if not self.is_processed():
             logger.warning("Data has not been processed. Nothing to delete")
-            return False
+            return
         try:
-            logger.warning("Deleting processed data...")
-            delete.delete_mm_obj_omero_refs(self._conn, self.mm_dataset.output)
+            delete.delete_mm_obj_omero_refs(conn, self.mm_dataset.output)
+            delete.delete_dataset_file_ann(conn, self.omero_dataset)
             self.mm_dataset.validated = False
             self.mm_dataset.processed = False
             self.mm_dataset.output = None
@@ -243,13 +244,9 @@ class DatasetManager:
         except Exception as e:
             logger.error(f"Error deleting processed data: {e}")
             self.mm_dataset.validated = False
-            return False
+            raise e
         else:
-            self.mm_dataset.validated = False
-            self.mm_dataset.processed = False
             logger.info("Processed data deleted.")
-
-        return True
 
     def process_data_remotely(self):
         pass
