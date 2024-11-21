@@ -140,7 +140,9 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
         pm.check_processed_data()
         pm.visualize_data()
         context = pm.context
+        mm_datasets = [dm.mm_dataset for dm in pm.datasets if dm.processed]
         dash_context["context"] = context
+        dash_context["context"]["mm_datasets"] = mm_datasets
         dash_context["context"]["project_id"] = project_id
         request.session["django_plotly_dash"] = dash_context
         return render(

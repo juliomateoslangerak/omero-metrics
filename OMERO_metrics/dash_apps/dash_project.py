@@ -1,10 +1,11 @@
 import dash
-from dash import html
+from dash import dcc, html
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 from datetime import datetime
 import pandas as pd
+from linkml_runtime.dumpers import YAMLDumper
 from microscopemetrics_schema import datamodel as mm_schema
 from OMERO_metrics.tools import dash_forms_tools as dft
 from OMERO_metrics import views
@@ -111,6 +112,7 @@ dash_app_project.layout = dmc.MantineProvider(
                                         icon="ic:round-cloud-download"
                                     ),
                                 ),
+                                dcc.Download(id="download"),
                                 # dmc.Select(
                                 #     label="Select your favorite library",
                                 #     placeholder="Select value",
@@ -849,3 +851,14 @@ def get_accordion_data(accordion_state, kkm):
         }
         print(f"Error: {e}")
     return dict_data
+
+
+@dash_app_project.expanded_callback(
+    dash.dependencies.Output("download", "data"),
+    [dash.dependencies.Input("download_project_data", "n_clicks")],
+    prevent_initial_call=True,
+)
+def download_project_data(*args, **kwargs):
+    mm_datasets = kwargs["session_state"]["context"]["mm_datasets"]
+    dumper = YAMLDumper()
+    return dict(content=dumper.dumps(mm_datasets), filename="dataset.yaml")

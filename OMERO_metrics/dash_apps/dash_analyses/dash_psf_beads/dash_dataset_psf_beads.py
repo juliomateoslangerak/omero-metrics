@@ -1,8 +1,10 @@
 import dash
-from dash import html
+from dash import dcc, html
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
+from linkml_runtime.dumpers import YAMLDumper
+
 from OMERO_metrics.styles import THEME, HEADER_PAPER_STYLE, MANTINE_THEME
 from OMERO_metrics import views
 from time import sleep
@@ -94,6 +96,7 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
                                         icon="ic:round-cloud-download"
                                     ),
                                 ),
+                                dcc.Download(id="download"),
                                 dmc.Button(
                                     id="delete_dataset_data",
                                     children="Delete",
@@ -257,3 +260,14 @@ def delete_dataset(*args, **kwargs):
         return opened, message
     else:
         return opened, None
+
+
+@omero_dataset_psf_beads.expanded_callback(
+    dash.dependencies.Output("download", "data"),
+    [dash.dependencies.Input("download_dataset_data", "n_clicks")],
+    prevent_initial_call=True,
+)
+def download_dataset_data(*args, **kwargs):
+    mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
+    dumper = YAMLDumper()
+    return dict(content=dumper.dumps(mm_dataset), filename="dataset.yaml")
