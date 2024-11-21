@@ -516,24 +516,15 @@ def dump_roi(
 ):
     if target_image is None:
         try:
-            target_image = omero_tools.get_omero_obj_from_mm_obj(
+            target_images = omero_tools.get_omero_obj_from_mm_obj(
                 conn=conn, mm_obj=roi.linked_references
             )
         except AttributeError:
-            logger.error(
-                f"ROI {roi.name} must be linked to an image. No image provided."
-            )
-            return None
-        if len(target_image) > 1:
-            logger.error(
-                f"ROI {roi.name} must be linked to a single image. More than one image provided."
-            )
-            return None
-        if len(target_image) == 0:
-            logger.error(
-                f"ROI {roi.name} must be linked to an image. No image provided."
-            )
-            return None
+            raise TypeError(f"ROI {roi.name} must be linked to an image. No image provided.")
+        if len(target_images) != 1:
+            raise TypeError(f"ROI {roi.name} must be linked to a single image.")
+        else:
+            target_image = target_images[0]
 
     handler = {
         "points": lambda shape: omero_tools.create_shape_point(shape),
