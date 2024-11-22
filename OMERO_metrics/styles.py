@@ -250,7 +250,7 @@ CONTENT_PAPER_STYLE = {
 }
 
 GRAPH_STYLE = {
-    "height": "400px",
+    "height": "300px",
 }
 
 PLOT_LAYOUT = {

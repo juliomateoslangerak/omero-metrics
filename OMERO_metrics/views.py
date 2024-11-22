@@ -373,10 +373,10 @@ def delete_dataset(request, conn=None, **kwargs):
     try:
         delete.delete_mm_obj_omero_refs(conn, dm.mm_dataset.output)
         delete.delete_dataset_file_ann(conn, dm.omero_dataset)
-        dm.mm_dataset.validated = False
-        dm.mm_dataset.processed = False
-        dm.mm_dataset.output = None
-        dm.processed = False
+        # dm.mm_dataset.validated = False
+        # dm.mm_dataset.processed = False
+        # dm.mm_dataset.output = None
+        # dm.processed = False
 
         return "Output deleted successfully", "green"
     except Exception as e:

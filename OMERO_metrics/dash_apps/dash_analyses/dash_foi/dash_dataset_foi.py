@@ -1,3 +1,5 @@
+from time import sleep
+from OMERO_metrics import views
 import dash
 import pandas as pd
 from dash import dcc, html
@@ -31,6 +33,34 @@ omero_dataset_foi = DjangoDash(
 omero_dataset_foi.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
+        dmc.NotificationProvider(position="top-center"),
+        html.Div(id="notifications-container"),
+        dmc.Modal(
+            title="Confirm Delete",
+            id="confirm_delete",
+            children=[
+                dmc.Text(
+                    "Are you sure you want to delete this dataset outputs?"
+                ),
+                dmc.Space(h=20),
+                dmc.Group(
+                    [
+                        dmc.Button(
+                            "Submit",
+                            id="modal-submit-button",
+                            color="red",
+                        ),
+                        dmc.Button(
+                            "Close",
+                            color="gray",
+                            variant="outline",
+                            id="modal-close-button",
+                        ),
+                    ],
+                    justify="flex-end",
+                ),
+            ],
+        ),
         dmc.Paper(
             children=[
                 dmc.Group(
@@ -472,6 +502,44 @@ def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:
     value = getattr(df, col).str.replace("_", " ", regex=True).str.title()
     setattr(df, col, value)
     return df
+
+
+@omero_dataset_foi.expanded_callback(
+    dash.dependencies.Output("confirm_delete", "opened"),
+    dash.dependencies.Output("notifications-container", "children"),
+    [
+        dash.dependencies.Input("delete_dataset_data", "n_clicks"),
+        dash.dependencies.Input("modal-submit-button", "n_clicks"),
+        dash.dependencies.Input("modal-close-button", "n_clicks"),
+        dash.dependencies.State("confirm_delete", "opened"),
+    ],
+    prevent_initial_call=True,
+)
+def delete_dataset(*args, **kwargs):
+    triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
+    dataset_id = kwargs["session_state"]["context"]["dataset_id"]
+    request = kwargs["request"]
+    opened = not args[3]
+    if triggered_button == "modal-submit-button.n_clicks" and args[0] > 0:
+        sleep(1)
+        msg, color = views.delete_dataset(request, dataset_id=dataset_id)
+        message = dmc.Notification(
+            title="Notification!",
+            id="simple-notify",
+            action="show",
+            message=msg,
+            icon=DashIconify(
+                icon=(
+                    "akar-icons:circle-check"
+                    if color == "green"
+                    else "akar-icons:circle-x"
+                )
+            ),
+            color=color,
+        )
+        return opened, message
+    else:
+        return opened, None
 
 
 @omero_dataset_foi.expanded_callback(

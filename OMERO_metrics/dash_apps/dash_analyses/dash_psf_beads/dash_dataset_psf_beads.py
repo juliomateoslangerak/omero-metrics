@@ -4,7 +4,6 @@ from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 from linkml_runtime.dumpers import YAMLDumper
-
 from OMERO_metrics.styles import THEME, HEADER_PAPER_STYLE, MANTINE_THEME
 from OMERO_metrics import views
 from time import sleep

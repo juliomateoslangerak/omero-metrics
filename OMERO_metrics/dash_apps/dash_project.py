@@ -58,7 +58,7 @@ def make_control(text, action_id):
 
 # Initialize the Dash app
 dashboard_name = "omero_project_dash"
-dash_app_project = DjangoDash(
+omero_project_dash = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
     external_stylesheets=dmc.styles.ALL,
@@ -66,7 +66,7 @@ dash_app_project = DjangoDash(
 
 
 # Define the layout
-dash_app_project.layout = dmc.MantineProvider(
+omero_project_dash.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
         html.Div(id="blank-input"),
@@ -312,7 +312,10 @@ dash_app_project.layout = dmc.MantineProvider(
                         children=[
                             dmc.LoadingOverlay(
                                 id="loading-overlay",
-                                overlayProps={"radius": "sm", "blur": 2},
+                                overlayProps={
+                                    "radius": "sm",
+                                    "blur": 1,
+                                },
                             ),
                             dmc.Paper(
                                 style={**CARD_STYLE1, "marginTop": "12px"},
@@ -355,7 +358,10 @@ dash_app_project.layout = dmc.MantineProvider(
                         children=[
                             dmc.LoadingOverlay(
                                 id="loading-overlay-threshold",
-                                overlayProps={"radius": "sm", "blur": 2},
+                                overlayProps={
+                                    "radius": "sm",
+                                    "blur": 1,
+                                },
                             ),
                             dmc.Paper(
                                 style={**CARD_STYLE1, "marginTop": "12px"},
@@ -397,7 +403,7 @@ dash_app_project.layout = dmc.MantineProvider(
 )
 
 
-@dash_app_project.expanded_callback(
+@omero_project_dash.expanded_callback(
     dash.dependencies.Output("project-dropdown", "data"),
     dash.dependencies.Output("date-picker", "minDate"),
     dash.dependencies.Output("date-picker", "maxDate"),
@@ -416,7 +422,7 @@ def update_dropdown(*args, **kwargs):
     return data, min_date, max_date, value_date
 
 
-@dash_app_project.expanded_callback(
+@omero_project_dash.expanded_callback(
     dash.dependencies.Output("line-chart", "data"),
     dash.dependencies.Output("line-chart", "series"),
     dash.dependencies.Output("line-chart", "referenceLines"),
@@ -480,7 +486,7 @@ def update_table(*args, **kwargs):
     return data, series, ref
 
 
-@dash_app_project.expanded_callback(
+@omero_project_dash.expanded_callback(
     dash.dependencies.Output("text_km", "children"),
     dash.dependencies.Output("kkm_table", "data"),
     dash.dependencies.Output("pagination", "total"),
@@ -517,7 +523,7 @@ def update_project_view(*args, **kwargs):
         return dash.no_update
 
 
-@dash_app_project.expanded_callback(
+@omero_project_dash.expanded_callback(
     dash.dependencies.Output("input_parameters_container", "children"),
     dash.dependencies.Output("sample_container", "children"),
     [dash.dependencies.Input("blank-input", "children")],
@@ -543,7 +549,7 @@ def update_modal(*args, **kwargs):
     )
 
 
-dash_app_project.clientside_callback(
+omero_project_dash.clientside_callback(
     """
     function updateLoadingState(n_clicks) {
         if (n_clicks > 0 ) {
@@ -560,7 +566,7 @@ dash_app_project.clientside_callback(
     dash.dependencies.Input("submit_config", "n_clicks"),
     prevent_initial_call=True,
 )
-dash_app_project.clientside_callback(
+omero_project_dash.clientside_callback(
     """
     function updateLoadingThresholdState(n_clicks) {
         if (n_clicks > 0) {
@@ -579,7 +585,7 @@ dash_app_project.clientside_callback(
 )
 
 
-@dash_app_project.expanded_callback(
+@omero_project_dash.expanded_callback(
     dash.dependencies.Output("save_config_result", "children"),
     dash.dependencies.Output("loading-overlay", "visible"),
     [
@@ -697,7 +703,7 @@ def update_config_project(*args, **kwargs):
 #     return not opened
 
 
-@dash_app_project.expanded_callback(
+@omero_project_dash.expanded_callback(
     dash.dependencies.Output("thresholds-dropdown", "data"),
     [dash.dependencies.Input("blank-input", "children")],
 )
@@ -708,7 +714,7 @@ def update_thresholds(*args, **kwargs):
     return data
 
 
-@dash_app_project.expanded_callback(
+@omero_project_dash.expanded_callback(
     dash.dependencies.Output({"index": dash.dependencies.MATCH}, "variant"),
     dash.dependencies.Input({"index": dash.dependencies.MATCH}, "n_clicks"),
 )
@@ -719,7 +725,7 @@ def update_heart(*args, **kwargs):
     return "filled"
 
 
-@dash_app_project.expanded_callback(
+@omero_project_dash.expanded_callback(
     dash.dependencies.Output("accordion-compose-controls", "children"),
     [dash.dependencies.Input("blank-input", "children")],
 )
@@ -779,7 +785,7 @@ def update_thresholds_controls(*args, **kwargs):
     return threshold_control
 
 
-@dash_app_project.expanded_callback(
+@omero_project_dash.expanded_callback(
     dash.dependencies.Output("notifications-container", "children"),
     dash.dependencies.Output("loading-overlay-threshold", "visible"),
     [
@@ -853,7 +859,7 @@ def get_accordion_data(accordion_state, kkm):
     return dict_data
 
 
-@dash_app_project.expanded_callback(
+@omero_project_dash.expanded_callback(
     dash.dependencies.Output("download", "data"),
     [dash.dependencies.Input("download_project_data", "n_clicks")],
     prevent_initial_call=True,
