@@ -342,11 +342,19 @@ def _get_input_metadata(
     for input_field in fields(input):
         input_element = getattr(input, input_field.name)
         if isinstance(input_element, mm_schema.Image):
-            metadata[input_field.name] = input_element.name
+            metadata[f"{input_field.name}_id"] = (
+                input_element.data_reference.omero_object_id
+            )
+            metadata[f"{input_field.name}_name"] = input_element.name
         elif isinstance(input_element, list) and all(
             isinstance(i_e, mm_schema.Image) for i_e in input_element
         ):
-            metadata[input_field.name] = [i_e.name for i_e in input_element]
+            metadata[f"{input_field.name}_id"] = [
+                i_e.data_reference.omero_object_id for i_e in input_element
+            ]
+            metadata[f"{input_field.name}_name"] = [
+                i_e.name for i_e in input_element
+            ]
         else:
             metadata[input_field.name] = str(input_element)
 
@@ -512,28 +520,23 @@ def dump_image(
 def dump_roi(
     conn: BlitzGateway,
     roi: mm_schema.Roi,
-    target_images: Union[ImageWrapper, list[ImageWrapper]] = None,
+    target_image: ImageWrapper = None,
 ):
-    if target_images is None:
+    if target_image is None:
         try:
-            target_images = [
-                omero_tools.get_omero_obj_from_mm_obj(conn=conn, mm_obj=ref)
-                for ref in roi.linked_references
-                if isinstance(ref, mm_schema.DataReference)
-            ]
+            target_images = omero_tools.get_omero_obj_from_mm_obj(
+                conn=conn, mm_obj=roi.linked_references
+            )
         except AttributeError:
-            logger.error(
+            raise TypeError(
                 f"ROI {roi.name} must be linked to an image. No image provided."
             )
-            return None
-
-    if not target_images or not all(
-        isinstance(i, ImageWrapper) for i in target_images
-    ):
-        logger.error(
-            f"ROI {roi.name} must be linked to an image. {target_images} object provided is not an image."
-        )
-        return None
+        if len(target_images) != 1:
+            raise TypeError(
+                f"ROI {roi.name} must be linked to a single image."
+            )
+        else:
+            target_image = target_images[0]
 
     handler = {
         "points": lambda shape: omero_tools.create_shape_point(shape),
@@ -558,22 +561,17 @@ def dump_roi(
             shape_handler(shape) for shape in getattr(roi, shape_field.name)
         ]
 
-    omero_rois = []
-    for target_image in target_images:
-        omero_roi = omero_tools.create_roi(
-            conn=conn,
-            image=target_image,
-            shapes=shapes,
-            name=roi.name,
-            description=roi.description,
-        )
-        omero_rois.append(omero_roi)
+    omero_roi = omero_tools.create_roi(
+        conn=conn,
+        image=target_image,
+        shapes=shapes,
+        name=roi.name,
+        description=roi.description,
+    )
 
-    roi.linked_references = [
-        omero_tools.get_ref_from_object(r) for r in omero_rois
-    ]
+    roi.data_reference = omero_tools.get_ref_from_object(omero_roi)
 
-    return omero_rois
+    return omero_roi
 
 
 def dump_tag(
