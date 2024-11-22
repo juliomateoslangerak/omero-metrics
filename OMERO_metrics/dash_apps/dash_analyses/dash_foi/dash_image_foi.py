@@ -308,16 +308,13 @@ def callback_image(*args, **kwargs):
     checked_contour = args[2]
     inverted_color = args[3]
     roi = args[4]
-
     if inverted_color:
         color = color + "_r"
-
     image_omero = kwargs["session_state"]["context"]["image"]
     image_data = image_omero[0, 0, :, :, int(args[0])]
     image_data = rescale_intensity(
         image_data, in_range=(0, image_data.max()), out_range=(0.0, 1.0)
     )
-
     df_rects = kwargs["session_state"]["context"]["df_rects"]
     df_lines = kwargs["session_state"]["context"]["df_lines"]
     df_points = kwargs["session_state"]["context"]["df_points"]

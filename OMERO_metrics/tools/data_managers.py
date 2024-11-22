@@ -230,7 +230,9 @@ class DatasetManager:
 
     def delete_processed_data(self, conn: BlitzGateway):
         """This function deletes the output of the dataset"""
-        logger.debug(f"Deleting processed data for dataset {self.omero_dataset.getId()}")
+        logger.debug(
+            f"Deleting processed data for dataset {self.omero_dataset.getId()}"
+        )
         if not self.is_processed():
             logger.warning("Data has not been processed. Nothing to delete")
             return

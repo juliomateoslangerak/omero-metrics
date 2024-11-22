@@ -1179,10 +1179,7 @@ def have_delete_permission(
     conn: BlitzGateway,
     object_refs: list[tuple[str, int]],
 ):
-    return all(
-        conn.getObject(ot, oid).canDelete()
-        for ot, oid in object_refs
-    )
+    return all(conn.getObject(ot, oid).canDelete() for ot, oid in object_refs)
 
 
 def del_objects(
@@ -1194,16 +1191,18 @@ def del_objects(
     dry_run_first: bool = True,
     wait: bool = True,
 ):
-    if check_permission and not have_delete_permission(
-        conn, object_refs
-    ):
+    if check_permission and not have_delete_permission(conn, object_refs):
         raise PermissionError(
             "You do not have permission to delete the object"
         )
 
     object_types = {
-        "Annotation": [id for ot, id in object_refs if ot.upper() == "ANNOTATION"],
-        "FileAnnotation": [id for ot, id in object_refs if ot.upper() == "FILEANNOTATION"],
+        "Annotation": [
+            id for ot, id in object_refs if ot.upper() == "ANNOTATION"
+        ],
+        "FileAnnotation": [
+            id for ot, id in object_refs if ot.upper() == "FILEANNOTATION"
+        ],
         "Roi": [id for ot, id in object_refs if ot.upper() == "ROI"],
         "Image": [id for ot, id in object_refs if ot.upper() == "IMAGE"],
     }
