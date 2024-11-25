@@ -16,8 +16,8 @@ download_group = dmc.Group(
                         rightSection=DashIconify(
                             icon="carbon:chevron-down", width=20
                         ),
-                        color="blue",
-                        variant="filled",
+                        color="green",
+                        variant="outline",
                     )
                 ),
                 dmc.MenuDropdown(
@@ -49,5 +49,47 @@ download_group = dmc.Group(
             trigger="click",
         ),
         dcc.Download(id="download"),
+    ]
+)
+
+
+download_table = dmc.Group(
+    [
+        dmc.Menu(
+            [
+                dmc.MenuTarget(
+                    dmc.ActionIcon(
+                        DashIconify(icon="material-symbols:download", width=20)
+                    )
+                ),
+                dmc.MenuDropdown(
+                    [
+                        dmc.MenuItem(
+                            "CSV",
+                            id="table-download-csv",
+                            leftSection=DashIconify(
+                                icon="iwwa:file-csv", width=20
+                            ),
+                        ),
+                        dmc.MenuItem(
+                            "Excel",
+                            id="table-download-xlsx",
+                            leftSection=DashIconify(
+                                icon="vscode-icons:file-type-excel", width=20
+                            ),
+                        ),
+                        dmc.MenuItem(
+                            "JSON",
+                            id="table-download-json",
+                            leftSection=DashIconify(
+                                icon="vscode-icons:file-type-json", width=20
+                            ),
+                        ),
+                    ]
+                ),
+            ],
+            trigger="click",
+        ),
+        dcc.Download(id="table-download"),
     ]
 )

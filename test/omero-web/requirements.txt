@@ -10,6 +10,7 @@ dash-mantine-components==0.14.5
 hypothesis
 dash-iconify
 ipywidgets>=7.0.0
+openpyxl
 # omero
 microscopemetrics_schema @ git+https://github.com/MontpellierRessourcesImagerie/microscopemetrics-schema.git
 microscopemetrics @ git+https://github.com/MontpellierRessourcesImagerie/microscope-metrics.git

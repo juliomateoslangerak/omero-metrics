@@ -71,7 +71,7 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
                                 dmc.Stack(
                                     [
                                         dmc.Title(
-                                            "PSF Beads Analysis",
+                                            "PSF Beads",
                                             c=THEME["primary"],
                                             size="h2",
                                         ),
@@ -129,14 +129,21 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
                                             fw=500,
                                             size="lg",
                                         ),
-                                        dmc.Tooltip(
-                                            label="Statistical measurements for all the channels presented in the dataset",
-                                            children=[
-                                                get_icon(
-                                                    "material-symbols:info-outline",
-                                                    color=THEME["primary"],
-                                                )
-                                            ],
+                                        dmc.Group(
+                                            [
+                                                my_components.download_table,
+                                                dmc.Tooltip(
+                                                    label="Statistical measurements for all the channels presented in the dataset",
+                                                    children=[
+                                                        get_icon(
+                                                            "material-symbols:info-outline",
+                                                            color=THEME[
+                                                                "primary"
+                                                            ],
+                                                        )
+                                                    ],
+                                                ),
+                                            ]
                                         ),
                                     ],
                                     justify="space-between",
@@ -287,4 +294,45 @@ def download_dataset_data(*args, **kwargs):
             content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.txt"
         )
 
+    raise dash.no_update
+
+
+@omero_dataset_psf_beads.expanded_callback(
+    dash.dependencies.Output("table-download", "data"),
+    [
+        dash.dependencies.Input("table-download-csv", "n_clicks"),
+        dash.dependencies.Input("table-download-xlsx", "n_clicks"),
+        dash.dependencies.Input("table-download-json", "n_clicks"),
+    ],
+    prevent_initial_call=True,
+)
+def download_table_data(*args, **kwargs):
+    if not kwargs["callback_context"].triggered:
+        raise dash.no_update
+
+    triggered_id = (
+        kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
+    )
+    table_km = kwargs["session_state"]["context"]["bead_km_df"]
+    kkm = [
+        "channel_name",
+        "considered_valid_count",
+        "intensity_max_median",
+        "intensity_max_std",
+        "intensity_min_mean",
+        "intensity_min_median",
+        "intensity_min_std",
+        "intensity_std_mean",
+        "intensity_std_median",
+        "intensity_std_std",
+    ]
+    table_kkm = table_km[kkm].copy()
+    table_kkm = table_kkm.round(3)
+    table_kkm.columns = table_kkm.columns.str.replace("_", " ").str.title()
+    if triggered_id == "table-download-csv":
+        return dcc.send_data_frame(table_kkm.to_csv, "km_table.csv")
+    elif triggered_id == "table-download-xlsx":
+        return dcc.send_data_frame(table_kkm.to_excel, "km_table.xlsx")
+    elif triggered_id == "table-download-json":
+        return dcc.send_data_frame(table_kkm.to_json, "km_table.json")
     raise dash.no_update

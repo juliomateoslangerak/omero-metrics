@@ -78,7 +78,7 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                 dmc.Stack(
                                     [
                                         dmc.Title(
-                                            "Field of Illumination Dataset Analysis",
+                                            "Field of Illumination",
                                             c=THEME["primary"],
                                             size="h2",
                                         ),
@@ -219,17 +219,22 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                                             fw=500,
                                                             size="lg",
                                                         ),
-                                                        dmc.Tooltip(
-                                                            label="Statistical measurements for all the channels",
-                                                            children=[
-                                                                DashIconify(
-                                                                    icon="material-symbols:info",
-                                                                    height=20,
-                                                                    color=THEME[
-                                                                        "primary"
+                                                        dmc.Group(
+                                                            [
+                                                                my_components.download_table,
+                                                                dmc.Tooltip(
+                                                                    label="Statistical measurements for all the channels",
+                                                                    children=[
+                                                                        DashIconify(
+                                                                            icon="material-symbols:info",
+                                                                            height=20,
+                                                                            color=THEME[
+                                                                                "primary"
+                                                                            ],
+                                                                        )
                                                                     ],
-                                                                )
-                                                            ],
+                                                                ),
+                                                            ]
                                                         ),
                                                     ],
                                                     justify="space-between",
@@ -567,4 +572,42 @@ def download_dataset_data(*args, **kwargs):
             content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.txt"
         )
 
+    raise dash.no_update
+
+
+@omero_dataset_foi.expanded_callback(
+    dash.dependencies.Output("table-download", "data"),
+    [
+        dash.dependencies.Input("table-download-csv", "n_clicks"),
+        dash.dependencies.Input("table-download-xlsx", "n_clicks"),
+        dash.dependencies.Input("table-download-json", "n_clicks"),
+    ],
+    prevent_initial_call=True,
+)
+def download_table_data(*args, **kwargs):
+    if not kwargs["callback_context"].triggered:
+        raise dash.no_update
+
+    triggered_id = (
+        kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
+    )
+    table = kwargs["session_state"]["context"]["key_values_df"]
+    metrics_df = table[
+        [
+            "channel_name",
+            "center_region_intensity_fraction",
+            "center_region_area_fraction",
+            "max_intensity",
+        ]
+    ].copy()
+    metrics_df = metrics_df.round(3)
+    metrics_df.columns = metrics_df.columns.str.replace(
+        "_", " ", regex=True
+    ).str.title()
+    if triggered_id == "table-download-csv":
+        return dcc.send_data_frame(metrics_df.to_csv, "km_table.csv")
+    elif triggered_id == "table-download-xlsx":
+        return dcc.send_data_frame(metrics_df.to_excel, "km_table.xlsx")
+    elif triggered_id == "table-download-json":
+        return dcc.send_data_frame(metrics_df.to_json, "km_table.json")
     raise dash.no_update
