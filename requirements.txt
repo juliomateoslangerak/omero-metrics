@@ -11,6 +11,5 @@ microscopemetrics_schema @ git+https://github.com/MontpellierRessourcesImagerie/
 microscopemetrics @ git+https://github.com/MontpellierRessourcesImagerie/microscope-metrics.git
 #zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-macos-universal2/releases/download/20240131/zeroc_ice-3.6.5-cp311-cp311-macosx_11_0_universal2.whl
 #zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-linux-x86_64/releases/download/20240202/zeroc_ice-3.6.5-cp311-cp311-manylinux_2_28_x86_64.whl
-omero-py==5.19.2
-hypothesis
+omero-py
 
