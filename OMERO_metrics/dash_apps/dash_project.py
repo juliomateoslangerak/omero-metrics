@@ -28,6 +28,54 @@ from microscopemetrics.analyses.mappings import MAPPINGS
 
 from time import sleep
 
+download_group = dmc.Group(
+    [
+        dmc.Menu(
+            [
+                dmc.MenuTarget(
+                    dmc.Button(
+                        "Download",
+                        leftSection=DashIconify(
+                            icon="material-symbols:download", width=20
+                        ),
+                        rightSection=DashIconify(
+                            icon="carbon:chevron-down", width=20
+                        ),
+                        color="blue",
+                        variant="filled",
+                    )
+                ),
+                dmc.MenuDropdown(
+                    [
+                        dmc.MenuItem(
+                            "YAML",
+                            id="download-yaml",
+                            leftSection=DashIconify(
+                                icon="vscode-icons:file-type-yaml", width=20
+                            ),
+                        ),
+                        dmc.MenuItem(
+                            "JSON",
+                            id="download-json",
+                            leftSection=DashIconify(
+                                icon="vscode-icons:file-type-json", width=20
+                            ),
+                        ),
+                        dmc.MenuItem(
+                            "Text",
+                            id="download-text",
+                            leftSection=DashIconify(
+                                icon="vscode-icons:file-type-text", width=20
+                            ),
+                        ),
+                    ]
+                ),
+            ],
+            trigger="click",
+        ),
+        dcc.Download(id="download"),
+    ]
+)
 sample_types = [x[0] for x in MAPPINGS]
 sample_types_dp = [
     {
@@ -131,31 +179,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                         ),
                         dmc.Group(
                             [
-                                dmc.Button(
-                                    id="download_project_data",
-                                    children="Download",
-                                    color="blue",
-                                    variant="filled",
-                                    leftSection=DashIconify(
-                                        icon="ic:round-cloud-download"
-                                    ),
-                                ),
-                                dcc.Download(id="download"),
-                                # dmc.Select(
-                                #     label="Select your favorite library",
-                                #     placeholder="Select value",
-                                #     id="select-opened",
-                                #     value="pd",
-                                #     data=[
-                                #         {"value": "pd", "label": "Pandas"},
-                                #         {"value": "np", "label": "NumPy"},
-                                #         {"value": "tf", "label": "TensorFlow"},
-                                #         {"value": "torch", "label": "PyTorch"},
-                                #     ],
-                                #     w=100,
-                                #     mb=10,
-                                #
-                                # ),
+                                download_group,
                                 dmc.Button(
                                     id="delete_project_data",
                                     children="Delete",
@@ -923,10 +947,38 @@ def delete_project(*args, **kwargs):
 
 @omero_project_dash.expanded_callback(
     dash.dependencies.Output("download", "data"),
-    [dash.dependencies.Input("download_project_data", "n_clicks")],
+    [
+        dash.dependencies.Input("download-yaml", "n_clicks"),
+        dash.dependencies.Input("download-json", "n_clicks"),
+        dash.dependencies.Input("download-text", "n_clicks"),
+    ],
     prevent_initial_call=True,
 )
 def download_project_data(*args, **kwargs):
+    if not kwargs["callback_context"].triggered:
+        raise dash.no_update
+
+    triggered_id = (
+        kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
+    )
     mm_datasets = kwargs["session_state"]["context"]["mm_datasets"]
-    dumper = YAMLDumper()
-    return dict(content=dumper.dumps(mm_datasets), filename="dataset.yaml")
+    file_name = kwargs["session_state"]["context"]["project_name"]
+    yaml_dumper = YAMLDumper()
+    if triggered_id == "download-yaml":
+        return dict(
+            content=yaml_dumper.dumps(mm_datasets),
+            filename=f"{file_name}.yaml",
+        )
+
+    elif triggered_id == "download-json":
+        return dict(
+            content=yaml_dumper.dumps(mm_datasets),
+            filename=f"{file_name}.json",
+        )
+
+    elif triggered_id == "download-text":
+        return dict(
+            content=yaml_dumper.dumps(mm_datasets), filename=f"{file_name}.txt"
+        )
+
+    raise dash.no_update

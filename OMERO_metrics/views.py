@@ -1,4 +1,8 @@
 from django.utils.datetime_safe import datetime
+
+from OMERO_metrics.dash_apps.dash_analyses.dash_foi.dash_dataset_foi import (
+    dashboard_name,
+)
 from OMERO_metrics.tools import delete
 from omeroweb.webclient.decorators import login_required, render_response
 from OMERO_metrics.tools.data_managers import (
@@ -143,6 +147,7 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
         mm_datasets = [dm.mm_dataset for dm in pm.datasets if dm.processed]
         dash_context["context"] = context
         dash_context["context"]["mm_datasets"] = mm_datasets
+        dash_context["context"]["project_name"] = project_wrapper.getName()
         dash_context["context"]["project_id"] = project_id
         request.session["django_plotly_dash"] = dash_context
         return render(

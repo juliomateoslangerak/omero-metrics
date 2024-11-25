@@ -15,6 +15,54 @@ def get_icon(icon, size=20, color=None):
     return DashIconify(icon=icon, height=size, color=color)
 
 
+download_group = dmc.Group(
+    [
+        dmc.Menu(
+            [
+                dmc.MenuTarget(
+                    dmc.Button(
+                        "Download",
+                        leftSection=DashIconify(
+                            icon="material-symbols:download", width=20
+                        ),
+                        rightSection=DashIconify(
+                            icon="carbon:chevron-down", width=20
+                        ),
+                        color="blue",
+                        variant="filled",
+                    )
+                ),
+                dmc.MenuDropdown(
+                    [
+                        dmc.MenuItem(
+                            "YAML",
+                            id="download-yaml",
+                            leftSection=DashIconify(
+                                icon="vscode-icons:file-type-yaml", width=20
+                            ),
+                        ),
+                        dmc.MenuItem(
+                            "JSON",
+                            id="download-json",
+                            leftSection=DashIconify(
+                                icon="vscode-icons:file-type-json", width=20
+                            ),
+                        ),
+                        dmc.MenuItem(
+                            "Text",
+                            id="download-text",
+                            leftSection=DashIconify(
+                                icon="vscode-icons:file-type-text", width=20
+                            ),
+                        ),
+                    ]
+                ),
+            ],
+            trigger="click",
+        ),
+        dcc.Download(id="download"),
+    ]
+)
 dashboard_name = "omero_dataset_psf_beads"
 
 omero_dataset_psf_beads = DjangoDash(
@@ -86,16 +134,7 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
                         ),
                         dmc.Group(
                             [
-                                dmc.Button(
-                                    id="download_dataset_data",
-                                    children="Download",
-                                    color="blue",
-                                    variant="filled",
-                                    leftSection=DashIconify(
-                                        icon="ic:round-cloud-download"
-                                    ),
-                                ),
-                                dcc.Download(id="download"),
+                                download_group,
                                 dmc.Button(
                                     id="delete_dataset_data",
                                     children="Delete",
@@ -263,10 +302,36 @@ def delete_dataset(*args, **kwargs):
 
 @omero_dataset_psf_beads.expanded_callback(
     dash.dependencies.Output("download", "data"),
-    [dash.dependencies.Input("download_dataset_data", "n_clicks")],
+    [
+        dash.dependencies.Input("download-yaml", "n_clicks"),
+        dash.dependencies.Input("download-json", "n_clicks"),
+        dash.dependencies.Input("download-text", "n_clicks"),
+    ],
     prevent_initial_call=True,
 )
 def download_dataset_data(*args, **kwargs):
+    if not kwargs["callback_context"].triggered:
+        raise dash.no_update
+
+    triggered_id = (
+        kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
+    )
     mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
-    dumper = YAMLDumper()
-    return dict(content=dumper.dumps(mm_dataset), filename="dataset.yaml")
+    file_name = mm_dataset.name
+    yaml_dumper = YAMLDumper()
+    if triggered_id == "download-yaml":
+        return dict(
+            content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.yaml"
+        )
+
+    elif triggered_id == "download-json":
+        return dict(
+            content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.json"
+        )
+
+    elif triggered_id == "download-text":
+        return dict(
+            content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.txt"
+        )
+
+    raise dash.no_update
