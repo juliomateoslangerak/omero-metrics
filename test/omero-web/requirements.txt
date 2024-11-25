@@ -7,9 +7,7 @@ dpd_static_support
 dash-bootstrap-components
 django-bootstrap4
 dash-mantine-components==0.14.5
-hypothesis
 dash-iconify
-ipywidgets>=7.0.0
-# omero
-microscopemetrics_schema @ git+https://github.com/MontpellierRessourcesImagerie/microscopemetrics-schema.git
+
+# omerometrics
 microscopemetrics @ git+https://github.com/MontpellierRessourcesImagerie/microscope-metrics.git
