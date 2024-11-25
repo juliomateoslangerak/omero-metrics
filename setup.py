@@ -47,7 +47,8 @@ setup(
     download_url="%s/v%s.tar.gz" % (url, version),
     include_package_data=True,
     install_requires=[
-        "omero-web>=5.26.0" "bootstrap4",
+        "omero-web>=5.26.0",
+        "bootstrap4",
         "django-plotly-dash==2.4.0",
         "dash==2.9.3",
         "plotly==5.20.0",
@@ -58,7 +59,6 @@ setup(
         "dash-iconify",
         "ipywidgets>=7.0.0",
         "openpyxl",
-        "microscopemetrics_schema @ git+https://github.com/MontpellierRessourcesImagerie/microscopemetrics-schema.git",
         "microscopemetrics @ git+https://github.com/MontpellierRessourcesImagerie/microscope-metrics.git",
         "pytest-django",
         "pytest",

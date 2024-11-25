@@ -10,8 +10,8 @@ dash-mantine-components==0.14.5
 dash-iconify
 ipywidgets>=7.0.0
 openpyxl
+omero-web>=5.26.0
 # omero
-microscopemetrics_schema @ git+https://github.com/MontpellierRessourcesImagerie/microscopemetrics-schema.git
 microscopemetrics @ git+https://github.com/MontpellierRessourcesImagerie/microscope-metrics.git
 
 #zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-macos-universal2/releases/download/20240131/zeroc_ice-3.6.5-cp311-cp311-macosx_11_0_universal2.whl
