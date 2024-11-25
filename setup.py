@@ -47,7 +47,7 @@ setup(
     download_url="%s/v%s.tar.gz" % (url, version),
     include_package_data=True,
     install_requires=[
-        "bootstrap4",
+        "omero-web>=5.26.0" "bootstrap4",
         "django-plotly-dash==2.4.0",
         "dash==2.9.3",
         "plotly==5.20.0",
