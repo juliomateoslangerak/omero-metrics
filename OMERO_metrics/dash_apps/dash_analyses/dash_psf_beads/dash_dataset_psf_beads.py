@@ -88,15 +88,7 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
                         dmc.Group(
                             [
                                 my_components.download_group,
-                                dmc.Button(
-                                    id="delete_dataset_data",
-                                    children="Delete",
-                                    color="red",
-                                    variant="filled",
-                                    leftSection=DashIconify(
-                                        icon="ic:round-delete-forever"
-                                    ),
-                                ),
+                                my_components.delete_button,
                                 dmc.Badge(
                                     "PSF Beads Analysis",
                                     color=THEME["primary"],
@@ -226,7 +218,7 @@ def func_psf_callback(*args, **kwargs):
     dash.dependencies.Output("confirm_delete", "opened"),
     dash.dependencies.Output("notifications-container", "children"),
     [
-        dash.dependencies.Input("delete_dataset_data", "n_clicks"),
+        dash.dependencies.Input("delete_data", "n_clicks"),
         dash.dependencies.Input("modal-submit-button", "n_clicks"),
         dash.dependencies.Input("modal-close-button", "n_clicks"),
         dash.dependencies.State("confirm_delete", "opened"),

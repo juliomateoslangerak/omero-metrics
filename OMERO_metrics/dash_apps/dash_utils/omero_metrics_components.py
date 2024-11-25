@@ -1,7 +1,7 @@
 import dash_mantine_components as dmc
 from dash import dcc
 from dash_iconify import DashIconify
-
+from OMERO_metrics.styles import THEME
 
 download_group = dmc.Group(
     [
@@ -16,7 +16,7 @@ download_group = dmc.Group(
                         rightSection=DashIconify(
                             icon="carbon:chevron-down", width=20
                         ),
-                        color="green",
+                        color=THEME["primary"],
                         variant="outline",
                     )
                 ),
@@ -59,7 +59,10 @@ download_table = dmc.Group(
             [
                 dmc.MenuTarget(
                     dmc.ActionIcon(
-                        DashIconify(icon="material-symbols:download", width=20)
+                        DashIconify(
+                            icon="material-symbols:download", width=20
+                        ),
+                        color=THEME["primary"],
                     )
                 ),
                 dmc.MenuDropdown(
@@ -92,4 +95,13 @@ download_table = dmc.Group(
         ),
         dcc.Download(id="table-download"),
     ]
+)
+
+
+delete_button = dmc.Button(
+    id="delete_data",
+    children="Delete",
+    color="red",
+    variant="filled",
+    leftSection=DashIconify(icon="ic:round-delete-forever"),
 )

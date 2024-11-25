@@ -95,37 +95,7 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                         dmc.Group(
                             [
                                 my_components.download_group,
-                                dmc.Button(
-                                    id="delete_dataset_data",
-                                    children="Delete",
-                                    color="red",
-                                    variant="filled",
-                                    rightSection=DashIconify(
-                                        icon="line-md:document-delete-twotone",
-                                        height=20,
-                                    ),
-                                ),
-                                # dmc.Select(
-                                #     data=[
-                                #         "Pandas",
-                                #         "NumPy",
-                                #         "TensorFlow",
-                                #         "PyTorch",
-                                #     ],
-                                #     value="Pandas",
-                                #     comboboxProps={
-                                #         "withinPortal": False,
-                                #         "zIndex": 1000,
-                                #     },
-                                #     style={
-                                #         "backgroundColor": THEME["primary"],
-                                #         "color": "green",
-                                #         "background-color": "green",
-                                #     },
-                                #     styles={
-                                #         "root": {"backgroundColor": "red"},
-                                #     },
-                                # ),
+                                my_components.delete_button,
                                 dmc.Badge(
                                     "FOI Analysis",
                                     color=THEME["primary"],
@@ -504,7 +474,7 @@ def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:
     dash.dependencies.Output("confirm_delete", "opened"),
     dash.dependencies.Output("notifications-container", "children"),
     [
-        dash.dependencies.Input("delete_dataset_data", "n_clicks"),
+        dash.dependencies.Input("delete_data", "n_clicks"),
         dash.dependencies.Input("modal-submit-button", "n_clicks"),
         dash.dependencies.Input("modal-close-button", "n_clicks"),
         dash.dependencies.State("confirm_delete", "opened"),

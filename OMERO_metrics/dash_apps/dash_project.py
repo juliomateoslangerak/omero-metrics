@@ -25,7 +25,7 @@ from OMERO_metrics.styles import (
 import math
 from microscopemetrics.analyses.mappings import MAPPINGS
 from time import sleep
-import OMERO_metrics.dash_apps.dash_utils as du
+import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 
 sample_types = [x[0] for x in MAPPINGS]
 sample_types_dp = [
@@ -130,16 +130,8 @@ omero_project_dash.layout = dmc.MantineProvider(
                         ),
                         dmc.Group(
                             [
-                                du.omero_metrics_components.download_group,
-                                dmc.Button(
-                                    id="delete_project_data",
-                                    children="Delete",
-                                    color="red",
-                                    variant="filled",
-                                    leftSection=DashIconify(
-                                        icon="ic:round-delete-forever"
-                                    ),
-                                ),
+                                my_components.download_group,
+                                my_components.delete_button,
                                 dmc.Badge(
                                     "Project Analysis",
                                     color=THEME["primary"],
@@ -859,7 +851,7 @@ def get_accordion_data(accordion_state, kkm):
     dash.dependencies.Output("delete-confirm_delete", "opened"),
     dash.dependencies.Output("delete-notifications-container", "children"),
     [
-        dash.dependencies.Input("delete_project_data", "n_clicks"),
+        dash.dependencies.Input("delete_data", "n_clicks"),
         dash.dependencies.Input("delete-modal-submit-button", "n_clicks"),
         dash.dependencies.Input("delete-modal-close-button", "n_clicks"),
         dash.dependencies.State("delete-confirm_delete", "opened"),
