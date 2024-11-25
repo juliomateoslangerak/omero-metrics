@@ -59,7 +59,7 @@ setup(
         "dash-iconify",
         "ipywidgets>=7.0.0",
         "openpyxl",
-        "microscopemetrics @ git+https://github.com/MontpellierRessourcesImagerie/microscope-metrics.git",
+        # "microscopemetrics @ git+https://github.com/MontpellierRessourcesImagerie/microscope-metrics.git",
         "pytest-django",
         "pytest",
     ],
