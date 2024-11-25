@@ -69,6 +69,34 @@ omero_project_dash = DjangoDash(
 omero_project_dash.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
+        dmc.NotificationProvider(position="top-center"),
+        html.Div(id="delete-notifications-container"),
+        dmc.Modal(
+            title="Confirm Delete",
+            id="delete-confirm_delete",
+            children=[
+                dmc.Text(
+                    "Are you sure you want to delete this project outputs?"
+                ),
+                dmc.Space(h=20),
+                dmc.Group(
+                    [
+                        dmc.Button(
+                            "Submit",
+                            id="delete-modal-submit-button",
+                            color="red",
+                        ),
+                        dmc.Button(
+                            "Close",
+                            color="gray",
+                            variant="outline",
+                            id="delete-modal-close-button",
+                        ),
+                    ],
+                    justify="flex-end",
+                ),
+            ],
+        ),
         html.Div(id="blank-input"),
         html.Div(id="save_config_result"),
         dmc.Paper(
@@ -385,11 +413,8 @@ omero_project_dash.layout = dmc.MantineProvider(
                                             ),
                                         ],
                                     ),
-                                    dmc.NotificationProvider(
-                                        position="top-center"
-                                    ),
-                                    html.Div(id="notifications-container"),
                                     html.Div(id="result_data"),
+                                    html.Div(id="notifications-container"),
                                 ],
                             ),
                         ],
@@ -451,7 +476,6 @@ def update_table(*args, **kwargs):
     else:
         ref = []
     dates_range = args[1]
-    print(f"Dates range: {dates_range}")
     dates = kwargs["session_state"]["context"]["dates"]
     df_filtering = pd.DataFrame(dates, columns=["Date"])
     df_dates = df_filtering[
@@ -598,8 +622,6 @@ omero_project_dash.clientside_callback(
 def update_config_project(*args, **kwargs):
     sample_form = args[1]
     input_form = args[2]
-    print(f"Sample form valid: {sample_form}")
-    print(f"Input form valid: {input_form}")
     project_id = int(kwargs["session_state"]["context"]["project_id"])
     request = kwargs["request"]
     setup = kwargs["session_state"]["context"]["setup"]
@@ -799,7 +821,6 @@ def threshold_callback1(*args, **kwargs):
     output = get_accordion_data(args[1], kkm)
     request = kwargs["request"]
     project_id = kwargs["session_state"]["context"]["project_id"]
-    print(output)
     if output:
         response, color = views.save_threshold(
             request=request,
@@ -857,6 +878,47 @@ def get_accordion_data(accordion_state, kkm):
         }
         print(f"Error: {e}")
     return dict_data
+
+
+@omero_project_dash.expanded_callback(
+    dash.dependencies.Output("delete-confirm_delete", "opened"),
+    dash.dependencies.Output("delete-notifications-container", "children"),
+    [
+        dash.dependencies.Input("delete_project_data", "n_clicks"),
+        dash.dependencies.Input("delete-modal-submit-button", "n_clicks"),
+        dash.dependencies.Input("delete-modal-close-button", "n_clicks"),
+        dash.dependencies.State("delete-confirm_delete", "opened"),
+    ],
+    prevent_initial_call=True,
+)
+def delete_project(*args, **kwargs):
+    triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
+    project_id = kwargs["session_state"]["context"]["project_id"]
+    request = kwargs["request"]
+    opened = not args[3]
+    if (
+        triggered_button == "delete-modal-submit-button.n_clicks"
+        and args[0] > 0
+    ):
+        sleep(1)
+        msg, color = views.delete_project(request, project_id=project_id)
+        message = dmc.Notification(
+            title="Notification!",
+            id="simple-notify",
+            action="show",
+            message=msg,
+            icon=DashIconify(
+                icon=(
+                    "akar-icons:circle-check"
+                    if color == "green"
+                    else "akar-icons:circle-x"
+                )
+            ),
+            color=color,
+        )
+        return opened, message
+    else:
+        return opened, None
 
 
 @omero_project_dash.expanded_callback(

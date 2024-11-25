@@ -233,16 +233,12 @@ class DatasetManager:
         logger.debug(
             f"Deleting processed data for dataset {self.omero_dataset.getId()}"
         )
-        if not self.is_processed():
+        if not self.processed:
             logger.warning("Data has not been processed. Nothing to delete")
             return
         try:
             delete.delete_mm_obj_omero_refs(conn, self.mm_dataset.output)
             delete.delete_dataset_file_ann(conn, self.omero_dataset)
-            self.mm_dataset.validated = False
-            self.mm_dataset.processed = False
-            self.mm_dataset.output = None
-            self.processed = False
         except Exception as e:
             logger.error(f"Error deleting processed data: {e}")
             self.mm_dataset.validated = False
@@ -410,6 +406,11 @@ class ProjectManager:
 
     def delete_data(self):
         pass
+
+    def delete_processed_data(self, conn: BlitzGateway):
+        for dataset in self.datasets:
+            if dataset.processed:
+                dataset.delete_processed_data(self._conn)
 
     def load_config_file(self):
         if self.setup is None:

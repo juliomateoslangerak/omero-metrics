@@ -454,8 +454,6 @@ def save_config_dash(*args, **kwargs):
     input_form = args[2]
     project_id = int(kwargs["session_state"]["context"]["project_id"])
     request = kwargs["request"]
-    print(f"Sample form valid: {sample_form}")
-    print(f"Input form valid: {input_form}")
     if args[0] > 0 and current == 2:
         if dft.validate_form(sample_form) and dft.validate_form(input_form):
             sleep(1)

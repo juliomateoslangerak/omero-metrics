@@ -371,13 +371,22 @@ def delete_dataset(request, conn=None, **kwargs):
     dm = DatasetManager(conn, dataset_wrapper, load_images=False)
     dm.load_data()
     try:
-        delete.delete_mm_obj_omero_refs(conn, dm.mm_dataset.output)
-        delete.delete_dataset_file_ann(conn, dm.omero_dataset)
-        # dm.mm_dataset.validated = False
-        # dm.mm_dataset.processed = False
-        # dm.mm_dataset.output = None
-        # dm.processed = False
+        dm.delete_processed_data(conn)
+        return "Output deleted successfully", "green"
+    except Exception as e:
+        return str(e), "red"
 
+
+@login_required(setGroupContext=True)
+def delete_project(request, conn=None, **kwargs):
+    """Delete the project outputs"""
+    project_id = kwargs["project_id"]
+    logger.info(f"Deleting dataset {project_id}")
+    project_wrapper = conn.getObject("Project", project_id)
+    pm = ProjectManager(conn, project_wrapper)
+    pm.load_data()
+    try:
+        pm.delete_processed_data(conn)
         return "Output deleted successfully", "green"
     except Exception as e:
         return str(e), "red"

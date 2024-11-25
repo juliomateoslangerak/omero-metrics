@@ -689,6 +689,5 @@ def modify_column_name(col, i):
     match = re.search(r"ch(\d+)", col)
     if match:
         new_ch = int(match.group(1)) + i
-        print(col.replace(match.group(0), f"ch{new_ch:02d}"))
         return col.replace(match.group(0), f"ch{new_ch:02d}")
     return col

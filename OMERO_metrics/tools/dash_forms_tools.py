@@ -49,7 +49,6 @@ def get_field_types(field, supported_types=(str, int, float, bool)):
     elif field.type in supported_types:
         data_type["type"] = field.type.__name__
     else:
-        print(f'Field type "{field.type}" not supported')
         data_type["type"] = "unsupported"
     return data_type
 
