@@ -1,5 +1,5 @@
 import dash
-from dash import dcc, html
+from dash import html
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
@@ -11,7 +11,6 @@ from OMERO_metrics.tools import dash_forms_tools as dft
 from OMERO_metrics import views
 from OMERO_metrics.styles import (
     THEME,
-    CARD_STYLE,
     CARD_STYLE1,
     BUTTON_STYLE,
     TAB_STYLES,
@@ -25,57 +24,9 @@ from OMERO_metrics.styles import (
 )
 import math
 from microscopemetrics.analyses.mappings import MAPPINGS
-
 from time import sleep
+import OMERO_metrics.dash_apps.dash_utils as du
 
-download_group = dmc.Group(
-    [
-        dmc.Menu(
-            [
-                dmc.MenuTarget(
-                    dmc.Button(
-                        "Download",
-                        leftSection=DashIconify(
-                            icon="material-symbols:download", width=20
-                        ),
-                        rightSection=DashIconify(
-                            icon="carbon:chevron-down", width=20
-                        ),
-                        color="blue",
-                        variant="filled",
-                    )
-                ),
-                dmc.MenuDropdown(
-                    [
-                        dmc.MenuItem(
-                            "YAML",
-                            id="download-yaml",
-                            leftSection=DashIconify(
-                                icon="vscode-icons:file-type-yaml", width=20
-                            ),
-                        ),
-                        dmc.MenuItem(
-                            "JSON",
-                            id="download-json",
-                            leftSection=DashIconify(
-                                icon="vscode-icons:file-type-json", width=20
-                            ),
-                        ),
-                        dmc.MenuItem(
-                            "Text",
-                            id="download-text",
-                            leftSection=DashIconify(
-                                icon="vscode-icons:file-type-text", width=20
-                            ),
-                        ),
-                    ]
-                ),
-            ],
-            trigger="click",
-        ),
-        dcc.Download(id="download"),
-    ]
-)
 sample_types = [x[0] for x in MAPPINGS]
 sample_types_dp = [
     {
@@ -179,7 +130,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                         ),
                         dmc.Group(
                             [
-                                download_group,
+                                du.omero_metrics_components.download_group,
                                 dmc.Button(
                                     id="delete_project_data",
                                     children="Delete",
