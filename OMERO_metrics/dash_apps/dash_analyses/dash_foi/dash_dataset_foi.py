@@ -1,3 +1,5 @@
+from time import sleep
+from OMERO_metrics import views
 import dash
 import pandas as pd
 from dash import dcc, html
@@ -20,6 +22,7 @@ from OMERO_metrics.styles import (
     TABLE_MANTINE_STYLE,
 )
 import math
+import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 
 dashboard_name = "omero_dataset_foi"
 omero_dataset_foi = DjangoDash(
@@ -31,6 +34,34 @@ omero_dataset_foi = DjangoDash(
 omero_dataset_foi.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
+        dmc.NotificationProvider(position="top-center"),
+        html.Div(id="notifications-container"),
+        dmc.Modal(
+            title="Confirm Delete",
+            id="confirm_delete",
+            children=[
+                dmc.Text(
+                    "Are you sure you want to delete this dataset outputs?"
+                ),
+                dmc.Space(h=20),
+                dmc.Group(
+                    [
+                        dmc.Button(
+                            "Submit",
+                            id="modal-submit-button",
+                            color="red",
+                        ),
+                        dmc.Button(
+                            "Close",
+                            color="gray",
+                            variant="outline",
+                            id="modal-close-button",
+                        ),
+                    ],
+                    justify="flex-end",
+                ),
+            ],
+        ),
         dmc.Paper(
             children=[
                 dmc.Group(
@@ -47,7 +78,7 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                 dmc.Stack(
                                     [
                                         dmc.Title(
-                                            "Field of Illumination Dataset Analysis",
+                                            "Field of Illumination",
                                             c=THEME["primary"],
                                             size="h2",
                                         ),
@@ -63,48 +94,8 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                         ),
                         dmc.Group(
                             [
-                                dmc.Button(
-                                    id="download_dataset_data",
-                                    children="Download",
-                                    color="blue",
-                                    variant="filled",
-                                    rightSection=DashIconify(
-                                        icon="line-md:download",
-                                        height=20,
-                                    ),
-                                ),
-                                dcc.Download(id="download"),
-                                dmc.Button(
-                                    id="delete_dataset_data",
-                                    children="Delete",
-                                    color="red",
-                                    variant="filled",
-                                    rightSection=DashIconify(
-                                        icon="line-md:document-delete-twotone",
-                                        height=20,
-                                    ),
-                                ),
-                                # dmc.Select(
-                                #     data=[
-                                #         "Pandas",
-                                #         "NumPy",
-                                #         "TensorFlow",
-                                #         "PyTorch",
-                                #     ],
-                                #     value="Pandas",
-                                #     comboboxProps={
-                                #         "withinPortal": False,
-                                #         "zIndex": 1000,
-                                #     },
-                                #     style={
-                                #         "backgroundColor": THEME["primary"],
-                                #         "color": "green",
-                                #         "background-color": "green",
-                                #     },
-                                #     styles={
-                                #         "root": {"backgroundColor": "red"},
-                                #     },
-                                # ),
+                                my_components.download_group,
+                                my_components.delete_button,
                                 dmc.Badge(
                                     "FOI Analysis",
                                     color=THEME["primary"],
@@ -198,17 +189,22 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                                             fw=500,
                                                             size="lg",
                                                         ),
-                                                        dmc.Tooltip(
-                                                            label="Statistical measurements for all the channels",
-                                                            children=[
-                                                                DashIconify(
-                                                                    icon="material-symbols:info",
-                                                                    height=20,
-                                                                    color=THEME[
-                                                                        "primary"
+                                                        dmc.Group(
+                                                            [
+                                                                my_components.download_table,
+                                                                dmc.Tooltip(
+                                                                    label="Statistical measurements for all the channels",
+                                                                    children=[
+                                                                        DashIconify(
+                                                                            icon="material-symbols:info",
+                                                                            height=20,
+                                                                            color=THEME[
+                                                                                "primary"
+                                                                            ],
+                                                                        )
                                                                     ],
-                                                                )
-                                                            ],
+                                                                ),
+                                                            ]
                                                         ),
                                                     ],
                                                     justify="space-between",
@@ -475,11 +471,113 @@ def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:
 
 
 @omero_dataset_foi.expanded_callback(
+    dash.dependencies.Output("confirm_delete", "opened"),
+    dash.dependencies.Output("notifications-container", "children"),
+    [
+        dash.dependencies.Input("delete_data", "n_clicks"),
+        dash.dependencies.Input("modal-submit-button", "n_clicks"),
+        dash.dependencies.Input("modal-close-button", "n_clicks"),
+        dash.dependencies.State("confirm_delete", "opened"),
+    ],
+    prevent_initial_call=True,
+)
+def delete_dataset(*args, **kwargs):
+    triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
+    dataset_id = kwargs["session_state"]["context"]["dataset_id"]
+    request = kwargs["request"]
+    opened = not args[3]
+    if triggered_button == "modal-submit-button.n_clicks" and args[0] > 0:
+        sleep(1)
+        msg, color = views.delete_dataset(request, dataset_id=dataset_id)
+        message = dmc.Notification(
+            title="Notification!",
+            id="simple-notify",
+            action="show",
+            message=msg,
+            icon=DashIconify(
+                icon=(
+                    "akar-icons:circle-check"
+                    if color == "green"
+                    else "akar-icons:circle-x"
+                )
+            ),
+            color=color,
+        )
+        return opened, message
+    else:
+        return opened, None
+
+
+@omero_dataset_foi.expanded_callback(
     dash.dependencies.Output("download", "data"),
-    [dash.dependencies.Input("download_dataset_data", "n_clicks")],
+    [
+        dash.dependencies.Input("download-yaml", "n_clicks"),
+        dash.dependencies.Input("download-json", "n_clicks"),
+        dash.dependencies.Input("download-text", "n_clicks"),
+    ],
     prevent_initial_call=True,
 )
 def download_dataset_data(*args, **kwargs):
+    if not kwargs["callback_context"].triggered:
+        raise dash.no_update
+
+    triggered_id = (
+        kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
+    )
     mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
-    dumper = YAMLDumper()
-    return dict(content=dumper.dumps(mm_dataset), filename="dataset.yaml")
+    file_name = mm_dataset.name
+    yaml_dumper = YAMLDumper()
+    if triggered_id == "download-yaml":
+        return dict(
+            content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.yaml"
+        )
+
+    elif triggered_id == "download-json":
+        return dict(
+            content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.json"
+        )
+
+    elif triggered_id == "download-text":
+        return dict(
+            content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.txt"
+        )
+
+    raise dash.no_update
+
+
+@omero_dataset_foi.expanded_callback(
+    dash.dependencies.Output("table-download", "data"),
+    [
+        dash.dependencies.Input("table-download-csv", "n_clicks"),
+        dash.dependencies.Input("table-download-xlsx", "n_clicks"),
+        dash.dependencies.Input("table-download-json", "n_clicks"),
+    ],
+    prevent_initial_call=True,
+)
+def download_table_data(*args, **kwargs):
+    if not kwargs["callback_context"].triggered:
+        raise dash.no_update
+
+    triggered_id = (
+        kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
+    )
+    table = kwargs["session_state"]["context"]["key_values_df"]
+    metrics_df = table[
+        [
+            "channel_name",
+            "center_region_intensity_fraction",
+            "center_region_area_fraction",
+            "max_intensity",
+        ]
+    ].copy()
+    metrics_df = metrics_df.round(3)
+    metrics_df.columns = metrics_df.columns.str.replace(
+        "_", " ", regex=True
+    ).str.title()
+    if triggered_id == "table-download-csv":
+        return dcc.send_data_frame(metrics_df.to_csv, "km_table.csv")
+    elif triggered_id == "table-download-xlsx":
+        return dcc.send_data_frame(metrics_df.to_excel, "km_table.xlsx")
+    elif triggered_id == "table-download-json":
+        return dcc.send_data_frame(metrics_df.to_json, "km_table.json")
+    raise dash.no_update

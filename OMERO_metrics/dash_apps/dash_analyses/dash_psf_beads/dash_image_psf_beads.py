@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 dashboard_name = "omero_image_psf_beads"
 
 omero_image_psf_beads = DjangoDash(
-    name=dashboard_name, external_scripts=dmc.styles.ALL
+    name=dashboard_name, serve_locally=True, external_scripts=dmc.styles.ALL
 )
 
 omero_image_psf_beads.layout = dmc.MantineProvider(

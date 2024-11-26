@@ -1,13 +1,15 @@
 import dash
-from dash import html
+from dash import dcc, html
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
+from linkml_runtime.dumpers import YAMLDumper
 from OMERO_metrics.styles import THEME, HEADER_PAPER_STYLE, MANTINE_THEME
 from OMERO_metrics import views
 from time import sleep
 import math
 from OMERO_metrics.styles import TABLE_MANTINE_STYLE
+import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 
 
 def get_icon(icon, size=20, color=None):
@@ -18,6 +20,7 @@ dashboard_name = "omero_dataset_psf_beads"
 
 omero_dataset_psf_beads = DjangoDash(
     name=dashboard_name,
+    serve_locally=True,
     external_stylesheets=dmc.styles.ALL,
 )
 
@@ -69,7 +72,7 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
                                 dmc.Stack(
                                     [
                                         dmc.Title(
-                                            "PSF Beads Analysis",
+                                            "PSF Beads",
                                             c=THEME["primary"],
                                             size="h2",
                                         ),
@@ -85,24 +88,8 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
                         ),
                         dmc.Group(
                             [
-                                dmc.Button(
-                                    id="download_dataset_data",
-                                    children="Download",
-                                    color="blue",
-                                    variant="filled",
-                                    leftSection=DashIconify(
-                                        icon="ic:round-cloud-download"
-                                    ),
-                                ),
-                                dmc.Button(
-                                    id="delete_dataset_data",
-                                    children="Delete",
-                                    color="red",
-                                    variant="filled",
-                                    leftSection=DashIconify(
-                                        icon="ic:round-delete-forever"
-                                    ),
-                                ),
+                                my_components.download_group,
+                                my_components.delete_button,
                                 dmc.Badge(
                                     "PSF Beads Analysis",
                                     color=THEME["primary"],
@@ -135,14 +122,21 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
                                             fw=500,
                                             size="lg",
                                         ),
-                                        dmc.Tooltip(
-                                            label="Statistical measurements for all the channels presented in the dataset",
-                                            children=[
-                                                get_icon(
-                                                    "material-symbols:info-outline",
-                                                    color=THEME["primary"],
-                                                )
-                                            ],
+                                        dmc.Group(
+                                            [
+                                                my_components.download_table,
+                                                dmc.Tooltip(
+                                                    label="Statistical measurements for all the channels presented in the dataset",
+                                                    children=[
+                                                        get_icon(
+                                                            "material-symbols:info-outline",
+                                                            color=THEME[
+                                                                "primary"
+                                                            ],
+                                                        )
+                                                    ],
+                                                ),
+                                            ]
                                         ),
                                     ],
                                     justify="space-between",
@@ -225,7 +219,7 @@ def func_psf_callback(*args, **kwargs):
     dash.dependencies.Output("confirm_delete", "opened"),
     dash.dependencies.Output("notifications-container", "children"),
     [
-        dash.dependencies.Input("delete_dataset_data", "n_clicks"),
+        dash.dependencies.Input("delete_data", "n_clicks"),
         dash.dependencies.Input("modal-submit-button", "n_clicks"),
         dash.dependencies.Input("modal-close-button", "n_clicks"),
         dash.dependencies.State("confirm_delete", "opened"),
@@ -257,3 +251,81 @@ def delete_dataset(*args, **kwargs):
         return opened, message
     else:
         return opened, None
+
+
+@omero_dataset_psf_beads.expanded_callback(
+    dash.dependencies.Output("download", "data"),
+    [
+        dash.dependencies.Input("download-yaml", "n_clicks"),
+        dash.dependencies.Input("download-json", "n_clicks"),
+        dash.dependencies.Input("download-text", "n_clicks"),
+    ],
+    prevent_initial_call=True,
+)
+def download_dataset_data(*args, **kwargs):
+    if not kwargs["callback_context"].triggered:
+        raise dash.no_update
+
+    triggered_id = (
+        kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
+    )
+    mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
+    file_name = mm_dataset.name
+    yaml_dumper = YAMLDumper()
+    if triggered_id == "download-yaml":
+        return dict(
+            content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.yaml"
+        )
+
+    elif triggered_id == "download-json":
+        return dict(
+            content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.json"
+        )
+
+    elif triggered_id == "download-text":
+        return dict(
+            content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.txt"
+        )
+
+    raise dash.no_update
+
+
+@omero_dataset_psf_beads.expanded_callback(
+    dash.dependencies.Output("table-download", "data"),
+    [
+        dash.dependencies.Input("table-download-csv", "n_clicks"),
+        dash.dependencies.Input("table-download-xlsx", "n_clicks"),
+        dash.dependencies.Input("table-download-json", "n_clicks"),
+    ],
+    prevent_initial_call=True,
+)
+def download_table_data(*args, **kwargs):
+    if not kwargs["callback_context"].triggered:
+        raise dash.no_update
+
+    triggered_id = (
+        kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
+    )
+    table_km = kwargs["session_state"]["context"]["bead_km_df"]
+    kkm = [
+        "channel_name",
+        "considered_valid_count",
+        "intensity_max_median",
+        "intensity_max_std",
+        "intensity_min_mean",
+        "intensity_min_median",
+        "intensity_min_std",
+        "intensity_std_mean",
+        "intensity_std_median",
+        "intensity_std_std",
+    ]
+    table_kkm = table_km[kkm].copy()
+    table_kkm = table_kkm.round(3)
+    table_kkm.columns = table_kkm.columns.str.replace("_", " ").str.title()
+    if triggered_id == "table-download-csv":
+        return dcc.send_data_frame(table_kkm.to_csv, "km_table.csv")
+    elif triggered_id == "table-download-xlsx":
+        return dcc.send_data_frame(table_kkm.to_excel, "km_table.xlsx")
+    elif triggered_id == "table-download-json":
+        return dcc.send_data_frame(table_kkm.to_json, "km_table.json")
+    raise dash.no_update

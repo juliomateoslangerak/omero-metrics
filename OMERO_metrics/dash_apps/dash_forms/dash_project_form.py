@@ -97,7 +97,25 @@ dash_form_project.layout = dmc.MantineProvider(
                     children=[
                         dmc.LoadingOverlay(
                             id="loading-overlay",
-                            overlayProps={"radius": "sm", "blur": 2},
+                            overlayProps={
+                                "radius": "sm",
+                                "blur": 1,
+                            },
+                            loaderProps={
+                                "variant": "custom",
+                                "children": [
+                                    dmc.Image(
+                                        h=150,
+                                        radius="md",
+                                        src="/static/OMERO_metrics/images/loader.gif",
+                                    ),
+                                    dmc.Text(
+                                        "Processing...",
+                                        c=THEME["text"]["primary"],
+                                        size="lg",
+                                    ),
+                                ],
+                            },
                         ),
                         # Progress Indicator
                         dmc.Progress(
@@ -436,8 +454,6 @@ def save_config_dash(*args, **kwargs):
     input_form = args[2]
     project_id = int(kwargs["session_state"]["context"]["project_id"])
     request = kwargs["request"]
-    print(f"Sample form valid: {sample_form}")
-    print(f"Input form valid: {input_form}")
     if args[0] > 0 and current == 2:
         if dft.validate_form(sample_form) and dft.validate_form(input_form):
             sleep(1)

@@ -1,4 +1,8 @@
 from django.utils.datetime_safe import datetime
+
+from OMERO_metrics.dash_apps.dash_analyses.dash_foi.dash_dataset_foi import (
+    dashboard_name,
+)
 from OMERO_metrics.tools import delete
 from omeroweb.webclient.decorators import login_required, render_response
 from OMERO_metrics.tools.data_managers import (
@@ -140,7 +144,10 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
         pm.check_processed_data()
         pm.visualize_data()
         context = pm.context
+        mm_datasets = [dm.mm_dataset for dm in pm.datasets if dm.processed]
         dash_context["context"] = context
+        dash_context["context"]["mm_datasets"] = mm_datasets
+        dash_context["context"]["project_name"] = project_wrapper.getName()
         dash_context["context"]["project_id"] = project_id
         request.session["django_plotly_dash"] = dash_context
         return render(
@@ -369,13 +376,22 @@ def delete_dataset(request, conn=None, **kwargs):
     dm = DatasetManager(conn, dataset_wrapper, load_images=False)
     dm.load_data()
     try:
-        delete.delete_mm_obj_omero_refs(conn, dm.mm_dataset.output)
-        delete.delete_dataset_file_ann(conn, dm.omero_dataset)
-        dm.mm_dataset.validated = False
-        dm.mm_dataset.processed = False
-        dm.mm_dataset.output = None
-        dm.processed = False
+        dm.delete_processed_data(conn)
+        return "Output deleted successfully", "green"
+    except Exception as e:
+        return str(e), "red"
 
+
+@login_required(setGroupContext=True)
+def delete_project(request, conn=None, **kwargs):
+    """Delete the project outputs"""
+    project_id = kwargs["project_id"]
+    logger.info(f"Deleting dataset {project_id}")
+    project_wrapper = conn.getObject("Project", project_id)
+    pm = ProjectManager(conn, project_wrapper)
+    pm.load_data()
+    try:
+        pm.delete_processed_data(conn)
         return "Output deleted successfully", "green"
     except Exception as e:
         return str(e), "red"

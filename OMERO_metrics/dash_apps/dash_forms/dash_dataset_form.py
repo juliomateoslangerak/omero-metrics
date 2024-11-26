@@ -74,6 +74,28 @@ dash_form_project.layout = dmc.MantineProvider(
         ),
         dmc.Container(
             [
+                dmc.LoadingOverlay(
+                    id="loading-overlay",
+                    overlayProps={
+                        "radius": "sm",
+                        "blur": 1,
+                    },
+                    loaderProps={
+                        "variant": "custom",
+                        "children": [
+                            dmc.Image(
+                                h=150,
+                                radius="md",
+                                src="/static/OMERO_metrics/images/loader.gif",
+                            ),
+                            dmc.Text(
+                                "Processing...",
+                                c=THEME["text"]["primary"],
+                                size="lg",
+                            ),
+                        ],
+                    },
+                ),
                 # Main content
                 dmc.Paper(
                     id="main-content",
@@ -417,7 +439,7 @@ dash_form_project.clientside_callback(
     }
     """,
     dash.dependencies.Output(
-        "next-basic-usage", "loading", allow_duplicate=True
+        "loading-overlay", "visible", allow_duplicate=True
     ),
     dash.dependencies.Input("next-basic-usage", "n_clicks"),
     dash.dependencies.State("stepper-basic-usage", "active"),
@@ -427,6 +449,7 @@ dash_form_project.clientside_callback(
 
 @dash_form_project.expanded_callback(
     dash.dependencies.Output("main-content", "children"),
+    dash.dependencies.Output("loading-overlay", "visible"),
     [
         dash.dependencies.Input("next-basic-usage", "n_clicks"),
         dash.dependencies.State("framework-multi-select", "value"),
@@ -464,29 +487,34 @@ def run_analysis(*args, **kwargs):
                 comment=args[3],
             )
 
-            return dmc.Alert(
-                children=[
-                    dmc.Title(
-                        children=(
-                            "Your analysis completed successfully!"
-                            if color == "green"
-                            else "Oops! something happened"
+            return (
+                dmc.Alert(
+                    children=[
+                        dmc.Title(
+                            children=(
+                                "Your analysis completed successfully!"
+                                if color == "green"
+                                else "Oops! something happened"
+                            ),
+                            order=4,
                         ),
-                        order=4,
+                        dmc.Text(
+                            msg,
+                            size="sm",
+                        ),
+                    ],
+                    color=color,
+                    icon=DashIconify(
+                        icon=(
+                            "mdi:check-circle"
+                            if color == "green"
+                            else "mdi:alert"
+                        )
                     ),
-                    dmc.Text(
-                        msg,
-                        size="sm",
-                    ),
-                ],
-                color=color,
-                icon=DashIconify(
-                    icon=(
-                        "mdi:check-circle" if color == "green" else "mdi:alert"
-                    )
+                    title="Success!" if color == "green" else "Error!",
+                    radius="md",
                 ),
-                title="Success!" if color == "green" else "Error!",
-                radius="md",
+                False,
             )
         except Exception as e:
             return dmc.Alert(
@@ -499,7 +527,7 @@ def run_analysis(*args, **kwargs):
                 title="Error!",
                 radius="md",
             )
-    return dash.no_update
+    return dash.no_update, False
 
 
 dash_form_project.clientside_callback(

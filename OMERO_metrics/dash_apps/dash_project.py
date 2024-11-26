@@ -5,12 +5,12 @@ import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 from datetime import datetime
 import pandas as pd
+from linkml_runtime.dumpers import YAMLDumper
 from microscopemetrics_schema import datamodel as mm_schema
 from OMERO_metrics.tools import dash_forms_tools as dft
 from OMERO_metrics import views
 from OMERO_metrics.styles import (
     THEME,
-    CARD_STYLE,
     CARD_STYLE1,
     BUTTON_STYLE,
     TAB_STYLES,
@@ -24,8 +24,8 @@ from OMERO_metrics.styles import (
 )
 import math
 from microscopemetrics.analyses.mappings import MAPPINGS
-
 from time import sleep
+import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 
 sample_types = [x[0] for x in MAPPINGS]
 sample_types_dp = [
@@ -57,7 +57,7 @@ def make_control(text, action_id):
 
 # Initialize the Dash app
 dashboard_name = "omero_project_dash"
-dash_app_project = DjangoDash(
+omero_project_dash = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
     external_stylesheets=dmc.styles.ALL,
@@ -65,9 +65,37 @@ dash_app_project = DjangoDash(
 
 
 # Define the layout
-dash_app_project.layout = dmc.MantineProvider(
+omero_project_dash.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
+        dmc.NotificationProvider(position="top-center"),
+        html.Div(id="delete-notifications-container"),
+        dmc.Modal(
+            title="Confirm Delete",
+            id="delete-confirm_delete",
+            children=[
+                dmc.Text(
+                    "Are you sure you want to delete this project outputs?"
+                ),
+                dmc.Space(h=20),
+                dmc.Group(
+                    [
+                        dmc.Button(
+                            "Submit",
+                            id="delete-modal-submit-button",
+                            color="red",
+                        ),
+                        dmc.Button(
+                            "Close",
+                            color="gray",
+                            variant="outline",
+                            id="delete-modal-close-button",
+                        ),
+                    ],
+                    justify="flex-end",
+                ),
+            ],
+        ),
         html.Div(id="blank-input"),
         html.Div(id="save_config_result"),
         dmc.Paper(
@@ -102,39 +130,8 @@ dash_app_project.layout = dmc.MantineProvider(
                         ),
                         dmc.Group(
                             [
-                                dmc.Button(
-                                    id="download_project_data",
-                                    children="Download",
-                                    color="blue",
-                                    variant="filled",
-                                    leftSection=DashIconify(
-                                        icon="ic:round-cloud-download"
-                                    ),
-                                ),
-                                # dmc.Select(
-                                #     label="Select your favorite library",
-                                #     placeholder="Select value",
-                                #     id="select-opened",
-                                #     value="pd",
-                                #     data=[
-                                #         {"value": "pd", "label": "Pandas"},
-                                #         {"value": "np", "label": "NumPy"},
-                                #         {"value": "tf", "label": "TensorFlow"},
-                                #         {"value": "torch", "label": "PyTorch"},
-                                #     ],
-                                #     w=100,
-                                #     mb=10,
-                                #
-                                # ),
-                                dmc.Button(
-                                    id="delete_project_data",
-                                    children="Delete",
-                                    color="red",
-                                    variant="filled",
-                                    leftSection=DashIconify(
-                                        icon="ic:round-delete-forever"
-                                    ),
-                                ),
+                                my_components.download_group,
+                                my_components.delete_button,
                                 dmc.Badge(
                                     "Project Analysis",
                                     color=THEME["primary"],
@@ -310,7 +307,10 @@ dash_app_project.layout = dmc.MantineProvider(
                         children=[
                             dmc.LoadingOverlay(
                                 id="loading-overlay",
-                                overlayProps={"radius": "sm", "blur": 2},
+                                overlayProps={
+                                    "radius": "sm",
+                                    "blur": 1,
+                                },
                             ),
                             dmc.Paper(
                                 style={**CARD_STYLE1, "marginTop": "12px"},
@@ -353,7 +353,10 @@ dash_app_project.layout = dmc.MantineProvider(
                         children=[
                             dmc.LoadingOverlay(
                                 id="loading-overlay-threshold",
-                                overlayProps={"radius": "sm", "blur": 2},
+                                overlayProps={
+                                    "radius": "sm",
+                                    "blur": 1,
+                                },
                             ),
                             dmc.Paper(
                                 style={**CARD_STYLE1, "marginTop": "12px"},
@@ -377,11 +380,8 @@ dash_app_project.layout = dmc.MantineProvider(
                                             ),
                                         ],
                                     ),
-                                    dmc.NotificationProvider(
-                                        position="top-center"
-                                    ),
-                                    html.Div(id="notifications-container"),
                                     html.Div(id="result_data"),
+                                    html.Div(id="notifications-container"),
                                 ],
                             ),
                         ],
@@ -395,7 +395,7 @@ dash_app_project.layout = dmc.MantineProvider(
 )
 
 
-@dash_app_project.expanded_callback(
+@omero_project_dash.expanded_callback(
     dash.dependencies.Output("project-dropdown", "data"),
     dash.dependencies.Output("date-picker", "minDate"),
     dash.dependencies.Output("date-picker", "maxDate"),
@@ -414,7 +414,7 @@ def update_dropdown(*args, **kwargs):
     return data, min_date, max_date, value_date
 
 
-@dash_app_project.expanded_callback(
+@omero_project_dash.expanded_callback(
     dash.dependencies.Output("line-chart", "data"),
     dash.dependencies.Output("line-chart", "series"),
     dash.dependencies.Output("line-chart", "referenceLines"),
@@ -443,7 +443,6 @@ def update_table(*args, **kwargs):
     else:
         ref = []
     dates_range = args[1]
-    print(f"Dates range: {dates_range}")
     dates = kwargs["session_state"]["context"]["dates"]
     df_filtering = pd.DataFrame(dates, columns=["Date"])
     df_dates = df_filtering[
@@ -478,7 +477,7 @@ def update_table(*args, **kwargs):
     return data, series, ref
 
 
-@dash_app_project.expanded_callback(
+@omero_project_dash.expanded_callback(
     dash.dependencies.Output("text_km", "children"),
     dash.dependencies.Output("kkm_table", "data"),
     dash.dependencies.Output("pagination", "total"),
@@ -515,7 +514,7 @@ def update_project_view(*args, **kwargs):
         return dash.no_update
 
 
-@dash_app_project.expanded_callback(
+@omero_project_dash.expanded_callback(
     dash.dependencies.Output("input_parameters_container", "children"),
     dash.dependencies.Output("sample_container", "children"),
     [dash.dependencies.Input("blank-input", "children")],
@@ -541,7 +540,7 @@ def update_modal(*args, **kwargs):
     )
 
 
-dash_app_project.clientside_callback(
+omero_project_dash.clientside_callback(
     """
     function updateLoadingState(n_clicks) {
         if (n_clicks > 0 ) {
@@ -558,7 +557,7 @@ dash_app_project.clientside_callback(
     dash.dependencies.Input("submit_config", "n_clicks"),
     prevent_initial_call=True,
 )
-dash_app_project.clientside_callback(
+omero_project_dash.clientside_callback(
     """
     function updateLoadingThresholdState(n_clicks) {
         if (n_clicks > 0) {
@@ -577,7 +576,7 @@ dash_app_project.clientside_callback(
 )
 
 
-@dash_app_project.expanded_callback(
+@omero_project_dash.expanded_callback(
     dash.dependencies.Output("save_config_result", "children"),
     dash.dependencies.Output("loading-overlay", "visible"),
     [
@@ -590,8 +589,6 @@ dash_app_project.clientside_callback(
 def update_config_project(*args, **kwargs):
     sample_form = args[1]
     input_form = args[2]
-    print(f"Sample form valid: {sample_form}")
-    print(f"Input form valid: {input_form}")
     project_id = int(kwargs["session_state"]["context"]["project_id"])
     request = kwargs["request"]
     setup = kwargs["session_state"]["context"]["setup"]
@@ -695,7 +692,7 @@ def update_config_project(*args, **kwargs):
 #     return not opened
 
 
-@dash_app_project.expanded_callback(
+@omero_project_dash.expanded_callback(
     dash.dependencies.Output("thresholds-dropdown", "data"),
     [dash.dependencies.Input("blank-input", "children")],
 )
@@ -706,7 +703,7 @@ def update_thresholds(*args, **kwargs):
     return data
 
 
-@dash_app_project.expanded_callback(
+@omero_project_dash.expanded_callback(
     dash.dependencies.Output({"index": dash.dependencies.MATCH}, "variant"),
     dash.dependencies.Input({"index": dash.dependencies.MATCH}, "n_clicks"),
 )
@@ -717,7 +714,7 @@ def update_heart(*args, **kwargs):
     return "filled"
 
 
-@dash_app_project.expanded_callback(
+@omero_project_dash.expanded_callback(
     dash.dependencies.Output("accordion-compose-controls", "children"),
     [dash.dependencies.Input("blank-input", "children")],
 )
@@ -777,7 +774,7 @@ def update_thresholds_controls(*args, **kwargs):
     return threshold_control
 
 
-@dash_app_project.expanded_callback(
+@omero_project_dash.expanded_callback(
     dash.dependencies.Output("notifications-container", "children"),
     dash.dependencies.Output("loading-overlay-threshold", "visible"),
     [
@@ -791,7 +788,6 @@ def threshold_callback1(*args, **kwargs):
     output = get_accordion_data(args[1], kkm)
     request = kwargs["request"]
     project_id = kwargs["session_state"]["context"]["project_id"]
-    print(output)
     if output:
         response, color = views.save_threshold(
             request=request,
@@ -849,3 +845,83 @@ def get_accordion_data(accordion_state, kkm):
         }
         print(f"Error: {e}")
     return dict_data
+
+
+@omero_project_dash.expanded_callback(
+    dash.dependencies.Output("delete-confirm_delete", "opened"),
+    dash.dependencies.Output("delete-notifications-container", "children"),
+    [
+        dash.dependencies.Input("delete_data", "n_clicks"),
+        dash.dependencies.Input("delete-modal-submit-button", "n_clicks"),
+        dash.dependencies.Input("delete-modal-close-button", "n_clicks"),
+        dash.dependencies.State("delete-confirm_delete", "opened"),
+    ],
+    prevent_initial_call=True,
+)
+def delete_project(*args, **kwargs):
+    triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
+    project_id = kwargs["session_state"]["context"]["project_id"]
+    request = kwargs["request"]
+    opened = not args[3]
+    if (
+        triggered_button == "delete-modal-submit-button.n_clicks"
+        and args[0] > 0
+    ):
+        sleep(1)
+        msg, color = views.delete_project(request, project_id=project_id)
+        message = dmc.Notification(
+            title="Notification!",
+            id="simple-notify",
+            action="show",
+            message=msg,
+            icon=DashIconify(
+                icon=(
+                    "akar-icons:circle-check"
+                    if color == "green"
+                    else "akar-icons:circle-x"
+                )
+            ),
+            color=color,
+        )
+        return opened, message
+    else:
+        return opened, None
+
+
+@omero_project_dash.expanded_callback(
+    dash.dependencies.Output("download", "data"),
+    [
+        dash.dependencies.Input("download-yaml", "n_clicks"),
+        dash.dependencies.Input("download-json", "n_clicks"),
+        dash.dependencies.Input("download-text", "n_clicks"),
+    ],
+    prevent_initial_call=True,
+)
+def download_project_data(*args, **kwargs):
+    if not kwargs["callback_context"].triggered:
+        raise dash.no_update
+
+    triggered_id = (
+        kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
+    )
+    mm_datasets = kwargs["session_state"]["context"]["mm_datasets"]
+    file_name = kwargs["session_state"]["context"]["project_name"]
+    yaml_dumper = YAMLDumper()
+    if triggered_id == "download-yaml":
+        return dict(
+            content=yaml_dumper.dumps(mm_datasets),
+            filename=f"{file_name}.yaml",
+        )
+
+    elif triggered_id == "download-json":
+        return dict(
+            content=yaml_dumper.dumps(mm_datasets),
+            filename=f"{file_name}.json",
+        )
+
+    elif triggered_id == "download-text":
+        return dict(
+            content=yaml_dumper.dumps(mm_datasets), filename=f"{file_name}.txt"
+        )
+
+    raise dash.no_update

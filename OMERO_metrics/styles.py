@@ -192,7 +192,7 @@ CARD_STYLE = {
 }
 
 CARD_STYLE1 = {
-    "backgroundColor": "#e2ffe2",
+    "backgroundColor": "white",
     "borderRadius": "8px",
     "border": f'1px solid {THEME["border"]}',
     "padding": "24px",
