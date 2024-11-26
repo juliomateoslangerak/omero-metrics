@@ -80,21 +80,6 @@ dash_form_project.layout = dmc.MantineProvider(
                         "radius": "sm",
                         "blur": 1,
                     },
-                    loaderProps={
-                        "variant": "custom",
-                        "children": [
-                            dmc.Image(
-                                h=150,
-                                radius="md",
-                                src="/static/OMERO_metrics/images/loader.gif",
-                            ),
-                            dmc.Text(
-                                "Processing...",
-                                c=THEME["text"]["primary"],
-                                size="lg",
-                            ),
-                        ],
-                    },
                 ),
                 # Main content
                 dmc.Paper(

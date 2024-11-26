@@ -145,6 +145,7 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
         pm.visualize_data()
         context = pm.context
         dash_context["context"] = context
+        dash_context["context"]["project_id"] = project_id
         dash_context["context"]["project_name"] = project_wrapper.getName()
         request.session["django_plotly_dash"] = dash_context
         return render(
@@ -198,6 +199,7 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
         dm.load_data()
         dm.visualize_data()
         dash_context["context"] = dm.context
+        dash_context["context"]["dataset_id"] = dataset_id
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,

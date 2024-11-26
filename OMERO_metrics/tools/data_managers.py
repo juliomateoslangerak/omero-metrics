@@ -122,7 +122,6 @@ class DatasetManager:
             raise ValueError("datasets must be a DatasetWrapper")
 
         self.omero_project = self.omero_dataset.getParent()
-        self.dataset_id = self.omero_dataset.getId()
         self.input_parameters = None
         self.load_images = load_images
         self.mm_dataset = None
@@ -279,7 +278,6 @@ class DatasetManager:
                 message = "Unknown analysis type. Unable to visualize"
                 logger.warning(message)
                 self.context, self.app_name = warning_message(message)
-            self.context["dataset_id"] = self.dataset_id
         else:
             if self.omero_project and len(self.attached_images) > 0:
                 self.input_parameters = load.load_config_file_data(
@@ -322,7 +320,6 @@ class ProjectManager:
         self.datasets = []
         self.context = None
         self.setup = None
-        self.project_id = omero_project.getId()
         self.threshold = None
         self.datasets_types = []
         self.processed_datasets = {}
@@ -369,7 +366,7 @@ class ProjectManager:
         return self.homogenize
 
     def visualize_data(self):
-        if self.processed_datasets:
+        if self.processed_datasets and self.setup:
             if self.is_homogenized():
                 if (
                     list(self.processed_datasets.values())[
@@ -406,7 +403,6 @@ class ProjectManager:
                         )
                     )
                     self.context["mm_datasets"] = self.mm_harmonized_dataset
-                    self.context["project_id"] = self.project_id
                 else:
                     message = "This project contains unsupported analysis type. Unable to visualize"
                     logger.warning(message)
