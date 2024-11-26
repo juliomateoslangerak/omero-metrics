@@ -16,7 +16,7 @@ from omero.gateway import (
 import microscopemetrics_schema.datamodel as mm_schema
 from linkml_runtime.loaders import yaml_loader
 import pandas as pd
-from OMERO_metrics.tools import omero_tools
+from OMERO_metrics.tools import omero_tools, dump
 import re
 
 logger = logging.getLogger(__name__)
@@ -322,14 +322,11 @@ def load_dash_data_image(
 def load_dash_data_dataset(
     dataset: mm_schema.MetricsDataset,
 ) -> dict:
-    dash_context = {}
-
+    dash_context = {"mm_dataset": dataset}
     if isinstance(dataset, FieldIlluminationDataset):
         title = "Field Illumination Dataset"
-
         dash_context["title"] = title
         dash_context["dm"] = dataset
-        df = get_images_intensity_profiles(dataset)
         dash_context["image"], channel_series = concatenate_images(
             dataset.input_data.field_illumination_image
         )
@@ -350,12 +347,16 @@ def load_dash_data_dataset(
         ]
 
     elif isinstance(dataset, PSFBeadsDataset):
-
         dash_context["bead_km_df"] = get_km_mm_metrics_dataset(
             mm_dataset=dataset, table_name="key_measurements"
         )
     else:
         dash_context = {}
+    if dash_context:
+        dump._remove_unsupported_types(dataset.input_data)
+        dump._remove_unsupported_types(dataset.input_parameters)
+        dump._remove_unsupported_types(dataset.output)
+        dash_context["mm_dataset"] = dataset
     return dash_context
 
 

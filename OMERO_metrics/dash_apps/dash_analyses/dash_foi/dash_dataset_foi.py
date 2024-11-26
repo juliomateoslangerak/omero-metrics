@@ -7,7 +7,7 @@ from django_plotly_dash import DjangoDash
 import plotly.express as px
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
-from linkml_runtime.dumpers import YAMLDumper
+from linkml_runtime.dumpers import YAMLDumper, JSONDumper
 from skimage.exposure import rescale_intensity
 from OMERO_metrics.styles import (
     THEME,
@@ -527,6 +527,7 @@ def download_dataset_data(*args, **kwargs):
     mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
     file_name = mm_dataset.name
     yaml_dumper = YAMLDumper()
+    json_dumper = JSONDumper()
     if triggered_id == "download-yaml":
         return dict(
             content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.yaml"
@@ -534,7 +535,7 @@ def download_dataset_data(*args, **kwargs):
 
     elif triggered_id == "download-json":
         return dict(
-            content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.json"
+            content=json_dumper.dumps(mm_dataset), filename=f"{file_name}.json"
         )
 
     elif triggered_id == "download-text":

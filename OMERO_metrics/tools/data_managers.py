@@ -1,5 +1,7 @@
 import datetime
 import logging
+
+from docutils.nodes import description
 from microscopemetrics_schema.datamodel import (
     microscopemetrics_schema as mm_schema,
 )
@@ -120,6 +122,7 @@ class DatasetManager:
             raise ValueError("datasets must be a DatasetWrapper")
 
         self.omero_project = self.omero_dataset.getParent()
+        self.dataset_id = self.omero_dataset.getId()
         self.input_parameters = None
         self.load_images = load_images
         self.mm_dataset = None
@@ -271,10 +274,12 @@ class DatasetManager:
                     self.mm_dataset.__class__.__name__
                 )
                 self.context = load.load_dash_data_dataset(self.mm_dataset)
+
             else:
                 message = "Unknown analysis type. Unable to visualize"
                 logger.warning(message)
                 self.context, self.app_name = warning_message(message)
+            self.context["dataset_id"] = self.dataset_id
         else:
             if self.omero_project and len(self.attached_images) > 0:
                 self.input_parameters = load.load_config_file_data(
@@ -311,22 +316,24 @@ class ProjectManager:
     to interact with OMERO and load and dump data.
     """
 
-    def __init__(self, conn: BlitzGateway, project: ProjectWrapper):
+    def __init__(self, conn: BlitzGateway, omero_project: ProjectWrapper):
         self._conn = conn
-        self.project = project
+        self.omero_project = omero_project
         self.datasets = []
         self.context = None
         self.setup = None
+        self.project_id = omero_project.getId()
         self.threshold = None
         self.datasets_types = []
         self.processed_datasets = {}
         self.unprocessed_datasets = {}
         self.app_name = None
         self.homogenize = None
+        self.mm_harmonized_dataset = None
 
     def load_data(self, force_reload=True):
         if force_reload or self.datasets is []:
-            for dataset in self.project.listChildren():
+            for dataset in self.omero_project.listChildren():
                 dm = DatasetManager(self._conn, dataset)
                 dm.load_data()
                 dm.is_processed()
@@ -382,6 +389,24 @@ class ProjectManager:
                     )
                     self.context["setup"] = self.setup
                     self.context["threshold"] = self.threshold
+                    self.mm_harmonized_dataset = (
+                        mm_schema.HarmonizedMetricsDatasetCollection(
+                            datasets=[
+                                dm.mm_dataset
+                                for dm in self.datasets
+                                if dm.processed
+                            ],
+                            dataset_class=[
+                                dm.mm_dataset.class_class_curie
+                                for dm in self.datasets
+                                if dm.processed
+                            ],
+                            name=self.omero_project.getName(),
+                            description=self.omero_project.getDescription(),
+                        )
+                    )
+                    self.context["mm_datasets"] = self.mm_harmonized_dataset
+                    self.context["project_id"] = self.project_id
                 else:
                     message = "This project contains unsupported analysis type. Unable to visualize"
                     logger.warning(message)
@@ -414,11 +439,13 @@ class ProjectManager:
 
     def load_config_file(self):
         if self.setup is None:
-            self.setup = load.load_config_file_data(self._conn, self.project)
+            self.setup = load.load_config_file_data(
+                self._conn, self.omero_project
+            )
 
     def load_threshold_file(self):
         if self.threshold is None:
-            self.threshold = load.load_thresholds_file_data(self.project)
+            self.threshold = load.load_thresholds_file_data(self.omero_project)
 
 
 class MicroscopeManager:
@@ -435,15 +462,6 @@ class MicroscopeManager:
         self.microscope = conn.getObject("Microscope", microscope_id)
         self.data = None
         self.context = None
-
-    # def load_data(self, force_reload=True):
-    #     if force_reload or self.data is None:
-    #         self.data = load.load_microscope(self._conn, self.microscope_id)
-    #         self.context = self.data["context"]
-    #     else:
-    #         raise NotImplementedError(
-    #             "partial loading of data from OMERO is not yet implemented"
-    #         )
 
     def visualize_data(self):
         pass

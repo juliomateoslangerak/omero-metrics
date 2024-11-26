@@ -5,7 +5,7 @@ import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 from datetime import datetime
 import pandas as pd
-from linkml_runtime.dumpers import YAMLDumper
+from linkml_runtime.dumpers import YAMLDumper, JSONDumper
 from microscopemetrics_schema import datamodel as mm_schema
 from OMERO_metrics.tools import dash_forms_tools as dft
 from OMERO_metrics import views
@@ -907,6 +907,7 @@ def download_project_data(*args, **kwargs):
     mm_datasets = kwargs["session_state"]["context"]["mm_datasets"]
     file_name = kwargs["session_state"]["context"]["project_name"]
     yaml_dumper = YAMLDumper()
+    json_dumper = JSONDumper()
     if triggered_id == "download-yaml":
         return dict(
             content=yaml_dumper.dumps(mm_datasets),
@@ -915,7 +916,7 @@ def download_project_data(*args, **kwargs):
 
     elif triggered_id == "download-json":
         return dict(
-            content=yaml_dumper.dumps(mm_datasets),
+            content=json_dumper.dumps(mm_datasets),
             filename=f"{file_name}.json",
         )
 

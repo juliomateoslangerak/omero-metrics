@@ -144,11 +144,8 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
         pm.check_processed_data()
         pm.visualize_data()
         context = pm.context
-        mm_datasets = [dm.mm_dataset for dm in pm.datasets if dm.processed]
         dash_context["context"] = context
-        dash_context["context"]["mm_datasets"] = mm_datasets
         dash_context["context"]["project_name"] = project_wrapper.getName()
-        dash_context["context"]["project_id"] = project_id
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
@@ -201,14 +198,6 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
         dm.load_data()
         dm.visualize_data()
         dash_context["context"] = dm.context
-        if dm.processed:
-            mm_dataset = dm.mm_dataset
-            _remove_unsupported_types(mm_dataset.input_data)
-            _remove_unsupported_types(mm_dataset.input_parameters)
-            if mm_dataset.output:
-                _remove_unsupported_types(mm_dataset.output)
-            dash_context["context"]["mm_dataset"] = mm_dataset
-        dash_context["context"]["dataset_id"] = dataset_id
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
