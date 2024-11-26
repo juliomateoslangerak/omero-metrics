@@ -134,8 +134,11 @@ def load_config_file_data(conn, project):
     setup = None
     for ann in project.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
-            ns = ann.getFile().getName()
-            if ns.startswith("study_config"):
+            ns = ann.getNs()
+            if ns in [
+                cls.class_class_curie
+                for cls in mm_schema.MetricsInputParameters.__subclasses__()
+            ]:
                 setup = yaml.load(
                     ann.getFileInChunks().__next__().decode(),
                     Loader=yaml.SafeLoader,

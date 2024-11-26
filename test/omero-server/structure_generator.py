@@ -271,8 +271,12 @@ GENERATOR_MAPPER = {
 
 def _attach_config(conn, project, file_path):
     mimetype, _ = mimetypes.guess_type(file_path)
+    file_path_split = file_path.split("/")
     file_ann = conn.createFileAnnfromLocalFile(
-        file_path, mimetype=mimetype, desc="configuration file"
+        file_path,
+        mimetype=mimetype,
+        desc="configuration file",
+        ns=f"microscopemetrics_schema:analyses/{file_path_split[-2]}_schema/{file_path_split[-1].split('_')[-1].split('.')[0]}InputParameters",
     )
     project.linkAnnotation(file_ann)
 
