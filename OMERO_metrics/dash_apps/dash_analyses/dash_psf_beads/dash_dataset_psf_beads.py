@@ -20,6 +20,7 @@ dashboard_name = "omero_dataset_psf_beads"
 
 omero_dataset_psf_beads = DjangoDash(
     name=dashboard_name,
+    serve_locally=True,
     external_stylesheets=dmc.styles.ALL,
 )
 
