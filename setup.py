@@ -52,7 +52,7 @@ setup(
         "django-plotly-dash==2.4.0",
         "dash==2.9.3",
         "plotly==5.20.0",
-        "dpd_static_support",
+        "dpd_static_support==0.0.5",
         "dash-bootstrap-components",
         "django-bootstrap4",
         "dash-mantine-components==0.14.5",
