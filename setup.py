@@ -55,7 +55,7 @@ setup(
         "dpd_static_support",
         "dash-bootstrap-components",
         "django-bootstrap4",
-        "dash-mantine-components",
+        "dash-mantine-components==0.14.5",
         "dash-iconify",
         "openpyxl",
         "dash-renderer",
