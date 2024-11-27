@@ -16,8 +16,6 @@ from omero.gateway import (
 import microscopemetrics_schema.datamodel as mm_schema
 from linkml_runtime.loaders import yaml_loader
 import pandas as pd
-from openpyxl.packaging.manifest import mimetypes
-
 from OMERO_metrics.tools import omero_tools, dump
 import re
 
@@ -136,12 +134,11 @@ def load_config_file_data(conn, project):
     setup = None
     for ann in project.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
-            name = ann.getFile().getName()
-            if (
-                name.startswith("study_config")
-                and ann.getNs()
-                and ann.getNs().startswith("microscopemetrics_schema")
-            ):
+            ns = ann.getNs()
+            if ns in [
+                cls.class_class_curie
+                for cls in mm_schema.MetricsInputParameters.__subclasses__()
+            ]:
                 setup = yaml.load(
                     ann.getFileInChunks().__next__().decode(),
                     Loader=yaml.SafeLoader,
