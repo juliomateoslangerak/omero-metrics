@@ -1,7 +1,6 @@
 import datetime
 import logging
 
-from docutils.nodes import description
 from microscopemetrics_schema.datamodel import (
     microscopemetrics_schema as mm_schema,
 )
