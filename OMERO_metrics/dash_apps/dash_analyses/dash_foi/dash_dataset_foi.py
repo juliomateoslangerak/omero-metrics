@@ -23,6 +23,7 @@ from OMERO_metrics.styles import (
 )
 import math
 import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
+from OMERO_metrics.tools import load
 
 dashboard_name = "omero_dataset_foi"
 omero_dataset_foi = DjangoDash(
@@ -338,7 +339,10 @@ def update_dropdown_menu(*args, **kwargs):
 def update_km_table(*args, **kwargs):
     try:
         page = int(args[0])
-        table = kwargs["session_state"]["context"]["key_values_df"]
+        table = load.get_km_mm_metrics_dataset(
+            mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
+            table_name="key_measurements",
+        )
         start_idx = (page - 1) * 4
         end_idx = start_idx + 4
         metrics_df = table[
@@ -430,9 +434,11 @@ def update_profile_type(*args, **kwargs):
     try:
         channel = int(args[0])
         curveType = args[1]
-        df_intensity_profiles = kwargs["session_state"]["context"][
-            "intensity_profiles"
-        ]
+        df_intensity_profiles = load.load_table_mm_metrics(
+            kwargs["session_state"]["context"]["mm_dataset"].output[
+                "intensity_profiles"
+            ]
+        )
         channel_regex = f"ch{channel:02d}"
         df_profile = df_intensity_profiles[
             df_intensity_profiles.columns[
@@ -483,7 +489,9 @@ def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:
 )
 def delete_dataset(*args, **kwargs):
     triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
-    dataset_id = kwargs["session_state"]["context"]["dataset_id"]
+    dataset_id = kwargs["session_state"]["context"][
+        "mm_dataset"
+    ].data_reference.omero_object_id
     request = kwargs["request"]
     opened = not args[3]
     if triggered_button == "modal-submit-button.n_clicks" and args[0] > 0:
@@ -562,7 +570,10 @@ def download_table_data(*args, **kwargs):
     triggered_id = (
         kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
     )
-    table = kwargs["session_state"]["context"]["key_values_df"]
+    table = load.get_km_mm_metrics_dataset(
+        mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
+        table_name="key_measurements",
+    )
     metrics_df = table[
         [
             "channel_name",

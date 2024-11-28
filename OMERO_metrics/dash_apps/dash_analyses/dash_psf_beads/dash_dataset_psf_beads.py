@@ -10,6 +10,7 @@ from time import sleep
 import math
 from OMERO_metrics.styles import TABLE_MANTINE_STYLE
 import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
+from OMERO_metrics.tools import load
 
 
 def get_icon(icon, size=20, color=None):
@@ -186,7 +187,10 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
     ],
 )
 def func_psf_callback(*args, **kwargs):
-    table_km = kwargs["session_state"]["context"]["bead_km_df"]
+    table_km = load.get_km_mm_metrics_dataset(
+        mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
+        table_name="key_measurements",
+    )
     page = int(args[0])
     kkm = [
         "channel_name",
@@ -228,7 +232,9 @@ def func_psf_callback(*args, **kwargs):
 )
 def delete_dataset(*args, **kwargs):
     triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
-    dataset_id = kwargs["session_state"]["context"]["dataset_id"]
+    dataset_id = kwargs["session_state"]["context"][
+        "mm_dataset"
+    ].data_reference.omero_object_id
     request = kwargs["request"]
     opened = not args[3]
     if triggered_button == "modal-submit-button.n_clicks" and args[0] > 0:
@@ -307,7 +313,10 @@ def download_table_data(*args, **kwargs):
     triggered_id = (
         kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
     )
-    table_km = kwargs["session_state"]["context"]["bead_km_df"]
+    table_km = load.get_km_mm_metrics_dataset(
+        mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
+        table_name="key_measurements",
+    )
     kkm = [
         "channel_name",
         "considered_valid_count",

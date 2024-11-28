@@ -1,8 +1,4 @@
 import logging
-from microscopemetrics_schema.datamodel.microscopemetrics_schema import (
-    FieldIlluminationDataset,
-    PSFBeadsDataset,
-)
 import yaml
 import numpy as np
 from omero.gateway import (
@@ -18,8 +14,6 @@ from linkml_runtime.loaders import yaml_loader
 import pandas as pd
 from OMERO_metrics.tools import omero_tools, dump
 import re
-
-logger = logging.getLogger(__name__)
 import omero
 from datetime import datetime
 from OMERO_metrics.tools.data_type import (
@@ -27,6 +21,8 @@ from OMERO_metrics.tools.data_type import (
     DATASET_TYPES,
     INPUT_IMAGES_MAPPING,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def get_annotations_tables(conn, group_id):
@@ -247,122 +243,6 @@ def load_dataset(
     return mm_dataset
 
 
-def load_dash_data_image(
-    mm_dataset: mm_schema.MetricsDataset,
-    image: mm_schema.Image,
-    image_index: int,
-    image_location: str,
-) -> dict:
-    dash_context = {}
-    if (
-        isinstance(mm_dataset, FieldIlluminationDataset)
-        and image_location == "input_data"
-    ):
-        dash_context["image"] = image.array_data
-        dash_context["channel_names"] = image.channel_series
-        image_id = int(image.data_reference.omero_object_id)
-        rois = get_rois_mm_dataset(mm_dataset)
-        df_lines_omero = pd.DataFrame(rois[image_id]["roi"]["Line"])
-        df_rects_omero = pd.DataFrame(rois[image_id]["roi"]["Rectangle"])
-        df_points_omero = pd.DataFrame(rois[image_id]["roi"]["Point"])
-        df_lines_omero.columns = df_lines_omero.columns.str.upper()
-        df_rects_omero.columns = df_rects_omero.columns.str.upper()
-        df_points_omero.columns = df_points_omero.columns.str.upper()
-        dash_context["df_lines"] = df_lines_omero
-        dash_context["df_rects"] = df_rects_omero
-        dash_context["df_points"] = df_points_omero
-        dash_context["df_intensity_profiles"] = load_table_mm_metrics(
-            mm_dataset.output["intensity_profiles"][image_index]
-        )
-    elif (
-        isinstance(mm_dataset, FieldIlluminationDataset)
-        and image_location == "output"
-    ):
-        dash_context["image"] = image.array_data
-        dash_context["channel_names"] = image.channel_series
-        dash_context["message"] = (
-            "No visualization available for output images."
-        )
-    elif (
-        isinstance(mm_dataset, PSFBeadsDataset)
-        and image_location == "input_data"
-    ):
-        dash_context["image"] = image.array_data
-        dash_context["min_distance"] = (
-            mm_dataset.input_parameters.min_lateral_distance_factor
-        )
-        dash_context["channel_names"] = image.channel_series
-        dash_context["bead_properties_df"] = load_table_mm_metrics(
-            mm_dataset.output["bead_properties"]
-        )
-        dash_context["bead_km_df"] = get_km_mm_metrics_dataset(
-            mm_dataset=mm_dataset, table_name="key_measurements"
-        )
-        dash_context["bead_x_profiles_df"] = load_table_mm_metrics(
-            mm_dataset.output["bead_profiles_x"]
-        )
-        dash_context["bead_y_profiles_df"] = load_table_mm_metrics(
-            mm_dataset.output["bead_profiles_y"]
-        )
-        dash_context["bead_z_profiles_df"] = load_table_mm_metrics(
-            mm_dataset.output["bead_profiles_z"]
-        )
-        dash_context["image_id"] = image.data_reference.omero_object_id
-    elif (
-        isinstance(mm_dataset, PSFBeadsDataset) and image_location == "output"
-    ):
-        dash_context["image"] = image.array_data
-        dash_context["channel_names"] = image.channel_series
-        dash_context["message"] = (
-            "No visualization available for output images."
-        )
-
-    else:
-        dash_context = {}
-    return dash_context
-
-
-def load_dash_data_dataset(
-    dataset: mm_schema.MetricsDataset,
-) -> dict:
-    dash_context = {"mm_dataset": dataset}
-    if isinstance(dataset, FieldIlluminationDataset):
-        title = "Field Illumination Dataset"
-        dash_context["title"] = title
-        dash_context["dm"] = dataset
-        dash_context["image"], channel_series = concatenate_images(
-            dataset.input_data.field_illumination_image
-        )
-        dash_context["channel_names"] = channel_series
-        dash_context["intensity_profiles"] = load_table_mm_metrics(
-            dataset.output["intensity_profiles"]
-        )
-        dash_context["key_values_df"] = get_km_mm_metrics_dataset(
-            mm_dataset=dataset, table_name="key_measurements"
-        )
-        dash_context["timeline_data"] = [
-            {
-                "name": i.name,
-                "description": i.description,
-                "acquisition_datetime": i.acquisition_datetime,
-            }
-            for i in dataset.input_data.field_illumination_image
-        ]
-
-    elif isinstance(dataset, PSFBeadsDataset):
-        dash_context["bead_km_df"] = get_km_mm_metrics_dataset(
-            mm_dataset=dataset, table_name="key_measurements"
-        )
-    else:
-        dash_context = {}
-    if dash_context:
-        dump._remove_unsupported_types(dataset.input_data)
-        dump._remove_unsupported_types(dataset.input_parameters)
-        dump._remove_unsupported_types(dataset.output)
-        dash_context["mm_dataset"] = dataset
-    return dash_context
-
-
 def load_dash_data_project(
     processed_datasets: dict,
 ) -> (dict, str):
@@ -422,7 +302,7 @@ def load_image(
         ]
     )
     source_images = []
-    array_data = _load_image_intensities(image) if load_array else None
+    # array_data = _load_image_intensities(image) if load_array else None
     return mm_schema.Image(
         name=image.getName(),
         description=image.getDescription(),
@@ -439,96 +319,12 @@ def load_image(
         time_series=time_series,
         channel_series=channel_series,
         source_images=source_images,
-        # OMERO order zctyx -> microscope-metrics order TZYXC
-        array_data=array_data,
+        array_data=[],
     )
 
 
 def _load_image_intensities(image: ImageWrapper) -> np.ndarray:
     return omero_tools.get_image_intensities(image).transpose((2, 0, 3, 4, 1))
-
-
-def get_project_data(
-    collections: mm_schema.MetricsDatasetCollection,
-) -> pd.DataFrame:
-    data = []
-    for dataset in collections.datasets:
-        data.append(
-            [
-                dataset.__class__.__name__,
-                dataset.data_reference.omero_object_type,
-                dataset.data_reference.omero_object_id,
-                dataset.processed,
-                dataset.acquisition_datetime,
-            ]
-        )
-    df = pd.DataFrame(
-        data,
-        columns=[
-            "Analysis_type",
-            "Omero_object_type",
-            "Omero_object_id",
-            "Processed",
-            "Acquisition_datetime",
-        ],
-    )
-    return df
-
-
-def get_dataset_by_id(
-    collections: mm_schema.MetricsDatasetCollection, dataset_id
-) -> mm_schema.MetricsDataset:
-    try:
-        dataset = [
-            i
-            for i in collections.datasets
-            if i.data_reference.omero_object_id == dataset_id
-        ][0]
-        return dataset
-    except IndexError:
-        return None
-
-
-def get_images_intensity_profiles(
-    dataset: mm_schema.MetricsDataset,
-) -> pd.DataFrame:
-    data = []
-    for i, j in zip(
-        dataset.input_data["field_illumination_image"],
-        dataset.output["intensity_profiles"],
-    ):
-        data.append(
-            [
-                i["data_reference"]["omero_object_id"],
-                j["data_reference"]["omero_object_id"],
-                i["shape_c"],
-            ]
-        )
-    df = pd.DataFrame(
-        data,
-        columns=["Field_illumination_image", "Intensity_profiles", "Channel"],
-    )
-    return df
-
-
-def get_key_values(var: FieldIlluminationDataset.output) -> pd.DataFrame:
-    data_dict = var.key_measurements.__dict__
-    col = var.key_measurements.channel_name
-    data_dict = [
-        [key] + value
-        for key, value in data_dict.items()
-        if isinstance(value, list)
-        and key
-        not in [
-            "name",
-            "description",
-            "data_reference",
-            "linked_references",
-            "channel_name",
-        ]
-    ]
-    df = pd.DataFrame(data_dict, columns=["Measurements"] + col)
-    return df
 
 
 def concatenate_images(images: list):
@@ -541,9 +337,6 @@ def concatenate_images(images: list):
         list_images.extend(result)
         list_channels.extend(channels)
     return list_images, list_channels
-
-
-# -----------------------------------------------------------------------------------
 
 
 def roi_finder(roi: mm_schema.Roi):

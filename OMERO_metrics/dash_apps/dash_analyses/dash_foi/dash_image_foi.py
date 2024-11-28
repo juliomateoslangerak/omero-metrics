@@ -12,6 +12,8 @@ from OMERO_metrics.styles import (
     LINE_CHART_SERIES,
     HEADER_PAPER_STYLE,
 )
+from OMERO_metrics.tools import load
+import pandas as pd
 
 
 def get_icon(icon, size=20, color=None):
@@ -307,6 +309,8 @@ def callback_image(*args, **kwargs):
     color = args[1]
     checked_contour = args[2]
     inverted_color = args[3]
+    mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
+    image_id = kwargs["session_state"]["context"]["image_id"]
     roi = args[4]
     if inverted_color:
         color = color + "_r"
@@ -315,9 +319,14 @@ def callback_image(*args, **kwargs):
     image_data = rescale_intensity(
         image_data, in_range=(0, image_data.max()), out_range=(0.0, 1.0)
     )
-    df_rects = kwargs["session_state"]["context"]["df_rects"]
-    df_lines = kwargs["session_state"]["context"]["df_lines"]
-    df_points = kwargs["session_state"]["context"]["df_points"]
+    rois = load.get_rois_mm_dataset(mm_dataset)
+    df_lines = pd.DataFrame(rois[image_id]["roi"]["Line"])
+    df_rects = pd.DataFrame(rois[image_id]["roi"]["Rectangle"])
+    df_points = pd.DataFrame(rois[image_id]["roi"]["Point"])
+    df_lines.columns = df_lines.columns.str.upper()
+    df_rects.columns = df_rects.columns.str.upper()
+    df_points.columns = df_points.columns.str.upper()
+
     df_point_channel = df_points[df_points["C"] == int(args[0])].copy()
 
     fig = px.imshow(
@@ -417,9 +426,12 @@ def callback_image(*args, **kwargs):
     [dash.dependencies.Input("my-dropdown1", "value")],
 )
 def update_intensity_profiles(*args, **kwargs):
-    df_intensity_profiles = kwargs["session_state"]["context"][
-        "df_intensity_profiles"
-    ]
+    image_index = int(kwargs["session_state"]["context"]["image_index"])
+    df_intensity_profiles = load.load_table_mm_metrics(
+        kwargs["session_state"]["context"]["mm_dataset"].output[
+            "intensity_profiles"
+        ][image_index]
+    )
     ch = f"ch{int(args[0]):02d}"
     df_profile = df_intensity_profiles[
         df_intensity_profiles.columns[

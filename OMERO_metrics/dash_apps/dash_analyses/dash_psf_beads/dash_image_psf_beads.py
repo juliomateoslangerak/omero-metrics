@@ -8,13 +8,14 @@ import numpy as np
 import logging
 import pandas as pd
 from dash_iconify import DashIconify
-
+from OMERO_metrics import views
 from OMERO_metrics.tools.data_preperation import (
     crop_bead_index,
     mip_graphs,
     fig_mip,
 )
 from OMERO_metrics.styles import THEME, MANTINE_THEME, HEADER_PAPER_STYLE
+from OMERO_metrics.tools import load
 
 
 def get_icon(icon, size=20, color=None):
@@ -376,21 +377,25 @@ def update_icon(*args, **kwargs):
 )
 def update_image(*args, **kwargs):
     try:
-        image_omero = kwargs["session_state"]["context"]["image"]
+        image_id = int(kwargs["session_state"]["context"]["image_id"])
         channel_index = int(args[0])
         color = args[1]
         invert = args[2]
         contour = args[3]
         roi = args[4]
         beads_info = args[5]
-
-        min_distance = kwargs["session_state"]["context"]["min_distance"]
-        bead_properties_df = kwargs["session_state"]["context"][
-            "bead_properties_df"
-        ]
-
+        mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
+        min_distance = int(
+            mm_dataset.input_parameters.min_lateral_distance_factor
+        )
+        bead_properties_df = load.load_table_mm_metrics(
+            mm_dataset.output["bead_properties"]
+        )
         df_beads_location = bead_properties_df[
-            bead_properties_df["channel_nr"] == channel_index
+            (
+                (bead_properties_df["channel_nr"] == channel_index)
+                & (bead_properties_df["image_id"] == image_id)
+            )
         ][
             [
                 "channel_nr",
@@ -411,7 +416,12 @@ def update_image(*args, **kwargs):
         if invert:
             color = color + "_r"
 
-        stack = image_omero[0, :, :, :, channel_index]
+        stack = views.load_image_dash(
+            kwargs["request"],
+            image_id=image_id,
+            c_range=channel_index,
+            t_range=0,
+        )
         mip_z = np.max(stack, axis=0)
 
         fig = px.imshow(
@@ -469,10 +479,12 @@ def update_image(*args, **kwargs):
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_channels_psf_image(*args, **kwargs):
-    channel_names = kwargs["session_state"]["context"]["channel_names"]
+    channel_names = views.load_channels(
+        kwargs["request"],
+        image_id=kwargs["session_state"]["context"]["image_id"],
+    )
     channel_options = [
-        {"label": c.name, "value": f"{i}"}
-        for i, c in enumerate(channel_names.channels)
+        {"label": c, "value": f"{i}"} for i, c in enumerate(channel_names)
     ]
     return channel_options
 
@@ -490,15 +502,17 @@ def update_channels_psf_image(*args, **kwargs):
 def callback_mip(*args, **kwargs):
     point = args[0]["points"][0]
     axis = args[1].lower()
+    mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
+    image_id = int(kwargs["session_state"]["context"]["image_id"])
     channel_index = int(args[2])
-    stack = kwargs["session_state"]["context"]["image"][
-        0, :, :, :, channel_index
-    ]
-    bead_properties_df = kwargs["session_state"]["context"][
-        "bead_properties_df"
-    ]
+    bead_properties_df = load.load_table_mm_metrics(
+        mm_dataset.output["bead_properties"]
+    )
     df_beads_location = bead_properties_df[
-        bead_properties_df["channel_nr"] == channel_index
+        (
+            (bead_properties_df["channel_nr"] == channel_index)
+            & (bead_properties_df["image_id"] == image_id)
+        )
     ][
         [
             "channel_nr",
@@ -509,7 +523,7 @@ def callback_mip(*args, **kwargs):
             "center_y",
         ]
     ].copy()
-    min_dist = int(kwargs["session_state"]["context"]["min_distance"])
+    min_dist = int(mm_dataset.input_parameters.min_lateral_distance_factor)
     if point["curveNumber"] == 1:
         bead_index = point["pointNumber"]
         # title = (
@@ -518,6 +532,12 @@ def callback_mip(*args, **kwargs):
         bead = df_beads_location[
             df_beads_location["bead_id"] == bead_index
         ].copy()
+        stack = views.load_image_dash(
+            kwargs["request"],
+            image_id=image_id,
+            c_range=channel_index,
+            t_range=0,
+        )
         x0, xf, y0, yf = crop_bead_index(bead, min_dist, stack)
         mip_x, mip_y, mip_z = mip_graphs(x0, xf, y0, yf, stack)
         fig_mip_go = fig_mip(mip_x, mip_y, mip_z)
@@ -546,7 +566,10 @@ def callback_mip(*args, **kwargs):
 
 
 def line_graph_axis(bead_index, channel_index, axis, kwargs):
-    df_axis = kwargs["session_state"]["context"][f"bead_{axis}_profiles_df"]
+    mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
+    df_axis = load.load_table_mm_metrics(
+        mm_dataset.output[f"bead_profiles_{axis}"]
+    )
     image_id = kwargs["session_state"]["context"]["image_id"]
     df_axis_3d = df_axis[
         df_axis.columns[df_axis.columns.str.startswith(str(image_id))]

@@ -25,6 +25,7 @@ import omero
 import logging
 from OMERO_metrics.tools import load
 from django.urls import reverse
+from OMERO_metrics.tools import omero_tools
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,8 @@ DATA_TYPE = {
         psf_beads.analyse_psf_beads,
     ],
 }
+
+template_name_dash = "OMERO_metrics/dash_template/dash_template.html"
 
 
 @login_required(setGroupContext=True)
@@ -100,9 +103,6 @@ def image_rois(request, image_id, conn=None, **kwargs):
         "OMERO_metrics/image_rois.html",
         {"ImageId": image_id},
     )
-
-
-template_name_dash = "OMERO_metrics/dash_template/dash_template.html"
 
 
 @login_required(setGroupContext=True)
@@ -434,3 +434,33 @@ def save_threshold(request, conn=None, **kwargs):
             )
         else:
             return "Something happened. Couldn't save thresholds.", "red"
+
+
+@login_required(setGroupContext=True)
+def load_image_dash(request, conn=None, **kwargs):
+    """Load the image"""
+    try:
+        image_id = kwargs["image_id"]
+        image_wrapper = conn.getObject("Image", image_id)
+        image_wrapper = ImageManager(conn, image_wrapper)
+        image = omero_tools.get_image_intensities(
+            image=image_wrapper,
+            z_range=kwargs["z_range"] if kwargs["z_range"] else None,
+            c_range=kwargs["c_range"] if kwargs["c_range"] else None,
+            t_range=kwargs["t_range"] if kwargs["t_range"] else None,
+            x_range=kwargs["x_range"] if kwargs["x_range"] else None,
+            y_range=kwargs["y_range"] if kwargs["y_range"] else None,
+        ).transpose((2, 0, 3, 4, 1))
+        return image
+    except Exception as e:
+        return str(e), "red"
+
+
+def load_channels(request, conn=None, **kwargs):
+    """Load the channels"""
+    try:
+        image_id = kwargs["image_id"]
+        image_wrapper = conn.getObject("Image", image_id)
+        return [channel.getName() for channel in image_wrapper.getChannels()]
+    except Exception as e:
+        return []

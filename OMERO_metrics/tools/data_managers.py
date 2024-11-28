@@ -41,7 +41,7 @@ class ImageManager:
         self.omero_image = omero_image
         self.omero_dataset = self.omero_image.getParent()
         self.dataset_manager = DatasetManager(self._conn, self.omero_dataset)
-        self.context = None
+        self.context = {}
         self.mm_image = None
         self.image_exist = None
         self.image_index = None
@@ -53,6 +53,7 @@ class ImageManager:
         if force_reload or self.mm_image is None:
             self.dataset_manager.load_data()
             self.dataset_manager.is_processed()
+            self.dataset_manager.remove_unsupported_data()
             if self.dataset_manager.processed:
                 self.mm_image = load.load_image(self.omero_image)
             else:
@@ -79,12 +80,18 @@ class ImageManager:
                     self.app_name = TEMPLATE_MAPPINGS_IMAGE.get(
                         self.dataset_manager.mm_dataset.__class__.__name__
                     )[self.image_location]
-                    self.context = load.load_dash_data_image(
-                        self.dataset_manager.mm_dataset,
-                        self.mm_image,
-                        self.image_index,
-                        self.image_location,
-                    )
+                    if self.image_location == "input_data":
+                        self.context = {
+                            "image_index": self.image_index,
+                            "image_id": self.mm_image.data_reference.omero_object_id,
+                            "mm_dataset": self.dataset_manager.mm_dataset,
+                            # "channel_names": self.mm_image.channel_series,
+                            # "image": self.mm_image.array_data
+                        }
+                    elif self.image_location == "output":
+                        message = "No visualization for output images"
+                        logger.warning(message)
+                        self.context, self.app_name = warning_message(message)
                 else:
                     message = "Image does not exist in the dataset yaml file. Unable to visualize"
                     logger.warning(message)
@@ -128,7 +135,7 @@ class DatasetManager:
         self.analysis_config_id = None
         self.analysis_func = None
         self.app_name = None
-        self.context = None
+        self.context = {}
         self.processed = False
         self.microscope = mm_schema.Microscope()
         self.kkm = None
@@ -146,6 +153,11 @@ class DatasetManager:
 
     def is_validated(self):
         return self.mm_dataset.validated if self.mm_dataset else False
+
+    def remove_unsupported_data(self):
+        dump._remove_unsupported_types(self.mm_dataset.input_data)
+        dump._remove_unsupported_types(self.mm_dataset.input_parameters)
+        dump._remove_unsupported_types(self.mm_dataset.output)
 
     def load_data(self, force_reload=True):
         if force_reload or self.mm_dataset is None:
@@ -271,7 +283,17 @@ class DatasetManager:
                 self.app_name = TEMPLATE_MAPPINGS_DATASET.get(
                     self.mm_dataset.__class__.__name__
                 )
-                self.context = load.load_dash_data_dataset(self.mm_dataset)
+
+                if isinstance(
+                    self.mm_dataset, mm_schema.FieldIlluminationDataset
+                ):
+                    self.context["image"], self.context["channel_names"] = (
+                        load.concatenate_images(
+                            self.mm_dataset.input_data.field_illumination_image
+                        )
+                    )
+                    self.remove_unsupported_data()
+                self.context["mm_dataset"] = self.mm_dataset
 
             else:
                 message = "Unknown analysis type. Unable to visualize"
@@ -297,12 +319,6 @@ class DatasetManager:
                 message = "The dataset is not under a project or does not contain images. Unable to visualize"
                 logger.warning(message)
                 self.context, self.app_name = warning_message(message)
-
-    def save_settings(self):
-        pass
-
-    def delete_data(self):
-        pass
 
 
 class ProjectManager:
