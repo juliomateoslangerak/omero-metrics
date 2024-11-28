@@ -421,7 +421,10 @@ def update_image(*args, **kwargs):
             image_id=image_id,
             c_range=channel_index,
             t_range=0,
-        )
+            x_range=None,
+            y_range=None,
+            z_range=None,
+        )[0, :, :, :, 0]
         mip_z = np.max(stack, axis=0)
 
         fig = px.imshow(
@@ -483,6 +486,7 @@ def update_channels_psf_image(*args, **kwargs):
         kwargs["request"],
         image_id=kwargs["session_state"]["context"]["image_id"],
     )
+    print(channel_names)
     channel_options = [
         {"label": c, "value": f"{i}"} for i, c in enumerate(channel_names)
     ]
@@ -537,7 +541,10 @@ def callback_mip(*args, **kwargs):
             image_id=image_id,
             c_range=channel_index,
             t_range=0,
-        )
+            x_range=None,
+            y_range=None,
+            z_range=None,
+        )[0, :, :, :, 0]
         x0, xf, y0, yf = crop_bead_index(bead, min_dist, stack)
         mip_x, mip_y, mip_z = mip_graphs(x0, xf, y0, yf, stack)
         fig_mip_go = fig_mip(mip_x, mip_y, mip_z)

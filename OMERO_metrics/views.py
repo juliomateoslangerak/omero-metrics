@@ -442,7 +442,7 @@ def load_image_dash(request, conn=None, **kwargs):
     try:
         image_id = kwargs["image_id"]
         image_wrapper = conn.getObject("Image", image_id)
-        image_wrapper = ImageManager(conn, image_wrapper)
+        print(image_wrapper.getName())
         image = omero_tools.get_image_intensities(
             image=image_wrapper,
             z_range=kwargs["z_range"] if kwargs["z_range"] else None,
@@ -451,11 +451,13 @@ def load_image_dash(request, conn=None, **kwargs):
             x_range=kwargs["x_range"] if kwargs["x_range"] else None,
             y_range=kwargs["y_range"] if kwargs["y_range"] else None,
         ).transpose((2, 0, 3, 4, 1))
+        print(f"Image shape: {image}")
         return image
     except Exception as e:
         return str(e), "red"
 
 
+@login_required(setGroupContext=True)
 def load_channels(request, conn=None, **kwargs):
     """Load the channels"""
     try:
