@@ -336,9 +336,9 @@ def update_dropdown_menu(_, **kwargs):
         dash.dependencies.Input("pagination", "value"),
     ],
 )
-def update_km_table(*args, **kwargs):
+def update_km_table(page, **kwargs):
     try:
-        page = int(args[0])
+        page = int(page)
         table = load.get_km_mm_metrics_dataset(
             mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
             table_name="key_measurements",
@@ -378,9 +378,9 @@ def update_km_table(*args, **kwargs):
         dash.dependencies.Input("channel_dropdown_foi", "value"),
     ],
 )
-def update_intensity_map(*args, **kwargs):
+def update_intensity_map(channel, **kwargs):
     try:
-        channel = int(args[0])
+        channel = int(channel)
         images = kwargs["session_state"]["context"]["image"]
         image = images[channel]
         image_channel = image[0, 0, :, :]
@@ -430,10 +430,9 @@ def update_intensity_map(*args, **kwargs):
         dash.dependencies.Input("profile-type", "value"),
     ],
 )
-def update_profile_type(*args, **kwargs):
+def update_profile_type(channel, curve_type, **kwargs):
     try:
-        channel = int(args[0])
-        curveType = args[1]
+        channel = int(channel)
         df_intensity_profiles = load.load_table_mm_metrics(
             kwargs["session_state"]["context"]["mm_dataset"].output[
                 "intensity_profiles"
@@ -463,7 +462,7 @@ def update_profile_type(*args, **kwargs):
         df_profile.columns = df_profile.columns.str.replace(
             "Center Vertical", "Vertical (↓)"
         )
-        return df_profile.to_dict("records"), curveType
+        return df_profile.to_dict("records"), curve_type
 
     except Exception as e:
         return [{"Pixel": 0}], "natural"
@@ -525,7 +524,7 @@ def delete_dataset(*args, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def download_dataset_data(*args, **kwargs):
+def download_dataset_data(_, **kwargs):
     if not kwargs["callback_context"].triggered:
         raise dash.no_update
 

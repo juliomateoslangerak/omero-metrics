@@ -470,7 +470,7 @@ def update_image(
     dash.dependencies.Output("channel_selector_psf_image", "data"),
     [dash.dependencies.Input("blank-input", "children")],
 )
-def update_channels_psf_image(*args, **kwargs):
+def update_channels_psf_image(_, **kwargs):
     channel_names = kwargs["session_state"]["context"]["channel_names"]
     channel_options = [
         {"label": c.name, "value": f"{i}"}
@@ -553,7 +553,6 @@ def line_graph_axis(bead_index, channel_index, axis, kwargs):
     df_axis = load.load_table_mm_metrics(
         mm_dataset.output[f"bead_profiles_{axis}"]
     )
-    print(df_axis)
     image_id = kwargs["session_state"]["context"]["image_id"]
     df_axis_3d = df_axis[
         df_axis.columns[df_axis.columns.str.startswith(str(image_id))]

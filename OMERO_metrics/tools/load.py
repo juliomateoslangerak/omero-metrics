@@ -454,6 +454,8 @@ def get_km_mm_metrics_dataset(
         if k not in columns_exceptions and v
     }
     df = pd.DataFrame(table_date)
+    df = df.replace("nan", np.NaN)
+    df = df.apply(lambda col: pd.to_numeric(col, errors="ignore"))
     return df
 
 
@@ -461,6 +463,7 @@ def load_table_mm_metrics(table):
     if table and isinstance(table, mm_schema.Table):
         table_date = {v.name: v.values for v in table.columns if v}
         df = pd.DataFrame(table_date)
+        df = df.replace("nan", np.NaN)
         df = df.apply(lambda col: pd.to_numeric(col, errors="ignore"))
         return df
     elif (
@@ -475,6 +478,7 @@ def load_table_mm_metrics(table):
             df = pd.DataFrame(table_date)
             df = df.apply(lambda col: pd.to_numeric(col, errors="ignore"))
             df.columns = [modify_column_name(col, start) for col in df.columns]
+            df = df.replace("nan", np.NaN)
             start = df.columns.str.extract(r"ch(\d+)").astype(int)[0].max() + 1
             df_list.append(df)
         return pd.concat(df_list, axis=1)
