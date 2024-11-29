@@ -318,7 +318,7 @@ omero_dataset_foi.layout = dmc.MantineProvider(
     dash.dependencies.Output("channel_dropdown_foi", "data"),
     [dash.dependencies.Input("blank-input", "children")],
 )
-def update_dropdown_menu(*args, **kwargs):
+def update_dropdown_menu(_, **kwargs):
     try:
         channel = kwargs["session_state"]["context"]["channel_names"]
         return [
@@ -563,7 +563,7 @@ def download_dataset_data(*args, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def download_table_data(*args, **kwargs):
+def download_table_data(_, **kwargs):
     if not kwargs["callback_context"].triggered:
         raise dash.no_update
 

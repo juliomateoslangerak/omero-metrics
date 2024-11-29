@@ -296,7 +296,7 @@ dash_form_project.layout = dmc.MantineProvider(
     dash.dependencies.Output("setup-text", "children"),
     [dash.dependencies.Input("blank", "children")],
 )
-def update_setup(*args, **kwargs):
+def update_setup(_, **kwargs):
     input_parameters = kwargs["session_state"]["context"]["input_parameters"][
         "input_parameters"
     ]
@@ -312,7 +312,7 @@ def update_setup(*args, **kwargs):
     dash.dependencies.Output("sample_container", "children"),
     [dash.dependencies.Input("blank", "children")],
 )
-def update_sample(*args, **kwargs):
+def update_sample(_, **kwargs):
     sample = kwargs["session_state"]["context"]["input_parameters"]["sample"]
     mm_sample = getattr(mm_schema, sample["type"])
     mm_sample = mm_sample(**sample["fields"])
@@ -325,10 +325,10 @@ def update_sample(*args, **kwargs):
     dash.dependencies.Output("framework-multi-select", "value"),
     [dash.dependencies.Input("blank", "children")],
 )
-def list_images_multi_selector(*args, **kwargs):
+def list_images_multi_selector(_, **kwargs):
     list_images = kwargs["session_state"]["context"]["list_images"]
     return list_images, [
-        list_images[i]["value"] for i in range(len(list_images))
+        list_images[i]["value"] for i, _ in enumerate(list_images)
     ]
 
 
@@ -336,8 +336,7 @@ def list_images_multi_selector(*args, **kwargs):
     dash.dependencies.Output("framework-multi-select", "error"),
     [dash.dependencies.Input("framework-multi-select", "value")],
 )
-def multi_selector_callback(*args, **kwargs):
-    value = args[0]
+def multi_selector_callback(value, **kwargs):
     return "Select at least 1." if len(value) < 1 else ""
 
 
@@ -353,11 +352,10 @@ def multi_selector_callback(*args, **kwargs):
         dash.dependencies.State("stepper-basic-usage", "active"),
     ],
 )
-def update_review_form(*args, **kwargs):
-    form_content = args[1]
-    multi_selector = args[2]
-    current = args[4]
-    input_parameters = args[3]
+def update_review_form(
+    _, form_content, multi_selector, input_parameters, current, **kwargs
+):
+
     selectors = dmc.MultiSelect(
         label="Images selected",
         data=[f"Image ID: {i}" for i in multi_selector],
@@ -443,14 +441,11 @@ dash_form_project.clientside_callback(
     ],
     prevent_initial_call=True,
 )
-def run_analysis(*args, **kwargs):
+def run_analysis(_, list_images, current, comment, **kwargs):
     config = kwargs["session_state"]["context"]["input_parameters"]
     input_parameters = config["input_parameters"]
     sample = config["sample"]
     dataset_id = kwargs["session_state"]["context"]["dataset_id"]
-    list_images = args[1]
-    current = args[2]
-
     if current == 2:
         sleep(1)
         try:
@@ -469,7 +464,7 @@ def run_analysis(*args, **kwargs):
                 mm_sample=mm_sample,
                 list_images=list_images,
                 mm_input_parameters=mm_input_parameters,
-                comment=args[3],
+                comment=comment,
             )
 
             return (

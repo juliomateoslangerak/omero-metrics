@@ -491,3 +491,33 @@
 #         scene_zaxis_showticklabels=False,
 #     )
 #     return fig
+# @login_required(setGroupContext=True)
+# def load_image_dash(request, conn=None, **kwargs):
+#     """Load the image"""
+#     try:
+#         image_id = kwargs["image_id"]
+#         image_wrapper = conn.getObject("Image", image_id)
+#         print(image_wrapper.getName())
+#         image = omero_tools.get_image_intensities(
+#             image=image_wrapper,
+#             z_range=kwargs["z_range"] if kwargs["z_range"] else None,
+#             c_range=kwargs["c_range"] if kwargs["c_range"] else None,
+#             t_range=kwargs["t_range"] if kwargs["t_range"] else None,
+#             x_range=kwargs["x_range"] if kwargs["x_range"] else None,
+#             y_range=kwargs["y_range"] if kwargs["y_range"] else None,
+#         ).transpose((2, 0, 3, 4, 1))
+#         print(request.session["django_plotly_dash"])
+#         return image
+#     except Exception as e:
+#         return str(e), "red"
+#
+#
+# @login_required(setGroupContext=True)
+# def load_channels(request, conn=None, **kwargs):
+#     """Load the channels"""
+#     try:
+#         image_id = kwargs["image_id"]
+#         image_wrapper = conn.getObject("Image", image_id)
+#         return [channel.getName() for channel in image_wrapper.getChannels()]
+#     except Exception as e:
+#         return []

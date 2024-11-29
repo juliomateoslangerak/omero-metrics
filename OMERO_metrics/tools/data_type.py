@@ -1,3 +1,5 @@
+from microscopemetrics.analyses import field_illumination, psf_beads
+
 DATASET_TYPES = ["FieldIlluminationDataset", "PSFBeadsDataset"]
 
 INPUT_IMAGES_MAPPING = {
@@ -17,7 +19,20 @@ DATASET_IMAGES = {
     },
 }
 
-
+DATA_TYPE = {
+    "FieldIlluminationInputParameters": [
+        "FieldIlluminationDataset",
+        "FieldIlluminationInputData",
+        "field_illumination_image",
+        field_illumination.analyse_field_illumination,
+    ],
+    "PSFBeadsInputParameters": [
+        "PSFBeadsDataset",
+        "PSFBeadsInputData",
+        "psf_beads_images",
+        psf_beads.analyse_psf_beads,
+    ],
+}
 KKM_MAPPINGS = {
     "FieldIlluminationDataset": [
         "max_intensity",

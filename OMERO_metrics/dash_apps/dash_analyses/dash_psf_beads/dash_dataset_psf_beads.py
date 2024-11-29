@@ -186,12 +186,12 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
         dash.dependencies.Input("pagination", "value"),
     ],
 )
-def func_psf_callback(*args, **kwargs):
+def func_psf_callback(pagination_value, **kwargs):
     table_km = load.get_km_mm_metrics_dataset(
         mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
         table_name="key_measurements",
     )
-    page = int(args[0])
+    page = int(pagination_value)
     kkm = [
         "channel_name",
         "considered_valid_count",
@@ -268,7 +268,7 @@ def delete_dataset(*args, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def download_dataset_data(*args, **kwargs):
+def download_dataset_data(_, **kwargs):
     if not kwargs["callback_context"].triggered:
         raise dash.no_update
 
@@ -306,7 +306,7 @@ def download_dataset_data(*args, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def download_table_data(*args, **kwargs):
+def download_table_data(_, **kwargs):
     if not kwargs["callback_context"].triggered:
         raise dash.no_update
 

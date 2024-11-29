@@ -40,7 +40,9 @@ class ImageManager:
             raise ValueError("the object must be an ImageWrapper")
         self.omero_image = omero_image
         self.omero_dataset = self.omero_image.getParent()
-        self.dataset_manager = DatasetManager(self._conn, self.omero_dataset)
+        self.dataset_manager = DatasetManager(
+            self._conn, self.omero_dataset, False
+        )
         self.context = {}
         self.mm_image = None
         self.image_exist = None
@@ -52,10 +54,9 @@ class ImageManager:
         logger.info("Loading data CALL")
         if force_reload or self.mm_image is None:
             self.dataset_manager.load_data()
-            self.dataset_manager.is_processed()
-            self.dataset_manager.remove_unsupported_data()
             if self.dataset_manager.processed:
                 self.mm_image = load.load_image(self.omero_image)
+                self.dataset_manager.remove_unsupported_data()
             else:
                 self.mm_image = None
         else:
@@ -85,8 +86,8 @@ class ImageManager:
                             "image_index": self.image_index,
                             "image_id": self.mm_image.data_reference.omero_object_id,
                             "mm_dataset": self.dataset_manager.mm_dataset,
-                            # "channel_names": self.mm_image.channel_series,
-                            # "image": self.mm_image.array_data
+                            "channel_names": self.mm_image.channel_series,
+                            "image": self.mm_image.array_data,
                         }
                     elif self.image_location == "output":
                         message = "No visualization for output images"
@@ -126,7 +127,6 @@ class DatasetManager:
             self.omero_dataset = omero_dataset
         else:
             raise ValueError("datasets must be a DatasetWrapper")
-
         self.omero_project = self.omero_dataset.getParent()
         self.input_parameters = None
         self.load_images = load_images
@@ -146,10 +146,10 @@ class DatasetManager:
         ]
 
     def is_processed(self):
-        if self.mm_dataset:
-            self.processed = self.mm_dataset.processed
-        else:
-            self.processed = False
+        self.processed = (
+            self.mm_dataset.processed if self.mm_dataset else False
+        )
+        return self.processed
 
     def is_validated(self):
         return self.mm_dataset.validated if self.mm_dataset else False
@@ -302,7 +302,7 @@ class DatasetManager:
         else:
             if self.omero_project and len(self.attached_images) > 0:
                 self.input_parameters = load.load_config_file_data(
-                    self._conn, self.omero_project
+                    self.omero_project
                 )
                 if self.input_parameters:
                     self.app_name = "omero_dataset_form"
@@ -450,9 +450,7 @@ class ProjectManager:
 
     def load_config_file(self):
         if self.setup is None:
-            self.setup = load.load_config_file_data(
-                self._conn, self.omero_project
-            )
+            self.setup = load.load_config_file_data(self.omero_project)
 
     def load_threshold_file(self):
         if self.threshold is None:

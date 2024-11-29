@@ -93,7 +93,7 @@ def create_control_panel():
                         labelPosition="center",
                     ),
                     dmc.Select(
-                        id="my-dropdown1",
+                        id="channel_dropdown",
                         label="Channel",
                         w="100%",
                         value="0",
@@ -283,10 +283,10 @@ omero_image_foi.layout = dmc.MantineProvider(
 
 
 @omero_image_foi.expanded_callback(
-    dash.dependencies.Output("my-dropdown1", "data"),
+    dash.dependencies.Output("channel_dropdown", "data"),
     [dash.dependencies.Input("blank-input", "children")],
 )
-def callback_channel(*args, **kwargs):
+def callback_channel(_, **kwargs):
     channel_names = kwargs["session_state"]["context"]["channel_names"]
     channel_list = [
         {"label": c.name, "value": f"{i}", "description": f"Channel {i+1}"}
@@ -298,24 +298,22 @@ def callback_channel(*args, **kwargs):
 @omero_image_foi.expanded_callback(
     dash.dependencies.Output("rois-graph", "figure"),
     [
-        dash.dependencies.Input("my-dropdown1", "value"),
+        dash.dependencies.Input("channel_dropdown", "value"),
         dash.dependencies.Input("my-dropdown2", "value"),
         dash.dependencies.Input("checkbox-state", "checked"),
         dash.dependencies.Input("switch-invert-colors", "checked"),
         dash.dependencies.Input("segmented", "value"),
     ],
 )
-def callback_image(*args, **kwargs):
-    color = args[1]
-    checked_contour = args[2]
-    inverted_color = args[3]
+def callback_image(
+    channel, color, checked_contour, inverted_color, roi, **kwargs
+):
     mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
     image_id = kwargs["session_state"]["context"]["image_id"]
-    roi = args[4]
     if inverted_color:
         color = color + "_r"
     image_omero = kwargs["session_state"]["context"]["image"]
-    image_data = image_omero[0, 0, :, :, int(args[0])]
+    image_data = image_omero[0, 0, :, :, int(channel)]
     image_data = rescale_intensity(
         image_data, in_range=(0, image_data.max()), out_range=(0.0, 1.0)
     )
@@ -327,7 +325,7 @@ def callback_image(*args, **kwargs):
     df_rects.columns = df_rects.columns.str.upper()
     df_points.columns = df_points.columns.str.upper()
 
-    df_point_channel = df_points[df_points["C"] == int(args[0])].copy()
+    df_point_channel = df_points[df_points["C"] == int(channel)].copy()
 
     fig = px.imshow(
         image_data,
@@ -423,16 +421,16 @@ def callback_image(*args, **kwargs):
 
 @omero_image_foi.expanded_callback(
     dash.dependencies.Output("intensity_profile", "data"),
-    [dash.dependencies.Input("my-dropdown1", "value")],
+    [dash.dependencies.Input("channel_dropdown", "value")],
 )
-def update_intensity_profiles(*args, **kwargs):
+def update_intensity_profiles(channel, **kwargs):
     image_index = int(kwargs["session_state"]["context"]["image_index"])
     df_intensity_profiles = load.load_table_mm_metrics(
         kwargs["session_state"]["context"]["mm_dataset"].output[
             "intensity_profiles"
         ][image_index]
     )
-    ch = f"ch{int(args[0]):02d}"
+    ch = f"ch{int(channel):02d}"
     df_profile = df_intensity_profiles[
         df_intensity_profiles.columns[
             df_intensity_profiles.columns.str.startswith(ch)

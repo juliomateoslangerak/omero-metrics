@@ -3,9 +3,6 @@ import dash_mantine_components as dmc
 import pandas as pd
 from dash import html, dash_table
 
-stylesheets = [
-    "https://unpkg.com/@mantine/charts@7/styles.css",
-]
 
 df = pd.read_csv(
     "https://raw.githubusercontent.com/plotly/datasets/master/gapminder2007.csv"
@@ -50,7 +47,7 @@ dashboard_name = "Microscope"
 dash_app_microscope = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
-    external_stylesheets=stylesheets,
+    external_stylesheets=dmc.styles.CHARTS,
 )
 
 dash_app_microscope.layout = dmc.MantineProvider(

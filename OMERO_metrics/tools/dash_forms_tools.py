@@ -13,7 +13,7 @@ from typing import get_origin, get_args, Union
 
 
 def extract_form_data(form_content, class_name):
-    replace_str = class_name + "_"
+    replace_str = f"{class_name}_"
     return {
         i["props"]["id"].replace(replace_str, ""): i["props"]["value"]
         for i in form_content

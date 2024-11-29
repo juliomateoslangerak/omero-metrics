@@ -15,12 +15,11 @@ def fig_mip(mip_x, mip_y, mip_z):
     fig = fig.add_trace(mip_y.data[0], row=1, col=2)
     fig = fig.add_trace(mip_z.data[0], row=2, col=1)
     fig = fig.update_layout(
-        # title_text=title,
         coloraxis=dict(colorscale="hot"),
         autosize=False,
     )
     fig.update_layout(
-        {  # "margin": {"l": 10, "r": 10, "t": 10, "b": 10},
+        {
             "xaxis": {
                 "visible": False,
                 "automargin": False,
@@ -59,9 +58,6 @@ def fig_mip(mip_x, mip_y, mip_z):
             },
         }
     )
-    # fig = fig.update_yaxes(automargin=False)
-    # fig = fig.update_xaxes(automargin=False)
-
     return fig
 
 
@@ -106,7 +102,6 @@ def mip_graphs(
 def crop_bead_index(bead, min_dist, stack):
     x = bead["center_x"].values[0]
     y = bead["center_y"].values[0]
-    # z = bead["center_z"].values[0]
     x0 = max(0, x - min_dist)
     y0 = max(0, y - min_dist)
     xf = min(stack.shape[2], x + min_dist)

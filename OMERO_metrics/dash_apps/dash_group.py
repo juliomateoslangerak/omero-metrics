@@ -67,24 +67,11 @@ dash_app_group.layout = dmc.MantineProvider(
                                 ),
                             ],
                         ),
-                        dmc.Group(
-                            [
-                                dmc.Button(
-                                    id="delete_group_data",
-                                    children="Delete",
-                                    color="red",
-                                    variant="filled",
-                                    leftSection=DashIconify(
-                                        icon="ic:round-delete-forever"
-                                    ),
-                                ),
-                                dmc.Badge(
-                                    "Group Analysis",
-                                    color=THEME["primary"],
-                                    variant="dot",
-                                    size="lg",
-                                ),
-                            ]
+                        dmc.Badge(
+                            "Group Analysis",
+                            color=THEME["primary"],
+                            variant="dot",
+                            size="lg",
                         ),
                     ],
                     justify="space-between",
@@ -266,16 +253,6 @@ dash_app_group.layout = dmc.MantineProvider(
                                         id="project_file_annotations_table",
                                         style={"margin": "10px"},
                                     ),
-                                    # dmc.Divider(mb="md"),
-                                    # dmc.Text(
-                                    #     "Map Annotations",
-                                    #     c=THEME["primary"],
-                                    #     size="xl",
-                                    # ),
-                                    # html.Div(
-                                    #     id="project_map_annotations_table",
-                                    #     style={"margin": "10px"},
-                                    # ),
                                     html.Div(id="blank-input"),
                                     html.Div(id="result"),
                                 ],
@@ -344,30 +321,25 @@ def render_content(*args, **kwargs):
 
 @dash_app_group.expanded_callback(
     dash.dependencies.Output("project_file_annotations_table", "children"),
-    # dash.dependencies.Output("project_map_annotations_table", "children"),
     [
         dash.dependencies.Input("select_mimetype", "value"),
         dash.dependencies.Input("date-picker", "value"),
     ],
     prevent_initial_call=True,
 )
-def load_table_project(*args, **kwargs):
+def load_table_project(mime_type, dates, **kwargs):
     file_ann = kwargs["session_state"]["context"]["file_ann"]
-    data_filter = args[1]
-    if data_filter is not None:
+    if dates is not None:
         file_ann = file_ann[
-            (file_ann["Date"].dt.date >= pd.to_datetime(data_filter[0]).date())
-            & (
-                file_ann["Date"].dt.date
-                <= pd.to_datetime(data_filter[1]).date()
-            )
+            (file_ann["Date"].dt.date >= pd.to_datetime(dates[0]).date())
+            & (file_ann["Date"].dt.date <= pd.to_datetime(dates[1]).date())
         ]
 
     else:
         pass
-    if int(args[0]) > 0 and len(file_ann.Mimetype.unique()) > 0:
+    if int(mime_type) > 0 and len(file_ann.Mimetype.unique()) > 0:
         file_ann = file_ann[
-            file_ann.Mimetype == file_ann.Mimetype.unique()[int(args[0]) - 1]
+            file_ann.Mimetype == file_ann.Mimetype.unique()[int(mime_type) - 1]
         ]
     else:
         pass
@@ -378,7 +350,7 @@ def load_table_project(*args, **kwargs):
     file_ann_subset.loc[file_ann_subset.index, "Download"] = [
         (
             f"[CSV]({request.build_absolute_uri(reverse(viewname='omero_table', args=[i, 'csv']))})"
-            f" | [JSON]({request.build_absolute_uri(reverse(viewname='omero_table', args=[i, 'json']))}) "
+            f" | [JSON]({request.build_absolute_uri(reverse(viewname='omero_table', args=[i, 'json']))})"
             if mt == "OMERO.tables"
             else f"[YAML]({request.build_absolute_uri(reverse(viewname='download_annotation', args=[id_f]))})"
         )
@@ -408,25 +380,6 @@ def load_table_project(*args, **kwargs):
         style_header=TABLE_HEADER_STYLE,
         style_data_conditional=STYLE_DATA_CONDITIONAL,
     )
-    # map_ann = kwargs["session_state"]["context"]["map_ann"]
-    # map_ann_subset = map_ann[
-    #     map_ann.columns[~map_ann.columns.str.contains("ID")]
-    # ]
-    # map_table = dash_table.DataTable(
-    #     id="datatable-interactivity",
-    #     columns=[{"name": i, "id": i} for i in map_ann_subset.columns],
-    #     data=map_ann_subset.to_dict("records"),
-    #     sort_action="native",
-    #     sort_mode="multi",
-    #     row_selectable="multi",
-    #     page_action="native",
-    #     page_current=0,
-    #     page_size=5,
-    #     style_table=TABLE_STYLE,
-    #     style_cell=TABLE_CELL_STYLE,
-    #     style_header=TABLE_HEADER_STYLE,
-    #     style_data_conditional=STYLE_DATA_CONDITIONAL,
-    # )
     return file_ann_table
 
 

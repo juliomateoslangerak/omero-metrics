@@ -1,12 +1,8 @@
-import contextlib
-import dataclasses
 import logging
 import omero
 from OMERO_metrics.tools import omero_tools
 import microscopemetrics_schema.datamodel as mm_schema
 from omero.gateway import BlitzGateway, FileAnnotationWrapper, DatasetWrapper
-from dataclasses import fields
-
 from OMERO_metrics.tools.data_type import DATASET_TYPES
 
 logger = logging.getLogger(__name__)
@@ -20,7 +16,7 @@ def _empty_data_reference(reference: mm_schema.DataReference) -> None:
     reference.omero_object_id = None
 
 
-def delete_data_references(mm_obj: mm_schema.MetricsObject) -> None:
+def delete_data_references(mm_obj: mm_schema.MetricsObject) -> list:
     if isinstance(mm_obj, mm_schema.DataReference):
         _empty_data_reference(mm_obj)
     elif isinstance(mm_obj, mm_schema.MetricsObject):
@@ -85,12 +81,9 @@ def delete_dataset_file_ann(conn: BlitzGateway, dataset: DatasetWrapper):
                     )
 
 
-def delete_all_mm_analysis(conn, group_id):
+def delete_all_annotations(conn, group_id):
     all_annotations = conn.getObjects("Annotation", opts={"group": group_id})
-    rois = conn.getObjects("Roi", opts={"group": group_id})
-    rois_ids = [roi.getId() for roi in rois if roi.canDelete()]
     obj_ids = []
-    # TODO: Delete output images
     for ann in all_annotations:
         if ann.getNs() and ann.getNs().startswith("microscopemetrics"):
             obj_ids.append(ann.getId())
@@ -103,8 +96,6 @@ def delete_all_mm_analysis(conn, group_id):
                 deleteChildren=True,
                 wait=True,
             )
-        if len(rois_ids) > 0:
-            conn.deleteObjects(graph_spec="Roi", obj_ids=rois_ids, wait=True)
         return "All microscopemetrics analysis deleted", "green"
     except Exception as e:
         if isinstance(e, omero.CmdError):

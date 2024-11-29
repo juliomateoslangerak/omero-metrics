@@ -1,50 +1,20 @@
 from django.utils.datetime_safe import datetime
-
-from OMERO_metrics.dash_apps.dash_analyses.dash_foi.dash_dataset_foi import (
-    dashboard_name,
-)
-from OMERO_metrics.tools import delete
-from omeroweb.webclient.decorators import login_required, render_response
-from OMERO_metrics.tools.data_managers import (
-    DatasetManager,
-    ProjectManager,
-    ImageManager,
-)
 from django.shortcuts import render
-
-from OMERO_metrics.tools.dump import _remove_unsupported_types
-from OMERO_metrics.tools.omero_tools import (
-    get_ref_from_object,
-)
-from OMERO_metrics.tools.load import load_config_file_data
-from OMERO_metrics.tools.load import load_image
-from microscopemetrics_schema import datamodel as mm_schema
-from microscopemetrics.analyses import field_illumination, psf_beads
-from OMERO_metrics.tools import dump
-import omero
-import logging
-from OMERO_metrics.tools import load
 from django.urls import reverse
+from omeroweb.webclient.decorators import login_required, render_response
+from microscopemetrics_schema import datamodel as mm_schema
+from OMERO_metrics.tools import load
+from OMERO_metrics.tools import dump
 from OMERO_metrics.tools import omero_tools
+from OMERO_metrics.tools import data_managers
+from OMERO_metrics.tools import delete
+from OMERO_metrics.tools import data_type
+import logging
+from omero.gateway import FileAnnotationWrapper
+import omero
 
 logger = logging.getLogger(__name__)
 
-from omero.gateway import FileAnnotationWrapper
-
-DATA_TYPE = {
-    "FieldIlluminationInputParameters": [
-        "FieldIlluminationDataset",
-        "FieldIlluminationInputData",
-        "field_illumination_image",
-        field_illumination.analyse_field_illumination,
-    ],
-    "PSFBeadsInputParameters": [
-        "PSFBeadsDataset",
-        "PSFBeadsInputData",
-        "psf_beads_images",
-        psf_beads.analyse_psf_beads,
-    ],
-}
 
 template_name_dash = "OMERO_metrics/dash_template/dash_template.html"
 
@@ -100,8 +70,8 @@ def image_rois(request, image_id, conn=None, **kwargs):
     thumbnails for the specified image"""
     return render(
         request,
-        "OMERO_metrics/image_rois.html",
-        {"ImageId": image_id},
+        template_name="OMERO_metrics/image_rois.html",
+        context={"ImageId": image_id},
     )
 
 
@@ -110,7 +80,7 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
     dash_context = request.session.get("django_plotly_dash", dict())
     try:
         image_wrapper = conn.getObject("Image", image_id)
-        im = ImageManager(conn, image_wrapper)
+        im = data_managers.ImageManager(conn, image_wrapper)
         im.load_data()
         im.visualize_data()
         context = im.context
@@ -136,7 +106,7 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
     dash_context = request.session.get("django_plotly_dash", dict())
     try:
         project_wrapper = conn.getObject("Project", project_id)
-        pm = ProjectManager(conn, project_wrapper)
+        pm = data_managers.ProjectManager(conn, project_wrapper)
         pm.load_data()
         pm.is_homogenized()
         pm.load_config_file()
@@ -195,7 +165,9 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
     dash_context = request.session.get("django_plotly_dash", dict())
     try:
         dataset_wrapper = conn.getObject("Dataset", dataset_id)
-        dm = DatasetManager(conn, dataset_wrapper, load_images=True)
+        dm = data_managers.DatasetManager(
+            conn, dataset_wrapper, load_images=True
+        )
         dm.load_data()
         dm.visualize_data()
         dash_context["context"] = dm.context
@@ -238,7 +210,7 @@ def save_config(request, conn=None, **kwargs):
         mm_input_parameters = kwargs["input_parameters"]
         mm_sample = kwargs["sample"]
         project_wrapper = conn.getObject("Project", project_id)
-        setup = load_config_file_data(conn, project_wrapper)
+        setup = load.load_config_file_data(project_wrapper)
         try:
             if setup:
                 to_delete = []
@@ -282,15 +254,20 @@ def run_analysis_view(request, conn=None, **kwargs):
         list_images = kwargs["list_images"]
         comment = kwargs["comment"]
         list_mm_images = [
-            load_image(conn.getObject("Image", int(i))) for i in list_images
+            load.load_image(conn.getObject("Image", int(i)))
+            for i in list_images
         ]
         mm_sample = kwargs["mm_sample"]
         mm_input_parameters = kwargs["mm_input_parameters"]
         input_data = getattr(
-            mm_schema, DATA_TYPE[mm_input_parameters.class_name][1]
+            mm_schema, data_type.DATA_TYPE[mm_input_parameters.class_name][1]
         )
         input_data = input_data(
-            **{DATA_TYPE[mm_input_parameters.class_name][2]: list_mm_images}
+            **{
+                data_type.DATA_TYPE[mm_input_parameters.class_name][
+                    2
+                ]: list_mm_images
+            }
         )
         mm_microscope = mm_schema.Microscope(
             name=project_wrapper.getDetails().getGroup().getName()
@@ -299,12 +276,12 @@ def run_analysis_view(request, conn=None, **kwargs):
             orcid="0000-0002-1825-0097", name=conn.getUser().getName()
         )
         mm_dataset = getattr(
-            mm_schema, DATA_TYPE[mm_input_parameters.class_name][0]
+            mm_schema, data_type.DATA_TYPE[mm_input_parameters.class_name][0]
         )
         mm_dataset = mm_dataset(
             name=dataset_wrapper.getName(),
             description=dataset_wrapper.getDescription(),
-            data_reference=get_ref_from_object(dataset_wrapper),
+            data_reference=omero_tools.get_ref_from_object(dataset_wrapper),
             input_parameters=mm_input_parameters,
             microscope=mm_microscope,
             sample=mm_sample,
@@ -314,7 +291,9 @@ def run_analysis_view(request, conn=None, **kwargs):
             ),
             experimenter=mm_experimenter,
         )
-        run_status = DATA_TYPE[mm_input_parameters.class_name][3](mm_dataset)
+        run_status = data_type.DATA_TYPE[mm_input_parameters.class_name][3](
+            mm_dataset
+        )
         if run_status and mm_dataset.processed:
             try:
                 if comment:
@@ -352,10 +331,14 @@ def delete_all(request, conn=None, **kwargs):
     """Delete all the files"""
     try:
         group_id = kwargs["group_id"]
-        message, color = delete.delete_all_mm_analysis(conn, group_id)
+        for project in conn.getObjects("Project", opts={"group": group_id}):
+            pm = data_managers.ProjectManager(conn, project)
+            pm.load_data()
+            pm.delete_processed_data(conn)
+        message, color = delete.delete_all_annotations(conn, group_id)
         return message, color
     except Exception as e:
-        return (str(e), "red")
+        return str(e), "red"
 
 
 @login_required(setGroupContext=True)
@@ -364,7 +347,7 @@ def delete_dataset(request, conn=None, **kwargs):
     dataset_id = kwargs["dataset_id"]
     logger.info(f"Deleting dataset {dataset_id}")
     dataset_wrapper = conn.getObject("Dataset", dataset_id)
-    dm = DatasetManager(conn, dataset_wrapper, load_images=False)
+    dm = data_managers.DatasetManager(conn, dataset_wrapper, load_images=False)
     dm.load_data()
     try:
         dm.delete_processed_data(conn)
@@ -379,7 +362,7 @@ def delete_project(request, conn=None, **kwargs):
     project_id = kwargs["project_id"]
     logger.info(f"Deleting dataset {project_id}")
     project_wrapper = conn.getObject("Project", project_id)
-    pm = ProjectManager(conn, project_wrapper)
+    pm = data_managers.ProjectManager(conn, project_wrapper)
     pm.load_data()
     try:
         pm.delete_processed_data(conn)
@@ -434,35 +417,3 @@ def save_threshold(request, conn=None, **kwargs):
             )
         else:
             return "Something happened. Couldn't save thresholds.", "red"
-
-
-@login_required(setGroupContext=True)
-def load_image_dash(request, conn=None, **kwargs):
-    """Load the image"""
-    try:
-        image_id = kwargs["image_id"]
-        image_wrapper = conn.getObject("Image", image_id)
-        print(image_wrapper.getName())
-        image = omero_tools.get_image_intensities(
-            image=image_wrapper,
-            z_range=kwargs["z_range"] if kwargs["z_range"] else None,
-            c_range=kwargs["c_range"] if kwargs["c_range"] else None,
-            t_range=kwargs["t_range"] if kwargs["t_range"] else None,
-            x_range=kwargs["x_range"] if kwargs["x_range"] else None,
-            y_range=kwargs["y_range"] if kwargs["y_range"] else None,
-        ).transpose((2, 0, 3, 4, 1))
-        print(f"Image shape: {image}")
-        return image
-    except Exception as e:
-        return str(e), "red"
-
-
-@login_required(setGroupContext=True)
-def load_channels(request, conn=None, **kwargs):
-    """Load the channels"""
-    try:
-        image_id = kwargs["image_id"]
-        image_wrapper = conn.getObject("Image", image_id)
-        return [channel.getName() for channel in image_wrapper.getChannels()]
-    except Exception as e:
-        return []

@@ -12,7 +12,7 @@ from omero.gateway import (
 import microscopemetrics_schema.datamodel as mm_schema
 from linkml_runtime.loaders import yaml_loader
 import pandas as pd
-from OMERO_metrics.tools import omero_tools, dump
+from OMERO_metrics.tools import omero_tools
 import re
 import omero
 from datetime import datetime
@@ -126,7 +126,7 @@ def image_exist(image_id, mm_dataset):
     return image_found, image_location, index
 
 
-def load_config_file_data(conn, project):
+def load_config_file_data(project):
     setup = None
     for ann in project.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
@@ -185,7 +185,7 @@ def load_project(
 
 
 def load_dataset(
-    dataset: DatasetWrapper, load_images: bool = True
+    dataset: DatasetWrapper, load_images: bool
 ) -> mm_schema.MetricsDataset:
     mm_datasets = []
     for ann in dataset.listAnnotations():
@@ -302,7 +302,7 @@ def load_image(
         ]
     )
     source_images = []
-    # array_data = _load_image_intensities(image) if load_array else None
+    array_data = _load_image_intensities(image) if load_array else None
     return mm_schema.Image(
         name=image.getName(),
         description=image.getDescription(),
@@ -319,7 +319,7 @@ def load_image(
         time_series=time_series,
         channel_series=channel_series,
         source_images=source_images,
-        array_data=[],
+        array_data=array_data,
     )
 
 

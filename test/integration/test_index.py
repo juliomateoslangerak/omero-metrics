@@ -24,12 +24,6 @@ class TestLoadIndexPage(IWebTest):
         user = self.new_client_and_user(privileges=None)
         return user
 
-    # @pytest.fixture(scope="session")
-    # def server_structure(self):
-    #     with open("test/integration/server_structure.yaml", "r") as f:
-    #         server_structure = yaml.load(f, Loader=yaml.SafeLoader)
-    #     return server_structure
-
     def test_load_index(self, user1):
         """Test loading the app index page"""
         conn = get_connection(user1)

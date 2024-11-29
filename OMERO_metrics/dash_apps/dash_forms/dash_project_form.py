@@ -350,8 +350,8 @@ def stepper_callback(*args, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def update_sample_container(*args, **kwargs):
-    mm_sample = MAPPINGS[int(args[0])][0]
+def update_sample_container(sample_type_selector, **kwargs):
+    mm_sample = MAPPINGS[int(sample_type_selector)][0]
     form_manager = dft.DashForm(
         mm_sample, disabled=False, form_id="sample_content"
     )
@@ -366,8 +366,8 @@ def update_sample_container(*args, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def update_input_parameters(*args, **kwargs):
-    analysis_type = MAPPINGS[int(args[0])][2].__name__
+def update_input_parameters(sample_type_selector, **kwargs):
+    analysis_type = MAPPINGS[int(sample_type_selector)][2].__name__
     mm_input_parameters = DATASET_TO_INPUT[analysis_type]
     form_manager = dft.DashForm(
         mm_input_parameters, disabled=False, form_id="input_content"
@@ -387,10 +387,11 @@ def update_input_parameters(*args, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def review_configuration(*args, **kwargs):
-    sample = dft.disable_all_fields_dash_form(args[1])
-    input_parameters = dft.disable_all_fields_dash_form(args[2])
-    current = args[3]
+def review_configuration(
+    _, sample_form, input_parameters_form, current, **kwargs
+):
+    sample = dft.disable_all_fields_dash_form(sample_form)
+    input_parameters = dft.disable_all_fields_dash_form(input_parameters_form)
     if current == 1:
         return sample, input_parameters
     else:
@@ -427,19 +428,23 @@ dash_form_project.clientside_callback(
     ],
     prevent_initial_call=True,
 )
-def save_config_dash(*args, **kwargs):
-    current = args[3]
-    if not args[4]:  # No sample type selected
+def save_config_dash(
+    clicked_data,
+    sample_form,
+    input_form,
+    current,
+    sample_type_selector,
+    **kwargs,
+):
+    if not sample_type_selector:  # No sample type selected
         return dash.no_update, False
 
-    analysis_type = MAPPINGS[int(args[4])][2].__name__
-    mm_sample = MAPPINGS[int(args[4])][0]
+    analysis_type = MAPPINGS[int(sample_type_selector)][2].__name__
+    mm_sample = MAPPINGS[int(sample_type_selector)][0]
     mm_input_parameters = DATASET_TO_INPUT[analysis_type]
-    sample_form = args[1]
-    input_form = args[2]
     project_id = int(kwargs["session_state"]["context"]["project_id"])
     request = kwargs["request"]
-    if args[0] > 0 and current == 2:
+    if clicked_data > 0 and current == 2:
         if dft.validate_form(sample_form) and dft.validate_form(input_form):
             sleep(1)
             try:

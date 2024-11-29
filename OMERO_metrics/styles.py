@@ -50,7 +50,6 @@ INPUT_STYLES = {
 }
 
 TABLE_MANTINE_STYLE = {
-    # "backgroundColor": "#e2ffe2",
     "width": "98%",
     "height": "auto",
     "margin": "5px",
@@ -238,7 +237,6 @@ CONTAINER_STYLE = {
 HEADER_PAPER_STYLE = {
     "shadow": "sm",
     "p": "md",
-    # "radius": "lg",
     "mb": "md",
 }
 

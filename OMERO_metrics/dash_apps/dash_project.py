@@ -424,11 +424,11 @@ def update_dropdown(*args, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def update_table(*args, **kwargs):
+def update_table(measurement, dates_range, **kwargs):
     df_list = kwargs["session_state"]["context"]["key_measurements_list"]
     threshold = kwargs["session_state"]["context"]["threshold"]
     kkm = kwargs["session_state"]["context"]["kkm"]
-    measurement = int(args[0])
+    measurement = int(measurement)
     if threshold:
         threshold_kkm = threshold[kkm[measurement]]
         ref = [
@@ -442,7 +442,6 @@ def update_table(*args, **kwargs):
         ]
     else:
         ref = []
-    dates_range = args[1]
     dates = kwargs["session_state"]["context"]["dates"]
     df_filtering = pd.DataFrame(dates, columns=["Date"])
     df_dates = df_filtering[
@@ -455,7 +454,6 @@ def update_table(*args, **kwargs):
             <= datetime.strptime(dates_range[1], "%Y-%m-%d").date()
         )
     ].index.to_list()
-    # kkm = [k.replace("_", " ").title() for k in kkm]
     df_list_filtered = [df_list[i] for i in df_dates]
     data = [
         {"Date": dates[i], "Name": f"Dataset {i}"}
@@ -487,13 +485,12 @@ def update_table(*args, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def update_project_view(*args, **kwargs):
-    if args[0]:
-        page = args[1]
+def update_project_view(clicked_data, page, **kwargs):
+    if clicked_data:
         table = kwargs["session_state"]["context"]["key_measurements_list"]
         dates = kwargs["session_state"]["context"]["dates"]
         kkm = kwargs["session_state"]["context"]["kkm"]
-        selected_dataset = int(args[0]["Name"].split(" ")[-1])
+        selected_dataset = int(clicked_data["Name"].split(" ")[-1])
         df_selected = table[selected_dataset]
         table_kkm = df_selected[kkm].copy()
         table_kkm = table_kkm.round(3)
@@ -508,7 +505,7 @@ def update_project_view(*args, **kwargs):
             "body": page_data.values.tolist(),
             "caption": "Key Measurements for the selected dataset",
         }
-        return ("Key Measurements" " processed at " + str(date), grid, total)
+        return f"Key Measurements processed at {str(date)}", grid, total
 
     else:
         return dash.no_update
@@ -586,9 +583,7 @@ omero_project_dash.clientside_callback(
     ],
     prevent_initial_call=True,
 )
-def update_config_project(*args, **kwargs):
-    sample_form = args[1]
-    input_form = args[2]
+def update_config_project(submit_click, sample_form, input_form, **kwargs):
     project_id = int(kwargs["session_state"]["context"]["project_id"])
     request = kwargs["request"]
     setup = kwargs["session_state"]["context"]["setup"]
@@ -677,21 +672,6 @@ def update_config_project(*args, **kwargs):
         ], False
 
 
-# @dash_app_project.expanded_callback(
-#     dash.dependencies.Output("modal-simple", "opened"),
-#     [
-#         dash.dependencies.Input("modal-demo-button", "n_clicks"),
-#         dash.dependencies.Input("modal-close-button", "n_clicks"),
-#         dash.dependencies.Input("modal-submit-button", "n_clicks"),
-#         dash.dependencies.State("modal-simple", "opened"),
-#     ],
-#     prevent_initial_call=True,
-# )
-# def modal_demo(*args, **kwargs):
-#     opened = args[3]
-#     return not opened
-
-
 @omero_project_dash.expanded_callback(
     dash.dependencies.Output("thresholds-dropdown", "data"),
     [dash.dependencies.Input("blank-input", "children")],
@@ -707,8 +687,7 @@ def update_thresholds(*args, **kwargs):
     dash.dependencies.Output({"index": dash.dependencies.MATCH}, "variant"),
     dash.dependencies.Input({"index": dash.dependencies.MATCH}, "n_clicks"),
 )
-def update_heart(*args, **kwargs):
-    n = args[0]
+def update_heart(n, **kwargs):
     if n % 2 == 0:
         return "default"
     return "filled"
@@ -721,7 +700,6 @@ def update_heart(*args, **kwargs):
 def update_thresholds_controls(*args, **kwargs):
     kkm = kwargs["session_state"]["context"]["kkm"]
     threshold = kwargs["session_state"]["context"]["threshold"]
-    # kkm = [k.replace("_", " ").title() for k in kkm]
     if threshold:
         new_kkm = threshold
     else:
@@ -759,7 +737,6 @@ def update_thresholds_controls(*args, **kwargs):
                                     value=value.get("lower_limit", ""),
                                 ),
                             ],
-                            # legend=key.replace("_", " ").title(),
                             variant="filled",
                             radius="md",
                             style={"padding": "10px", "margin": "10px"},

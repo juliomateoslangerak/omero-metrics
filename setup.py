@@ -50,7 +50,7 @@ setup(
         "omero-web>=5.26.0",
         "bootstrap4",
         "django-plotly-dash==2.4.0",
-        "dash==2.9.3",
+        "dash==2.15.0",
         "plotly==5.20.0",
         "dpd_static_support==0.0.5",
         "dash-bootstrap-components",
