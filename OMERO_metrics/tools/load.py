@@ -266,10 +266,10 @@ def load_dash_data_project(
     return dash_context, app_name
 
 
-def load_analysis_config(project=ProjectWrapper):
+def load_analysis_config(project_wrapper=ProjectWrapper):
     configs = [
         ann
-        for ann in project.listAnnotations(ns="OMERO-metrics/analysis_config")
+        for ann in project_wrapper.listAnnotations(ns="OMERO-metrics/analysis_config")
         if isinstance(ann, MapAnnotationWrapper)
     ]
     if not configs:
@@ -277,7 +277,7 @@ def load_analysis_config(project=ProjectWrapper):
     if len(configs) > 1:
         logger.error(
             f"More than one configuration"
-            f" in project {project.getId()}."
+            f" in project {project_wrapper.getId()}."
             f"Using the last one saved"
         )
 

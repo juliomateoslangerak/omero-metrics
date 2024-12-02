@@ -334,7 +334,7 @@ def delete_all(request, conn=None, **kwargs):
         for project in conn.getObjects("Project", opts={"group": group_id}):
             pm = data_managers.ProjectManager(conn, project)
             pm.load_data()
-            pm.delete_processed_data(conn)
+            pm.delete_processed_data()
         message, color = delete.delete_all_annotations(conn, group_id)
         return message, color
     except Exception as e:
@@ -365,7 +365,7 @@ def delete_project(request, conn=None, **kwargs):
     pm = data_managers.ProjectManager(conn, project_wrapper)
     pm.load_data()
     try:
-        pm.delete_processed_data(conn)
+        pm.delete_processed_data()
         return "Output deleted successfully", "green"
     except Exception as e:
         return str(e), "red"

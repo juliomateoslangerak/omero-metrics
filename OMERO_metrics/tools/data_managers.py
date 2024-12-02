@@ -443,7 +443,7 @@ class ProjectManager:
     def delete_data(self):
         pass
 
-    def delete_processed_data(self, conn: BlitzGateway):
+    def delete_processed_data(self):
         for dataset in self.datasets:
             if dataset.processed:
                 dataset.delete_processed_data(self._conn)
