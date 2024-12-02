@@ -269,7 +269,9 @@ def load_dash_data_project(
 def load_analysis_config(project_wrapper=ProjectWrapper):
     configs = [
         ann
-        for ann in project_wrapper.listAnnotations(ns="OMERO-metrics/analysis_config")
+        for ann in project_wrapper.listAnnotations(
+            ns="OMERO-metrics/analysis_config"
+        )
         if isinstance(ann, MapAnnotationWrapper)
     ]
     if not configs:
