@@ -9,7 +9,8 @@ download_group = dmc.Group(
             [
                 dmc.MenuTarget(
                     dmc.Button(
-                        "Download",
+                        id="activate_download",
+                        children="Download",
                         leftSection=DashIconify(
                             icon="material-symbols:download", width=20
                         ),

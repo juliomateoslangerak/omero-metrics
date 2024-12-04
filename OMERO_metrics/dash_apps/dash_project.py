@@ -208,6 +208,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                                                             icon="ph:magnifying-glass"
                                                         ),
                                                         value="0",
+                                                        disabled=True,
                                                         rightSection=DashIconify(
                                                             icon="ph:caret-down"
                                                         ),
@@ -228,6 +229,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                                                         leftSection=DashIconify(
                                                             icon="ph:calendar"
                                                         ),
+                                                        disabledDates=True,
                                                         styles=DATEPICKER_STYLES,
                                                     ),
                                                 ],
@@ -240,26 +242,31 @@ omero_project_dash.layout = dmc.MantineProvider(
                                     html.Div(
                                         id="graph-project",
                                         style={"height": "250px"},
-                                        children=dmc.LineChart(
-                                            id="line-chart",
-                                            h=300,
-                                            data=[],
-                                            dataKey="Date",
-                                            withLegend=True,
-                                            legendProps={
-                                                "horizontalAlign": "top",
-                                                "left": 50,
-                                            },
-                                            series=[],
-                                            curveType="natural",
-                                            style={"padding": 20},
-                                            xAxisLabel="Processed Date",
-                                        ),
+                                        children=[
+                                            dmc.LineChart(
+                                                id="line-chart",
+                                                h=300,
+                                                data=[],
+                                                dataKey="Date",
+                                                withLegend=True,
+                                                legendProps={
+                                                    "horizontalAlign": "top",
+                                                    "left": 50,
+                                                },
+                                                series=[],
+                                                curveType="natural",
+                                                style={"padding": 20},
+                                                xAxisLabel="Processed Date",
+                                            ),
+                                            html.Div(id="feedback_message"),
+                                        ],
                                     ),
                                 ],
                             ),
                             # Data Table Section
                             dmc.Paper(
+                                id="clicked_data_paper",
+                                hiddenFrom={"visible": False, "display": None},
                                 style={**CARD_STYLE1, "marginTop": "12px"},
                                 children=[
                                     dmc.Text(
@@ -400,85 +407,109 @@ omero_project_dash.layout = dmc.MantineProvider(
     dash.dependencies.Output("date-picker", "minDate"),
     dash.dependencies.Output("date-picker", "maxDate"),
     dash.dependencies.Output("date-picker", "value"),
+    dash.dependencies.Output("date-picker", "disabledDates"),
+    dash.dependencies.Output("project-dropdown", "disabled"),
+    dash.dependencies.Output("activate_download", "disabled"),
+    dash.dependencies.Output("delete_data", "disabled"),
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_dropdown(*args, **kwargs):
-    kkm = kwargs["session_state"]["context"]["kkm"]
-    kkm = [k.replace("_", " ").title() for k in kkm]
-    dates = kwargs["session_state"]["context"]["dates"]
-    options = [{"value": f"{i}", "label": f"{k}"} for i, k in enumerate(kkm)]
-    min_date = min(dates)
-    max_date = max(dates)
-    data = options
-    value_date = [min_date, max_date]
-    return data, min_date, max_date, value_date
+    try:
+        kkm = kwargs["session_state"]["context"]["kkm"]
+        kkm = [k.replace("_", " ").title() for k in kkm]
+        dates = kwargs["session_state"]["context"]["dates"]
+        options = [
+            {"value": f"{i}", "label": f"{k}"} for i, k in enumerate(kkm)
+        ]
+        min_date = min(dates)
+        max_date = max(dates)
+        data = options
+        value_date = [min_date, max_date]
+        return data, min_date, max_date, value_date, False, False, False, False
+    except Exception as e:
+        return (
+            dash.no_update,
+            dash.no_update,
+            dash.no_update,
+            dash.no_update,
+            True,
+            True,
+            True,
+            True,
+        )
 
 
 @omero_project_dash.expanded_callback(
     dash.dependencies.Output("line-chart", "data"),
     dash.dependencies.Output("line-chart", "series"),
     dash.dependencies.Output("line-chart", "referenceLines"),
+    dash.dependencies.Output("graph-project", "children"),
     [
         dash.dependencies.Input("project-dropdown", "value"),
         dash.dependencies.Input("date-picker", "value"),
     ],
-    prevent_initial_call=True,
 )
 def update_table(measurement, dates_range, **kwargs):
-    df_list = kwargs["session_state"]["context"]["key_measurements_list"]
-    threshold = kwargs["session_state"]["context"]["threshold"]
-    kkm = kwargs["session_state"]["context"]["kkm"]
-    measurement = int(measurement)
-    if threshold:
-        threshold_kkm = threshold[kkm[measurement]]
-        ref = [
-            {
-                "y": v,
-                "label": k.replace("_", " ").title(),
-                "color": "red.6",
-            }
-            for k, v in threshold_kkm.items()
-            if v
+    try:
+        df_list = kwargs["session_state"]["context"]["key_measurements_list"]
+        threshold = kwargs["session_state"]["context"]["threshold"]
+        kkm = kwargs["session_state"]["context"]["kkm"]
+        measurement = int(measurement)
+        if threshold:
+            threshold_kkm = threshold[kkm[measurement]]
+            ref = [
+                {
+                    "y": v,
+                    "label": k.replace("_", " ").title(),
+                    "color": "red.6",
+                }
+                for k, v in threshold_kkm.items()
+                if v
+            ]
+        else:
+            ref = []
+        dates = kwargs["session_state"]["context"]["dates"]
+        df_filtering = pd.DataFrame(dates, columns=["Date"])
+        df_dates = df_filtering[
+            (
+                df_filtering["Date"]
+                >= datetime.strptime(dates_range[0], "%Y-%m-%d").date()
+            )
+            & (
+                df_filtering["Date"]
+                <= datetime.strptime(dates_range[1], "%Y-%m-%d").date()
+            )
+        ].index.to_list()
+        df_list_filtered = [df_list[i] for i in df_dates]
+        data = [
+            {"Date": dates[i], "Name": f"Dataset {i}"}
+            | df[[kkm[measurement]]]
+            .copy()
+            .mean()
+            .reset_index(name="Mean")
+            .rename(columns={"index": "Measurement"})
+            .pivot_table(columns="Measurement")
+            .to_dict("records")[0]
+            for i, df in enumerate(df_list_filtered)
         ]
-    else:
-        ref = []
-    dates = kwargs["session_state"]["context"]["dates"]
-    df_filtering = pd.DataFrame(dates, columns=["Date"])
-    df_dates = df_filtering[
-        (
-            df_filtering["Date"]
-            >= datetime.strptime(dates_range[0], "%Y-%m-%d").date()
-        )
-        & (
-            df_filtering["Date"]
-            <= datetime.strptime(dates_range[1], "%Y-%m-%d").date()
-        )
-    ].index.to_list()
-    df_list_filtered = [df_list[i] for i in df_dates]
-    data = [
-        {"Date": dates[i], "Name": f"Dataset {i}"}
-        | df[[kkm[measurement]]]
-        .copy()
-        .mean()
-        .reset_index(name="Mean")
-        .rename(columns={"index": "Measurement"})
-        .pivot_table(columns="Measurement")
-        .to_dict("records")[0]
-        for i, df in enumerate(df_list_filtered)
-    ]
-    series = [
-        {
-            "name": kkm[measurement],
-            "color": "green.7",
-        }
-    ]
-    return data, series, ref
+        series = [
+            {
+                "name": kkm[measurement],
+                "color": "green.7",
+            }
+        ]
+        return data, series, ref, dash.no_update
+    except Exception as e:
+        msg = kwargs["session_state"]["context"]["message"]
+        message_container = dmc.Text(msg)
+        return [], [], [], message_container
 
 
 @omero_project_dash.expanded_callback(
     dash.dependencies.Output("text_km", "children"),
     dash.dependencies.Output("kkm_table", "data"),
     dash.dependencies.Output("pagination", "total"),
+    dash.dependencies.Output("clicked_data_paper", "hiddenFrom"),
     [
         dash.dependencies.Input("line-chart", "clickData"),
         dash.dependencies.Input("pagination", "value"),
@@ -486,28 +517,38 @@ def update_table(measurement, dates_range, **kwargs):
     prevent_initial_call=True,
 )
 def update_project_view(clicked_data, page, **kwargs):
-    if clicked_data:
-        table = kwargs["session_state"]["context"]["key_measurements_list"]
-        dates = kwargs["session_state"]["context"]["dates"]
-        kkm = kwargs["session_state"]["context"]["kkm"]
-        selected_dataset = int(clicked_data["Name"].split(" ")[-1])
-        df_selected = table[selected_dataset]
-        table_kkm = df_selected[kkm].copy()
-        table_kkm = table_kkm.round(3)
-        total = math.ceil(len(table_kkm) / 4)
-        start_idx = (page - 1) * 4
-        end_idx = start_idx + 4
-        table_kkm.columns = table_kkm.columns.str.replace("_", " ").str.title()
-        date = dates[selected_dataset]
-        page_data = table_kkm.iloc[start_idx:end_idx]
-        grid = {
-            "head": page_data.columns.tolist(),
-            "body": page_data.values.tolist(),
-            "caption": "Key Measurements for the selected dataset",
-        }
-        return f"Key Measurements processed at {str(date)}", grid, total
+    try:
+        if clicked_data:
+            table = kwargs["session_state"]["context"]["key_measurements_list"]
+            dates = kwargs["session_state"]["context"]["dates"]
+            kkm = kwargs["session_state"]["context"]["kkm"]
+            selected_dataset = int(clicked_data["Name"].split(" ")[-1])
+            df_selected = table[selected_dataset]
+            table_kkm = df_selected[kkm].copy()
+            table_kkm = table_kkm.round(3)
+            total = math.ceil(len(table_kkm) / 4)
+            start_idx = (page - 1) * 4
+            end_idx = start_idx + 4
+            table_kkm.columns = table_kkm.columns.str.replace(
+                "_", " "
+            ).str.title()
+            date = dates[selected_dataset]
+            page_data = table_kkm.iloc[start_idx:end_idx]
+            grid = {
+                "head": page_data.columns.tolist(),
+                "body": page_data.values.tolist(),
+                "caption": "Key Measurements for the selected dataset",
+            }
+            return (
+                f"Key Measurements processed at {str(date)}",
+                grid,
+                total,
+                {"visible": True},
+            )
 
-    else:
+        else:
+            return dash.no_update
+    except Exception as e:
         return dash.no_update
 
 
@@ -521,19 +562,19 @@ def update_modal(*args, **kwargs):
     sample = setup["sample"]
     mm_sample = getattr(mm_schema, sample["type"])
     mm_sample = mm_sample(**sample["fields"])
-    sample_form = dft.DashForm(
+    sample_form = dft.get_form(
         mm_sample, disabled=False, form_id="sample_form"
     )
     input_parameters = setup["input_parameters"]
     mm_input_parameters = getattr(mm_schema, input_parameters["type"])
     mm_input_parameters = mm_input_parameters(**input_parameters["fields"])
-    input_parameters_form = dft.DashForm(
+    input_parameters_form = dft.get_form(
         mm_input_parameters, disabled=False, form_id="input_parameters_form"
     )
 
     return (
-        input_parameters_form.form,
-        sample_form.form,
+        input_parameters_form,
+        sample_form,
     )
 
 
@@ -677,10 +718,13 @@ def update_config_project(submit_click, sample_form, input_form, **kwargs):
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_thresholds(*args, **kwargs):
-    kkm = kwargs["session_state"]["context"]["kkm"]
-    kkm = [k.replace("_", " ").title() for k in kkm]
-    data = [{"value": f"{i}", "label": f"{k}"} for i, k in enumerate(kkm)]
-    return data
+    try:
+        kkm = kwargs["session_state"]["context"]["kkm"]
+        kkm = [k.replace("_", " ").title() for k in kkm]
+        data = [{"value": f"{i}", "label": f"{k}"} for i, k in enumerate(kkm)]
+        return data
+    except Exception as e:
+        return dash.no_update
 
 
 @omero_project_dash.expanded_callback(
@@ -698,57 +742,60 @@ def update_heart(n, **kwargs):
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_thresholds_controls(*args, **kwargs):
-    kkm = kwargs["session_state"]["context"]["kkm"]
-    threshold = kwargs["session_state"]["context"]["threshold"]
-    if threshold:
-        new_kkm = threshold
-    else:
-        new_kkm = {k: {"upper_limit": "", "lower_limit": ""} for k in kkm}
+    try:
+        kkm = kwargs["session_state"]["context"]["kkm"]
+        threshold = kwargs["session_state"]["context"]["threshold"]
+        if threshold:
+            new_kkm = threshold
+        else:
+            new_kkm = {k: {"upper_limit": "", "lower_limit": ""} for k in kkm}
 
-    threshold_control = [
-        dmc.AccordionItem(
-            [
-                make_control(
-                    key.replace("_", " ").title(),
-                    f"action-{i}",
-                ),
-                dmc.AccordionPanel(
-                    id=key + "_panel",
-                    children=[
-                        dmc.Fieldset(
-                            id=key + "_fieldset",
-                            children=[
-                                dmc.NumberInput(
-                                    label="Upper Limit",
-                                    placeholder="Enter upper limit",
-                                    leftSection=DashIconify(
-                                        icon="hugeicons:chart-maximum",
-                                        color=THEME["primary"],
+        threshold_control = [
+            dmc.AccordionItem(
+                [
+                    make_control(
+                        key.replace("_", " ").title(),
+                        f"action-{i}",
+                    ),
+                    dmc.AccordionPanel(
+                        id=key + "_panel",
+                        children=[
+                            dmc.Fieldset(
+                                id=key + "_fieldset",
+                                children=[
+                                    dmc.NumberInput(
+                                        label="Upper Limit",
+                                        placeholder="Enter upper limit",
+                                        leftSection=DashIconify(
+                                            icon="hugeicons:chart-maximum",
+                                            color=THEME["primary"],
+                                        ),
+                                        value=value.get("upper_limit", ""),
                                     ),
-                                    value=value.get("upper_limit", ""),
-                                ),
-                                dmc.NumberInput(
-                                    label="Lower Limit",
-                                    placeholder="Enter lower limit",
-                                    leftSection=DashIconify(
-                                        icon="hugeicons:chart-minimum",
-                                        color=THEME["primary"],
+                                    dmc.NumberInput(
+                                        label="Lower Limit",
+                                        placeholder="Enter lower limit",
+                                        leftSection=DashIconify(
+                                            icon="hugeicons:chart-minimum",
+                                            color=THEME["primary"],
+                                        ),
+                                        value=value.get("lower_limit", ""),
                                     ),
-                                    value=value.get("lower_limit", ""),
-                                ),
-                            ],
-                            variant="filled",
-                            radius="md",
-                            style={"padding": "10px", "margin": "10px"},
-                        )
-                    ],
-                ),
-            ],
-            value=f"item-{i}",
-        )
-        for i, (key, value) in enumerate(new_kkm.items())
-    ]
-    return threshold_control
+                                ],
+                                variant="filled",
+                                radius="md",
+                                style={"padding": "10px", "margin": "10px"},
+                            )
+                        ],
+                    ),
+                ],
+                value=f"item-{i}",
+            )
+            for i, (key, value) in enumerate(new_kkm.items())
+        ]
+        return threshold_control
+    except Exception as e:
+        return dash.no_update
 
 
 @omero_project_dash.expanded_callback(
@@ -761,33 +808,36 @@ def update_thresholds_controls(*args, **kwargs):
     prevent_initial_call=True,
 )
 def threshold_callback1(*args, **kwargs):
-    kkm = kwargs["session_state"]["context"]["kkm"]
-    output = get_accordion_data(args[1], kkm)
-    request = kwargs["request"]
-    project_id = kwargs["session_state"]["context"]["project_id"]
-    if output:
-        response, color = views.save_threshold(
-            request=request,
-            project_id=int(project_id),
-            threshold=output,
-        )
-        return (
-            dmc.Notification(
-                title="Thresholds Updated",
-                id="simple-notify",
-                color=color,
-                action="show",
-                message=response,
-                icon=(
-                    DashIconify(icon="ic:round-celebration")
-                    if color == "green"
-                    else DashIconify(icon="ic:round-error")
+    try:
+        kkm = kwargs["session_state"]["context"]["kkm"]
+        output = get_accordion_data(args[1], kkm)
+        request = kwargs["request"]
+        project_id = kwargs["session_state"]["context"]["project_id"]
+        if output:
+            response, color = views.save_threshold(
+                request=request,
+                project_id=int(project_id),
+                threshold=output,
+            )
+            return (
+                dmc.Notification(
+                    title="Thresholds Updated",
+                    id="simple-notify",
+                    color=color,
+                    action="show",
+                    message=response,
+                    icon=(
+                        DashIconify(icon="ic:round-celebration")
+                        if color == "green"
+                        else DashIconify(icon="ic:round-error")
+                    ),
                 ),
-            ),
-            False,
-        )
-    else:
-        return dash.no_update, False
+                False,
+            )
+        else:
+            return dash.no_update, False
+    except Exception as e:
+        return dash.no_update
 
 
 def get_accordion_data(accordion_state, kkm):
@@ -836,33 +886,36 @@ def get_accordion_data(accordion_state, kkm):
     prevent_initial_call=True,
 )
 def delete_project(*args, **kwargs):
-    triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
-    project_id = kwargs["session_state"]["context"]["project_id"]
-    request = kwargs["request"]
-    opened = not args[3]
-    if (
-        triggered_button == "delete-modal-submit-button.n_clicks"
-        and args[0] > 0
-    ):
-        sleep(1)
-        msg, color = views.delete_project(request, project_id=project_id)
-        message = dmc.Notification(
-            title="Notification!",
-            id="simple-notify",
-            action="show",
-            message=msg,
-            icon=DashIconify(
-                icon=(
-                    "akar-icons:circle-check"
-                    if color == "green"
-                    else "akar-icons:circle-x"
-                )
-            ),
-            color=color,
-        )
-        return opened, message
-    else:
-        return opened, None
+    try:
+        triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
+        project_id = kwargs["session_state"]["context"]["project_id"]
+        request = kwargs["request"]
+        opened = not args[3]
+        if (
+            triggered_button == "delete-modal-submit-button.n_clicks"
+            and args[0] > 0
+        ):
+            sleep(1)
+            msg, color = views.delete_project(request, project_id=project_id)
+            message = dmc.Notification(
+                title="Notification!",
+                id="simple-notify",
+                action="show",
+                message=msg,
+                icon=DashIconify(
+                    icon=(
+                        "akar-icons:circle-check"
+                        if color == "green"
+                        else "akar-icons:circle-x"
+                    )
+                ),
+                color=color,
+            )
+            return opened, message
+        else:
+            return opened, None
+    except Exception as e:
+        return dash.no_update
 
 
 @omero_project_dash.expanded_callback(
@@ -875,31 +928,35 @@ def delete_project(*args, **kwargs):
     prevent_initial_call=True,
 )
 def download_project_data(*args, **kwargs):
-    if not kwargs["callback_context"].triggered:
+    try:
+        if not kwargs["callback_context"].triggered:
+            raise dash.no_update
+
+        triggered_id = (
+            kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
+        )
+        mm_datasets = kwargs["session_state"]["context"]["mm_datasets"]
+        file_name = kwargs["session_state"]["context"]["project_name"]
+        yaml_dumper = YAMLDumper()
+        json_dumper = JSONDumper()
+        if triggered_id == "download-yaml":
+            return dict(
+                content=yaml_dumper.dumps(mm_datasets),
+                filename=f"{file_name}.yaml",
+            )
+
+        elif triggered_id == "download-json":
+            return dict(
+                content=json_dumper.dumps(mm_datasets),
+                filename=f"{file_name}.json",
+            )
+
+        elif triggered_id == "download-text":
+            return dict(
+                content=yaml_dumper.dumps(mm_datasets),
+                filename=f"{file_name}.txt",
+            )
+
         raise dash.no_update
-
-    triggered_id = (
-        kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
-    )
-    mm_datasets = kwargs["session_state"]["context"]["mm_datasets"]
-    file_name = kwargs["session_state"]["context"]["project_name"]
-    yaml_dumper = YAMLDumper()
-    json_dumper = JSONDumper()
-    if triggered_id == "download-yaml":
-        return dict(
-            content=yaml_dumper.dumps(mm_datasets),
-            filename=f"{file_name}.yaml",
-        )
-
-    elif triggered_id == "download-json":
-        return dict(
-            content=json_dumper.dumps(mm_datasets),
-            filename=f"{file_name}.json",
-        )
-
-    elif triggered_id == "download-text":
-        return dict(
-            content=yaml_dumper.dumps(mm_datasets), filename=f"{file_name}.txt"
-        )
-
-    raise dash.no_update
+    except Exception as e:
+        return dash.no_update

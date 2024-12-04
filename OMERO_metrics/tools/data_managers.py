@@ -333,7 +333,7 @@ class ProjectManager:
         self._conn = conn
         self.omero_project = omero_project
         self.datasets = []
-        self.context = None
+        self.context = {}
         self.setup = None
         self.threshold = None
         self.datasets_types = []
@@ -381,15 +381,15 @@ class ProjectManager:
         return self.homogenize
 
     def visualize_data(self):
-        if self.processed_datasets and self.setup:
-            if self.is_homogenized():
+        if self.setup:
+            if self.processed_datasets and self.is_homogenized():
                 if (
                     list(self.processed_datasets.values())[
                         0
                     ].mm_dataset.__class__.__name__
                     in TEMPLATE_MAPPINGS_DATASET
                 ):
-                    self.context, self.app_name = load.load_dash_data_project(
+                    self.context = load.load_dash_data_project(
                         self.processed_datasets
                     )
                     self.context["unprocessed_datasets"] = list(
@@ -399,8 +399,6 @@ class ProjectManager:
                     self.context["processed_datasets"] = list(
                         self.processed_datasets.keys()
                     )
-                    self.context["setup"] = self.setup
-                    self.context["threshold"] = self.threshold
                     self.mm_harmonized_dataset = (
                         mm_schema.HarmonizedMetricsDatasetCollection(
                             datasets=[
@@ -418,24 +416,22 @@ class ProjectManager:
                         )
                     )
                     self.context["mm_datasets"] = self.mm_harmonized_dataset
+                    message = "Data loaded successfully"
                 else:
                     message = "This project contains unsupported analysis type. Unable to visualize"
                     logger.warning(message)
-                    self.context, self.app_name = warning_message(message)
-
             else:
-                message = "This project contains different types of datasets. Unable to visualize"
+                message = "No data or compatible data to visualize. Please process the data first."
                 logger.warning(message)
-                self.context, self.app_name = warning_message(message)
-
+            self.context["message"] = message
+            self.context["setup"] = self.setup
+            self.context["threshold"] = (
+                self.threshold if self.threshold else ""
+            )
+            self.app_name = "omero_project_dash"
         else:
-            if self.setup:
-                message = "This project doesn't contain a processed dataset but it contains a config file. Unable to visualize"
-                logger.warning(message)
-                self.context, self.app_name = warning_message(message)
-            else:
-                self.app_name = "omero_project_config_form"
-                self.context = {}
+            self.app_name = "omero_project_config_form"
+            self.context = {}
 
     def save_settings(self):
         pass
