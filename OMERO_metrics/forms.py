@@ -23,7 +23,6 @@ def dataclass_to_form(dataclass):
             form_fields[field.name] = forms.FloatField()
         elif field.type == bool:
             form_fields[field.name] = forms.BooleanField(required=False)
-        # Add more type checks as needed
 
     return type(f"{dataclass.__name__}Form", (forms.Form,), form_fields)
 

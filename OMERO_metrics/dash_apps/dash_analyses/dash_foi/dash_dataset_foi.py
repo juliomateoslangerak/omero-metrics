@@ -462,6 +462,7 @@ def update_profile_type(channel, curve_type, **kwargs):
         df_profile.columns = df_profile.columns.str.replace(
             "Center Vertical", "Vertical (↓)"
         )
+        print(df_profile.to_dict("records"))
         return df_profile.to_dict("records"), curve_type
 
     except Exception as e:

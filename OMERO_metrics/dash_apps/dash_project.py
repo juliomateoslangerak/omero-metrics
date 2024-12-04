@@ -247,7 +247,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                                                 id="line-chart",
                                                 h=300,
                                                 data=[],
-                                                dataKey="Date",
+                                                dataKey="date",
                                                 withLegend=True,
                                                 legendProps={
                                                     "horizontalAlign": "top",
@@ -481,25 +481,20 @@ def update_table(measurement, dates_range, **kwargs):
             )
         ].index.to_list()
         df_list_filtered = [df_list[i] for i in df_dates]
-        data = [
-            {"Date": dates[i], "Name": f"Dataset {i}"}
-            | df[[kkm[measurement]]]
-            .copy()
-            .mean()
-            .reset_index(name="Mean")
-            .rename(columns={"index": "Measurement"})
-            .pivot_table(columns="Measurement")
-            .to_dict("records")[0]
-            for i, df in enumerate(df_list_filtered)
-        ]
+        dates_filtered = [dates[i] for i in df_dates]
+        data = get_data_trends(
+            kkm, measurement, dates_filtered, df_list_filtered
+        ).to_dict("records")
         series = [
             {
-                "name": kkm[measurement],
+                "name": channel,
                 "color": "green.7",
             }
+            for channel in df_list[0]["channel_name"].tolist()
         ]
         return data, series, ref, dash.no_update
     except Exception as e:
+        print(e)
         msg = kwargs["session_state"]["context"]["message"]
         message_container = dmc.Text(msg)
         return [], [], [], message_container
@@ -522,7 +517,7 @@ def update_project_view(clicked_data, page, **kwargs):
             table = kwargs["session_state"]["context"]["key_measurements_list"]
             dates = kwargs["session_state"]["context"]["dates"]
             kkm = kwargs["session_state"]["context"]["kkm"]
-            selected_dataset = int(clicked_data["Name"].split(" ")[-1])
+            selected_dataset = int(clicked_data["dataset_index"])
             df_selected = table[selected_dataset]
             table_kkm = df_selected[kkm].copy()
             table_kkm = table_kkm.round(3)
@@ -960,3 +955,18 @@ def download_project_data(*args, **kwargs):
         raise dash.no_update
     except Exception as e:
         return dash.no_update
+
+
+def get_data_trends(kkm, measurement, dates, dfs):
+    complete_df = pd.DataFrame()
+    for i, df in enumerate(dfs):
+        dfi = df.pivot_table(columns="channel_name", values=kkm).reset_index(
+            names="Measurement"
+        )
+        dfi["dataset_index"] = i
+        dfi["date"] = dates[i]
+        complete_df = pd.concat([complete_df, dfi])
+    complete_df = complete_df.reset_index(drop=True)
+    complete_df = complete_df[complete_df["Measurement"] == kkm[measurement]]
+    complete_df = complete_df.drop(columns="Measurement")
+    return complete_df
