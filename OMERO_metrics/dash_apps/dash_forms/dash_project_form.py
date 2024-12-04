@@ -352,10 +352,9 @@ def stepper_callback(*args, **kwargs):
 )
 def update_sample_container(sample_type_selector, **kwargs):
     mm_sample = MAPPINGS[int(sample_type_selector)][0]
-    form_manager = dft.DashForm(
+    sample_form = dft.get_form(
         mm_sample, disabled=False, form_id="sample_content"
     )
-    sample_form = form_manager.form
     return [sample_form]
 
 
@@ -369,10 +368,9 @@ def update_sample_container(sample_type_selector, **kwargs):
 def update_input_parameters(sample_type_selector, **kwargs):
     analysis_type = MAPPINGS[int(sample_type_selector)][2].__name__
     mm_input_parameters = DATASET_TO_INPUT[analysis_type]
-    form_manager = dft.DashForm(
+    mm_input_parameters = dft.get_form(
         mm_input_parameters, disabled=False, form_id="input_content"
     )
-    mm_input_parameters = form_manager.form
     return [mm_input_parameters]
 
 

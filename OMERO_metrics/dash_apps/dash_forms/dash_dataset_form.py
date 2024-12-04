@@ -302,10 +302,10 @@ def update_setup(_, **kwargs):
     ]
     input_parameters_object = getattr(mm_schema, input_parameters["type"])
     input_parameters_mm = input_parameters_object(**input_parameters["fields"])
-    form = dft.DashForm(
+    form = dft.get_form(
         input_parameters_mm, disabled=True, form_id="input_parameters_form"
     )
-    return form.form
+    return form
 
 
 @dash_form_project.expanded_callback(
@@ -316,8 +316,8 @@ def update_sample(_, **kwargs):
     sample = kwargs["session_state"]["context"]["input_parameters"]["sample"]
     mm_sample = getattr(mm_schema, sample["type"])
     mm_sample = mm_sample(**sample["fields"])
-    form = dft.DashForm(mm_sample, disabled=True, form_id="sample_form")
-    return form.form
+    form = dft.get_form(mm_sample, disabled=True, form_id="sample_form")
+    return form
 
 
 @dash_form_project.expanded_callback(

@@ -2,20 +2,22 @@ import dash_mantine_components as dmc
 from dataclasses import fields
 from dash_iconify import DashIconify
 import re
-
-
-Field_TYPE_MAPPING = {
-    "float": ["NumberInput", "carbon:character-decimal"],
-    "int": ["NumberInput", "carbon:character-whole-number"],
-    "str": ["TextInput", "carbon:string-text"],
-}
 from typing import get_origin, get_args, Union
 
 
+Field_TYPE_MAPPING = {
+    "float": [dmc.NumberInput, "carbon:character-decimal"],
+    "int": [dmc.NumberInput, "carbon:character-whole-number"],
+    "str": [dmc.TextInput, "carbon:string-text"],
+}
+
+
 def extract_form_data(form_content, class_name):
-    replace_str = f"{class_name}_"
+    replace_str = f"^{class_name}_"
     return {
-        i["props"]["id"].replace(replace_str, ""): i["props"]["value"]
+        i["props"]["id"].replace(replace_str, "", regex=True): i["props"][
+            "value"
+        ]
         for i in form_content
     }
 
@@ -32,7 +34,7 @@ def clean_field_name(field: str):
 
 def get_field_types(field, supported_types=(str, int, float, bool)):
     data_type = {
-        "field_name": clean_field_name(field.name),
+        "field_name": field.name,
         "type": None,
         "optional": False,
         "default": field.default,
@@ -57,15 +59,13 @@ def get_dmc_field_input(
     field, mm_object, type_mapping=Field_TYPE_MAPPING, disabled=False
 ):
     field_info = get_field_types(field)
-    input_field_name = getattr(dmc, type_mapping[field_info["type"]][0])
+    input_field_name = type_mapping[field_info["type"]][0]
     input_field = input_field_name()
-    input_field.id = (
-        mm_object.class_name
-        + "_"
-        + field_info["field_name"].replace(" ", "_").lower()
+    input_field.id = f"{mm_object.class_name}_{field_info['field_name']}"
+    input_field.label = clean_field_name(field_info["field_name"])
+    input_field.placeholder = (
+        f"Enter {clean_field_name(field_info['field_name'])}"
     )
-    input_field.label = field_info["field_name"]
-    input_field.placeholder = "Enter " + field_info["field_name"]
     input_field.value = (
         field_info["default"]
         if getattr(mm_object, field.name) is None
@@ -99,25 +99,16 @@ def add_space_between_capitals(s: str) -> str:
     return label
 
 
-class DashForm:
-    def __init__(self, mm_object, disabled=False, form_id="form_content"):
-        self.mm_object = mm_object
-        self.disabled = disabled
-        self.form_id = form_id
-        self.form = self.get_form()
-
-    def get_form(self):
-        form_content = dmc.Fieldset(
-            id=self.form_id,
-            children=[],
-            legend=add_space_between_capitals(self.mm_object.class_name),
-            variant="filled",
-            radius="md",
+def get_form(mm_object, disabled=False, form_id="form_content"):
+    form_content = dmc.Fieldset(
+        id=form_id,
+        children=[],
+        legend=add_space_between_capitals(mm_object.class_name),
+        variant="filled",
+        radius="md",
+    )
+    for field in fields(mm_object):
+        form_content.children.append(
+            get_dmc_field_input(field, mm_object, disabled=disabled)
         )
-        for field in fields(self.mm_object):
-            form_content.children.append(
-                get_dmc_field_input(
-                    field, self.mm_object, disabled=self.disabled
-                )
-            )
-        return form_content
+    return form_content
