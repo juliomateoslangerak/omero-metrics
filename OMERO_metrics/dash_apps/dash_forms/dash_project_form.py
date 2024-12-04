@@ -446,13 +446,9 @@ def save_config_dash(
         if dft.validate_form(sample_form) and dft.validate_form(input_form):
             sleep(1)
             try:
-                input_parameters = dft.extract_form_data(
-                    input_form, mm_input_parameters.class_name
-                )
+                input_parameters = dft.extract_form_data(input_form)
                 mm_input_parameters = mm_input_parameters(**input_parameters)
-                sample = dft.extract_form_data(
-                    sample_form, mm_sample.class_name
-                )
+                sample = dft.extract_form_data(sample_form)
                 mm_sample = mm_sample(**sample)
                 response, color = views.save_config(
                     request=request,

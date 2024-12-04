@@ -141,7 +141,7 @@ def create_control_panel():
                         mt="md",
                     ),
                     dmc.Select(
-                        id="my-dropdown2",
+                        id="color_select",
                         label="Color Scheme",
                         allowDeselect=False,
                         data=[
@@ -299,7 +299,7 @@ def callback_channel(_, **kwargs):
     dash.dependencies.Output("rois-graph", "figure"),
     [
         dash.dependencies.Input("channel_dropdown", "value"),
-        dash.dependencies.Input("my-dropdown2", "value"),
+        dash.dependencies.Input("color_select", "value"),
         dash.dependencies.Input("checkbox-state", "checked"),
         dash.dependencies.Input("switch-invert-colors", "checked"),
         dash.dependencies.Input("segmented", "value"),

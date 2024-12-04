@@ -37,6 +37,8 @@ sample_types_dp = [
     for i, x in enumerate(sample_types)
 ]
 
+colors = ["#FF0000", "#00FF00", "#0000FF", "#FFFF00"]
+
 
 def make_control(text, action_id):
     return dmc.Flex(
@@ -257,6 +259,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                                                 curveType="natural",
                                                 style={"padding": 20},
                                                 xAxisLabel="Processed Date",
+                                                connectNulls=True,
                                             ),
                                             html.Div(id="feedback_message"),
                                         ],
@@ -482,19 +485,19 @@ def update_table(measurement, dates_range, **kwargs):
         ].index.to_list()
         df_list_filtered = [df_list[i] for i in df_dates]
         dates_filtered = [dates[i] for i in df_dates]
-        data = get_data_trends(
+        df = get_data_trends(
             kkm, measurement, dates_filtered, df_list_filtered
-        ).to_dict("records")
+        )
+        data = df.to_dict("records")
+        channels = [
+            c for c in df.columns if c not in ["dataset_index", "date"]
+        ]
         series = [
-            {
-                "name": channel,
-                "color": "green.7",
-            }
-            for channel in df_list[0]["channel_name"].tolist()
+            {"name": channel, "color": colors[i % len(colors)]}
+            for i, channel in enumerate(channels)
         ]
         return data, series, ref, dash.no_update
     except Exception as e:
-        print(e)
         msg = kwargs["session_state"]["context"]["message"]
         message_container = dmc.Text(msg)
         return [], [], [], message_container
@@ -629,11 +632,9 @@ def update_config_project(submit_click, sample_form, input_form, **kwargs):
     mm_input_parameters = getattr(mm_schema, input_parameters["type"])
     if dft.validate_form(sample_form) and dft.validate_form(input_form):
         try:
-            input_parameters = dft.extract_form_data(
-                input_form, mm_input_parameters.class_name
-            )
+            input_parameters = dft.extract_form_data(input_form)
             mm_input_parameters = mm_input_parameters(**input_parameters)
-            sample = dft.extract_form_data(sample_form, mm_sample.class_name)
+            sample = dft.extract_form_data(sample_form)
             mm_sample = mm_sample(**sample)
             response, color = views.save_config(
                 request=request,

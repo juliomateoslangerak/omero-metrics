@@ -12,12 +12,9 @@ Field_TYPE_MAPPING = {
 }
 
 
-def extract_form_data(form_content, class_name):
-    replace_str = f"^{class_name}_"
+def extract_form_data(form_content):
     return {
-        i["props"]["id"].replace(replace_str, "", regex=True): i["props"][
-            "value"
-        ]
+        i["props"]["id"].split(":")[1]: i["props"]["value"]
         for i in form_content
     }
 
@@ -61,7 +58,7 @@ def get_dmc_field_input(
     field_info = get_field_types(field)
     input_field_name = type_mapping[field_info["type"]][0]
     input_field = input_field_name()
-    input_field.id = f"{mm_object.class_name}_{field_info['field_name']}"
+    input_field.id = f"{mm_object.class_name}:{field_info['field_name']}"
     input_field.label = clean_field_name(field_info["field_name"])
     input_field.placeholder = (
         f"Enter {clean_field_name(field_info['field_name'])}"
