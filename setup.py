@@ -49,8 +49,8 @@ setup(
     install_requires=[
         "omero-web>=5.26.0",
         "bootstrap4",
-        "django-plotly-dash==2.4.0",
-        "dash==2.15.0",
+        "django-plotly-dash==2.4.2",
+        "dash==2.18.0",
         "plotly==5.20.0",
         "dpd_static_support==0.0.5",
         "dash-bootstrap-components",
