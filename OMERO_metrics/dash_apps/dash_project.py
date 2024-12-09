@@ -455,17 +455,30 @@ def update_dropdown(*args, **kwargs):
 def update_table(measurement, dates_range, **kwargs):
     try:
         # Check if required data exists in session state
-        if not all(key in kwargs["session_state"]["context"] for key in
-                   ["key_measurements_list", "threshold", "kkm", "dates"]):
+        if not all(
+            key in kwargs["session_state"]["context"]
+            for key in ["key_measurements_list", "threshold", "kkm", "dates"]
+        ):
             msg = kwargs["session_state"]["context"]["message"]
-            return [], [], [], dmc.Stack(
-                children=[
-                    dmc.Text(msg, align="center", size="lg", weight=500, color="dimmed"),
-                    dmc.Space(h=100),  # Add some vertical spacing
-                ],
-                align="center",
-                justify="center",
-                style={"height": "250px"}
+            return (
+                [],
+                [],
+                [],
+                dmc.Stack(
+                    children=[
+                        dmc.Text(
+                            msg,
+                            align="center",
+                            size="lg",
+                            weight=500,
+                            color="dimmed",
+                        ),
+                        dmc.Space(h=100),  # Add some vertical spacing
+                    ],
+                    align="center",
+                    justify="center",
+                    style={"height": "250px"},
+                ),
             )
 
         df_list = kwargs["session_state"]["context"]["key_measurements_list"]
@@ -474,15 +487,28 @@ def update_table(measurement, dates_range, **kwargs):
 
         # Check if we have any data
         if not df_list or not dates_range:
-            msg = kwargs["session_state"]["context"].get("message", "No data available yet")
-            return [], [], [], dmc.Stack(
-                children=[
-                    dmc.Text(msg, align="center", size="lg", weight=500, color="dimmed"),
-                    dmc.Space(h=100),  # Add some vertical spacing
-                ],
-                align="center",
-                justify="center",
-                style={"height": "250px"}
+            msg = kwargs["session_state"]["context"].get(
+                "message", "No data available yet"
+            )
+            return (
+                [],
+                [],
+                [],
+                dmc.Stack(
+                    children=[
+                        dmc.Text(
+                            msg,
+                            align="center",
+                            size="lg",
+                            weight=500,
+                            color="dimmed",
+                        ),
+                        dmc.Space(h=100),  # Add some vertical spacing
+                    ],
+                    align="center",
+                    justify="center",
+                    style={"height": "250px"},
+                ),
             )
 
         measurement = int(measurement)
@@ -504,26 +530,36 @@ def update_table(measurement, dates_range, **kwargs):
         df_filtering = pd.DataFrame(dates, columns=["Date"])
         df_dates = df_filtering[
             (
-                    df_filtering["Date"]
-                    >= datetime.strptime(dates_range[0], "%Y-%m-%d").date()
+                df_filtering["Date"]
+                >= datetime.strptime(dates_range[0], "%Y-%m-%d").date()
             )
             & (
-                    df_filtering["Date"]
-                    <= datetime.strptime(dates_range[1], "%Y-%m-%d").date()
+                df_filtering["Date"]
+                <= datetime.strptime(dates_range[1], "%Y-%m-%d").date()
             )
-            ].index.to_list()
+        ].index.to_list()
 
         # Check if we have any data after filtering
         if not df_dates:
-            return [], [], [], dmc.Stack(
-                children=[
-                    dmc.Text("No data available for selected date range", align="center", size="lg", weight=500,
-                             color="dimmed"),
-                    dmc.Space(h=100),  # Add some vertical spacing
-                ],
-                align="center",
-                justify="center",
-                style={"height": "250px"}
+            return (
+                [],
+                [],
+                [],
+                dmc.Stack(
+                    children=[
+                        dmc.Text(
+                            "No data available for selected date range",
+                            align="center",
+                            size="lg",
+                            weight=500,
+                            color="dimmed",
+                        ),
+                        dmc.Space(h=100),  # Add some vertical spacing
+                    ],
+                    align="center",
+                    justify="center",
+                    style={"height": "250px"},
+                ),
             )
 
         df_list_filtered = [df_list[i] for i in df_dates]
@@ -534,15 +570,25 @@ def update_table(measurement, dates_range, **kwargs):
 
         # Check if we have data after processing
         if df.empty:
-            return [], [], [], dmc.Stack(
-                children=[
-                    dmc.Text("No data available for selected measurement", align="center", size="lg", weight=500,
-                             color="dimmed"),
-                    dmc.Space(h=100),  # Add some vertical spacing
-                ],
-                align="center",
-                justify="center",
-                style={"height": "250px"}
+            return (
+                [],
+                [],
+                [],
+                dmc.Stack(
+                    children=[
+                        dmc.Text(
+                            "No data available for selected measurement",
+                            align="center",
+                            size="lg",
+                            weight=500,
+                            color="dimmed",
+                        ),
+                        dmc.Space(h=100),  # Add some vertical spacing
+                    ],
+                    align="center",
+                    justify="center",
+                    style={"height": "250px"},
+                ),
             )
 
         data = df.to_dict("records")
@@ -557,15 +603,27 @@ def update_table(measurement, dates_range, **kwargs):
 
     except Exception as e:
         msg = kwargs["session_state"]["context"]["message"]
-        return [], [], [], dmc.Stack(
-            children=[
-                dmc.Text(msg, align="center", size="lg", weight=500, color="dimmed"),
-                dmc.Space(h=100),  # Add some vertical spacing
-            ],
-            align="center",
-            justify="center",
-            style={"height": "250px"}
+        return (
+            [],
+            [],
+            [],
+            dmc.Stack(
+                children=[
+                    dmc.Text(
+                        msg,
+                        align="center",
+                        size="lg",
+                        weight=500,
+                        color="dimmed",
+                    ),
+                    dmc.Space(h=100),  # Add some vertical spacing
+                ],
+                align="center",
+                justify="center",
+                style={"height": "250px"},
+            ),
         )
+
 
 @omero_project_dash.expanded_callback(
     dash.dependencies.Output("text_km", "children"),
