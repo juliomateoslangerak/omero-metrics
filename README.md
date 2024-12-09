@@ -8,48 +8,74 @@ This project is financed by [France BioImaging](https://france-bioimaging.org/).
 
 <img alt="FBI logo" height="100" src="docs/slides/media/logo_FBI.png"/>
 
-OMERO.metrics with Docker
-=========================
 
-A webapp to follow microscope performance over time.
+An OMERO webapp to follow microscope performance over time.
 
-Installation
-============
+The following instructions are for Linux. Instructions for other OSs will be added soon.
 
-Install `OMERO_metrics` in development mode as follows:
+# Installation on your OMERO-web server instance
 
-    # within your python venv:
-    $ cd OMERO-metrics
-    $ pip install -e .
+To be completed
 
-Run in your terminal to start the server:
+# Try OMERO-metrics using docker
 
-    $ docker compose up -d
+Install docker and docker-compose on your computer following the instructions on the [docker website](https://docs.docker.com/get-docker/).
 
-
-Execute this code to generate some test data:
-
-     $ cd OMERO-metrics/
-     $ pip install -r requirements.txt
-     $ cd test/omero-server
-     $ python3 structure_generator.py
-
-Now restart your `omero-web` server and go to
-<http://localhost:5080/omero_metrics/> in your browser.
-
-# OMERO-metrics with a local omero-web
-
-This project is related to configuring Django settings for OMERO web application with Plotly Dash components.
-
-## Installation
-
-```
+Clone the repository:
+```bash
+$ git clone https://github.com/MontpellierRessourcesImagerie/OMERO-metrics.git
 $ cd OMERO-metrics
+```
+
+Run the following command to start the server:
+
+```bash
+$ docker compose up -d
+```
+
+Wait for the server to start and then go to <http://localhost:5080/> in your server.
+
+Before trying anything, you need to generate users, and import some data, etc. If you wish, you can do that 
+automatically. To do so you need to install the python environment and run a script that will generate some data for you.
+
+```bash
+$ python -m venv my_venv
+$ source my_venv/bin/activate
+$ pip install -e .
+$ cd test/omero-server
+$ python structure_generator.py
+```
+
+Go to <http://localhost:5080/> and log in with the following credentials:
+- Username: Asterix
+- Password: abc123
+
+# Installation for development
+
+Here we explain how to install OMERO-metrics using an OMERO-web server running locally. The main advantage is
+that you may edit the code and debug very easily.
+
+## Pre-requirements
+
+You need to make sure that Python (version 3.9, 3.10 or 3.11) is installed in your computer.
+
+## Configuration
+
+Clone the repository and create a virtual environment to run your server in
+
+```bash
+$ git clone https://github.com/MontpellierRessourcesImagerie/OMERO-metrics.git
+$ cd OMERO-metrics
+$ python -m venv my_venv
+$ source my_venv/bin/activate
 $ pip install -e .
 ```
 
-1.  Make sure you have REACT_VERSION=18.2.0 installed and set ENV to REACT_VERSION=18.2.0 (export REACT_VERSION=18.2.0) .
+We created a little bash script that is configuring the setup. You can run it by typing:
 
+```bash
+
+````
 Add these additional configurations using the terminal:
 
       export OMERODIR=$(pwd)
