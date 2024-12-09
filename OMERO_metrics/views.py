@@ -1,7 +1,6 @@
 from django.utils.datetime_safe import datetime
 from django.shortcuts import render
-from django.urls import reverse
-from omeroweb.webclient.decorators import login_required, render_response
+from omeroweb.webclient.decorators import login_required
 from microscopemetrics_schema import datamodel as mm_schema
 from OMERO_metrics.tools import load
 from OMERO_metrics.tools import dump
@@ -19,22 +18,6 @@ logger = logging.getLogger(__name__)
 template_name_dash = "OMERO_metrics/dash_template/dash_template.html"
 
 
-@login_required(setGroupContext=True)
-def download_file(request, conn=None, **kwargs):
-    """Download a file by triggering the omero_table view"""
-    try:
-        file_id = kwargs.get("file_id")
-        if not file_id:
-            raise ValueError("File ID is required")
-
-        # Build the URL for the view you want to trigger
-        response_url = reverse("omero_table", args=[file_id, "csv"])
-        uri = request.build_absolute_uri(response_url)
-
-        return uri
-    except Exception as e:
-        return str(e)  # Or consider returning an HttpResponse with the error
-
 
 @login_required()
 def index(request, conn=None, **kwargs):
@@ -47,32 +30,6 @@ def index(request, conn=None, **kwargs):
     return render(request, "OMERO_metrics/index.html", context)
 
 
-def web_gateway_templates(request, base_template):
-    """Simply return the named template. Similar functionality to
-    django.views.generic.simple.direct_to_template"""
-    template_name = "OMERO_metrics/web_gateway/%s.html" % base_template
-    return render(request, template_name, {})
-
-
-@login_required()
-@render_response()
-def webclient_templates(request, base_template, **kwargs):
-    """Simply return the named template.
-    Similar functionality to
-    django.views.generic.simple.direct_to_template"""
-    template_name = "OMERO_metrics/web_gateway/%s.html" % base_template
-    return {"template": template_name}
-
-
-@login_required(setGroupContext=True)
-def image_rois(request, image_id, conn=None, **kwargs):
-    """Simply shows a page of ROI
-    thumbnails for the specified image"""
-    return render(
-        request,
-        template_name="OMERO_metrics/image_rois.html",
-        context={"ImageId": image_id},
-    )
 
 
 @login_required(setGroupContext=True)
