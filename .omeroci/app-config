@@ -25,7 +25,6 @@ config_commands=(
     "config append omero.web.middleware '{\"index\": 8, \"class\": \"django_plotly_dash.middleware.BaseMiddleware\"}'"
     "config append omero.web.middleware '{\"index\":0.1, \"class\": \"OMERO_metrics.middleware.OmeroAuth\"}'"
     "config append omero.web.ui.center_plugins '[\"Metrics View\", \"OMERO_metrics/webclient_plugins/center_plugin.metricsview.js.html\", \"metrics_view_panel\"]'"
-    "config append omero.web.ui.right_plugins '[\"ROIs\", \"OMERO_metrics/webclient_plugins/right_plugin.rois.js.html\", \"image_roi_tab\"]'"
 )
 su - omero-web -c "env OMERODIR=$OMERODIR /opt/omero/web/venv3/bin/omero config set omero.web.apps '[\"$value\"]'"
 # Execute each configuration command
