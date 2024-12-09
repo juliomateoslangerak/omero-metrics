@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 template_name_dash = "OMERO_metrics/dash_template/dash_template.html"
 
 
-
 @login_required()
 def index(request, conn=None, **kwargs):
     experimenter = conn.getUser()
@@ -28,8 +27,6 @@ def index(request, conn=None, **kwargs):
         "experimenterId": experimenter.id,
     }
     return render(request, "OMERO_metrics/index.html", context)
-
-
 
 
 @login_required(setGroupContext=True)

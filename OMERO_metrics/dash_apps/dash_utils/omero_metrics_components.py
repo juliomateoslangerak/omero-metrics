@@ -5,6 +5,7 @@ from OMERO_metrics.styles import (
     THEME,
     HEADER_PAPER_STYLE,
 )
+
 download_group = dmc.Group(
     [
         dmc.Menu(
@@ -142,7 +143,6 @@ def header_component(title, description, tag, load_buttons=True):
                         ],
                     ),
                     dmc.Group(
-
                         [
                             download_group,
                             delete_button,
@@ -151,16 +151,15 @@ def header_component(title, description, tag, load_buttons=True):
                                 color=THEME["primary"],
                                 variant="dot",
                                 size="lg",
-                            )
-                        ] if load_buttons else dmc.Badge(
-                                tag,
-                                color=THEME["primary"],
-                                variant="dot",
-                                size="lg",
-                            )
-
-
-
+                            ),
+                        ]
+                        if load_buttons
+                        else dmc.Badge(
+                            tag,
+                            color=THEME["primary"],
+                            variant="dot",
+                            size="lg",
+                        )
                     ),
                 ],
                 justify="space-between",

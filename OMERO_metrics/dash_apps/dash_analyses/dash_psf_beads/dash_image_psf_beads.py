@@ -32,7 +32,12 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
         # Header Section
-       my_components.header_component("PSF Beads Analysis", "Advanced Microscopy Image Analysis", "PSF beads Analysis", load_buttons=False),
+        my_components.header_component(
+            "PSF Beads Analysis",
+            "Advanced Microscopy Image Analysis",
+            "PSF beads Analysis",
+            load_buttons=False,
+        ),
         # Main Content
         dmc.Container(
             [

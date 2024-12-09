@@ -50,7 +50,12 @@ dash_form_project = DjangoDash(
 dash_form_project.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
-        my_components.header_component("Configuration Setup", "Configure your sample type and input parameters","Analysis Form", load_buttons=False),
+        my_components.header_component(
+            "Configuration Setup",
+            "Configure your sample type and input parameters",
+            "Analysis Form",
+            load_buttons=False,
+        ),
         dmc.Container(
             [
                 dmc.Paper(

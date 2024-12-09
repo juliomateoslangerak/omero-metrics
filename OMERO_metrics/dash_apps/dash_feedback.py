@@ -9,7 +9,13 @@ import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_compone
 warning_app = DjangoDash("WarningApp")
 
 warning_app.layout = dmc.MantineProvider(
-    [   my_components.header_component("Omero Metrics Warnings", "This is a warning message", "Feedback", load_buttons=False),
+    [
+        my_components.header_component(
+            "Omero Metrics Warnings",
+            "This is a warning message",
+            "Feedback",
+            load_buttons=False,
+        ),
         dmc.Container(
             [
                 html.Div(id="input_void"),
@@ -21,7 +27,7 @@ warning_app.layout = dmc.MantineProvider(
                     style={"margin": "10px"},
                 ),
             ]
-        )
+        ),
     ]
 )
 

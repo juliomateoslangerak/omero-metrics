@@ -57,7 +57,9 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
                 ),
             ],
         ),
-       my_components.header_component("PSF Beads", "PSF Beads Analysis Dashboard", "PSF Beads Analysis"),
+        my_components.header_component(
+            "PSF Beads", "PSF Beads Analysis Dashboard", "PSF Beads Analysis"
+        ),
         dmc.Container(
             [
                 html.Div(id="blank-input"),

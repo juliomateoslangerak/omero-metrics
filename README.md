@@ -74,7 +74,7 @@ $ pip install -e .
 We created a little bash script that is configuring the setup. You can run it by typing:
 
 ```bash
-
+test /omero-server$ ./setup.sh
 ````
 Add these additional configurations using the terminal:
 
@@ -95,7 +95,6 @@ Add these additional configurations using the terminal:
       config append omero.web.middleware '{"index": 8, "class": "django_plotly_dash.middleware.BaseMiddleware"}'
       config append omero.web.middleware '{"index":0.1, "class": "OMERO_metrics.middleware.OmeroAuth"}'
       config append omero.web.ui.center_plugins '["Metrics View", "OMERO_metrics/webclient_plugins/center_plugin.metricsview.js.html", "metrics_view_panel"]'
-      config append omero.web.ui.right_plugins '["ROIs", "OMERO_metrics/webclient_plugins/right_plugin.rois.js.html", "image_roi_tab"]'
 
 ```
 python manage.py migrate

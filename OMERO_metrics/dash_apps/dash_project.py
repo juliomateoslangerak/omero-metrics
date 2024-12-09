@@ -99,7 +99,11 @@ omero_project_dash.layout = dmc.MantineProvider(
         ),
         html.Div(id="blank-input"),
         html.Div(id="save_config_result"),
-       my_components.header_component("Project Dashboard","Microscopy Image Analysis Dashboard","Project Analysis"),
+        my_components.header_component(
+            "Project Dashboard",
+            "Microscopy Image Analysis Dashboard",
+            "Project Analysis",
+        ),
         dmc.Tabs(
             value="dashboard",
             styles=TAB_STYLES,
