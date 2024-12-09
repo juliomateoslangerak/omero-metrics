@@ -3,12 +3,13 @@ from dash import html
 from dash_iconify import DashIconify
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
+import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 
 
 warning_app = DjangoDash("WarningApp")
 
 warning_app.layout = dmc.MantineProvider(
-    [
+    [   my_components.header_component("Omero Metrics Warnings", "This is a warning message", "Feedback", load_buttons=False),
         dmc.Container(
             [
                 html.Div(id="input_void"),
