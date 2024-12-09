@@ -23,16 +23,6 @@ from OMERO_metrics.dash_apps.dash_analyses.dash_psf_beads import (
 urlpatterns = [
     re_path(r"^$", index, name="OMERO_metrics_index"),
     re_path(
-        r"^webgateway_templates/(?P<base_template>[a-z0-9_]+)/",
-        web_gateway_templates,
-        name="webgateway_templates",
-    ),
-    re_path(
-        r"^webclient_templates/(?P<base_template>[a-z0-9_]+)/",
-        webclient_templates,
-        name="webclient_templates",
-    ),
-    re_path(
         r"^project/(?P<project_id>[0-9]+)/",
         center_viewer_project,
         name="project",
@@ -46,11 +36,7 @@ urlpatterns = [
     re_path(
         r"^image/(?P<image_id>[0-9]+)/", center_viewer_image, name="image"
     ),
-    re_path(
-        r"^image_rois/(?P<image_id>[0-9]+)/",
-        image_rois,
-        name="webtest_image_rois",
-    ),
+
     # This url is for the app in a new tab
     re_path(r"^microscope", microscope_view, name="microscope"),
 ]
