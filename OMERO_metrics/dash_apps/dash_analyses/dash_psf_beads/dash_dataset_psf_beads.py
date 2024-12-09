@@ -4,7 +4,7 @@ from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 from linkml_runtime.dumpers import YAMLDumper, JSONDumper
-from OMERO_metrics.styles import THEME, HEADER_PAPER_STYLE, MANTINE_THEME
+from OMERO_metrics.styles import THEME, MANTINE_THEME
 from OMERO_metrics import views
 from time import sleep
 import math
@@ -57,54 +57,7 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
                 ),
             ],
         ),
-        dmc.Paper(
-            children=[
-                dmc.Group(
-                    [
-                        dmc.Group(
-                            [
-                                html.Img(
-                                    src="/static/OMERO_metrics/images/metrics_logo.png",
-                                    style={
-                                        "width": "120px",
-                                        "height": "auto",
-                                    },
-                                ),
-                                dmc.Stack(
-                                    [
-                                        dmc.Title(
-                                            "PSF Beads",
-                                            c=THEME["primary"],
-                                            size="h2",
-                                        ),
-                                        dmc.Text(
-                                            "PSF Beads Analysis Dashboard",
-                                            c=THEME["text"]["secondary"],
-                                            size="sm",
-                                        ),
-                                    ],
-                                    gap="xs",
-                                ),
-                            ],
-                        ),
-                        dmc.Group(
-                            [
-                                my_components.download_group,
-                                my_components.delete_button,
-                                dmc.Badge(
-                                    "PSF Beads Analysis",
-                                    color=THEME["primary"],
-                                    variant="dot",
-                                    size="lg",
-                                ),
-                            ]
-                        ),
-                    ],
-                    justify="space-between",
-                ),
-            ],
-            **HEADER_PAPER_STYLE,
-        ),
+       my_components.header_component("PSF Beads", "PSF Beads Analysis Dashboard", "PSF Beads Analysis"),
         dmc.Container(
             [
                 html.Div(id="blank-input"),
@@ -268,7 +221,7 @@ def delete_dataset(*args, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def download_dataset_data(_, **kwargs):
+def download_dataset_data(*args, **kwargs):
     if not kwargs["callback_context"].triggered:
         raise dash.no_update
 
@@ -306,7 +259,7 @@ def download_dataset_data(_, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def download_table_data(_, **kwargs):
+def download_table_data(*args, **kwargs):
     if not kwargs["callback_context"].triggered:
         raise dash.no_update
 

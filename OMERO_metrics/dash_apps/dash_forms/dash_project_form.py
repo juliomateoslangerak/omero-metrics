@@ -14,6 +14,8 @@ from OMERO_metrics.styles import (
     HEADER_PAPER_STYLE,
     CONTAINER_STYLE,
 )
+import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
+
 
 # TODO: change the styles import
 
@@ -48,48 +50,7 @@ dash_form_project = DjangoDash(
 dash_form_project.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
-        dmc.Paper(
-            children=[
-                dmc.Group(
-                    [
-                        dmc.Group(
-                            [
-                                html.Img(
-                                    src="/static/OMERO_metrics/images/metrics_logo.png",
-                                    style={
-                                        "width": "120px",
-                                        "height": "auto",
-                                    },
-                                ),
-                                dmc.Stack(
-                                    [
-                                        dmc.Title(
-                                            "Configuration Setup",
-                                            c=THEME["primary"],
-                                            size="h2",
-                                        ),
-                                        dmc.Text(
-                                            "Configure your sample type and input parameters",
-                                            c=THEME["text"]["secondary"],
-                                            size="sm",
-                                        ),
-                                    ],
-                                    gap="xs",
-                                ),
-                            ],
-                        ),
-                        dmc.Badge(
-                            "Analysis Form",
-                            color=THEME["primary"],
-                            variant="dot",
-                            size="lg",
-                        ),
-                    ],
-                    justify="space-between",
-                ),
-            ],
-            **HEADER_PAPER_STYLE,
-        ),
+        my_components.header_component("Configuration Setup", "Configure your sample type and input parameters","Analysis Form", load_buttons=False),
         dmc.Container(
             [
                 dmc.Paper(

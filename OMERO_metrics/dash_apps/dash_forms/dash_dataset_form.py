@@ -13,6 +13,7 @@ from OMERO_metrics.styles import (
     HEADER_PAPER_STYLE,
     CONTAINER_STYLE,
 )
+import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 
 active = 0
 min_step = 0
@@ -30,47 +31,11 @@ dash_form_project.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
         # Header Section
-        dmc.Paper(
-            children=[
-                dmc.Group(
-                    [
-                        dmc.Group(
-                            [
-                                html.Img(
-                                    src="/static/OMERO_metrics/images/metrics_logo.png",
-                                    style={
-                                        "width": "120px",
-                                        "height": "auto",
-                                    },
-                                ),
-                                dmc.Stack(
-                                    [
-                                        dmc.Title(
-                                            "Analysis Dashboard",
-                                            c=THEME["primary"],
-                                            size="h2",
-                                        ),
-                                        dmc.Text(
-                                            "Configure and run your analysis",
-                                            c=THEME["text"]["secondary"],
-                                            size="sm",
-                                        ),
-                                    ],
-                                    gap="xs",
-                                ),
-                            ],
-                        ),
-                        dmc.Badge(
-                            "Analysis Form",
-                            color=THEME["primary"],
-                            variant="dot",
-                            size="lg",
-                        ),
-                    ],
-                    justify="space-between",
-                ),
-            ],
-            **HEADER_PAPER_STYLE,
+        my_components.header_component(
+            "Analysis Dashboard",
+            "Configure and run your analysis",
+            "Analysis Form",
+            load_buttons=False,
         ),
         dmc.Container(
             [

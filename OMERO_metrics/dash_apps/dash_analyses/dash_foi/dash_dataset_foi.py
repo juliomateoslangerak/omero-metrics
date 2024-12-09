@@ -13,7 +13,6 @@ from OMERO_metrics.styles import (
     THEME,
     MANTINE_THEME,
     CONTAINER_STYLE,
-    HEADER_PAPER_STYLE,
     CONTENT_PAPER_STYLE,
     GRAPH_STYLE,
     PLOT_LAYOUT,
@@ -63,53 +62,8 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                 ),
             ],
         ),
-        dmc.Paper(
-            children=[
-                dmc.Group(
-                    [
-                        dmc.Group(
-                            [
-                                html.Img(
-                                    src="/static/OMERO_metrics/images/metrics_logo.png",
-                                    style={
-                                        "width": "120px",
-                                        "height": "auto",
-                                    },
-                                ),
-                                dmc.Stack(
-                                    [
-                                        dmc.Title(
-                                            "Field of Illumination",
-                                            c=THEME["primary"],
-                                            size="h2",
-                                        ),
-                                        dmc.Text(
-                                            "Dataset Dashboard",
-                                            c=THEME["text"]["secondary"],
-                                            size="sm",
-                                        ),
-                                    ],
-                                    gap="xs",
-                                ),
-                            ],
-                        ),
-                        dmc.Group(
-                            [
-                                my_components.download_group,
-                                my_components.delete_button,
-                                dmc.Badge(
-                                    "FOI Analysis",
-                                    color=THEME["primary"],
-                                    variant="dot",
-                                    size="lg",
-                                ),
-                            ]
-                        ),
-                    ],
-                    justify="space-between",
-                ),
-            ],
-            **HEADER_PAPER_STYLE,
+        my_components.header_component(
+            "Field Illumination", "Dataset Analysis", "FOI Analysis"
         ),
         dmc.Container(
             [
@@ -318,7 +272,7 @@ omero_dataset_foi.layout = dmc.MantineProvider(
     dash.dependencies.Output("channel_dropdown_foi", "data"),
     [dash.dependencies.Input("blank-input", "children")],
 )
-def update_dropdown_menu(_, **kwargs):
+def update_dropdown_menu(*args, **kwargs):
     try:
         channel = kwargs["session_state"]["context"]["channel_names"]
         return [
@@ -432,41 +386,24 @@ def update_intensity_map(channel, **kwargs):
 )
 def update_profile_type(channel, curve_type, **kwargs):
     try:
-        channel = int(channel)
         df_intensity_profiles = load.load_table_mm_metrics(
             kwargs["session_state"]["context"]["mm_dataset"].output[
                 "intensity_profiles"
             ]
         )
-        channel_regex = f"ch{channel:02d}"
-        df_profile = df_intensity_profiles[
-            df_intensity_profiles.columns[
-                df_intensity_profiles.columns.str.startswith(channel_regex)
-            ]
-        ].copy()
-
-        df_profile.columns = df_profile.columns.str.replace(
-            "ch\d{2}_", "", regex=True
+        df_profile = df_intensity_profiles.filter(regex=f"ch0*{channel}_")
+        df_profile.columns = (
+            df_profile.columns.str.replace(
+                "ch\d+_leftTop_to_rightBottom", "Diagonal (↘)"
+            )
+            .str.replace("ch\d+_leftBottom_to_rightTop", "Diagonal (↗)")
+            .str.replace("ch\d+_center_horizontal", "Horizontal (→)")
+            .str.replace("ch\d+_center_vertical", "Vertical (↓)")
         )
-        df_profile = restyle_dataframe(df_profile, "columns")
-        df_profile = df_profile.reset_index()
-        df_profile.columns = df_profile.columns.str.replace(
-            "Lefttop To Rightbottom", "Diagonal (↘)"
-        )
-        df_profile.columns = df_profile.columns.str.replace(
-            "Leftbottom To Righttop", "Diagonal (↗)"
-        )
-        df_profile.columns = df_profile.columns.str.replace(
-            "Center Horizontal", "Horizontal (→)"
-        )
-        df_profile.columns = df_profile.columns.str.replace(
-            "Center Vertical", "Vertical (↓)"
-        )
-        print(df_profile.to_dict("records"))
         return df_profile.to_dict("records"), curve_type
 
     except Exception as e:
-        return [{"Pixel": 0}], "natural"
+        return [{"Pixel": 0}], "linear"
 
 
 def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:
@@ -525,7 +462,7 @@ def delete_dataset(*args, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def download_dataset_data(_, **kwargs):
+def download_dataset_data(*args, **kwargs):
     if not kwargs["callback_context"].triggered:
         raise dash.no_update
 
@@ -563,7 +500,7 @@ def download_dataset_data(_, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def download_table_data(_, **kwargs):
+def download_table_data(*args, **kwargs):
     if not kwargs["callback_context"].triggered:
         raise dash.no_update
 

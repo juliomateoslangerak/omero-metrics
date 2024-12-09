@@ -6,7 +6,7 @@ import plotly.express as px
 import plotly.graph_objs as go
 import numpy as np
 import logging
-import pandas as pd
+import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 from dash_iconify import DashIconify
 from OMERO_metrics.tools.data_preperation import (
     crop_bead_index,
@@ -32,49 +32,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
         # Header Section
-        dmc.Paper(
-            children=[
-                dmc.Group(
-                    [
-                        dmc.Group(
-                            [
-                                html.Img(
-                                    src="/static/OMERO_metrics/images/metrics_logo.png",
-                                    style={
-                                        "width": "120px",
-                                        "height": "auto",
-                                    },
-                                ),
-                                dmc.Stack(
-                                    [
-                                        dmc.Title(
-                                            "PSF Beads Analysis",
-                                            c=THEME["primary"],
-                                            size="h2",
-                                        ),
-                                        dmc.Text(
-                                            "Advanced Microscopy Image Analysis",
-                                            c=THEME["text"]["secondary"],
-                                            size="sm",
-                                        ),
-                                    ],
-                                    gap="xs",
-                                ),
-                            ],
-                            gap="md",
-                        ),
-                        dmc.Badge(
-                            "Interactive Analysis",
-                            color=THEME["primary"],
-                            variant="dot",
-                            size="lg",
-                        ),
-                    ],
-                    justify="space-between",
-                ),
-            ],
-            **HEADER_PAPER_STYLE,
-        ),
+       my_components.header_component("PSF Beads Analysis", "Advanced Microscopy Image Analysis", "PSF beads Analysis", load_buttons=False),
         # Main Content
         dmc.Container(
             [
@@ -387,26 +345,11 @@ def update_image(
         bead_properties_df = load.load_table_mm_metrics(
             mm_dataset.output["bead_properties"]
         )
-        df_beads_location = bead_properties_df[
-            (
-                (bead_properties_df["channel_nr"] == channel_index)
-                & (bead_properties_df["image_id"] == image_id)
-            )
-        ][
-            [
-                "channel_nr",
-                "bead_id",
-                "considered_axial_edge",
-                "considered_valid",
-                "considered_self_proximity",
-                "considered_lateral_edge",
-                "considered_intensity_outlier",
-                "center_z",
-                "center_y",
-                "center_x",
-            ]
-        ].copy()
-
+        df_beads_location = bead_properties_df.loc[
+            (bead_properties_df["image_id"] == image_id)
+            & (bead_properties_df["channel_nr"] == channel_index),
+            :,
+        ]
         beads, roi_rect = get_beads_info(df_beads_location, min_distance)
 
         if invert:
@@ -498,28 +441,18 @@ def callback_mip(points, axis, channel_index, **kwargs):
     bead_properties_df = load.load_table_mm_metrics(
         mm_dataset.output["bead_properties"]
     )
-    df_beads_location = bead_properties_df[
-        (
-            (bead_properties_df["channel_nr"] == channel_index)
-            & (bead_properties_df["image_id"] == image_id)
-        )
-    ][
-        [
-            "channel_nr",
-            "bead_id",
-            "considered_axial_edge",
-            "center_z",
-            "center_x",
-            "center_y",
-        ]
-    ].copy()
+    df_beads_location = bead_properties_df.loc[
+        (bead_properties_df["image_id"] == image_id)
+        & (bead_properties_df["channel_nr"] == channel_index),
+        :,
+    ]
     min_dist = int(mm_dataset.input_parameters.min_lateral_distance_factor)
     if point["curveNumber"] == 1:
         bead_index = point["pointNumber"]
 
-        bead = df_beads_location[
-            df_beads_location["bead_id"] == bead_index
-        ].copy()
+        bead = df_beads_location.loc[
+            df_beads_location["bead_id"] == bead_index, :
+        ]
         stack = kwargs["session_state"]["context"]["image"][
             0, :, :, :, channel_index
         ]
@@ -554,28 +487,9 @@ def line_graph_axis(bead_index, channel_index, axis, kwargs):
         mm_dataset.output[f"bead_profiles_{axis}"]
     )
     image_id = kwargs["session_state"]["context"]["image_id"]
-    df_axis_3d = df_axis[
-        df_axis.columns[df_axis.columns.str.startswith(str(image_id))]
-    ]
-    df_meta_x = pd.DataFrame(
-        data=[
-            [
-                int(col.split("_")[-3]),
-                int(col.split("_")[-4]),
-                col.split("_")[-1],
-                col,
-            ]
-            for col in df_axis_3d.columns
-        ],
-        columns=["bead_id", "channel_nr", "type", "name"],
+    df_x = df_axis.filter(
+        regex=f"^{image_id}_{channel_index}_{bead_index}_{axis}_"
     )
-    cols_x = df_meta_x[
-        (
-            (df_meta_x["bead_id"] == bead_index)
-            & (df_meta_x["channel_nr"] == channel_index)
-        )
-    ]["name"].values
-    df_x = df_axis_3d[cols_x].copy()
     df_x.columns = df_x.columns.str.split("_").str[-1]
     fig_ip_x = px.line(df_x)
     fig_ip_x.update_traces(
