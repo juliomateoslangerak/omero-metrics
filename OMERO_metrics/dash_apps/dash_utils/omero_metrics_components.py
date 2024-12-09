@@ -1,8 +1,10 @@
 import dash_mantine_components as dmc
-from dash import dcc
+from dash import dcc, html
 from dash_iconify import DashIconify
-from OMERO_metrics.styles import THEME
-
+from OMERO_metrics.styles import (
+    THEME,
+    HEADER_PAPER_STYLE,
+)
 download_group = dmc.Group(
     [
         dmc.Menu(
@@ -106,3 +108,63 @@ delete_button = dmc.Button(
     variant="filled",
     leftSection=DashIconify(icon="ic:round-delete-forever"),
 )
+
+
+def header_component(title, description, tag, load_buttons=True):
+    return dmc.Paper(
+        children=[
+            dmc.Group(
+                [
+                    dmc.Group(
+                        [
+                            html.Img(
+                                src="/static/OMERO_metrics/images/metrics_logo.png",
+                                style={
+                                    "width": "120px",
+                                    "height": "auto",
+                                },
+                            ),
+                            dmc.Stack(
+                                [
+                                    dmc.Title(
+                                        title,
+                                        c=THEME["primary"],
+                                        size="h2",
+                                    ),
+                                    dmc.Text(
+                                        description,
+                                        c=THEME["text"]["secondary"],
+                                        size="sm",
+                                    ),
+                                ],
+                                gap="xs",
+                            ),
+                        ],
+                    ),
+                    dmc.Group(
+
+                        [
+                            download_group,
+                            delete_button,
+                            dmc.Badge(
+                                tag,
+                                color=THEME["primary"],
+                                variant="dot",
+                                size="lg",
+                            )
+                        ] if load_buttons else dmc.Badge(
+                                tag,
+                                color=THEME["primary"],
+                                variant="dot",
+                                size="lg",
+                            )
+
+
+
+                    ),
+                ],
+                justify="space-between",
+            ),
+        ],
+        **HEADER_PAPER_STYLE,
+    )
