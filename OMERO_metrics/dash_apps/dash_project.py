@@ -424,10 +424,9 @@ def update_table(measurement, dates_range, **kwargs):
                     children=[
                         dmc.Text(
                             msg,
-                            align="center",
                             size="lg",
-                            weight=500,
-                            color="dimmed",
+                            fw=500,
+                            c="dimmed",
                         ),
                         dmc.Space(h=100),  # Add some vertical spacing
                     ],
@@ -454,10 +453,9 @@ def update_table(measurement, dates_range, **kwargs):
                     children=[
                         dmc.Text(
                             msg,
-                            align="center",
                             size="lg",
-                            weight=500,
-                            color="dimmed",
+                            fw=500,
+                            c="dimmed",
                         ),
                         dmc.Space(h=100),  # Add some vertical spacing
                     ],
@@ -505,10 +503,9 @@ def update_table(measurement, dates_range, **kwargs):
                     children=[
                         dmc.Text(
                             "No data available for selected date range",
-                            align="center",
                             size="lg",
-                            weight=500,
-                            color="dimmed",
+                            fw=500,
+                            c="dimmed",
                         ),
                         dmc.Space(h=100),  # Add some vertical spacing
                     ],
@@ -534,10 +531,9 @@ def update_table(measurement, dates_range, **kwargs):
                     children=[
                         dmc.Text(
                             "No data available for selected measurement",
-                            align="center",
                             size="lg",
-                            weight=500,
-                            color="dimmed",
+                            fw=500,
+                            c="dimmed",
                         ),
                         dmc.Space(h=100),  # Add some vertical spacing
                     ],
@@ -567,10 +563,9 @@ def update_table(measurement, dates_range, **kwargs):
                 children=[
                     dmc.Text(
                         msg,
-                        align="center",
                         size="lg",
-                        weight=500,
-                        color="dimmed",
+                        fw=500,
+                        c="dimmed",
                     ),
                     dmc.Space(h=100),  # Add some vertical spacing
                 ],
