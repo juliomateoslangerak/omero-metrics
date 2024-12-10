@@ -33,6 +33,9 @@ omero config set omero.web.debug True
 # Set secure mode
 omero config set omero.web.secure True
 
+# Set server list
+omero config set omero.web.server_list '[["localhost", 4064, "omero"]]'
+
 # Add middleware for CORS
 omero config append omero.web.middleware '{"index": 0.5, "class": "corsheaders.middleware.CorsMiddleware"}'
 omero config append omero.web.middleware '{"index": 10, "class": "corsheaders.middleware.CorsPostCsrfMiddleware"}'
