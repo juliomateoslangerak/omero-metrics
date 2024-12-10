@@ -4,6 +4,8 @@ from dash_iconify import DashIconify
 from OMERO_metrics.styles import (
     THEME,
     HEADER_PAPER_STYLE,
+    BUTTON_STYLE,
+    CARD_STYLE1,
 )
 
 download_group = dmc.Group(
@@ -167,3 +169,26 @@ def header_component(title, description, tag, load_buttons=True):
         ],
         **HEADER_PAPER_STYLE,
     )
+
+
+def thresholds_paper(Accordion_children):
+    return [
+        dmc.Accordion(
+            id="accordion-compose-controls",
+            chevron=DashIconify(icon="ant-design:plus-outlined"),
+            disableChevronRotation=True,
+            children=Accordion_children,
+        ),
+        dmc.Group(
+            justify="flex-end",
+            mt="xl",
+            children=[
+                dmc.Button(
+                    "Update",
+                    id="modal-submit-button",
+                    style=BUTTON_STYLE,
+                ),
+            ],
+        ),
+        html.Div(id="notifications-container"),
+    ]

@@ -338,15 +338,9 @@ omero_project_dash.layout = dmc.MantineProvider(
                                     dmc.Group(
                                         justify="flex-end",
                                         mt="xl",
-                                        children=[
-                                            dmc.Button(
-                                                "Update",
-                                                id="modal-submit-button",
-                                                style=BUTTON_STYLE,
-                                            ),
-                                        ],
+                                        id="thresholds-button_container",
+                                        children=[],
                                     ),
-                                    html.Div(id="result_data"),
                                     html.Div(id="notifications-container"),
                                 ],
                             ),
@@ -472,7 +466,7 @@ def update_table(measurement, dates_range, **kwargs):
                 {
                     "y": v,
                     "label": k.replace("_", " ").title(),
-                    "color": "red.6",
+                    "color": "red.6" if k == "upper_limit" else "yellow.6",
                 }
                 for k, v in threshold_kkm.items()
                 if v
@@ -808,6 +802,7 @@ def update_heart(n, **kwargs):
 
 @omero_project_dash.expanded_callback(
     dash.dependencies.Output("accordion-compose-controls", "children"),
+    dash.dependencies.Output("thresholds-button_container", "children"),
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_thresholds_controls(*args, **kwargs):
@@ -862,7 +857,12 @@ def update_thresholds_controls(*args, **kwargs):
             )
             for i, (key, value) in enumerate(new_kkm.items())
         ]
-        return threshold_control
+        button = dmc.Button(
+            "Update",
+            id="modal-submit-button",
+            style=BUTTON_STYLE,
+        )
+        return threshold_control, button
     except Exception as e:
         return dash.no_update
 
@@ -882,7 +882,7 @@ def threshold_callback1(*args, **kwargs):
         output = get_accordion_data(args[1], kkm)
         request = kwargs["request"]
         project_id = kwargs["session_state"]["context"]["project_id"]
-        if output:
+        if output and args[0] > 0:
             response, color = views.save_threshold(
                 request=request,
                 project_id=int(project_id),
