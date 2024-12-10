@@ -349,8 +349,8 @@ def load_table_project(mime_type, dates, **kwargs):
     request = kwargs["request"]
     file_ann_subset.loc[file_ann_subset.index, "Download"] = [
         (
-            f"[CSV]({request.build_absolute_uri(reverse(viewname='omero_table', args=[i, 'csv']))})"
-            f" | [JSON]({request.build_absolute_uri(reverse(viewname='omero_table', args=[i, 'json']))})"
+            f"[CSV]({request.build_absolute_uri(reverse(viewname='omero_table', args=[i, 'csv']))}) | "
+            f"[JSON]({request.build_absolute_uri(reverse(viewname='omero_table', args=[i, 'json']))})"
             if mt == "OMERO.tables"
             else f"[YAML]({request.build_absolute_uri(reverse(viewname='download_annotation', args=[id_f]))})"
         )
@@ -362,7 +362,12 @@ def load_table_project(mime_type, dates, **kwargs):
         id="datatable_file_ann",
         columns=[
             (
-                {"id": x, "name": x, "presentation": "markdown"}
+                {
+                    "id": x,
+                    "name": x,
+                    "type": "text",
+                    "presentation": "markdown",
+                }
                 if x == "Download"
                 else {"id": x, "name": x}
             )

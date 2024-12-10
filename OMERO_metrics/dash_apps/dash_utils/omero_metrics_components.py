@@ -5,7 +5,6 @@ from OMERO_metrics.styles import (
     THEME,
     HEADER_PAPER_STYLE,
     BUTTON_STYLE,
-    CARD_STYLE1,
 )
 
 download_group = dmc.Group(
