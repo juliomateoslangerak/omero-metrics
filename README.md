@@ -74,32 +74,17 @@ $ pip install -e .
 We created a little bash script that is configuring the setup. You can run it by typing:
 
 ```bash
-test /omero-server$ ./setup.sh
+test /OMERO_metrics$ ./configuration_omero.sh /path/to/omeroweb /path/to/mydatabase
 ````
-Add these additional configurations using the terminal:
+where `/path/to/omeroweb` is the path to the OMERO-web directory and `/path/to/mydatabase` is the path to the OMERO_metrics sqlite database.
 
-      export OMERODIR=$(pwd)
-      config append omero.web.apps '"OMERO_metrics"'
-      config append omero.web.apps '"dpd_static_support"'
-      config append omero.web.apps '"django_plotly_dash"'
-      config append omero.web.apps '"bootstrap4"'
-      config append omero.web.apps '"corsheaders"'
-      config append omero.web.ui.top_links '["Metrics", "OMERO_metrics_index", {"title": "Open app in new tab", "target": "_blank"}]'
-      config set omero.web.debug True
-      config append omero.web.middleware '{"index": 0.5, "class": "corsheaders.middleware.CorsMiddleware"}'
-      config append omero.web.middleware '{"index": 10, "class": "corsheaders.middleware.CorsPostCsrfMiddleware"}'
-      config set omero.web.cors_origin_allow_all True
-      config set omero.web.databases '{"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": "/opt/omero/web/mydatabase"}}'
-      config append omero.web.middleware '{"index": 7, "class": "django_plotly_dash.middleware.ExternalRedirectionMiddleware"}'
-      config append omero.web.middleware '{"index": 0.5, "class": "whitenoise.middleware.WhiteNoiseMiddleware"}'
-      config append omero.web.middleware '{"index": 8, "class": "django_plotly_dash.middleware.BaseMiddleware"}'
-      config append omero.web.middleware '{"index":0.1, "class": "OMERO_metrics.middleware.OmeroAuth"}'
-      config append omero.web.ui.center_plugins '["Metrics View", "OMERO_metrics/webclient_plugins/center_plugin.metricsview.js.html", "metrics_view_panel"]'
 
-```
-python manage.py migrate
-```
-
+```bash
+export REACT_VERSION=18.2.0
+export OMERODIR=$(pwd)
+omero config append omero.web.server_list '["localhost", 6064, "omero_server"]'
+omero web start
+````
 
 Further Info
 ============
