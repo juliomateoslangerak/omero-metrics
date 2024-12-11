@@ -10,7 +10,6 @@ from OMERO_metrics.views import run_analysis_view
 from OMERO_metrics.styles import (
     THEME,
     MANTINE_THEME,
-    HEADER_PAPER_STYLE,
     CONTAINER_STYLE,
 )
 import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
@@ -21,13 +20,13 @@ max_step = 2
 
 
 dashboard_name = "omero_dataset_form"
-dash_form_project = DjangoDash(
+dash_form_dataset = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
     external_stylesheets=dmc.styles.ALL,
 )
 
-dash_form_project.layout = dmc.MantineProvider(
+dash_form_dataset.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
         # Header Section
@@ -257,7 +256,7 @@ dash_form_project.layout = dmc.MantineProvider(
 )
 
 
-@dash_form_project.expanded_callback(
+@dash_form_dataset.expanded_callback(
     dash.dependencies.Output("setup-text", "children"),
     [dash.dependencies.Input("blank", "children")],
 )
@@ -273,7 +272,7 @@ def update_setup(_, **kwargs):
     return form
 
 
-@dash_form_project.expanded_callback(
+@dash_form_dataset.expanded_callback(
     dash.dependencies.Output("sample_container", "children"),
     [dash.dependencies.Input("blank", "children")],
 )
@@ -285,7 +284,7 @@ def update_sample(_, **kwargs):
     return form
 
 
-@dash_form_project.expanded_callback(
+@dash_form_dataset.expanded_callback(
     dash.dependencies.Output("framework-multi-select", "data"),
     dash.dependencies.Output("framework-multi-select", "value"),
     [dash.dependencies.Input("blank", "children")],
@@ -297,7 +296,7 @@ def list_images_multi_selector(_, **kwargs):
     ]
 
 
-@dash_form_project.expanded_callback(
+@dash_form_dataset.expanded_callback(
     dash.dependencies.Output("framework-multi-select", "error"),
     [dash.dependencies.Input("framework-multi-select", "value")],
 )
@@ -305,7 +304,7 @@ def multi_selector_callback(value, **kwargs):
     return "Select at least 1." if len(value) < 1 else ""
 
 
-@dash_form_project.expanded_callback(
+@dash_form_dataset.expanded_callback(
     dash.dependencies.Output("image_id", "children"),
     dash.dependencies.Output("sample_col", "children"),
     dash.dependencies.Output("config_col", "children"),
@@ -341,7 +340,7 @@ def update_review_form(
         return dash.no_update
 
 
-@dash_form_project.expanded_callback(
+@dash_form_dataset.expanded_callback(
     dash.dependencies.Output("stepper-basic-usage", "active"),
     dash.dependencies.Output("next-basic-usage", "children"),
     dash.dependencies.Output("next-basic-usage", "color"),
@@ -376,7 +375,7 @@ def stepper_callback(*args, **kwargs):
     return step, next_text, next_color
 
 
-dash_form_project.clientside_callback(
+dash_form_dataset.clientside_callback(
     """
     function updateLoadingState(n_clicks, current) {
         if (current == 2) {
@@ -395,7 +394,7 @@ dash_form_project.clientside_callback(
 )
 
 
-@dash_form_project.expanded_callback(
+@dash_form_dataset.expanded_callback(
     dash.dependencies.Output("main-content", "children"),
     dash.dependencies.Output("loading-overlay", "visible"),
     [
@@ -475,7 +474,7 @@ def run_analysis(_, list_images, current, comment, **kwargs):
     return dash.no_update, False
 
 
-dash_form_project.clientside_callback(
+dash_form_dataset.clientside_callback(
     """
     function updateProgress(active) {
         return active * 50;
