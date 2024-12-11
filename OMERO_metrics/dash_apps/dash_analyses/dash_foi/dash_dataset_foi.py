@@ -387,11 +387,15 @@ def update_profile_type(channel, curve_type, **kwargs):
         df_profile = df_intensity_profiles.filter(regex=f"ch0*{channel}_")
         df_profile.columns = (
             df_profile.columns.str.replace(
-                "ch\d+_leftTop_to_rightBottom", "Diagonal (↘)"
+                "ch\d+_leftTop_to_rightBottom", "Diagonal (↘)", regex=True
             )
-            .str.replace("ch\d+_leftBottom_to_rightTop", "Diagonal (↗)")
-            .str.replace("ch\d+_center_horizontal", "Horizontal (→)")
-            .str.replace("ch\d+_center_vertical", "Vertical (↓)")
+            .str.replace(
+                "ch\d+_leftBottom_to_rightTop", "Diagonal (↗)", regex=True
+            )
+            .str.replace(
+                "ch\d+_center_horizontal", "Horizontal (→)", regex=True
+            )
+            .str.replace("ch\d+_center_vertical", "Vertical (↓)", regex=True)
         )
         return df_profile.to_dict("records"), curve_type
 
