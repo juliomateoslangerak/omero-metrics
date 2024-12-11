@@ -26,7 +26,9 @@ def index(request, conn=None, **kwargs):
         "lastName": experimenter.lastName,
         "experimenterId": experimenter.id,
     }
-    return render(request, "OMERO_metrics/index.html", context)
+    return render(
+        request, "OMERO_metrics/top_link_template/index.html", context
+    )
 
 
 @login_required(setGroupContext=True)
@@ -159,7 +161,7 @@ def microscope_view(request, conn=None, **kwargs):
     the specified image"""
     return render(
         request,
-        template_name="OMERO_metrics/microscope.html",
+        template_name="OMERO_metrics/top_link_template/microscope.html",
         context={"app_name": "Microscope"},
     )
 
