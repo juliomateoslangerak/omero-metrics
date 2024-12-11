@@ -89,29 +89,40 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
 
 @login_required(setGroupContext=True)
 def center_viewer_group(request, conn=None, **kwargs):
-    if request.session.get("active_group"):
-        active_group = request.session["active_group"]
-    else:
-        active_group = conn.getEventContext().groupId
-    file_ann, map_ann = load.get_annotations_tables(conn, active_group)
     dash_context = request.session.get("django_plotly_dash", dict())
-    group = conn.getObject("ExperimenterGroup", active_group)
-    group_name = group.getName()
-    group_description = group.getDescription()
-    context = {
-        "group_id": active_group,
-        "group_name": group_name,
-        "group_description": group_description,
-        "file_ann": file_ann,
-        "map_ann": map_ann,
-    }
-    dash_context["context"] = context
-    request.session["django_plotly_dash"] = dash_context
-    return render(
-        request,
-        template_name=template_name_dash,
-        context={"app_name": "omero_group_dash"},
-    )
+
+    try:
+        if request.session.get("active_group"):
+            active_group = request.session["active_group"]
+        else:
+            active_group = conn.getEventContext().groupId
+        file_ann, map_ann = load.get_annotations_tables(conn, active_group)
+        dash_context = request.session.get("django_plotly_dash", dict())
+        group = conn.getObject("ExperimenterGroup", active_group)
+        group_name = group.getName()
+        group_description = group.getDescription()
+        context = {
+            "group_id": active_group,
+            "group_name": group_name,
+            "group_description": group_description,
+            "file_ann": file_ann,
+            "map_ann": map_ann,
+        }
+        dash_context["context"] = context
+        request.session["django_plotly_dash"] = dash_context
+        return render(
+            request,
+            template_name=template_name_dash,
+            context={"app_name": "omero_group_dash"},
+        )
+    except Exception as e:
+        dash_context["context"] = {"message": str(e)}
+        request.session["django_plotly_dash"] = dash_context
+        return render(
+            request,
+            template_name=template_name_dash,
+            context={"app_name": "WarningApp"},
+        )
 
 
 @login_required(setGroupContext=True)
