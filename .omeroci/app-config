@@ -19,7 +19,7 @@ config_commands=(
     "config append omero.web.middleware '{\"index\": 0.5, \"class\": \"corsheaders.middleware.CorsMiddleware\"}'"
     "config append omero.web.middleware '{\"index\": 10, \"class\": \"corsheaders.middleware.CorsPostCsrfMiddleware\"}'"
     "config set omero.web.cors_origin_allow_all True"
-    "config set omero.web.databases '{\"default\": {\"ENGINE\": \"django.db.backends.sqlite3\", \"NAME\": \"/opt/omero/web/django_plotly_dash_db}}'"
+    "config set omero.web.databases '{\"default\": {\"ENGINE\": \"django.db.backends.sqlite3\", \"NAME\": \"/opt/omero/web/django_plotly_dash_db\"}}'"
     "config append omero.web.middleware '{\"index\": 7, \"class\": \"django_plotly_dash.middleware.ExternalRedirectionMiddleware\"}'"
     "config append omero.web.middleware '{\"index\": 0.5, \"class\": \"whitenoise.middleware.WhiteNoiseMiddleware\"}'"
     "config append omero.web.middleware '{\"index\": 8, \"class\": \"django_plotly_dash.middleware.BaseMiddleware\"}'"
