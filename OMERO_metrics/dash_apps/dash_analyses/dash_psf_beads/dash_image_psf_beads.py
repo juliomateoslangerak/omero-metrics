@@ -230,7 +230,8 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                 dmc.Group(
                                                     [
                                                         dmc.Text(
-                                                            "Maximum Intensity Projection",
+                                                            id="title_mip",
+                                                            children="Maximum Intensity Projection",
                                                             size="lg",
                                                             fw=500,
                                                             c=THEME["primary"],
@@ -430,6 +431,7 @@ def update_channels_psf_image(_, **kwargs):
 @omero_image_psf_beads.expanded_callback(
     dash.dependencies.Output("mip_image", "figure"),
     dash.dependencies.Output("mip_chart_image", "figure"),
+    dash.dependencies.Output("title_mip", "children"),
     [
         dash.dependencies.Input("psf_image_graph", "clickData"),
         dash.dependencies.Input("axis_image_psf", "value"),
@@ -440,9 +442,12 @@ def update_channels_psf_image(_, **kwargs):
 def callback_mip(points, axis, channel_index, **kwargs):
     point = points["points"][0]
     axis = axis.lower()
+    channel_names = kwargs["session_state"]["context"]["channel_names"]
+    channels = [c.name for c in channel_names.channels]
     mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
     image_id = int(kwargs["session_state"]["context"]["image_id"])
     channel_index = int(channel_index)
+    channel_name = channels[channel_index]
     bead_properties_df = load.load_table_mm_metrics(
         mm_dataset.output["bead_properties"]
     )
@@ -478,9 +483,11 @@ def callback_mip(points, axis, channel_index, **kwargs):
             paper_bgcolor=THEME["background"],
             font={"color": THEME["text"]["primary"]},
         )
+        title = f"Maximum Intensity Projection for channel {channel_name} Bead number {bead_index}"
         return (
             fig_mip_go,
             line_graph_axis(bead_index, channel_index, axis, kwargs),
+            title,
         )
     else:
         return dash.no_update
