@@ -35,7 +35,6 @@ def get_annotations_tables(conn, group_id):
         "Date",
         "Owner",
         "NS",
-        "Mimetype",
     ]
     file_ann_rows = []
     map_ann_cols = ["Name", "ID", "Description", "Date", "Owner", "NS"]
@@ -52,7 +51,6 @@ def get_annotations_tables(conn, group_id):
                         ann.getDate(),
                         ann.getOwner().getName(),
                         ann.getNs(),
-                        ann.getFile().getMimetype(),
                     ]
                 )
             elif isinstance(ann, omero.gateway.MapAnnotationWrapper):
