@@ -82,7 +82,7 @@ where `/path/to/omeroweb` is the path to the OMERO-web directory and `/path/to/m
 ```bash
 export REACT_VERSION=18.2.0
 export OMERODIR=$(pwd)
-omero config append omero.web.server_list '["localhost", 6064, "omero_server"]'
+omero config set omero.web.server_list '[["localhost", 6064, "omero_server"]]'
 omero web start
 ````
 
