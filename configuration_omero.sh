@@ -43,7 +43,7 @@ omero config set omero.web.cors_origin_allow_all True
 
 # Configure the database (SQLite)
 # Ensure DB_PATH leads to a valid directory or filename as you intend.
-omero config set omero.web.databases "{\"default\": {\"ENGINE\": \"django.db.backends.sqlite3\", \"NAME\": \"$DB_PATH/dash_database\"}}"
+omero config set omero.web.databases "{\"default\": {\"ENGINE\": \"django.db.backends.sqlite3\", \"NAME\": \"$DB_PATH/django_plotly_dash_db\"}}"
 
 # Add django_plotly_dash and whitenoise middleware
 omero config append omero.web.middleware '{"index": 7, "class": "django_plotly_dash.middleware.ExternalRedirectionMiddleware"}'
