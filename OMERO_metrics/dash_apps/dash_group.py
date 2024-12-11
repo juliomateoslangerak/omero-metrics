@@ -187,14 +187,6 @@ dash_app_group.layout = dmc.MantineProvider(
                                                 ),
                                                 styles=DATEPICKER_STYLES,
                                             ),
-                                            dmc.Select(
-                                                id="select_mimetype",
-                                                label="Mime Type",
-                                                value="0",
-                                                w=250,
-                                                allowDeselect=False,
-                                                styles=SELECT_STYLES,
-                                            ),
                                             dmc.Button(
                                                 id="delete-all",
                                                 children=[
@@ -288,18 +280,6 @@ def update_date_range(*args, **kwargs):
 
 
 @dash_app_group.expanded_callback(
-    dash.dependencies.Output("select_mimetype", "data"),
-    [dash.dependencies.Input("blank-input", "children")],
-)
-def update_mimetype(*args, **kwargs):
-    df = kwargs["session_state"]["context"]["file_ann"]
-    mimetype = df.Mimetype.unique()
-    data = [{"label": mt, "value": f"{i+1}"} for i, mt in enumerate(mimetype)]
-    data = [{"label": "All", "value": "0"}] + data
-    return data
-
-
-@dash_app_group.expanded_callback(
     dash.dependencies.Output("microscope_info", "children"),
     dash.dependencies.Input("blank-input", "children"),
 )
@@ -322,12 +302,11 @@ def render_content(*args, **kwargs):
 @dash_app_group.expanded_callback(
     dash.dependencies.Output("project_file_annotations_table", "children"),
     [
-        dash.dependencies.Input("select_mimetype", "value"),
         dash.dependencies.Input("date-picker", "value"),
     ],
     prevent_initial_call=True,
 )
-def load_table_project(mime_type, dates, **kwargs):
+def load_table_project(dates, **kwargs):
     file_ann = kwargs["session_state"]["context"]["file_ann"]
     if dates is not None:
         file_ann = file_ann[
@@ -337,42 +316,14 @@ def load_table_project(mime_type, dates, **kwargs):
 
     else:
         pass
-    if int(mime_type) > 0 and len(file_ann.Mimetype.unique()) > 0:
-        file_ann = file_ann[
-            file_ann.Mimetype == file_ann.Mimetype.unique()[int(mime_type) - 1]
-        ]
-    else:
-        pass
+
     file_ann_subset = file_ann[
         file_ann.columns[~file_ann.columns.str.contains("ID")]
     ].copy()
     request = kwargs["request"]
-    file_ann_subset.loc[file_ann_subset.index, "Download"] = [
-        (
-            f"[CSV]({request.build_absolute_uri(reverse(viewname='omero_table', args=[i, 'csv']))}) | "
-            f"[JSON]({request.build_absolute_uri(reverse(viewname='omero_table', args=[i, 'json']))})"
-            if mt == "OMERO.tables"
-            else f"[YAML]({request.build_absolute_uri(reverse(viewname='download_annotation', args=[id_f]))})"
-        )
-        for i, mt, id_f in zip(
-            file_ann.File_ID, file_ann.Mimetype, file_ann.ID
-        )
-    ]
+
     file_ann_table = dash_table.DataTable(
         id="datatable_file_ann",
-        columns=[
-            (
-                {
-                    "id": x,
-                    "name": x,
-                    "type": "text",
-                    "presentation": "markdown",
-                }
-                if x == "Download"
-                else {"id": x, "name": x}
-            )
-            for x in file_ann_subset.columns
-        ],
         data=file_ann_subset.to_dict("records"),
         sort_action="native",
         sort_mode="multi",
@@ -435,4 +386,4 @@ def delete_all_callback(*args, **kwargs):
 def download_file(*args, **kwargs):
     table_data = args[1]
     df = pd.DataFrame(table_data)
-    return dcc.send_data_frame(df.to_csv, "FIle_annotation.csv")
+    return dcc.send_data_frame(df.to_csv, "File_annotation.csv")
