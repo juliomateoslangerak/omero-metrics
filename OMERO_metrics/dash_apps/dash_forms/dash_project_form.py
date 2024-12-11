@@ -11,7 +11,6 @@ import OMERO_metrics.views as views
 from OMERO_metrics.styles import (
     MANTINE_THEME,
     THEME,
-    HEADER_PAPER_STYLE,
     CONTAINER_STYLE,
 )
 import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
