@@ -100,7 +100,7 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
                                 dmc.ScrollArea(
                                     [
                                         dmc.Table(
-                                            id="key_values_psf",
+                                            id="key_measurements_psf",
                                             striped=True,
                                             highlightOnHover=True,
                                             className="table table-striped table-bordered",
@@ -135,7 +135,7 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
 
 
 @omero_dataset_psf_beads.expanded_callback(
-    dash.dependencies.Output("key_values_psf", "data"),
+    dash.dependencies.Output("key_measurements_psf", "data"),
     dash.dependencies.Output("pagination", "total"),
     [
         dash.dependencies.Input("pagination", "value"),
@@ -146,20 +146,9 @@ def func_psf_callback(pagination_value, **kwargs):
         mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
         table_name="key_measurements",
     )
+    kkm = kwargs["session_state"]["context"]["kkm"]
     page = int(pagination_value)
-    kkm = [
-        "channel_name",
-        "considered_valid_count",
-        "intensity_max_median",
-        "intensity_max_std",
-        "intensity_min_mean",
-        "intensity_min_median",
-        "intensity_min_std",
-        "intensity_std_mean",
-        "intensity_std_median",
-        "intensity_std_std",
-    ]
-    table_kkm = table_km[kkm].copy()
+    table_kkm = table_km.filter(["channel_name", *kkm])
     table_kkm = table_kkm.round(3)
     table_kkm.columns = table_kkm.columns.str.replace("_", " ").str.title()
     total = math.ceil(len(table_kkm) / 4)
@@ -272,19 +261,8 @@ def download_table_data(*args, **kwargs):
         mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
         table_name="key_measurements",
     )
-    kkm = [
-        "channel_name",
-        "considered_valid_count",
-        "intensity_max_median",
-        "intensity_max_std",
-        "intensity_min_mean",
-        "intensity_min_median",
-        "intensity_min_std",
-        "intensity_std_mean",
-        "intensity_std_median",
-        "intensity_std_std",
-    ]
-    table_kkm = table_km[kkm].copy()
+    kkm = kwargs["session_state"]["context"]["kkm"]
+    table_kkm = table_km.filter(["channel_name", *kkm])
     table_kkm = table_kkm.round(3)
     table_kkm.columns = table_kkm.columns.str.replace("_", " ").str.title()
     if triggered_id == "table-download-csv":

@@ -290,24 +290,17 @@ def update_dropdown_menu(*args, **kwargs):
         dash.dependencies.Input("pagination", "value"),
     ],
 )
-def update_km_table(page, **kwargs):
+def update_km_table(pagination_value, **kwargs):
     try:
-        page = int(page)
-        table = load.get_km_mm_metrics_dataset(
+        page = int(pagination_value)
+        kkm = kwargs["session_state"]["context"]["kkm"]
+        table_km = load.get_km_mm_metrics_dataset(
             mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
             table_name="key_measurements",
         )
         start_idx = (page - 1) * 4
         end_idx = start_idx + 4
-        metrics_df = table[
-            [
-                "channel_name",
-                "center_region_intensity_fraction",
-                "center_region_area_fraction",
-                "max_intensity",
-            ]
-        ].copy()
-
+        metrics_df = table_km.filter(["channel_name", *kkm])
         metrics_df = metrics_df.round(3)
         metrics_df.columns = metrics_df.columns.str.replace(
             "_", " ", regex=True
@@ -507,18 +500,12 @@ def download_table_data(*args, **kwargs):
     triggered_id = (
         kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
     )
-    table = load.get_km_mm_metrics_dataset(
+    table_km = load.get_km_mm_metrics_dataset(
         mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
         table_name="key_measurements",
     )
-    metrics_df = table[
-        [
-            "channel_name",
-            "center_region_intensity_fraction",
-            "center_region_area_fraction",
-            "max_intensity",
-        ]
-    ].copy()
+    kkm = kwargs["session_state"]["context"]["kkm"]
+    metrics_df = table_km.filter(["channel_name", *kkm])
     metrics_df = metrics_df.round(3)
     metrics_df.columns = metrics_df.columns.str.replace(
         "_", " ", regex=True

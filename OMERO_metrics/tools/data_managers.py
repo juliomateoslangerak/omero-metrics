@@ -294,6 +294,7 @@ class DatasetManager:
                     )
                     self.remove_unsupported_data()
                 self.context["mm_dataset"] = self.mm_dataset
+                self.context["kkm"] = self.kkm
 
             else:
                 message = "Unknown analysis type. Unable to visualize"

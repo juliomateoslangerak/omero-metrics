@@ -589,7 +589,7 @@ def update_project_view(clicked_data, page, **kwargs):
             kkm = kwargs["session_state"]["context"]["kkm"]
             selected_dataset = int(clicked_data["dataset_index"])
             df_selected = table[selected_dataset]
-            table_kkm = df_selected[kkm].copy()
+            table_kkm = df_selected.filter(["channel_name", *kkm])
             table_kkm = table_kkm.round(3)
             total = math.ceil(len(table_kkm) / 4)
             start_idx = (page - 1) * 4
