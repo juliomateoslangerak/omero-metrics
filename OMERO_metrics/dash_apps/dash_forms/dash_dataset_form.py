@@ -2,7 +2,6 @@ import dash
 from dash import html
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
-from dash_iconify import DashIconify
 from microscopemetrics_schema import datamodel as mm_schema
 from OMERO_metrics.tools import dash_forms_tools as dft
 from time import sleep
@@ -73,9 +72,8 @@ dash_form_dataset.layout = dmc.MantineProvider(
                                     id="step_sample",
                                     label="Sample Configuration",
                                     description="Define sample parameters",
-                                    icon=DashIconify(
+                                    icon=my_components.get_icon(
                                         icon="material-symbols:science-outline",
-                                        height=20,
                                     ),
                                     children=[
                                         dmc.Paper(
@@ -100,9 +98,8 @@ dash_form_dataset.layout = dmc.MantineProvider(
                                     id="step_input_data",
                                     label="Data Selection",
                                     description="Choose input images",
-                                    icon=DashIconify(
+                                    icon=my_components.get_icon(
                                         icon="material-symbols:image-search",
-                                        height=20,
                                     ),
                                     children=[
                                         dmc.Paper(
@@ -122,9 +119,8 @@ dash_form_dataset.layout = dmc.MantineProvider(
                                                                             id="framework-multi-select",
                                                                             clearable=True,
                                                                             searchable=True,
-                                                                            leftSection=DashIconify(
+                                                                            leftSection=my_components.get_icon(
                                                                                 icon="material-symbols-light:image",
-                                                                                height=20,
                                                                             ),
                                                                             styles={
                                                                                 "input": {
@@ -224,18 +220,16 @@ dash_form_dataset.layout = dmc.MantineProvider(
                                     "Back",
                                     id="back-basic-usage",
                                     variant="outline",
-                                    leftSection=DashIconify(
+                                    leftSection=my_components.get_icon(
                                         icon="material-symbols:arrow-back",
-                                        height=20,
                                     ),
                                     color=THEME["secondary"],
                                 ),
                                 dmc.Button(
                                     "Next",
                                     id="next-basic-usage",
-                                    rightSection=DashIconify(
+                                    rightSection=my_components.get_icon(
                                         icon="material-symbols:arrow-forward",
-                                        height=20,
                                     ),
                                     color=THEME["primary"],
                                 ),
@@ -327,8 +321,10 @@ def update_review_form(
         clearable=False,
         w="auto",
         disabled=True,
-        leftSection=DashIconify(icon="material-symbols-light:image"),
-        rightSection=DashIconify(icon="radix-icons:chevron-down"),
+        leftSection=my_components.get_icon(
+            icon="material-symbols-light:image"
+        ),
+        rightSection=my_components.get_icon(icon="radix-icons:chevron-down"),
     )
     if current == 1:
         return (
@@ -448,7 +444,7 @@ def run_analysis(_, list_images, current, comment, **kwargs):
                         ),
                     ],
                     color=color,
-                    icon=DashIconify(
+                    icon=my_components.get_icon(
                         icon=(
                             "mdi:check-circle"
                             if color == "green"
@@ -467,7 +463,7 @@ def run_analysis(_, list_images, current, comment, **kwargs):
                     dmc.Text(str(e), size="sm"),
                 ],
                 color="red",
-                icon=DashIconify(icon="mdi:alert"),
+                icon=my_components.get_icon(icon="mdi:alert"),
                 title="Error!",
                 radius="md",
             )

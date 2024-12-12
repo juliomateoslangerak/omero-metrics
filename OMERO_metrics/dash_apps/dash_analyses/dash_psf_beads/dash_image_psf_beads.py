@@ -7,13 +7,8 @@ import plotly.graph_objs as go
 import numpy as np
 import logging
 import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
-from dash_iconify import DashIconify
 from OMERO_metrics.styles import THEME, MANTINE_THEME
 from OMERO_metrics.tools import load
-
-
-def get_icon(icon, size=20, color=None):
-    return DashIconify(icon=icon, height=size, color=color)
 
 
 logger = logging.getLogger(__name__)
@@ -57,7 +52,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                         dmc.Tooltip(
                                                             label="Click on a bead in the image to view its MIP",
                                                             children=[
-                                                                get_icon(
+                                                                my_components.get_icon(
                                                                     "material-symbols:info",
                                                                     color=THEME[
                                                                         "primary"
@@ -109,10 +104,10 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                             w="100%",
                                                             value="0",
                                                             allowDeselect=False,
-                                                            leftSection=get_icon(
+                                                            leftSection=my_components.get_icon(
                                                                 "material-symbols:layers"
                                                             ),
-                                                            rightSection=get_icon(
+                                                            rightSection=my_components.get_icon(
                                                                 "radix-icons:chevron-down"
                                                             ),
                                                         ),
@@ -185,10 +180,10 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                                 },
                                                             ],
                                                             value="Hot",
-                                                            leftSection=get_icon(
+                                                            leftSection=my_components.get_icon(
                                                                 "material-symbols:palette"
                                                             ),
-                                                            rightSection=get_icon(
+                                                            rightSection=my_components.get_icon(
                                                                 "radix-icons:chevron-down"
                                                             ),
                                                         ),
@@ -274,10 +269,10 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                                     value="x",
                                                                     allowDeselect=False,
                                                                     id="axis_image_psf",
-                                                                    rightSection=get_icon(
+                                                                    rightSection=my_components.get_icon(
                                                                         "radix-icons:chevron-down"
                                                                     ),
-                                                                    leftSection=get_icon(
+                                                                    leftSection=my_components.get_icon(
                                                                         icon="mdi:axis-x-arrow"
                                                                     ),
                                                                 ),
@@ -319,7 +314,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
 )
 def update_icon(axis):
     icon = f"mdi:axis-{axis}-arrow"
-    return get_icon(icon=icon)
+    return my_components.get_icon(icon=icon)
 
 
 @omero_image_psf_beads.expanded_callback(

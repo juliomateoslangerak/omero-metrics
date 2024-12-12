@@ -169,6 +169,9 @@ SELECT_STYLES = {
     },
 }
 
+COLORS_CHANNELS = ["#FF0000", "#00FF00", "#0000FF", "#FFFF00"]
+
+
 DATEPICKER_STYLES = {
     **INPUT_BASE_STYLES,
     "calendar": {

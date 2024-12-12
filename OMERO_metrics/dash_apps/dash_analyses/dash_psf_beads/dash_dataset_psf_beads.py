@@ -2,7 +2,6 @@ import dash
 from dash import dcc, html
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
-from dash_iconify import DashIconify
 from linkml_runtime.dumpers import YAMLDumper, JSONDumper
 from OMERO_metrics.styles import THEME, MANTINE_THEME
 from OMERO_metrics import views
@@ -11,10 +10,6 @@ import math
 from OMERO_metrics.styles import TABLE_MANTINE_STYLE
 import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 from OMERO_metrics.tools import load
-
-
-def get_icon(icon, size=20, color=None):
-    return DashIconify(icon=icon, height=size, color=color)
 
 
 dashboard_name = "omero_dataset_psf_beads"
@@ -84,8 +79,8 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
                                                 dmc.Tooltip(
                                                     label="Statistical measurements for all the channels presented in the dataset",
                                                     children=[
-                                                        get_icon(
-                                                            "material-symbols:info-outline",
+                                                        my_components.get_icon(
+                                                            icon="material-symbols:info-outline",
                                                             color=THEME[
                                                                 "primary"
                                                             ],
@@ -190,7 +185,7 @@ def delete_dataset(*args, **kwargs):
             id="simple-notify",
             action="show",
             message=msg,
-            icon=DashIconify(
+            icon=my_components.get_icon(
                 icon=(
                     "akar-icons:circle-check"
                     if color == "green"

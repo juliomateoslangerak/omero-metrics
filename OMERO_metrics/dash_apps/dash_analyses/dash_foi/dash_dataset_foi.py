@@ -6,7 +6,6 @@ from dash import dcc, html
 from django_plotly_dash import DjangoDash
 import plotly.express as px
 import dash_mantine_components as dmc
-from dash_iconify import DashIconify
 from linkml_runtime.dumpers import YAMLDumper, JSONDumper
 from skimage.exposure import rescale_intensity
 from OMERO_metrics.styles import (
@@ -93,13 +92,11 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                                             allowDeselect=False,
                                                             w="200",
                                                             value="0",
-                                                            leftSection=DashIconify(
-                                                                icon="material-symbols:layers",
-                                                                height=20,
+                                                            leftSection=my_components.get_icon(
+                                                                icon="material-symbols:layers"
                                                             ),
-                                                            rightSection=DashIconify(
-                                                                icon="radix-icons:chevron-down",
-                                                                height=20,
+                                                            rightSection=my_components.get_icon(
+                                                                icon="radix-icons:chevron-down"
                                                             ),
                                                             styles=INPUT_BASE_STYLES,
                                                         ),
@@ -149,9 +146,8 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                                                 dmc.Tooltip(
                                                                     label="Statistical measurements for all the channels",
                                                                     children=[
-                                                                        DashIconify(
+                                                                        my_components.get_icon(
                                                                             icon="material-symbols:info",
-                                                                            height=20,
                                                                             color=THEME[
                                                                                 "primary"
                                                                             ],
@@ -436,7 +432,7 @@ def delete_dataset(*args, **kwargs):
             id="simple-notify",
             action="show",
             message=msg,
-            icon=DashIconify(
+            icon=my_components.get_icon(
                 icon=(
                     "akar-icons:circle-check"
                     if color == "green"

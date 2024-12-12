@@ -2,7 +2,6 @@ import dash
 from dash import html
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
-from dash_iconify import DashIconify
 from datetime import datetime
 import pandas as pd
 from linkml_runtime.dumpers import YAMLDumper, JSONDumper
@@ -20,23 +19,11 @@ from OMERO_metrics.styles import (
     DATEPICKER_STYLES,
     TABLE_MANTINE_STYLE,
     MANTINE_THEME,
+    COLORS_CHANNELS,
 )
 import math
-from microscopemetrics.analyses.mappings import MAPPINGS
 from time import sleep
 import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
-
-sample_types = [x[0] for x in MAPPINGS]
-sample_types_dp = [
-    {
-        "label": dft.add_space_between_capitals(x.__name__),
-        "value": f"{i}",
-        "description": f"Configure analysis for {x.__name__}",  # Added descriptions
-    }
-    for i, x in enumerate(sample_types)
-]
-
-colors = ["#FF0000", "#00FF00", "#0000FF", "#FFFF00"]
 
 
 def make_control(text, action_id):
@@ -44,7 +31,7 @@ def make_control(text, action_id):
         [
             dmc.AccordionControl(text),
             dmc.ActionIcon(
-                children=DashIconify(icon="lets-icons:check-fill"),
+                children=my_components.get_icon(icon="lets-icons:check-fill"),
                 color="green",
                 variant="default",
                 n_clicks=0,
@@ -113,21 +100,27 @@ omero_project_dash.layout = dmc.MantineProvider(
                         dmc.TabsTab(
                             "Dashboard",
                             value="dashboard",
-                            leftSection=DashIconify(icon="ph:chart-line-bold"),
+                            leftSection=my_components.get_icon(
+                                icon="ph:chart-line-bold"
+                            ),
                             color=THEME["primary"],
                             style=TAB_ITEM_STYLE,
                         ),
                         dmc.TabsTab(
                             "Settings",
                             value="settings",
-                            leftSection=DashIconify(icon="ph:gear-bold"),
+                            leftSection=my_components.get_icon(
+                                icon="ph:gear-bold"
+                            ),
                             color=THEME["primary"],
                             style=TAB_ITEM_STYLE,
                         ),
                         dmc.TabsTab(
                             "Thresholds",
                             value="thresholds",
-                            leftSection=DashIconify(icon="ph:ruler-bold"),
+                            leftSection=my_components.get_icon(
+                                icon="ph:ruler-bold"
+                            ),
                             color=THEME["primary"],
                             style=TAB_ITEM_STYLE,
                         ),
@@ -162,12 +155,12 @@ omero_project_dash.layout = dmc.MantineProvider(
                                                         id="project-dropdown",
                                                         label="Select Measurement",
                                                         placeholder="Choose a measurement",
-                                                        leftSection=DashIconify(
+                                                        leftSection=my_components.get_icon(
                                                             icon="ph:magnifying-glass"
                                                         ),
                                                         value="0",
                                                         disabled=True,
-                                                        rightSection=DashIconify(
+                                                        rightSection=my_components.get_icon(
                                                             icon="ph:caret-down"
                                                         ),
                                                         allowDeselect=False,
@@ -184,7 +177,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                                                         type="range",
                                                         valueFormat="DD-MM-YYYY",
                                                         placeholder="Select date range",
-                                                        leftSection=DashIconify(
+                                                        leftSection=my_components.get_icon(
                                                             icon="ph:calendar"
                                                         ),
                                                         disabledDates=True,
@@ -329,7 +322,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                                 children=[
                                     dmc.Accordion(
                                         id="accordion-compose-controls",
-                                        chevron=DashIconify(
+                                        chevron=my_components.get_icon(
                                             icon="ant-design:plus-outlined"
                                         ),
                                         disableChevronRotation=True,
@@ -542,7 +535,10 @@ def update_table(measurement, dates_range, **kwargs):
             c for c in df.columns if c not in ["dataset_index", "date"]
         ]
         series = [
-            {"name": channel, "color": colors[i % len(colors)]}
+            {
+                "name": channel,
+                "color": COLORS_CHANNELS[i % len(COLORS_CHANNELS)],
+            }
             for i, channel in enumerate(channels)
         ]
         return data, series, ref, dash.no_update
@@ -724,7 +720,7 @@ def update_config_project(submit_click, sample_form, input_form, **kwargs):
                         ),
                     ],
                     color=color,
-                    icon=DashIconify(
+                    icon=my_components.get_icon(
                         icon=(
                             "mdi:check-circle"
                             if color == "green"
@@ -745,7 +741,7 @@ def update_config_project(submit_click, sample_form, input_form, **kwargs):
                         dmc.Text(str(e), size="sm"),
                     ],
                     color="red",
-                    icon=DashIconify(icon="mdi:alert"),
+                    icon=my_components.get_icon(icon="mdi:alert"),
                     title="Error!",
                     radius="md",
                     withCloseButton=True,
@@ -767,7 +763,7 @@ def update_config_project(submit_click, sample_form, input_form, **kwargs):
                     ),
                 ],
                 color="red",
-                icon=DashIconify(icon="mdi:alert"),
+                icon=my_components.get_icon(icon="mdi:alert"),
                 title="Error!",
                 radius="md",
                 withCloseButton=True,
@@ -830,7 +826,7 @@ def update_thresholds_controls(*args, **kwargs):
                                     dmc.NumberInput(
                                         label="Upper Limit",
                                         placeholder="Enter upper limit",
-                                        leftSection=DashIconify(
+                                        leftSection=my_components.get_icon(
                                             icon="hugeicons:chart-maximum",
                                             color=THEME["primary"],
                                         ),
@@ -839,7 +835,7 @@ def update_thresholds_controls(*args, **kwargs):
                                     dmc.NumberInput(
                                         label="Lower Limit",
                                         placeholder="Enter lower limit",
-                                        leftSection=DashIconify(
+                                        leftSection=my_components.get_icon(
                                             icon="hugeicons:chart-minimum",
                                             color=THEME["primary"],
                                         ),
@@ -896,9 +892,9 @@ def threshold_callback1(*args, **kwargs):
                     action="show",
                     message=response,
                     icon=(
-                        DashIconify(icon="ic:round-celebration")
+                        my_components.get_icon(icon="ic:round-celebration")
                         if color == "green"
-                        else DashIconify(icon="ic:round-error")
+                        else my_components.get_icon(icon="ic:round-error")
                     ),
                 ),
                 False,
@@ -972,7 +968,7 @@ def delete_project(*args, **kwargs):
                 id="simple-notify",
                 action="show",
                 message=msg,
-                icon=DashIconify(
+                icon=my_components.get_icon(
                     icon=(
                         "akar-icons:circle-check"
                         if color == "green"

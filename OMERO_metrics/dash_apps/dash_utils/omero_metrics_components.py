@@ -13,6 +13,10 @@ from plotly.subplots import make_subplots
 from typing import Union
 
 
+def get_icon(icon, size=20, color=None):
+    return DashIconify(icon=icon, height=size, color=color)
+
+
 def fig_mip(mip_x, mip_y, mip_z):
     fig = make_subplots(
         rows=2,
