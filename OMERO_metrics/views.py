@@ -157,12 +157,12 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
 
 @login_required(setGroupContext=True)
 def microscope_view(request, conn=None, **kwargs):
-    """Simply shows a page of ROI thumbnails for
-    the specified image"""
+    """This is to display the microscope dashboard
+    for the top link ui"""
     return render(
         request,
         template_name="OMERO_metrics/top_link_template/microscope.html",
-        context={"app_name": "Microscope"},
+        context={"app_name": "top_iu_microscope"},
     )
 
 

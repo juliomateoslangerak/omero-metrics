@@ -67,7 +67,6 @@ omero_dataset_foi.layout = dmc.MantineProvider(
         ),
         dmc.Container(
             [
-                # Header Section
                 # Main Content
                 dmc.Grid(
                     gutter="md",

@@ -6,7 +6,6 @@ import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 from OMERO_metrics import views
 from time import sleep
-from django.urls import reverse
 from OMERO_metrics.styles import (
     THEME,
     MANTINE_THEME,
@@ -18,7 +17,6 @@ from OMERO_metrics.styles import (
     TAB_STYLES,
     TAB_ITEM_STYLE,
     STYLE_DATA_CONDITIONAL,
-    SELECT_STYLES,
     DATEPICKER_STYLES,
     HEADER_PAPER_STYLE,
 )

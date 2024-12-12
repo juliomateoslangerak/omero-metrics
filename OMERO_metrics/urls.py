@@ -1,4 +1,11 @@
-from OMERO_metrics.views import *
+from OMERO_metrics.views import (
+    index,
+    microscope_view,
+    center_viewer_project,
+    center_viewer_dataset,
+    center_viewer_group,
+    center_viewer_image,
+)
 from django.urls import re_path
 from OMERO_metrics.dash_apps import (
     dash_feedback,

@@ -9,7 +9,7 @@ df = pd.read_csv(
 )
 
 
-dashboard_name = "Microscope"
+dashboard_name = "top_iu_microscope"
 dash_app_microscope = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
