@@ -37,5 +37,5 @@ urlpatterns = [
         r"^image/(?P<image_id>[0-9]+)/", center_viewer_image, name="image"
     ),
     # This url is for the app in a new tab
-    re_path(r"^microscope", microscope_view, name="microscope"),
+    re_path(r"^microscope/", microscope_view, name="microscope"),
 ]

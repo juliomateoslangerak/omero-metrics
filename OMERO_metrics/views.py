@@ -15,7 +15,7 @@ import omero
 logger = logging.getLogger(__name__)
 
 
-template_name_dash = "OMERO_metrics/dash_template/dash_template.html"
+template_name_dash = "OMERO_metrics/dash_template_center_ui/dash_template.html"
 
 
 @login_required()

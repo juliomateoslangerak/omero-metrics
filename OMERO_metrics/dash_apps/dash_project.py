@@ -946,6 +946,7 @@ def get_accordion_data(accordion_state, kkm):
 @omero_project_dash.expanded_callback(
     dash.dependencies.Output("delete-confirm_delete", "opened"),
     dash.dependencies.Output("delete-notifications-container", "children"),
+    dash.dependencies.Output("delete-modal-submit-button", "loading"),
     [
         dash.dependencies.Input("delete_data", "n_clicks"),
         dash.dependencies.Input("delete-modal-submit-button", "n_clicks"),
@@ -980,9 +981,9 @@ def delete_project(*args, **kwargs):
                 ),
                 color=color,
             )
-            return opened, message
+            return opened, message, False
         else:
-            return opened, None
+            return opened, None, False
     except Exception as e:
         return dash.no_update
 
@@ -1044,3 +1045,20 @@ def get_data_trends(kkm, measurement, dates, dfs):
     complete_df = complete_df[complete_df["Measurement"] == kkm[measurement]]
     complete_df = complete_df.drop(columns="Measurement")
     return complete_df
+
+
+omero_project_dash.clientside_callback(
+    """
+    function loadingDeleteButton(n_clicks) {
+        if (n_clicks > 0) {
+            return true;
+        }
+        return false;
+    }
+    """,
+    dash.dependencies.Output(
+        "delete-modal-submit-button", "loading", allow_duplicate=True
+    ),
+    dash.dependencies.Input("delete-modal-submit-button", "n_clicks"),
+    prevent_initial_call=True,
+)

@@ -320,8 +320,6 @@ def load_table_project(dates, **kwargs):
     file_ann_subset = file_ann[
         file_ann.columns[~file_ann.columns.str.contains("ID")]
     ].copy()
-    request = kwargs["request"]
-
     file_ann_table = dash_table.DataTable(
         id="datatable_file_ann",
         data=file_ann_subset.to_dict("records"),
@@ -342,6 +340,7 @@ def load_table_project(dates, **kwargs):
 @dash_app_group.expanded_callback(
     dash.dependencies.Output("confirm_delete", "opened"),
     dash.dependencies.Output("notifications-container", "children"),
+    dash.dependencies.Output("modal-submit-button", "loading"),
     [
         dash.dependencies.Input("delete-all", "n_clicks"),
         dash.dependencies.Input("modal-submit-button", "n_clicks"),
@@ -372,9 +371,9 @@ def delete_all_callback(*args, **kwargs):
             ),
             color=color,
         )
-        return opened, message
+        return opened, message, False
     else:
-        return opened, None
+        return opened, None, False
 
 
 @dash_app_group.expanded_callback(
@@ -387,3 +386,20 @@ def download_file(*args, **kwargs):
     table_data = args[1]
     df = pd.DataFrame(table_data)
     return dcc.send_data_frame(df.to_csv, "File_annotation.csv")
+
+
+dash_app_group.clientside_callback(
+    """
+    function loadingDeleteButtonGroup(n_clicks) {
+        if (n_clicks > 0) {
+            return true;
+        }
+        return false;
+    }
+    """,
+    dash.dependencies.Output(
+        "modal-submit-button", "loading", allow_duplicate=True
+    ),
+    dash.dependencies.Input("modal-submit-button", "n_clicks"),
+    prevent_initial_call=True,
+)

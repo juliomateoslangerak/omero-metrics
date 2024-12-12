@@ -166,6 +166,7 @@ def func_psf_callback(pagination_value, **kwargs):
 @omero_dataset_psf_beads.expanded_callback(
     dash.dependencies.Output("confirm_delete", "opened"),
     dash.dependencies.Output("notifications-container", "children"),
+    dash.dependencies.Output("modal-submit-button", "loading"),
     [
         dash.dependencies.Input("delete_data", "n_clicks"),
         dash.dependencies.Input("modal-submit-button", "n_clicks"),
@@ -198,9 +199,9 @@ def delete_dataset(*args, **kwargs):
             ),
             color=color,
         )
-        return opened, message
+        return opened, message, False
     else:
-        return opened, None
+        return opened, None, False
 
 
 @omero_dataset_psf_beads.expanded_callback(
@@ -272,3 +273,20 @@ def download_table_data(*args, **kwargs):
     elif triggered_id == "table-download-json":
         return dcc.send_data_frame(table_kkm.to_json, "km_table.json")
     raise dash.no_update
+
+
+omero_dataset_psf_beads.clientside_callback(
+    """
+    function(n_clicks) {
+        if (n_clicks > 0) {
+            return true;
+        }
+        return false;
+    }
+    """,
+    dash.dependencies.Output(
+        "modal-submit-button", "loading", allow_duplicate=True
+    ),
+    dash.dependencies.Input("modal-submit-button", "n_clicks"),
+    prevent_initial_call=True,
+)
