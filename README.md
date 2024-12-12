@@ -86,7 +86,7 @@ omero config set omero.web.server_list '[["localhost", 6064, "omero_server"]]'
 omero web start
 ````
 
-# Ice Links
+# Some Useful Links To Download ZeroC-Ice
 
 ```python
 #zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-macos-universal2/releases/download/20240131/zeroc_ice-3.6.5-cp311-cp311-macosx_11_0_universal2.whl
@@ -97,7 +97,7 @@ Further Info
 ============
 
 1.  This app was derived from [cookiecutter-omero-webapp](https://github.com/ome/cookiecutter-omero-webapp).
-2.  For further info on depolyment, see [Deployment](https://docs.openmicroscopy.org/latest/omero/developers/Web/Deployment.html)
+2.  For further info on deployment, see [Deployment](https://docs.openmicroscopy.org/latest/omero/developers/Web/Deployment.html)
 
 
 License
