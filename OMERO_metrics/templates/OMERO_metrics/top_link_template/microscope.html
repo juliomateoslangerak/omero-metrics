@@ -2,8 +2,8 @@
 {% load static %}
 {%load plotly_dash%}
 
-            {% block content %}
-                <div class="{%plotly_class name=app_name %}">
-    {%plotly_app name=app_name ratio=1%}
-</div>
-            {% endblock %}
+{% block content %}
+        <div class="{%plotly_class name=app_name %}">
+           {%plotly_app name=app_name ratio=1%}
+        </div>
+{% endblock %}
