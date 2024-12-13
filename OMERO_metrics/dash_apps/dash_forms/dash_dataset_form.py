@@ -22,7 +22,10 @@ dashboard_name = "omero_dataset_form"
 dash_form_dataset = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
-    external_stylesheets=dmc.styles.ALL,
+    external_stylesheets=[
+        dmc.styles.ALL,
+        "/static/OMERO_metrics/css/style_app.css",
+    ],
 )
 
 dash_form_dataset.layout = dmc.MantineProvider(
