@@ -27,6 +27,7 @@ from OMERO_metrics.dash_apps.dash_analyses.dash_psf_beads import (
     dash_image_psf_beads,
 )
 
+
 urlpatterns = [
     re_path(r"^$", index, name="OMERO_metrics_index"),
     re_path(

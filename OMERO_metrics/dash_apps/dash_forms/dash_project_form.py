@@ -228,6 +228,7 @@ dash_form_project.layout = dmc.MantineProvider(
                                 dmc.Button(
                                     "Next",
                                     id="next-basic-usage",
+                                    color=THEME["primary"],
                                     rightSection=my_components.get_icon(
                                         icon="mdi:arrow-right"
                                     ),

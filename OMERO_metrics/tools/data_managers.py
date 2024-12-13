@@ -407,11 +407,9 @@ class ProjectManager:
                                 for dm in self.datasets
                                 if dm.processed
                             ],
-                            dataset_class=[
-                                dm.mm_dataset.class_class_curie
-                                for dm in self.datasets
-                                if dm.processed
-                            ],
+                            dataset_class=self.datasets[
+                                0
+                            ].mm_dataset.class_name,
                             name=self.omero_project.getName(),
                             description=self.omero_project.getDescription(),
                         )

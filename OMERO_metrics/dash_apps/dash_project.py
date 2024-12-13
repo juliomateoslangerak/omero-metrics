@@ -386,73 +386,55 @@ def update_dropdown(*args, **kwargs):
 
 
 @omero_project_dash.expanded_callback(
+    dash.dependencies.Output("graph-project", "children"),
+    [dash.dependencies.Input("blank-input", "children")],
+)
+def check_data(*args, **kwargs):
+    try:
+        data = kwargs["session_state"]["context"]["key_measurements_list"]
+        if data:
+            return dash.no_update
+        return dash.no_update
+    except Exception as e:
+        return [
+            dmc.Stack(
+                children=[
+                    dmc.Text(
+                        "No data available for this project",
+                        size="lg",
+                        fw=500,
+                        c="dimmed",
+                    ),
+                    dmc.Space(h=100),  # Add some vertical spacing
+                ],
+                align="center",
+                justify="center",
+                style={"height": "250px"},
+            )
+        ]
+
+
+@omero_project_dash.expanded_callback(
     dash.dependencies.Output("line-chart", "data"),
     dash.dependencies.Output("line-chart", "series"),
     dash.dependencies.Output("line-chart", "referenceLines"),
-    dash.dependencies.Output("graph-project", "children"),
     [
         dash.dependencies.Input("project-dropdown", "value"),
         dash.dependencies.Input("date-picker", "value"),
     ],
+    prevent_initial_call=True,
 )
 def update_table(measurement, dates_range, **kwargs):
     try:
-        # Check if required data exists in session state
-        if not all(
-            key in kwargs["session_state"]["context"]
-            for key in ["key_measurements_list", "threshold", "kkm", "dates"]
-        ):
-            msg = kwargs["session_state"]["context"]["message"]
-            return (
-                [],
-                [],
-                [],
-                dmc.Stack(
-                    children=[
-                        dmc.Text(
-                            msg,
-                            size="lg",
-                            fw=500,
-                            c="dimmed",
-                        ),
-                        dmc.Space(h=100),  # Add some vertical spacing
-                    ],
-                    align="center",
-                    justify="center",
-                    style={"height": "250px"},
-                ),
-            )
 
         df_list = kwargs["session_state"]["context"]["key_measurements_list"]
         threshold = kwargs["session_state"]["context"]["threshold"]
         kkm = kwargs["session_state"]["context"]["kkm"]
+        measurement = int(measurement)
 
         # Check if we have any data
-        if not df_list or not dates_range:
-            msg = kwargs["session_state"]["context"].get(
-                "message", "No data available yet"
-            )
-            return (
-                [],
-                [],
-                [],
-                dmc.Stack(
-                    children=[
-                        dmc.Text(
-                            msg,
-                            size="lg",
-                            fw=500,
-                            c="dimmed",
-                        ),
-                        dmc.Space(h=100),  # Add some vertical spacing
-                    ],
-                    align="center",
-                    justify="center",
-                    style={"height": "250px"},
-                ),
-            )
-
-        measurement = int(measurement)
+        if not df_list:
+            return dash.no_update
         if threshold:
             threshold_kkm = threshold[kkm[measurement]]
             ref = [
@@ -480,55 +462,11 @@ def update_table(measurement, dates_range, **kwargs):
             )
         ].index.to_list()
 
-        # Check if we have any data after filtering
-        if not df_dates:
-            return (
-                [],
-                [],
-                [],
-                dmc.Stack(
-                    children=[
-                        dmc.Text(
-                            "No data available for selected date range",
-                            size="lg",
-                            fw=500,
-                            c="dimmed",
-                        ),
-                        dmc.Space(h=100),  # Add some vertical spacing
-                    ],
-                    align="center",
-                    justify="center",
-                    style={"height": "250px"},
-                ),
-            )
-
         df_list_filtered = [df_list[i] for i in df_dates]
         dates_filtered = [dates[i] for i in df_dates]
         df = get_data_trends(
             kkm, measurement, dates_filtered, df_list_filtered
         )
-
-        # Check if we have data after processing
-        if df.empty:
-            return (
-                [],
-                [],
-                [],
-                dmc.Stack(
-                    children=[
-                        dmc.Text(
-                            "No data available for selected measurement",
-                            size="lg",
-                            fw=500,
-                            c="dimmed",
-                        ),
-                        dmc.Space(h=100),  # Add some vertical spacing
-                    ],
-                    align="center",
-                    justify="center",
-                    style={"height": "250px"},
-                ),
-            )
 
         data = df.to_dict("records")
         channels = [
@@ -541,29 +479,10 @@ def update_table(measurement, dates_range, **kwargs):
             }
             for i, channel in enumerate(channels)
         ]
-        return data, series, ref, dash.no_update
+        return data, series, ref
 
     except Exception as e:
-        msg = kwargs["session_state"]["context"]["message"]
-        return (
-            [],
-            [],
-            [],
-            dmc.Stack(
-                children=[
-                    dmc.Text(
-                        msg,
-                        size="lg",
-                        fw=500,
-                        c="dimmed",
-                    ),
-                    dmc.Space(h=100),  # Add some vertical spacing
-                ],
-                align="center",
-                justify="center",
-                style={"height": "250px"},
-            ),
-        )
+        return dash.no_update
 
 
 @omero_project_dash.expanded_callback(
@@ -575,7 +494,6 @@ def update_table(measurement, dates_range, **kwargs):
         dash.dependencies.Input("line-chart", "clickData"),
         dash.dependencies.Input("pagination", "value"),
     ],
-    prevent_initial_call=True,
 )
 def update_project_view(clicked_data, page, **kwargs):
     try:

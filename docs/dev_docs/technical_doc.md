@@ -115,7 +115,7 @@ manage script is manage.py and settings is settings.py
 ![image](media/setting_up_django_project.png)
 
 
-the final step is to configure back your configuration file to run a django server locally:
+the final step is to configure your configuration file to run a django server locally:
 add these Env variables and run your omero web client instance locally DJANGO_SETTINGS_MODULE=omeroweb.settings;REACT_VERSION=18.2.0;OMERODIR=~/OMERO-metrics;ICE_CONFIG=~/OMERO-metrics/etc/ice.config
 
 ![image](media/set_env_django_server.png)
