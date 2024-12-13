@@ -38,7 +38,10 @@ dashboard_name = "omero_project_config_form"
 dash_form_project = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
-    external_stylesheets=dmc.styles.ALL,
+    external_stylesheets=[
+        dmc.styles.ALL,
+        "/static/OMERO_metrics/css/style_app.css",
+    ],
 )
 
 dash_form_project.layout = dmc.MantineProvider(
