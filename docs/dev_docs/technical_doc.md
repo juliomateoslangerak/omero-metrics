@@ -1,22 +1,38 @@
+---
+title: OMERO-metrics Technical doc
+
+---
+
 
 OMERO-metrics is an omero web app. It was initially generated using the cookiecutter https://github.com/ome/cookiecutter-omero-webapp
 
 For visualization, we are using the help of dash and django-plotly-dash. 
-We are using also microscope-metrics and microscopemetrics-schema developped previously by Julio. 
+We are using also microscope-metrics and microscopemetrics-schema developed previously by Julio. 
 
 
 # Documentations
-https://django-plotly-dash.readthedocs.io/en/latest/
-https://dash.plotly.com/
-https://www.dash-mantine-components.com/
+- https://django-plotly-dash.readthedocs.io/en/latest/
+- https://dash.plotly.com/
+- https://www.dash-mantine-components.com/
+- https://github.com/GibbsConsulting/django-plotly-dash/tree/master/demo
+- https://github.com/ome/omero-test-infra
 
 # New Analysis Type
 
-![image](https://hackmd.io/_uploads/B1LUvmDN1e.png)
+![image](media/project_structure.png)
  
 To add a new analysis type, you create a folder under OMERO_metrics/dash_apps/dash_analysis
  
-create two python files, one for the dataset view and the other for the iage view. 
+create two python files, one for the dataset view and the other for the image view. These files will corresponds to your 
+django plotly dash pages.
+
+You need to update tools/data_manager to add the new analysis type and to manage your data.
+
+Make sure to add the django plotly dash pages to the urls.py file to trigger their registrations.
+
+
+
+
 
  
 
@@ -30,7 +46,7 @@ $ python -m venv my_venv
 $ source my_venv/bin/activate
 $ pip install -e .
 ```
-![image](https://hackmd.io/_uploads/SyfAPZDE1x.png)
+![image](media/project_structure1.png)
 
 
 We created a bash script to configure omero. You can run it by typing:
@@ -64,43 +80,42 @@ For more information about ice.config. Click [Here](https://github.com/ome/openm
 ## Running Pytest on Pycharm for OMERO-metrics
 
 Try to look for this small menu in the image to run and configure 
-![image](https://hackmd.io/_uploads/Hk4L0-vVkx.png)
+![image](media/debug_run_menu.png)
 
-Click on "Edit Configureations" the following window will open to configure your pytest and debug mode:
+Click on "Edit Configurations" the following window will open to configure your pytest and debug mode:
 
-![image](https://hackmd.io/_uploads/H1JT1fDEJe.png)
+![image](media/debug_run_window.png)
 
 Click on add new run configuration and click on pytest:
 
-![image](https://hackmd.io/_uploads/BJX-gfDNkx.png)
+![image](media/add_new_config.png)
 
 Now, we need to add our configurations: 
 The path to the pytest script you want to run
-Working directory should be the rrot project OMERO-metrics. and add for Env variables : DJANGO_SETTINGS_MODULE=omeroweb.settings;REACT_VERSION=18.2.0;OMERODIR=~/OMERO-metrics;ICE_CONFIG=~/OMERO-metrics/etc/ice.config
+Working directory should be the root project OMERO-metrics. and add for Env variables : DJANGO_SETTINGS_MODULE=omeroweb.settings;REACT_VERSION=18.2.0;OMERODIR=~/OMERO-metrics;ICE_CONFIG=~/OMERO-metrics/etc/ice.config
 
-![image](https://hackmd.io/_uploads/HJDjgfvN1g.png)
+![image](media/set_env_pytest.png)
 
 That's it, now run your test.
 
 
 ## Debug Mode:
 
-We will do the same like pytest but instead of adding pytest we will add Django Server:
+We will do the same as pytest but instead of adding pytest we will add Django Server:
 
-![image](https://hackmd.io/_uploads/B1-UMfD4Jl.png)
+![image](media/django_server_window.png)
 
 When you click on the Django server, this is the view that you will see. You will need first to enable Django Support for the project and add some configurations.
 
-![image](https://hackmd.io/_uploads/ByvwnfvV1g.png)
+![image](media/add_config_django_server.png)
 
 The Django root project should be ~/omeroweb
 manage script is manage.py and settings is settings.py
 
-![image](https://hackmd.io/_uploads/ByC6nfDNkx.png)
+![image](media/setting_up_django_project.png)
 
 
-the final step is to confugure back your configuration file o run a django server locally:
+the final step is to configure back your configuration file to run a django server locally:
 add these Env variables and run your omero web client instance locally DJANGO_SETTINGS_MODULE=omeroweb.settings;REACT_VERSION=18.2.0;OMERODIR=~/OMERO-metrics;ICE_CONFIG=~/OMERO-metrics/etc/ice.config
 
-![image](https://hackmd.io/_uploads/Hk7a6GwE1l.png)
-
+![image](media/set_env_django_server.png)
