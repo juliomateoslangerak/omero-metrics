@@ -13,6 +13,23 @@ from plotly.subplots import make_subplots
 from typing import Union
 
 
+def make_control(text, action_id):
+    return dmc.Flex(
+        [
+            dmc.AccordionControl(text),
+            dmc.ActionIcon(
+                children=my_components.get_icon(icon="lets-icons:check-fill"),
+                color="green",
+                variant="default",
+                n_clicks=0,
+                id={"index": action_id},
+            ),
+        ],
+        justify="center",
+        align="center",
+    )
+
+
 def get_icon(icon, size=20, color=None):
     return DashIconify(icon=icon, height=size, color=color)
 
