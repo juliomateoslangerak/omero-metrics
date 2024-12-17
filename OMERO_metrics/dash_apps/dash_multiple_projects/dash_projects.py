@@ -14,9 +14,9 @@ omero_multiple_projects = DjangoDash(
 omero_multiple_projects.layout = dmc.MantineProvider(
     [
         my_components.header_component(
-            "Omero Metrics Projects",
-            "This is a view for multiple projects",
-            "Feedback",
+            title="Omero Metrics Projects",
+            description="This is a view for multiple projects",
+            tag="Feedback",
             load_buttons=False,
         ),
         dmc.Container(
@@ -33,7 +33,7 @@ omero_multiple_projects.layout = dmc.MantineProvider(
     dash.dependencies.Output("chart_lines", "children"),
     [dash.dependencies.Input("input_void", "value")],
 )
-def tables(*args, **kwargs):
+def kkm_tables_projects(*args, **kwargs):
     if kwargs["session_state"]["context"]:
         data = kwargs["session_state"]["context"]
         print(data)
@@ -51,7 +51,7 @@ def tables(*args, **kwargs):
                         [
                             dmc.Text(f"Project ID: {project_id}"),
                             dmc.Text(
-                                f"No data available, please analyse project ID= {project_id}",
+                                children=f"No data available for project ID: {project_id}, please analyse it first.",
                                 c="dimmed",
                                 fw="bold",
                             ),
@@ -64,7 +64,7 @@ def tables(*args, **kwargs):
     else:
         return [
             dmc.Text(
-                "No data available, please analyse at least one project",
+                children="No data available. Please analyse at least one project",
                 c="dimmed",
                 fw="bold",
             )
