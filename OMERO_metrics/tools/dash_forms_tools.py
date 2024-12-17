@@ -71,7 +71,6 @@ def get_dmc_field_input(
     input_field.w = "auto"
     input_field.disabled = disabled
     input_field.required = not field_info["optional"]
-    # input_field.error = True if not field_info["optional"] else False
     input_field.leftSection = DashIconify(
         icon=type_mapping[field_info["type"]][1]
     )

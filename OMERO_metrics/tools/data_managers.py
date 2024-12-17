@@ -126,7 +126,7 @@ class DatasetManager:
         if isinstance(omero_dataset, DatasetWrapper):
             self.omero_dataset = omero_dataset
         else:
-            raise ValueError("datasets must be a DatasetWrapper")
+            raise ValueError("dataset must be a DatasetWrapper")
         self.omero_project = self.omero_dataset.getParent()
         self.input_parameters = None
         self.load_images = load_images

@@ -26,23 +26,6 @@ from time import sleep
 import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 
 
-def make_control(text, action_id):
-    return dmc.Flex(
-        [
-            dmc.AccordionControl(text),
-            dmc.ActionIcon(
-                children=my_components.get_icon(icon="lets-icons:check-fill"),
-                color="green",
-                variant="default",
-                n_clicks=0,
-                id={"index": action_id},
-            ),
-        ],
-        justify="center",
-        align="center",
-    )
-
-
 # Initialize the Dash app
 dashboard_name = "omero_project_dash"
 omero_project_dash = DjangoDash(
@@ -466,7 +449,7 @@ def update_table(measurement, dates_range, **kwargs):
 
         df_list_filtered = [df_list[i] for i in df_dates]
         dates_filtered = [dates[i] for i in df_dates]
-        df = get_data_trends(
+        df = my_components.get_data_trends(
             kkm, measurement, dates_filtered, df_list_filtered
         )
 
@@ -733,7 +716,7 @@ def update_thresholds_controls(*args, **kwargs):
         threshold_control = [
             dmc.AccordionItem(
                 [
-                    make_control(
+                    my_components.make_control(
                         key.replace("_", " ").title(),
                         f"action-{i}",
                     ),
@@ -946,21 +929,6 @@ def download_project_data(*args, **kwargs):
         raise dash.no_update
     except Exception as e:
         return dash.no_update
-
-
-def get_data_trends(kkm, measurement, dates, dfs):
-    complete_df = pd.DataFrame()
-    for i, df in enumerate(dfs):
-        dfi = df.pivot_table(columns="channel_name", values=kkm).reset_index(
-            names="Measurement"
-        )
-        dfi["dataset_index"] = i
-        dfi["date"] = dates[i]
-        complete_df = pd.concat([complete_df, dfi])
-    complete_df = complete_df.reset_index(drop=True)
-    complete_df = complete_df[complete_df["Measurement"] == kkm[measurement]]
-    complete_df = complete_df.drop(columns="Measurement")
-    return complete_df
 
 
 omero_project_dash.clientside_callback(

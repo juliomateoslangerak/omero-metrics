@@ -1,0 +1,18 @@
+{% extends "webgateway/base/base_main.html" %}
+{%load plotly_dash%}
+{% block title %}Omero Metrics{% endblock %}
+
+
+
+{% block script %}
+{% endblock %}
+
+{% block body %}
+
+
+
+
+<div class="{%plotly_class name='projects_multi_selection' %}">
+    {%plotly_app name='projects_multi_selection' ratio=1%}
+</div>
+{% endblock %}

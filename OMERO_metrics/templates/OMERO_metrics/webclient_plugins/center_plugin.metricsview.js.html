@@ -5,9 +5,18 @@ $(document).ready(function() {
         plugin_index: {{ forloop.counter }},
         load_plugin_content: function(selected, dtype, oid){
             var url;
-
-            if (dtype=="image") {
-                url = '{% url 'OMERO_metrics_index' %}image/'+oid +'/';
+            if (dtype=="project" && selected.length > 1) {
+                var iids = [];
+                for (var i=0; i<selected.length; i++) {
+                    var dtype = selected[i]['id'].split("-")[0];
+                    if (dtype == "project") {
+                        iids.push(selected[i]['id'].split("-")[1]);
+                    };
+                }
+                url = '{% url 'OMERO_metrics_projects' %}?projectIds='+ iids.join(",");
+            }
+            else if (dtype=="project" && selected.length == 1) {
+                url = '{% url 'OMERO_metrics_index' %}project/'+oid+'/';
             }
             else if (dtype=="dataset") {
                 url = '{% url 'OMERO_metrics_index' %}dataset/'+oid +'/';
@@ -15,14 +24,27 @@ $(document).ready(function() {
             else if (dtype=="experimenter") {
                 url = '{% url 'OMERO_metrics_index' %}group/';
             }
-            else if (dtype=="project") {
-                url = '{% url 'OMERO_metrics_index' %}project/'+oid +'/';
+            else if (dtype=="image") {
+                
+                url = '{% url 'OMERO_metrics_index' %}image/'+oid +'/';
             }
 
             $(this).load(url);
 
         },
-        supported_obj_types: ['experimenter','project','dataset', 'image'],
+        
+        plugin_enabled: function(selected){
+            if (selected.length == 0) return false;
+            var dtype = selected[0]['id'].split('-')[0];
+            if (selected.length > 1) {
+                return (dtype == "project");
+            } 
+            else {
+                return ($.inArray(dtype, ["image", "dataset", "project", "experimenter"]) > -1);
+    }
+}
     });
 });
 </script>
+
+

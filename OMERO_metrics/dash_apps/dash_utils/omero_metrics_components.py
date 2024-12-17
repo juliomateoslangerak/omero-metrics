@@ -6,11 +6,18 @@ from OMERO_metrics.styles import (
     HEADER_PAPER_STYLE,
     BUTTON_STYLE,
 )
+from datetime import datetime
 
 import plotly.express as px
 import numpy as np
 from plotly.subplots import make_subplots
 from typing import Union
+import pandas as pd
+from OMERO_metrics.styles import COLORS_CHANNELS
+
+
+def get_icon(icon, size=20, color=None):
+    return DashIconify(icon=icon, height=size, color=color)
 
 
 def make_control(text, action_id):
@@ -18,7 +25,7 @@ def make_control(text, action_id):
         [
             dmc.AccordionControl(text),
             dmc.ActionIcon(
-                children=my_components.get_icon(icon="lets-icons:check-fill"),
+                children=get_icon(icon="lets-icons:check-fill"),
                 color="green",
                 variant="default",
                 n_clicks=0,
@@ -28,10 +35,6 @@ def make_control(text, action_id):
         justify="center",
         align="center",
     )
-
-
-def get_icon(icon, size=20, color=None):
-    return DashIconify(icon=icon, height=size, color=color)
 
 
 def fig_mip(mip_x, mip_y, mip_z):
@@ -323,3 +326,52 @@ def thresholds_paper(Accordion_children):
         ),
         html.Div(id="notifications-container"),
     ]
+
+
+def get_title_line_chart(project_id, value):
+    title = dmc.Text(f"Project ID: {project_id}")
+    dates = value["dates"]
+    kkm = value["kkm"]
+    dfs = value["key_measurements_list"]
+    measurement = 0
+    df = get_data_trends(kkm, measurement, dates, dfs)
+    channels = [c for c in df.columns if c not in ["dataset_index", "date"]]
+    series = [
+        {
+            "name": channel,
+            "color": COLORS_CHANNELS[i % len(COLORS_CHANNELS)],
+        }
+        for i, channel in enumerate(channels)
+    ]
+    line_chart = dmc.LineChart(
+        id=f"line-chart-{project_id}",
+        h=300,
+        dataKey="date",
+        withLegend=True,
+        legendProps={
+            "horizontalAlign": "top",
+            "left": 50,
+        },
+        data=df.to_dict("records"),
+        series=series,
+        curveType="linear",
+        style={"padding": 20},
+        xAxisLabel="Processed Date",
+        connectNulls=True,
+    )
+    return title, line_chart
+
+
+def get_data_trends(kkm, measurement, dates, dfs):
+    complete_df = pd.DataFrame()
+    for i, df in enumerate(dfs):
+        dfi = df.pivot_table(columns="channel_name", values=kkm).reset_index(
+            names="Measurement"
+        )
+        dfi["dataset_index"] = i
+        dfi["date"] = dates[i]
+        complete_df = pd.concat([complete_df, dfi])
+    complete_df = complete_df.reset_index(drop=True)
+    complete_df = complete_df[complete_df["Measurement"] == kkm[measurement]]
+    complete_df = complete_df.drop(columns="Measurement")
+    return complete_df

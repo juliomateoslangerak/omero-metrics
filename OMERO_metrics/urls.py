@@ -5,6 +5,8 @@ from OMERO_metrics.views import (
     center_viewer_dataset,
     center_viewer_group,
     center_viewer_image,
+    imageJ,
+    center_view_projects,
 )
 from django.urls import re_path
 from OMERO_metrics.dash_apps import (
@@ -26,7 +28,7 @@ from OMERO_metrics.dash_apps.dash_analyses.dash_psf_beads import (
     dash_dataset_psf_beads,
     dash_image_psf_beads,
 )
-
+from OMERO_metrics.dash_apps.dash_multiple_projects import dash_projects
 
 urlpatterns = [
     re_path(r"^$", index, name="OMERO_metrics_index"),
@@ -46,4 +48,10 @@ urlpatterns = [
     ),
     # This url is for the app in a new tab
     re_path(r"^microscope/", microscope_view, name="microscope"),
+    re_path(r"^imageJ_test/", imageJ, name="imageJ_test"),
+    re_path(
+        r"^OMERO_metrics_projects/",
+        center_view_projects,
+        name="OMERO_metrics_projects",
+    ),
 ]
