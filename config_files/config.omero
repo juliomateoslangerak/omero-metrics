@@ -18,4 +18,4 @@ config set omero.web.debug True
 config set omero.web.cors_origin_allow_all True
 config set omero.web.databases '{"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": "/opt/omero/web/django_plotly_dash_db"}}'
 
-config set omero.web.csrf_trusted_origins '["https://metrics.omero-fbi.fr"]'
+config set omero.web.csrf_trusted_origins '["https://metrics.omero-fbi.fr",  "https://*.omero-fbi.fr"]'
