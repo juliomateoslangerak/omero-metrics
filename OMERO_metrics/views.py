@@ -15,7 +15,7 @@ import omero
 logger = logging.getLogger(__name__)
 
 
-template_name_dash = "OMERO_metrics/dash_template/dash_template.html"
+TEMPLATE_DASH_NAME = "OMERO_metrics/dash_template_center_ui/dash_template.html"
 
 
 @login_required()
@@ -44,7 +44,7 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name=template_name_dash,
+            template_name=TEMPLATE_DASH_NAME,
             context={"app_name": im.app_name},
         )
     except Exception as e:
@@ -52,7 +52,7 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name=template_name_dash,
+            template_name=TEMPLATE_DASH_NAME,
             context={"app_name": "WarningApp"},
         )
 
@@ -76,7 +76,7 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name=template_name_dash,
+            template_name=TEMPLATE_DASH_NAME,
             context={"app_name": pm.app_name},
         )
     except Exception as e:
@@ -84,7 +84,7 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name=template_name_dash,
+            template_name=TEMPLATE_DASH_NAME,
             context={"app_name": "WarningApp"},
         )
 
@@ -114,7 +114,7 @@ def center_viewer_group(request, conn=None, **kwargs):
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name=template_name_dash,
+            template_name=TEMPLATE_DASH_NAME,
             context={"app_name": "omero_group_dash"},
         )
     except Exception as e:
@@ -122,7 +122,7 @@ def center_viewer_group(request, conn=None, **kwargs):
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name=template_name_dash,
+            template_name=TEMPLATE_DASH_NAME,
             context={"app_name": "WarningApp"},
         )
 
@@ -142,7 +142,7 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name=template_name_dash,
+            template_name=TEMPLATE_DASH_NAME,
             context={"app_name": dm.app_name},
         )
     except Exception as e:
@@ -150,19 +150,59 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name=template_name_dash,
+            template_name=TEMPLATE_DASH_NAME,
             context={"app_name": "WarningApp"},
         )
 
 
 @login_required(setGroupContext=True)
 def microscope_view(request, conn=None, **kwargs):
-    """Simply shows a page of ROI thumbnails for
-    the specified image"""
+    """This is to display the microscope dashboard
+    for the top link ui"""
     return render(
         request,
         template_name="OMERO_metrics/top_link_template/microscope.html",
-        context={"app_name": "Microscope"},
+        context={"app_name": "top_iu_microscope"},
+    )
+
+
+@login_required(setGroupContext=True)
+def center_view_projects(request, conn=None, **kwargs):
+    """This is to display the project dashboard
+    for the top link ui"""
+    id_list = request.GET.get("projectIds", None)
+    id_list = request.GET.get("Project", id_list)
+    dash_context = request.session.get("django_plotly_dash", dict())
+    if id_list:
+        projectIds = [int(i) for i in id_list.split(",")]
+        data = {}
+        for id in projectIds:
+            project_wrapper = conn.getObject("Project", id)
+            pm = data_managers.ProjectManager(conn, project_wrapper)
+            pm.load_data()
+            pm.is_homogenized()
+            pm.load_config_file()
+            pm.load_threshold_file()
+            pm.check_processed_data()
+            pm.visualize_data()
+            context = pm.context
+            if "kkm" in context:
+                data[id] = {
+                    "kkm": context["kkm"],
+                    "key_measurements_list": context["key_measurements_list"],
+                    "dates": context["dates"],
+                }
+            else:
+                data[id] = {}
+    else:
+        projectIds = []
+        data = {}
+    dash_context["context"] = data
+    request.session["django_plotly_dash"] = dash_context
+    return render(
+        request,
+        template_name="OMERO_metrics/projects.html",
+        context={"projectIds": projectIds},
     )
 
 
@@ -384,3 +424,13 @@ def save_threshold(request, conn=None, **kwargs):
             )
         else:
             return "Something happened. Couldn't save thresholds.", "red"
+
+
+@login_required(setGroupContext=True)
+def imageJ(request, conn=None, **kwargs):
+    """Run ImageJ"""
+    return render(
+        request,
+        template_name="OMERO_metrics/top_link_template/imagej_template.html",
+        context={"app_name": "imageJ"},
+    )

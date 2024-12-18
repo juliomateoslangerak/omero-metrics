@@ -126,7 +126,7 @@ class DatasetManager:
         if isinstance(omero_dataset, DatasetWrapper):
             self.omero_dataset = omero_dataset
         else:
-            raise ValueError("datasets must be a DatasetWrapper")
+            raise ValueError("dataset must be a DatasetWrapper")
         self.omero_project = self.omero_dataset.getParent()
         self.input_parameters = None
         self.load_images = load_images
@@ -407,11 +407,9 @@ class ProjectManager:
                                 for dm in self.datasets
                                 if dm.processed
                             ],
-                            dataset_class=[
-                                dm.mm_dataset.class_class_curie
-                                for dm in self.datasets
-                                if dm.processed
-                            ],
+                            dataset_class=self.datasets[
+                                0
+                            ].mm_dataset.class_name,
                             name=self.omero_project.getName(),
                             description=self.omero_project.getDescription(),
                         )

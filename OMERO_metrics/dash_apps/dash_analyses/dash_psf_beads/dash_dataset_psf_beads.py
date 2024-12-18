@@ -2,7 +2,6 @@ import dash
 from dash import dcc, html
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
-from dash_iconify import DashIconify
 from linkml_runtime.dumpers import YAMLDumper, JSONDumper
 from OMERO_metrics.styles import THEME, MANTINE_THEME
 from OMERO_metrics import views
@@ -11,10 +10,6 @@ import math
 from OMERO_metrics.styles import TABLE_MANTINE_STYLE
 import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 from OMERO_metrics.tools import load
-
-
-def get_icon(icon, size=20, color=None):
-    return DashIconify(icon=icon, height=size, color=color)
 
 
 dashboard_name = "omero_dataset_psf_beads"
@@ -84,8 +79,8 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
                                                 dmc.Tooltip(
                                                     label="Statistical measurements for all the channels presented in the dataset",
                                                     children=[
-                                                        get_icon(
-                                                            "material-symbols:info-outline",
+                                                        my_components.get_icon(
+                                                            icon="material-symbols:info-outline",
                                                             color=THEME[
                                                                 "primary"
                                                             ],
@@ -166,6 +161,7 @@ def func_psf_callback(pagination_value, **kwargs):
 @omero_dataset_psf_beads.expanded_callback(
     dash.dependencies.Output("confirm_delete", "opened"),
     dash.dependencies.Output("notifications-container", "children"),
+    dash.dependencies.Output("modal-submit-button", "loading"),
     [
         dash.dependencies.Input("delete_data", "n_clicks"),
         dash.dependencies.Input("modal-submit-button", "n_clicks"),
@@ -189,7 +185,7 @@ def delete_dataset(*args, **kwargs):
             id="simple-notify",
             action="show",
             message=msg,
-            icon=DashIconify(
+            icon=my_components.get_icon(
                 icon=(
                     "akar-icons:circle-check"
                     if color == "green"
@@ -198,9 +194,9 @@ def delete_dataset(*args, **kwargs):
             ),
             color=color,
         )
-        return opened, message
+        return opened, message, False
     else:
-        return opened, None
+        return opened, None, False
 
 
 @omero_dataset_psf_beads.expanded_callback(
@@ -272,3 +268,20 @@ def download_table_data(*args, **kwargs):
     elif triggered_id == "table-download-json":
         return dcc.send_data_frame(table_kkm.to_json, "km_table.json")
     raise dash.no_update
+
+
+omero_dataset_psf_beads.clientside_callback(
+    """
+    function(n_clicks) {
+        if (n_clicks > 0) {
+            return true;
+        }
+        return false;
+    }
+    """,
+    dash.dependencies.Output(
+        "modal-submit-button", "loading", allow_duplicate=True
+    ),
+    dash.dependencies.Input("modal-submit-button", "n_clicks"),
+    prevent_initial_call=True,
+)

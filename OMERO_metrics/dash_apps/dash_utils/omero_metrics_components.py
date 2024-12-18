@@ -6,6 +6,141 @@ from OMERO_metrics.styles import (
     HEADER_PAPER_STYLE,
     BUTTON_STYLE,
 )
+from datetime import datetime
+
+import plotly.express as px
+import numpy as np
+from plotly.subplots import make_subplots
+from typing import Union
+import pandas as pd
+from OMERO_metrics.styles import COLORS_CHANNELS
+
+
+def get_icon(icon, size=20, color=None):
+    return DashIconify(icon=icon, height=size, color=color)
+
+
+def make_control(text, action_id):
+    return dmc.Flex(
+        [
+            dmc.AccordionControl(text),
+            dmc.ActionIcon(
+                children=get_icon(icon="lets-icons:check-fill"),
+                color="green",
+                variant="default",
+                n_clicks=0,
+                id={"index": action_id},
+            ),
+        ],
+        justify="center",
+        align="center",
+    )
+
+
+def fig_mip(mip_x, mip_y, mip_z):
+    fig = make_subplots(
+        rows=2,
+        cols=2,
+        specs=[[{}, {}], [{"colspan": 2}, None]],
+        subplot_titles=("MIP X axis", "MIP Y axis", "MIP Z axis"),
+    )
+    fig = fig.add_trace(mip_x.data[0], row=1, col=1)
+    fig = fig.add_trace(mip_y.data[0], row=1, col=2)
+    fig = fig.add_trace(mip_z.data[0], row=2, col=1)
+    fig = fig.update_layout(
+        coloraxis=dict(colorscale="hot"),
+        autosize=False,
+    )
+    fig.update_layout(
+        {
+            "xaxis": {
+                "visible": False,
+                "automargin": False,
+                "rangemode": "nonnegative",
+            },
+            "xaxis2": {
+                "visible": False,
+                "automargin": False,
+                "rangemode": "nonnegative",
+            },
+            "xaxis3": {
+                "visible": False,
+                "automargin": False,
+                "rangemode": "nonnegative",
+            },
+            "yaxis": {
+                "visible": False,
+                "anchor": "x",
+                "scaleanchor": "x",
+                "autorange": "reversed",
+                "automargin": False,
+            },
+            "yaxis2": {
+                "visible": False,
+                "anchor": "x2",
+                "scaleanchor": "x2",
+                "autorange": "reversed",
+                "automargin": False,
+            },
+            "yaxis3": {
+                "visible": False,
+                "anchor": "x3",
+                "scaleanchor": "x3",
+                "autorange": "reversed",
+                "automargin": False,
+            },
+        }
+    )
+    return fig
+
+
+def mip_graphs(
+    x0: int,
+    xf: int,
+    y0: int,
+    yf: int,
+    stack: Union[np.array, list],
+    do_sqrt: bool = True,
+):
+    image_bead = stack[:, y0:yf, x0:xf]
+    image_x = np.max(image_bead, axis=2)
+    image_y = np.max(image_bead, axis=1)
+    image_z = np.max(image_bead, axis=0)
+    if do_sqrt:
+        image_x = np.sqrt(image_x)
+        image_y = np.sqrt(image_y)
+        image_z = np.sqrt(image_z)
+    image_x = image_x / image_x.max()
+    image_y = image_y / image_y.max()
+    image_z = image_z / image_z.max()
+
+    mip_x = px.imshow(
+        image_x,
+        zmin=image_x.min(),
+        zmax=image_x.max(),
+    )
+    mip_y = px.imshow(
+        image_y,
+        zmin=image_y.min(),
+        zmax=image_y.max(),
+    )
+    mip_z = px.imshow(
+        image_z,
+        zmin=image_z.min(),
+        zmax=image_z.max(),
+    )
+    return mip_x, mip_y, mip_z
+
+
+def crop_bead_index(bead, min_dist, stack):
+    x = bead["center_x"].values[0]
+    y = bead["center_y"].values[0]
+    x0 = max(0, x - min_dist)
+    y0 = max(0, y - min_dist)
+    xf = min(stack.shape[2], x + min_dist)
+    yf = min(stack.shape[1], y + min_dist)
+    return x0, xf, y0, yf
+
 
 download_group = dmc.Group(
     [
@@ -191,3 +326,52 @@ def thresholds_paper(Accordion_children):
         ),
         html.Div(id="notifications-container"),
     ]
+
+
+def get_title_line_chart(project_id, value):
+    title = dmc.Text(f"Project ID: {project_id}")
+    dates = value["dates"]
+    kkm = value["kkm"]
+    dfs = value["key_measurements_list"]
+    measurement = 0
+    df = get_data_trends(kkm, measurement, dates, dfs)
+    channels = [c for c in df.columns if c not in ["dataset_index", "date"]]
+    series = [
+        {
+            "name": channel,
+            "color": COLORS_CHANNELS[i % len(COLORS_CHANNELS)],
+        }
+        for i, channel in enumerate(channels)
+    ]
+    line_chart = dmc.LineChart(
+        id=f"line-chart-{project_id}",
+        h=300,
+        dataKey="date",
+        withLegend=True,
+        legendProps={
+            "horizontalAlign": "top",
+            "left": 50,
+        },
+        data=df.to_dict("records"),
+        series=series,
+        curveType="linear",
+        style={"padding": 20},
+        xAxisLabel="Processed Date",
+        connectNulls=True,
+    )
+    return title, line_chart
+
+
+def get_data_trends(kkm, measurement, dates, dfs):
+    complete_df = pd.DataFrame()
+    for i, df in enumerate(dfs):
+        dfi = df.pivot_table(columns="channel_name", values=kkm).reset_index(
+            names="Measurement"
+        )
+        dfi["dataset_index"] = i
+        dfi["date"] = dates[i]
+        complete_df = pd.concat([complete_df, dfi])
+    complete_df = complete_df.reset_index(drop=True)
+    complete_df = complete_df[complete_df["Measurement"] == kkm[measurement]]
+    complete_df = complete_df.drop(columns="Measurement")
+    return complete_df

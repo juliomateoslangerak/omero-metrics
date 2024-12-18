@@ -1,6 +1,5 @@
 import dash
 from dash import dcc, html
-from dash_iconify import DashIconify
 from django_plotly_dash import DjangoDash
 from plotly.express.imshow_utils import rescale_intensity
 import dash_mantine_components as dmc
@@ -14,10 +13,6 @@ from OMERO_metrics.styles import (
 from OMERO_metrics.tools import load
 import pandas as pd
 import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
-
-
-def get_icon(icon, size=20, color=None):
-    return DashIconify(icon=icon, height=size, color=color)
 
 
 dashboard_name = "omero_image_foi"
@@ -53,8 +48,12 @@ def create_control_panel():
                         w="100%",
                         value="0",
                         allowDeselect=False,
-                        leftSection=get_icon("material-symbols:layers"),
-                        rightSection=get_icon("radix-icons:chevron-down"),
+                        leftSection=my_components.get_icon(
+                            "material-symbols:layers"
+                        ),
+                        rightSection=my_components.get_icon(
+                            "radix-icons:chevron-down"
+                        ),
                         styles={
                             "rightSection": {"pointerEvents": "none"},
                             "item": {"fontSize": "14px"},
@@ -114,7 +113,9 @@ def create_control_panel():
                             },
                         ],
                         value="Hot",
-                        leftSection=get_icon("material-symbols:palette"),
+                        leftSection=my_components.get_icon(
+                            "material-symbols:palette"
+                        ),
                         styles={
                             "rightSection": {"pointerEvents": "none"},
                             "item": {"fontSize": "14px"},

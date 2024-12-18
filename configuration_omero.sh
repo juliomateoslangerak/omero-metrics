@@ -27,6 +27,9 @@ omero config append omero.web.apps '"corsheaders"'
 # Configure top links
 omero config append omero.web.ui.top_links '["Metrics", "OMERO_metrics_index", {"title": "Open app in new tab", "target": "_blank"}]'
 
+# Center plugins
+omero config append omero.web.ui.center_plugins '["Metrics View", "OMERO_metrics/webclient_plugins/center_plugin.metricsview.js.html", "metrics_view_panel"]'
+
 # Set debug mode
 omero config set omero.web.debug True
 
@@ -52,9 +55,6 @@ omero config append omero.web.middleware '{"index": 8, "class": "django_plotly_d
 
 # OMERO_metrics middleware
 omero config append omero.web.middleware '{"index":0.1, "class": "OMERO_metrics.middleware.OmeroAuth"}'
-
-# Center plugins
-omero config append omero.web.ui.center_plugins '["Metrics View", "OMERO_metrics/webclient_plugins/center_plugin.metricsview.js.html", "metrics_view_panel"]'
 
 # Run migrations
 python "$OMEROWEB_PATH/manage.py" migrate

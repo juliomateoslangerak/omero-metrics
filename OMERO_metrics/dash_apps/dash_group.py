@@ -3,10 +3,8 @@ import pandas as pd
 from dash import html, dash_table, dcc
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
-from dash_iconify import DashIconify
 from OMERO_metrics import views
 from time import sleep
-from django.urls import reverse
 from OMERO_metrics.styles import (
     THEME,
     MANTINE_THEME,
@@ -18,11 +16,10 @@ from OMERO_metrics.styles import (
     TAB_STYLES,
     TAB_ITEM_STYLE,
     STYLE_DATA_CONDITIONAL,
-    SELECT_STYLES,
     DATEPICKER_STYLES,
     HEADER_PAPER_STYLE,
 )
-
+import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 
 dashboard_name = "omero_group_dash"
 dash_app_group = DjangoDash(
@@ -86,14 +83,18 @@ dash_app_group.layout = dmc.MantineProvider(
                     [
                         dmc.TabsTab(
                             "Microscope Health",
-                            leftSection=DashIconify(icon="tabler:microscope"),
+                            leftSection=my_components.get_icon(
+                                icon="tabler:microscope"
+                            ),
                             value="microscope_health",
                             color=THEME["primary"],
                             style=TAB_ITEM_STYLE,
                         ),
                         dmc.TabsTab(
                             "History",
-                            leftSection=DashIconify(icon="bx:history"),
+                            leftSection=my_components.get_icon(
+                                icon="bx:history"
+                            ),
                             value="history",
                             color=THEME["primary"],
                             style=TAB_ITEM_STYLE,
@@ -162,7 +163,7 @@ dash_app_group.layout = dmc.MantineProvider(
                                             dmc.Button(
                                                 id="download_table",
                                                 children=[
-                                                    DashIconify(
+                                                    my_components.get_icon(
                                                         icon="ic:round-download"
                                                     ),
                                                     "Download",
@@ -182,7 +183,7 @@ dash_app_group.layout = dmc.MantineProvider(
                                                 valueFormat="DD-MM-YYYY",
                                                 type="range",
                                                 w=250,
-                                                leftSection=DashIconify(
+                                                leftSection=my_components.get_icon(
                                                     icon="clarity:date-line"
                                                 ),
                                                 styles=DATEPICKER_STYLES,
@@ -190,7 +191,7 @@ dash_app_group.layout = dmc.MantineProvider(
                                             dmc.Button(
                                                 id="delete-all",
                                                 children=[
-                                                    DashIconify(
+                                                    my_components.get_icon(
                                                         icon="ic:round-delete-forever"
                                                     ),
                                                     "Delete All",
@@ -320,8 +321,6 @@ def load_table_project(dates, **kwargs):
     file_ann_subset = file_ann[
         file_ann.columns[~file_ann.columns.str.contains("ID")]
     ].copy()
-    request = kwargs["request"]
-
     file_ann_table = dash_table.DataTable(
         id="datatable_file_ann",
         data=file_ann_subset.to_dict("records"),
@@ -342,6 +341,7 @@ def load_table_project(dates, **kwargs):
 @dash_app_group.expanded_callback(
     dash.dependencies.Output("confirm_delete", "opened"),
     dash.dependencies.Output("notifications-container", "children"),
+    dash.dependencies.Output("modal-submit-button", "loading"),
     [
         dash.dependencies.Input("delete-all", "n_clicks"),
         dash.dependencies.Input("modal-submit-button", "n_clicks"),
@@ -363,7 +363,7 @@ def delete_all_callback(*args, **kwargs):
             id="simple-notify",
             action="show",
             message=msg,
-            icon=DashIconify(
+            icon=my_components.get_icon(
                 icon=(
                     "akar-icons:circle-check"
                     if color == "green"
@@ -372,9 +372,9 @@ def delete_all_callback(*args, **kwargs):
             ),
             color=color,
         )
-        return opened, message
+        return opened, message, False
     else:
-        return opened, None
+        return opened, None, False
 
 
 @dash_app_group.expanded_callback(
@@ -387,3 +387,20 @@ def download_file(*args, **kwargs):
     table_data = args[1]
     df = pd.DataFrame(table_data)
     return dcc.send_data_frame(df.to_csv, "File_annotation.csv")
+
+
+dash_app_group.clientside_callback(
+    """
+    function loadingDeleteButtonGroup(n_clicks) {
+        if (n_clicks > 0) {
+            return true;
+        }
+        return false;
+    }
+    """,
+    dash.dependencies.Output(
+        "modal-submit-button", "loading", allow_duplicate=True
+    ),
+    dash.dependencies.Input("modal-submit-button", "n_clicks"),
+    prevent_initial_call=True,
+)

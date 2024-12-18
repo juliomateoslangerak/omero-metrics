@@ -2,7 +2,6 @@ import dash
 from dash import html
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
-from dash_iconify import DashIconify
 from microscopemetrics.analyses.mappings import MAPPINGS
 from microscopemetrics_schema import datamodel as mm_schema
 from OMERO_metrics.tools import dash_forms_tools as dft
@@ -35,15 +34,14 @@ sample_types_dp = [
 ]
 
 
-def get_icon(icon):
-    return DashIconify(icon=icon, height=20)
-
-
 dashboard_name = "omero_project_config_form"
 dash_form_project = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
-    external_stylesheets=dmc.styles.ALL,
+    external_stylesheets=[
+        dmc.styles.ALL,
+        "/static/OMERO_metrics/css/style_app.css",
+    ],
 )
 
 dash_form_project.layout = dmc.MantineProvider(
@@ -87,8 +85,8 @@ dash_form_project.layout = dmc.MantineProvider(
                                     id="step_sample",
                                     label="Sample Configuration",
                                     description="Define your sample parameters",
-                                    icon=DashIconify(
-                                        icon="mdi:microscope", width=20
+                                    icon=my_components.get_icon(
+                                        icon="mdi:microscope"
                                     ),
                                     children=[
                                         dmc.Paper(
@@ -107,7 +105,7 @@ dash_form_project.layout = dmc.MantineProvider(
                                                     data=sample_types_dp,
                                                     searchable=True,
                                                     placeholder="Select Sample Type",
-                                                    leftSection=DashIconify(
+                                                    leftSection=my_components.get_icon(
                                                         icon="mdi:database-search"
                                                     ),
                                                     allowDeselect=False,
@@ -133,8 +131,8 @@ dash_form_project.layout = dmc.MantineProvider(
                                     id="step_input_data",
                                     label="Analysis Parameters",
                                     description="Set analysis configuration",
-                                    icon=DashIconify(
-                                        icon="mdi:tune-vertical", width=20
+                                    icon=my_components.get_icon(
+                                        icon="mdi:tune-vertical"
                                     ),
                                     children=[
                                         dmc.Paper(
@@ -226,14 +224,15 @@ dash_form_project.layout = dmc.MantineProvider(
                                     "Back",
                                     id="back-basic-usage",
                                     variant="outline",
-                                    leftSection=DashIconify(
+                                    leftSection=my_components.get_icon(
                                         icon="mdi:arrow-left"
                                     ),
                                 ),
                                 dmc.Button(
                                     "Next",
                                     id="next-basic-usage",
-                                    rightSection=DashIconify(
+                                    color=THEME["primary"],
+                                    rightSection=my_components.get_icon(
                                         icon="mdi:arrow-right"
                                     ),
                                 ),
@@ -282,7 +281,7 @@ def stepper_callback(*args, **kwargs):
     if button_id == "back-basic-usage.n_clicks":
         step = max(0, step - 1)
         next_text = ["Next"]
-        next_icon = DashIconify(icon="mdi:arrow-right")
+        next_icon = my_components.get_icon(icon="mdi:arrow-right")
         next_color = THEME["primary"]
     else:
         sample = args[3]
@@ -297,12 +296,12 @@ def stepper_callback(*args, **kwargs):
 
         if step == 2:
             next_text = ["Save Configuration"]
-            next_icon = DashIconify(icon="mdi:check")
+            next_icon = my_components.get_icon(icon="mdi:check")
             next_color = THEME["primary"]
         else:
             next_text = ["Next"]
             next_color = THEME["primary"]
-            next_icon = DashIconify(icon="mdi:arrow-right")
+            next_icon = my_components.get_icon(icon="mdi:arrow-right")
 
     progress = (step / 2) * 100
     return step, next_text, next_color, progress, next_icon
@@ -435,7 +434,7 @@ def save_config_dash(
                             ),
                         ],
                         color=color,
-                        icon=DashIconify(
+                        icon=my_components.get_icon(
                             icon=(
                                 "mdi:check-circle"
                                 if color == "green"
@@ -454,7 +453,7 @@ def save_config_dash(
                             dmc.Text(str(e), size="sm"),
                         ],
                         color="red",
-                        icon=DashIconify(icon="mdi:alert"),
+                        icon=my_components.get_icon(icon="mdi:alert"),
                         title="Error!",
                         radius="md",
                     )

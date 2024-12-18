@@ -6,7 +6,6 @@ from dash import dcc, html
 from django_plotly_dash import DjangoDash
 import plotly.express as px
 import dash_mantine_components as dmc
-from dash_iconify import DashIconify
 from linkml_runtime.dumpers import YAMLDumper, JSONDumper
 from skimage.exposure import rescale_intensity
 from OMERO_metrics.styles import (
@@ -67,7 +66,6 @@ omero_dataset_foi.layout = dmc.MantineProvider(
         ),
         dmc.Container(
             [
-                # Header Section
                 # Main Content
                 dmc.Grid(
                     gutter="md",
@@ -94,13 +92,11 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                                             allowDeselect=False,
                                                             w="200",
                                                             value="0",
-                                                            leftSection=DashIconify(
-                                                                icon="material-symbols:layers",
-                                                                height=20,
+                                                            leftSection=my_components.get_icon(
+                                                                icon="material-symbols:layers"
                                                             ),
-                                                            rightSection=DashIconify(
-                                                                icon="radix-icons:chevron-down",
-                                                                height=20,
+                                                            rightSection=my_components.get_icon(
+                                                                icon="radix-icons:chevron-down"
                                                             ),
                                                             styles=INPUT_BASE_STYLES,
                                                         ),
@@ -150,9 +146,8 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                                                 dmc.Tooltip(
                                                                     label="Statistical measurements for all the channels",
                                                                     children=[
-                                                                        DashIconify(
+                                                                        my_components.get_icon(
                                                                             icon="material-symbols:info",
-                                                                            height=20,
                                                                             color=THEME[
                                                                                 "primary"
                                                                             ],
@@ -413,6 +408,7 @@ def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:
 @omero_dataset_foi.expanded_callback(
     dash.dependencies.Output("confirm_delete", "opened"),
     dash.dependencies.Output("notifications-container", "children"),
+    dash.dependencies.Output("modal-submit-button", "loading"),
     [
         dash.dependencies.Input("delete_data", "n_clicks"),
         dash.dependencies.Input("modal-submit-button", "n_clicks"),
@@ -436,7 +432,7 @@ def delete_dataset(*args, **kwargs):
             id="simple-notify",
             action="show",
             message=msg,
-            icon=DashIconify(
+            icon=my_components.get_icon(
                 icon=(
                     "akar-icons:circle-check"
                     if color == "green"
@@ -445,9 +441,9 @@ def delete_dataset(*args, **kwargs):
             ),
             color=color,
         )
-        return opened, message
+        return opened, message, False
     else:
-        return opened, None
+        return opened, None, False
 
 
 @omero_dataset_foi.expanded_callback(
@@ -521,3 +517,20 @@ def download_table_data(*args, **kwargs):
     elif triggered_id == "table-download-json":
         return dcc.send_data_frame(metrics_df.to_json, "km_table.json")
     raise dash.no_update
+
+
+omero_dataset_foi.clientside_callback(
+    """
+    function(n_clicks) {
+        if (n_clicks > 0) {
+            return true;
+        }
+        return false;
+    }
+    """,
+    dash.dependencies.Output(
+        "modal-submit-button", "loading", allow_duplicate=True
+    ),
+    dash.dependencies.Input("modal-submit-button", "n_clicks"),
+    prevent_initial_call=True,
+)

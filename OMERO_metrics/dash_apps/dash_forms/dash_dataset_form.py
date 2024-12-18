@@ -2,7 +2,6 @@ import dash
 from dash import html
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
-from dash_iconify import DashIconify
 from microscopemetrics_schema import datamodel as mm_schema
 from OMERO_metrics.tools import dash_forms_tools as dft
 from time import sleep
@@ -23,7 +22,10 @@ dashboard_name = "omero_dataset_form"
 dash_form_dataset = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
-    external_stylesheets=dmc.styles.ALL,
+    external_stylesheets=[
+        dmc.styles.ALL,
+        "/static/OMERO_metrics/css/style_app.css",
+    ],
 )
 
 dash_form_dataset.layout = dmc.MantineProvider(
@@ -73,9 +75,8 @@ dash_form_dataset.layout = dmc.MantineProvider(
                                     id="step_sample",
                                     label="Sample Configuration",
                                     description="Define sample parameters",
-                                    icon=DashIconify(
+                                    icon=my_components.get_icon(
                                         icon="material-symbols:science-outline",
-                                        height=20,
                                     ),
                                     children=[
                                         dmc.Paper(
@@ -100,9 +101,8 @@ dash_form_dataset.layout = dmc.MantineProvider(
                                     id="step_input_data",
                                     label="Data Selection",
                                     description="Choose input images",
-                                    icon=DashIconify(
+                                    icon=my_components.get_icon(
                                         icon="material-symbols:image-search",
-                                        height=20,
                                     ),
                                     children=[
                                         dmc.Paper(
@@ -122,9 +122,8 @@ dash_form_dataset.layout = dmc.MantineProvider(
                                                                             id="framework-multi-select",
                                                                             clearable=True,
                                                                             searchable=True,
-                                                                            leftSection=DashIconify(
+                                                                            leftSection=my_components.get_icon(
                                                                                 icon="material-symbols-light:image",
-                                                                                height=20,
                                                                             ),
                                                                             styles={
                                                                                 "input": {
@@ -224,18 +223,16 @@ dash_form_dataset.layout = dmc.MantineProvider(
                                     "Back",
                                     id="back-basic-usage",
                                     variant="outline",
-                                    leftSection=DashIconify(
+                                    leftSection=my_components.get_icon(
                                         icon="material-symbols:arrow-back",
-                                        height=20,
                                     ),
                                     color=THEME["secondary"],
                                 ),
                                 dmc.Button(
                                     "Next",
                                     id="next-basic-usage",
-                                    rightSection=DashIconify(
+                                    rightSection=my_components.get_icon(
                                         icon="material-symbols:arrow-forward",
-                                        height=20,
                                     ),
                                     color=THEME["primary"],
                                 ),
@@ -327,8 +324,10 @@ def update_review_form(
         clearable=False,
         w="auto",
         disabled=True,
-        leftSection=DashIconify(icon="material-symbols-light:image"),
-        rightSection=DashIconify(icon="radix-icons:chevron-down"),
+        leftSection=my_components.get_icon(
+            icon="material-symbols-light:image"
+        ),
+        rightSection=my_components.get_icon(icon="radix-icons:chevron-down"),
     )
     if current == 1:
         return (
@@ -359,7 +358,7 @@ def stepper_callback(*args, **kwargs):
     button_id = kwargs["callback_context"].triggered[0]["prop_id"]
     step = current if current is not None else active
     next_text = "Next"
-    next_color = "green"
+    next_color = THEME["primary"]
     if button_id == "back-basic-usage.n_clicks":
         step = step - 1 if step > min_step else step
     else:
@@ -370,7 +369,7 @@ def stepper_callback(*args, **kwargs):
         else:
             if step >= 1:
                 next_text = "Run Analysis"
-                next_color = "green"
+                next_color = THEME["primary"]
             step = step + 1 if step < max_step else step
     return step, next_text, next_color
 
@@ -448,7 +447,7 @@ def run_analysis(_, list_images, current, comment, **kwargs):
                         ),
                     ],
                     color=color,
-                    icon=DashIconify(
+                    icon=my_components.get_icon(
                         icon=(
                             "mdi:check-circle"
                             if color == "green"
@@ -467,7 +466,7 @@ def run_analysis(_, list_images, current, comment, **kwargs):
                     dmc.Text(str(e), size="sm"),
                 ],
                 color="red",
-                icon=DashIconify(icon="mdi:alert"),
+                icon=my_components.get_icon(icon="mdi:alert"),
                 title="Error!",
                 radius="md",
             )
