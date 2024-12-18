@@ -15,7 +15,7 @@ import omero
 logger = logging.getLogger(__name__)
 
 
-template_name_dash = "OMERO_metrics/dash_template_center_ui/dash_template.html"
+TEMPLATE_DASH_NAME = "OMERO_metrics/dash_template_center_ui/dash_template.html"
 
 
 @login_required()
@@ -44,7 +44,7 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name=template_name_dash,
+            template_name=TEMPLATE_DASH_NAME,
             context={"app_name": im.app_name},
         )
     except Exception as e:
@@ -52,7 +52,7 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name=template_name_dash,
+            template_name=TEMPLATE_DASH_NAME,
             context={"app_name": "WarningApp"},
         )
 
@@ -76,7 +76,7 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name=template_name_dash,
+            template_name=TEMPLATE_DASH_NAME,
             context={"app_name": pm.app_name},
         )
     except Exception as e:
@@ -84,7 +84,7 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name=template_name_dash,
+            template_name=TEMPLATE_DASH_NAME,
             context={"app_name": "WarningApp"},
         )
 
@@ -114,7 +114,7 @@ def center_viewer_group(request, conn=None, **kwargs):
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name=template_name_dash,
+            template_name=TEMPLATE_DASH_NAME,
             context={"app_name": "omero_group_dash"},
         )
     except Exception as e:
@@ -122,7 +122,7 @@ def center_viewer_group(request, conn=None, **kwargs):
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name=template_name_dash,
+            template_name=TEMPLATE_DASH_NAME,
             context={"app_name": "WarningApp"},
         )
 
@@ -142,7 +142,7 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name=template_name_dash,
+            template_name=TEMPLATE_DASH_NAME,
             context={"app_name": dm.app_name},
         )
     except Exception as e:
@@ -150,7 +150,7 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name=template_name_dash,
+            template_name=TEMPLATE_DASH_NAME,
             context={"app_name": "WarningApp"},
         )
 

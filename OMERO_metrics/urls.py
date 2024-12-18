@@ -46,12 +46,12 @@ urlpatterns = [
     re_path(
         r"^image/(?P<image_id>[0-9]+)/", center_viewer_image, name="image"
     ),
-    # This url is for the app in a new tab
-    re_path(r"^microscope/", microscope_view, name="microscope"),
-    re_path(r"^imageJ_test/", imageJ, name="imageJ_test"),
     re_path(
         r"^OMERO_metrics_projects/",
         center_view_projects,
         name="OMERO_metrics_projects",
     ),
+    # This url is for the app in a new tab
+    re_path(r"^microscope/", microscope_view, name="microscope"),
+    re_path(r"^imageJ_test/", imageJ, name="imageJ_test"),
 ]

@@ -32,13 +32,13 @@ $(document).ready(function() {
             $(this).load(url);
 
         },
-        
+
         plugin_enabled: function(selected){
             if (selected.length == 0) return false;
             var dtype = selected[0]['id'].split('-')[0];
             if (selected.length > 1) {
                 return (dtype == "project");
-            } 
+            }
             else {
                 return ($.inArray(dtype, ["image", "dataset", "project", "experimenter"]) > -1);
     }
