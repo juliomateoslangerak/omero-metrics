@@ -79,7 +79,8 @@ For more information about ice.config. Click [Here](https://github.com/ome/openm
 
 ## Running Pytest on Pycharm for OMERO-metrics
 
-Try to look for this small menu in the image to run and configure 
+Try to look for this small menu in the image to run and configure your pytest and Django server:
+
 ![image](media/debug_run_menu.png)
 
 Click on "Edit Configurations" the following window will open to configure your pytest and debug mode:
@@ -115,7 +116,7 @@ manage script is manage.py and settings is settings.py
 ![image](media/setting_up_django_project.png)
 
 
-the final step is to configure your configuration file to run a django server locally:
+The final step is to configure your configuration file to run a django server locally:
 add these Env variables and run your omero web client instance locally DJANGO_SETTINGS_MODULE=omeroweb.settings;REACT_VERSION=18.2.0;OMERODIR=~/OMERO-metrics;ICE_CONFIG=~/OMERO-metrics/etc/ice.config
 
 ![image](media/set_env_django_server.png)
