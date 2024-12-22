@@ -73,10 +73,6 @@ pip install -e .
 
 We created a little bash script that is configuring the setup. You can run it by typing:
 
-
-
-
-
 ```bash
 export OMERODIR=$(pwd)
 config append omero.web.apps '"OMERO_metrics"'
