@@ -75,7 +75,8 @@ We created a little bash script that is configuring the setup. You can run it by
 
 ```bash
 
-````
+```
+
 Add these additional configurations using the terminal:
 
       export OMERODIR=$(pwd)
