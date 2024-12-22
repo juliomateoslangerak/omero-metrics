@@ -23,14 +23,14 @@ Install docker and docker-compose on your computer following the instructions on
 
 Clone the repository:
 ```bash
-$ git clone https://github.com/MontpellierRessourcesImagerie/OMERO-metrics.git
-$ cd OMERO-metrics
+git clone https://github.com/MontpellierRessourcesImagerie/OMERO-metrics.git
+cd OMERO-metrics
 ```
 
 Run the following command to start the server:
 
 ```bash
-$ docker compose up -d
+docker compose up -d
 ```
 
 Wait for the server to start and then go to <http://localhost:5080/> in your server.
@@ -73,9 +73,11 @@ pip install -e .
 
 We created a little bash script that is configuring the setup. You can run it by typing:
 
-```bash
-# Add these additional configurations using the terminal:
 
+
+
+
+```bash
 export OMERODIR=$(pwd)
 config append omero.web.apps '"OMERO_metrics"'
 config append omero.web.apps '"dpd_static_support"'
@@ -94,27 +96,27 @@ config append omero.web.middleware '{"index": 8, "class": "django_plotly_dash.mi
 config append omero.web.middleware '{"index":0.1, "class": "OMERO_metrics.middleware.OmeroAuth"}'
 config append omero.web.ui.center_plugins '["Metrics View", "OMERO_metrics/webclient_plugins/center_plugin.metricsview.js.html", "metrics_view_panel"]'
 config append omero.web.ui.right_plugins '["ROIs", "OMERO_metrics/webclient_plugins/right_plugin.rois.js.html", "image_roi_tab"]'
+```
 
-# and migrate the database
+and migrate the database
+
+```bash
 python manage.py migrate
 ```
 
-Further Info
-============
+## Further Info
 
 1.  This app was derived from [cookiecutter-omero-webapp](https://github.com/ome/cookiecutter-omero-webapp).
 2.  For further info on depolyment, see [Deployment](https://docs.openmicroscopy.org/latest/omero/developers/Web/Deployment.html)
 
 
-License
-=======
+## License
 
 This project, similar to many Open Microscopy Environment (OME) projects, is
 licensed under the terms of the AGPL v3.
 
 
-Copyright
-=========
+## Copyright
 
 2024 CNRS
 
