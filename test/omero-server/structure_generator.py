@@ -415,12 +415,12 @@ if __name__ == "__main__":
     # port = int(input("OMERO port: ") or 4064)
     # username = input("OMERO username: ")
     # password = input("OMERO password: ")
+    conn = BlitzGateway(
+        "root", "omero", host="localhost", port=6064, secure=True
+    )
 
     try:
         # conn = BlitzGateway(username, password, host=host, port=port, secure=True)
-        conn = BlitzGateway(
-            "root", "omero", host="localhost", port=6064, secure=True
-        )
         conn.connect()
         conn.keepAlive()
 

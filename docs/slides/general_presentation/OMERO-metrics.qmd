@@ -30,24 +30,26 @@ and establish the baseline for the future.
   - when there is a doubt about the performance of the equipment.
   - when there is a change in the equipment or its environment.
 
-# *OMERO-metrics* is a new web tool<br>for microscope performance monitoring
+# What is *OMERO-metrics*?<br> an OMERO web tool for microscope performance monitoring
 
 OMERO-metrics aims to provide a comprehensive solution for monitoring the performance of microscopes.
 
 - It draws on the experience of MetroloJ-QC: it is tested
-- uses the OMERO platform to store and manage metrology data: it is FAIR
+- uses the OMERO platform to store and manage metrology data using a schema: it is FAIR
 - uses OMERO-web's visualization capabilities to provide an interface: it is user-friendly
+
+# Who is *OMERO-metrics* for?
 
 # How does it work?
 
 1. First time **configuration** of the analysis you want to perform
-2. **Import images** into OMERO in a well defined structure
+2. **Import images** into OMERO in a well-defined structure
 3. **Run** the analysis using the pre-configured parameters
 4. **Visualize** the results in a dashboard
 
 ## UML diagram
 
-If you whish to see the UML diagram, here it is:
+If you which to see the UML diagram, here it is:
 
 ```{mermaid}
 flowchart LR
@@ -73,6 +75,19 @@ flowchart LR
     V2 -- no --> V4
     end
    ```
+# 0. Core concepts
+## 0.1. Embracing the ISA abstract model
+
+The **ISA model** uses three core hierarchically organized entities to capture (meta)data: 
+*Investigation*, *Study* and *Assay*. In OMERO-metrics these entities correspond to 
+*Group*, *Project* and *Dataset* and represent:
+
+- **Investigation / Group:** The *instrument / microscope* that we want to monitor. 
+An *investigation* links to one or more *studies*.
+- **Study / Project:** The Analysis type that we want to monitor. 
+Eg: the field-homogeneity of the 20x objective. A *study* links to one or more *assays*.
+- **Assay / Dataset:** The actual measurements taken at a particular point in time. 
+Those measurements are linked to the raw images stored in OMERO.
 
 # 1. Configure the analysis
 
@@ -89,18 +104,18 @@ OMERO is a server-client platform for managing, visualizing, and analyzing micro
 
 ## 2.1. Importing images
 
-Acquired images are imported into OMERO following a well defined structure.
+Acquired images are imported into OMERO following a well-defined structure.
 
 ::: {.r-stack}
-![](./media/import_image_data_full){.fragment}
+![](./media/import_image_data_full.png){.fragment}
 
-![](./media/import_image_data_group){.fragment}
+![](./media/import_image_data_group.png){.fragment}
 
-![](./media/import_image_data_project){.fragment}
+![](./media/import_image_data_project.png){.fragment}
 
-![](./media/import_image_data_dataset){.fragment}
+![](./media/import_image_data_dataset.png){.fragment}
 
-![](./media/import_image_data_images){.fragment}
+![](./media/import_image_data_images.png){.fragment}
 :::
 
 # 3. Run the analysis
@@ -133,15 +148,15 @@ At the image level, the user will be able to see the results of the analysis for
 
 # Attributions
 
-* FBI-core facility integration Cedric
-* FBI-data: Guillaume
-* Project responsible: Julio
-* Project developer: Oumou
+* FBI-core facility integration Cedric Mathews
+* FBI-data: Guillaume Gay
+* Project responsible: Julio Mateos Langerak
+* Project developer: Oumou Dhmine, Julio Mateos Langerak
 * WG-microscope-metrics: WGMM
-    * Dauphin Aurelien
+    * Aurelien Dauphin
     * Sylvain Derossi
     * Audrey Salles
-    * Erwan GRANDGIRARD
+    * Erwan Grandgirard
 
 # Documentation
 
