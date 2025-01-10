@@ -12,9 +12,10 @@ config append omero.web.middleware '{"index": 8, "class": "django_plotly_dash.mi
 config append omero.web.middleware '{"index":0.1, "class": "OMERO_metrics.middleware.OmeroAuth"}'
 
 config append omero.web.ui.center_plugins '["Metrics View", "OMERO_metrics/webclient_plugins/center_plugin.metricsview.js.html", "metrics_view_panel"]'
-config append omero.web.ui.right_plugins '["ROIs", "OMERO_metrics/webclient_plugins/right_plugin.rois.js.html", "image_roi_tab"]'
 config append omero.web.ui.top_links '["Metrics", "OMERO_metrics_index", {"title": "Open app in new tab", "target": "_blank"}]'
 
 config set omero.web.debug True
 config set omero.web.cors_origin_allow_all True
-config set omero.web.databases '{"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": "/opt/omero/web/mydatabase"}}'
+config set omero.web.databases '{"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": "/opt/omero/web/django_plotly_dash_db"}}'
+
+config set omero.web.csrf_trusted_origins '["https://metrics.omero-fbi.fr",  "https://*.omero-fbi.fr"]'

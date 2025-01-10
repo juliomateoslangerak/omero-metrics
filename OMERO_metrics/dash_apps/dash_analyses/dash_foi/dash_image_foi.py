@@ -1,6 +1,5 @@
 import dash
 from dash import dcc, html
-from dash_iconify import DashIconify
 from django_plotly_dash import DjangoDash
 from plotly.express.imshow_utils import rescale_intensity
 import dash_mantine_components as dmc
@@ -10,14 +9,10 @@ from OMERO_metrics.styles import (
     THEME,
     MANTINE_THEME,
     LINE_CHART_SERIES,
-    HEADER_PAPER_STYLE,
 )
 from OMERO_metrics.tools import load
 import pandas as pd
-
-
-def get_icon(icon, size=20, color=None):
-    return DashIconify(icon=icon, height=size, color=color)
+import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 
 
 dashboard_name = "omero_image_foi"
@@ -26,51 +21,6 @@ omero_image_foi = DjangoDash(
     serve_locally=True,
     external_stylesheets=dmc.styles.ALL,
 )
-
-
-def create_header():
-    return dmc.Paper(
-        children=[
-            dmc.Group(
-                [
-                    dmc.Group(
-                        [
-                            html.Img(
-                                src="/static/OMERO_metrics/images/metrics_logo.png",
-                                style={
-                                    "width": "120px",
-                                    "height": "auto",
-                                },
-                            ),
-                            dmc.Stack(
-                                [
-                                    dmc.Title(
-                                        "OMERO Image Analysis",
-                                        c=THEME["primary"],
-                                        size="h2",
-                                    ),
-                                    dmc.Text(
-                                        "Interactive analysis of image data",
-                                        c=THEME["text"]["secondary"],
-                                        size="sm",
-                                    ),
-                                ],
-                                gap="xs",
-                            ),
-                        ],
-                    ),
-                    dmc.Badge(
-                        "FOI Analysis",
-                        color=THEME["primary"],
-                        variant="dot",
-                        size="lg",
-                    ),
-                ],
-                justify="space-between",
-            ),
-        ],
-        **HEADER_PAPER_STYLE,
-    )
 
 
 def create_control_panel():
@@ -98,8 +48,12 @@ def create_control_panel():
                         w="100%",
                         value="0",
                         allowDeselect=False,
-                        leftSection=get_icon("material-symbols:layers"),
-                        rightSection=get_icon("radix-icons:chevron-down"),
+                        leftSection=my_components.get_icon(
+                            "material-symbols:layers"
+                        ),
+                        rightSection=my_components.get_icon(
+                            "radix-icons:chevron-down"
+                        ),
                         styles={
                             "rightSection": {"pointerEvents": "none"},
                             "item": {"fontSize": "14px"},
@@ -159,7 +113,9 @@ def create_control_panel():
                             },
                         ],
                         value="Hot",
-                        leftSection=get_icon("material-symbols:palette"),
+                        leftSection=my_components.get_icon(
+                            "material-symbols:palette"
+                        ),
                         styles={
                             "rightSection": {"pointerEvents": "none"},
                             "item": {"fontSize": "14px"},
@@ -217,7 +173,7 @@ def create_intensity_profile():
                         withLegend=True,
                         strokeWidth=2,
                         withDots=False,
-                        curveType="natural",
+                        curveType="linear",
                     ),
                 ],
                 gap="md",
@@ -232,7 +188,12 @@ def create_intensity_profile():
 
 omero_image_foi.layout = dmc.MantineProvider(
     [
-        create_header(),
+        my_components.header_component(
+            "OMERO Image Analysis",
+            "Interactive analysis of image data",
+            "FOI Analysis",
+            load_buttons=False,
+        ),
         dmc.Container(
             [
                 dmc.Grid(
@@ -430,28 +391,14 @@ def update_intensity_profiles(channel, **kwargs):
             "intensity_profiles"
         ][image_index]
     )
-    ch = f"ch{int(channel):02d}"
-    df_profile = df_intensity_profiles[
-        df_intensity_profiles.columns[
-            df_intensity_profiles.columns.str.startswith(ch)
-        ]
-    ].copy()
-    df_profile.columns = df_profile.columns.str.replace(
-        "ch\d{2}_", "", regex=True
-    )
-    df_profile.columns = df_profile.columns.str.replace("_", " ", regex=True)
-    df_profile.columns = df_profile.columns.str.title()
-    df_profile.columns = df_profile.columns.str.replace(
-        "Lefttop To Rightbottom", "Diagonal (↘)"
-    )
-    df_profile.columns = df_profile.columns.str.replace(
-        "Leftbottom To Righttop", "Diagonal (↗)"
-    )
-    df_profile.columns = df_profile.columns.str.replace(
-        "Center Horizontal", "Horizontal (→)"
-    )
-    df_profile.columns = df_profile.columns.str.replace(
-        "Center Vertical", "Vertical (↓)"
+    df_profile = df_intensity_profiles.filter(regex=f"ch0*{channel}_")
+    df_profile.columns = (
+        df_profile.columns.str.replace(
+            "ch\d+_leftTop_to_rightBottom", "Diagonal (↘)"
+        )
+        .str.replace("ch\d+_leftBottom_to_rightTop", "Diagonal (↗)")
+        .str.replace("ch\d+_center_horizontal", "Horizontal (→)")
+        .str.replace("ch\d+_center_vertical", "Vertical (↓)")
     )
 
     return df_profile.to_dict("records")

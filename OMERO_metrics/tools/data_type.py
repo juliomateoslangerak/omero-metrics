@@ -33,6 +33,9 @@ DATA_TYPE = {
         psf_beads.analyse_psf_beads,
     ],
 }
+
+# All the selected kkm should be numerical.
+
 KKM_MAPPINGS = {
     "FieldIlluminationDataset": [
         "max_intensity",

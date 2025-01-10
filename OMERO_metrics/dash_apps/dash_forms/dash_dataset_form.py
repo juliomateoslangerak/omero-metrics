@@ -2,7 +2,6 @@ import dash
 from dash import html
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
-from dash_iconify import DashIconify
 from microscopemetrics_schema import datamodel as mm_schema
 from OMERO_metrics.tools import dash_forms_tools as dft
 from time import sleep
@@ -10,9 +9,9 @@ from OMERO_metrics.views import run_analysis_view
 from OMERO_metrics.styles import (
     THEME,
     MANTINE_THEME,
-    HEADER_PAPER_STYLE,
     CONTAINER_STYLE,
 )
+import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 
 active = 0
 min_step = 0
@@ -20,57 +19,24 @@ max_step = 2
 
 
 dashboard_name = "omero_dataset_form"
-dash_form_project = DjangoDash(
+dash_form_dataset = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
-    external_stylesheets=dmc.styles.ALL,
+    external_stylesheets=[
+        dmc.styles.ALL,
+        "/static/OMERO_metrics/css/style_app.css",
+    ],
 )
 
-dash_form_project.layout = dmc.MantineProvider(
+dash_form_dataset.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
         # Header Section
-        dmc.Paper(
-            children=[
-                dmc.Group(
-                    [
-                        dmc.Group(
-                            [
-                                html.Img(
-                                    src="/static/OMERO_metrics/images/metrics_logo.png",
-                                    style={
-                                        "width": "120px",
-                                        "height": "auto",
-                                    },
-                                ),
-                                dmc.Stack(
-                                    [
-                                        dmc.Title(
-                                            "Analysis Dashboard",
-                                            c=THEME["primary"],
-                                            size="h2",
-                                        ),
-                                        dmc.Text(
-                                            "Configure and run your analysis",
-                                            c=THEME["text"]["secondary"],
-                                            size="sm",
-                                        ),
-                                    ],
-                                    gap="xs",
-                                ),
-                            ],
-                        ),
-                        dmc.Badge(
-                            "Analysis Form",
-                            color=THEME["primary"],
-                            variant="dot",
-                            size="lg",
-                        ),
-                    ],
-                    justify="space-between",
-                ),
-            ],
-            **HEADER_PAPER_STYLE,
+        my_components.header_component(
+            "Analysis Dashboard",
+            "Configure and run your analysis",
+            "Analysis Form",
+            load_buttons=False,
         ),
         dmc.Container(
             [
@@ -109,9 +75,8 @@ dash_form_project.layout = dmc.MantineProvider(
                                     id="step_sample",
                                     label="Sample Configuration",
                                     description="Define sample parameters",
-                                    icon=DashIconify(
+                                    icon=my_components.get_icon(
                                         icon="material-symbols:science-outline",
-                                        height=20,
                                     ),
                                     children=[
                                         dmc.Paper(
@@ -136,9 +101,8 @@ dash_form_project.layout = dmc.MantineProvider(
                                     id="step_input_data",
                                     label="Data Selection",
                                     description="Choose input images",
-                                    icon=DashIconify(
+                                    icon=my_components.get_icon(
                                         icon="material-symbols:image-search",
-                                        height=20,
                                     ),
                                     children=[
                                         dmc.Paper(
@@ -158,9 +122,8 @@ dash_form_project.layout = dmc.MantineProvider(
                                                                             id="framework-multi-select",
                                                                             clearable=True,
                                                                             searchable=True,
-                                                                            leftSection=DashIconify(
+                                                                            leftSection=my_components.get_icon(
                                                                                 icon="material-symbols-light:image",
-                                                                                height=20,
                                                                             ),
                                                                             styles={
                                                                                 "input": {
@@ -260,18 +223,16 @@ dash_form_project.layout = dmc.MantineProvider(
                                     "Back",
                                     id="back-basic-usage",
                                     variant="outline",
-                                    leftSection=DashIconify(
+                                    leftSection=my_components.get_icon(
                                         icon="material-symbols:arrow-back",
-                                        height=20,
                                     ),
                                     color=THEME["secondary"],
                                 ),
                                 dmc.Button(
                                     "Next",
                                     id="next-basic-usage",
-                                    rightSection=DashIconify(
+                                    rightSection=my_components.get_icon(
                                         icon="material-symbols:arrow-forward",
-                                        height=20,
                                     ),
                                     color=THEME["primary"],
                                 ),
@@ -292,7 +253,7 @@ dash_form_project.layout = dmc.MantineProvider(
 )
 
 
-@dash_form_project.expanded_callback(
+@dash_form_dataset.expanded_callback(
     dash.dependencies.Output("setup-text", "children"),
     [dash.dependencies.Input("blank", "children")],
 )
@@ -308,7 +269,7 @@ def update_setup(_, **kwargs):
     return form
 
 
-@dash_form_project.expanded_callback(
+@dash_form_dataset.expanded_callback(
     dash.dependencies.Output("sample_container", "children"),
     [dash.dependencies.Input("blank", "children")],
 )
@@ -320,7 +281,7 @@ def update_sample(_, **kwargs):
     return form
 
 
-@dash_form_project.expanded_callback(
+@dash_form_dataset.expanded_callback(
     dash.dependencies.Output("framework-multi-select", "data"),
     dash.dependencies.Output("framework-multi-select", "value"),
     [dash.dependencies.Input("blank", "children")],
@@ -332,7 +293,7 @@ def list_images_multi_selector(_, **kwargs):
     ]
 
 
-@dash_form_project.expanded_callback(
+@dash_form_dataset.expanded_callback(
     dash.dependencies.Output("framework-multi-select", "error"),
     [dash.dependencies.Input("framework-multi-select", "value")],
 )
@@ -340,7 +301,7 @@ def multi_selector_callback(value, **kwargs):
     return "Select at least 1." if len(value) < 1 else ""
 
 
-@dash_form_project.expanded_callback(
+@dash_form_dataset.expanded_callback(
     dash.dependencies.Output("image_id", "children"),
     dash.dependencies.Output("sample_col", "children"),
     dash.dependencies.Output("config_col", "children"),
@@ -363,8 +324,10 @@ def update_review_form(
         clearable=False,
         w="auto",
         disabled=True,
-        leftSection=DashIconify(icon="material-symbols-light:image"),
-        rightSection=DashIconify(icon="radix-icons:chevron-down"),
+        leftSection=my_components.get_icon(
+            icon="material-symbols-light:image"
+        ),
+        rightSection=my_components.get_icon(icon="radix-icons:chevron-down"),
     )
     if current == 1:
         return (
@@ -376,7 +339,7 @@ def update_review_form(
         return dash.no_update
 
 
-@dash_form_project.expanded_callback(
+@dash_form_dataset.expanded_callback(
     dash.dependencies.Output("stepper-basic-usage", "active"),
     dash.dependencies.Output("next-basic-usage", "children"),
     dash.dependencies.Output("next-basic-usage", "color"),
@@ -395,7 +358,7 @@ def stepper_callback(*args, **kwargs):
     button_id = kwargs["callback_context"].triggered[0]["prop_id"]
     step = current if current is not None else active
     next_text = "Next"
-    next_color = "green"
+    next_color = THEME["primary"]
     if button_id == "back-basic-usage.n_clicks":
         step = step - 1 if step > min_step else step
     else:
@@ -406,12 +369,12 @@ def stepper_callback(*args, **kwargs):
         else:
             if step >= 1:
                 next_text = "Run Analysis"
-                next_color = "green"
+                next_color = THEME["primary"]
             step = step + 1 if step < max_step else step
     return step, next_text, next_color
 
 
-dash_form_project.clientside_callback(
+dash_form_dataset.clientside_callback(
     """
     function updateLoadingState(n_clicks, current) {
         if (current == 2) {
@@ -430,7 +393,7 @@ dash_form_project.clientside_callback(
 )
 
 
-@dash_form_project.expanded_callback(
+@dash_form_dataset.expanded_callback(
     dash.dependencies.Output("main-content", "children"),
     dash.dependencies.Output("loading-overlay", "visible"),
     [
@@ -484,7 +447,7 @@ def run_analysis(_, list_images, current, comment, **kwargs):
                         ),
                     ],
                     color=color,
-                    icon=DashIconify(
+                    icon=my_components.get_icon(
                         icon=(
                             "mdi:check-circle"
                             if color == "green"
@@ -503,14 +466,14 @@ def run_analysis(_, list_images, current, comment, **kwargs):
                     dmc.Text(str(e), size="sm"),
                 ],
                 color="red",
-                icon=DashIconify(icon="mdi:alert"),
+                icon=my_components.get_icon(icon="mdi:alert"),
                 title="Error!",
                 radius="md",
             )
     return dash.no_update, False
 
 
-dash_form_project.clientside_callback(
+dash_form_dataset.clientside_callback(
     """
     function updateProgress(active) {
         return active * 50;

@@ -6,14 +6,12 @@ from dash import dcc, html
 from django_plotly_dash import DjangoDash
 import plotly.express as px
 import dash_mantine_components as dmc
-from dash_iconify import DashIconify
 from linkml_runtime.dumpers import YAMLDumper, JSONDumper
 from skimage.exposure import rescale_intensity
 from OMERO_metrics.styles import (
     THEME,
     MANTINE_THEME,
     CONTAINER_STYLE,
-    HEADER_PAPER_STYLE,
     CONTENT_PAPER_STYLE,
     GRAPH_STYLE,
     PLOT_LAYOUT,
@@ -63,57 +61,11 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                 ),
             ],
         ),
-        dmc.Paper(
-            children=[
-                dmc.Group(
-                    [
-                        dmc.Group(
-                            [
-                                html.Img(
-                                    src="/static/OMERO_metrics/images/metrics_logo.png",
-                                    style={
-                                        "width": "120px",
-                                        "height": "auto",
-                                    },
-                                ),
-                                dmc.Stack(
-                                    [
-                                        dmc.Title(
-                                            "Field of Illumination",
-                                            c=THEME["primary"],
-                                            size="h2",
-                                        ),
-                                        dmc.Text(
-                                            "Dataset Dashboard",
-                                            c=THEME["text"]["secondary"],
-                                            size="sm",
-                                        ),
-                                    ],
-                                    gap="xs",
-                                ),
-                            ],
-                        ),
-                        dmc.Group(
-                            [
-                                my_components.download_group,
-                                my_components.delete_button,
-                                dmc.Badge(
-                                    "FOI Analysis",
-                                    color=THEME["primary"],
-                                    variant="dot",
-                                    size="lg",
-                                ),
-                            ]
-                        ),
-                    ],
-                    justify="space-between",
-                ),
-            ],
-            **HEADER_PAPER_STYLE,
+        my_components.header_component(
+            "Field Illumination", "Dataset Analysis", "FOI Analysis"
         ),
         dmc.Container(
             [
-                # Header Section
                 # Main Content
                 dmc.Grid(
                     gutter="md",
@@ -140,13 +92,11 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                                             allowDeselect=False,
                                                             w="200",
                                                             value="0",
-                                                            leftSection=DashIconify(
-                                                                icon="material-symbols:layers",
-                                                                height=20,
+                                                            leftSection=my_components.get_icon(
+                                                                icon="material-symbols:layers"
                                                             ),
-                                                            rightSection=DashIconify(
-                                                                icon="radix-icons:chevron-down",
-                                                                height=20,
+                                                            rightSection=my_components.get_icon(
+                                                                icon="radix-icons:chevron-down"
                                                             ),
                                                             styles=INPUT_BASE_STYLES,
                                                         ),
@@ -196,9 +146,8 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                                                 dmc.Tooltip(
                                                                     label="Statistical measurements for all the channels",
                                                                     children=[
-                                                                        DashIconify(
+                                                                        my_components.get_icon(
                                                                             icon="material-symbols:info",
-                                                                            height=20,
                                                                             color=THEME[
                                                                                 "primary"
                                                                             ],
@@ -318,7 +267,7 @@ omero_dataset_foi.layout = dmc.MantineProvider(
     dash.dependencies.Output("channel_dropdown_foi", "data"),
     [dash.dependencies.Input("blank-input", "children")],
 )
-def update_dropdown_menu(_, **kwargs):
+def update_dropdown_menu(*args, **kwargs):
     try:
         channel = kwargs["session_state"]["context"]["channel_names"]
         return [
@@ -336,24 +285,17 @@ def update_dropdown_menu(_, **kwargs):
         dash.dependencies.Input("pagination", "value"),
     ],
 )
-def update_km_table(page, **kwargs):
+def update_km_table(pagination_value, **kwargs):
     try:
-        page = int(page)
-        table = load.get_km_mm_metrics_dataset(
+        page = int(pagination_value)
+        kkm = kwargs["session_state"]["context"]["kkm"]
+        table_km = load.get_km_mm_metrics_dataset(
             mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
             table_name="key_measurements",
         )
         start_idx = (page - 1) * 4
         end_idx = start_idx + 4
-        metrics_df = table[
-            [
-                "channel_name",
-                "center_region_intensity_fraction",
-                "center_region_area_fraction",
-                "max_intensity",
-            ]
-        ].copy()
-
+        metrics_df = table_km.filter(["channel_name", *kkm])
         metrics_df = metrics_df.round(3)
         metrics_df.columns = metrics_df.columns.str.replace(
             "_", " ", regex=True
@@ -432,41 +374,28 @@ def update_intensity_map(channel, **kwargs):
 )
 def update_profile_type(channel, curve_type, **kwargs):
     try:
-        channel = int(channel)
         df_intensity_profiles = load.load_table_mm_metrics(
             kwargs["session_state"]["context"]["mm_dataset"].output[
                 "intensity_profiles"
             ]
         )
-        channel_regex = f"ch{channel:02d}"
-        df_profile = df_intensity_profiles[
-            df_intensity_profiles.columns[
-                df_intensity_profiles.columns.str.startswith(channel_regex)
-            ]
-        ].copy()
-
-        df_profile.columns = df_profile.columns.str.replace(
-            "ch\d{2}_", "", regex=True
+        df_profile = df_intensity_profiles.filter(regex=f"ch0*{channel}_")
+        df_profile.columns = (
+            df_profile.columns.str.replace(
+                "ch\d+_leftTop_to_rightBottom", "Diagonal (↘)", regex=True
+            )
+            .str.replace(
+                "ch\d+_leftBottom_to_rightTop", "Diagonal (↗)", regex=True
+            )
+            .str.replace(
+                "ch\d+_center_horizontal", "Horizontal (→)", regex=True
+            )
+            .str.replace("ch\d+_center_vertical", "Vertical (↓)", regex=True)
         )
-        df_profile = restyle_dataframe(df_profile, "columns")
-        df_profile = df_profile.reset_index()
-        df_profile.columns = df_profile.columns.str.replace(
-            "Lefttop To Rightbottom", "Diagonal (↘)"
-        )
-        df_profile.columns = df_profile.columns.str.replace(
-            "Leftbottom To Righttop", "Diagonal (↗)"
-        )
-        df_profile.columns = df_profile.columns.str.replace(
-            "Center Horizontal", "Horizontal (→)"
-        )
-        df_profile.columns = df_profile.columns.str.replace(
-            "Center Vertical", "Vertical (↓)"
-        )
-        print(df_profile.to_dict("records"))
         return df_profile.to_dict("records"), curve_type
 
     except Exception as e:
-        return [{"Pixel": 0}], "natural"
+        return [{"Pixel": 0}], "linear"
 
 
 def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:
@@ -479,6 +408,7 @@ def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:
 @omero_dataset_foi.expanded_callback(
     dash.dependencies.Output("confirm_delete", "opened"),
     dash.dependencies.Output("notifications-container", "children"),
+    dash.dependencies.Output("modal-submit-button", "loading"),
     [
         dash.dependencies.Input("delete_data", "n_clicks"),
         dash.dependencies.Input("modal-submit-button", "n_clicks"),
@@ -502,7 +432,7 @@ def delete_dataset(*args, **kwargs):
             id="simple-notify",
             action="show",
             message=msg,
-            icon=DashIconify(
+            icon=my_components.get_icon(
                 icon=(
                     "akar-icons:circle-check"
                     if color == "green"
@@ -511,9 +441,9 @@ def delete_dataset(*args, **kwargs):
             ),
             color=color,
         )
-        return opened, message
+        return opened, message, False
     else:
-        return opened, None
+        return opened, None, False
 
 
 @omero_dataset_foi.expanded_callback(
@@ -525,7 +455,7 @@ def delete_dataset(*args, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def download_dataset_data(_, **kwargs):
+def download_dataset_data(*args, **kwargs):
     if not kwargs["callback_context"].triggered:
         raise dash.no_update
 
@@ -563,25 +493,19 @@ def download_dataset_data(_, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def download_table_data(_, **kwargs):
+def download_table_data(*args, **kwargs):
     if not kwargs["callback_context"].triggered:
         raise dash.no_update
 
     triggered_id = (
         kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
     )
-    table = load.get_km_mm_metrics_dataset(
+    table_km = load.get_km_mm_metrics_dataset(
         mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
         table_name="key_measurements",
     )
-    metrics_df = table[
-        [
-            "channel_name",
-            "center_region_intensity_fraction",
-            "center_region_area_fraction",
-            "max_intensity",
-        ]
-    ].copy()
+    kkm = kwargs["session_state"]["context"]["kkm"]
+    metrics_df = table_km.filter(["channel_name", *kkm])
     metrics_df = metrics_df.round(3)
     metrics_df.columns = metrics_df.columns.str.replace(
         "_", " ", regex=True
@@ -593,3 +517,20 @@ def download_table_data(_, **kwargs):
     elif triggered_id == "table-download-json":
         return dcc.send_data_frame(metrics_df.to_json, "km_table.json")
     raise dash.no_update
+
+
+omero_dataset_foi.clientside_callback(
+    """
+    function(n_clicks) {
+        if (n_clicks > 0) {
+            return true;
+        }
+        return false;
+    }
+    """,
+    dash.dependencies.Output(
+        "modal-submit-button", "loading", allow_duplicate=True
+    ),
+    dash.dependencies.Input("modal-submit-button", "n_clicks"),
+    prevent_initial_call=True,
+)
