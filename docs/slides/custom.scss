@@ -21,13 +21,17 @@ $presentation-heading-font: $font-family-sans-serif;
   text-align: center;
   font-size: 1.3em;
   padding-bottom: 0.25em;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .reveal .slide h3 {
   padding-bottom: 0.2em;
   font-size: 1.0em;
   font-weight: 400;
+}
+
+.reveal .slide p{
+  padding-bottom: 0.4em;
 }
 
 .reveal .slide blockquote {
