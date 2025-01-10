@@ -74,24 +74,24 @@ pip install -e .
 We created a little bash script that is configuring the setup. You can run it by typing:
 
 ```bash
-test /OMERO_metrics$ ./configuration_omero.sh /path/to/omeroweb /path/to/mydatabase
-````
-where `/path/to/omeroweb` is the path to the OMERO-web directory and `/path/to/mydatabase` is the path to the OMERO_metrics sqlite database.
+./configuration_omero.sh /path/to/omeroweb /path/to/mydatabase
+```
 
+where `/path/to/omeroweb` is the path to the OMERO-web directory and `/path/to/mydatabase` is the path to the OMERO_metrics sqlite database.
 
 ```bash
 export REACT_VERSION=18.2.0
 export OMERODIR=$(pwd)
 omero config set omero.web.server_list '[["localhost", 6064, "omero_server"]]'
 omero web start
-````
+```
 
 # Some Useful Links To Download ZeroC-Ice
 
 ```python
 #zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-macos-universal2/releases/download/20240131/zeroc_ice-3.6.5-cp311-cp311-macosx_11_0_universal2.whl
 #zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-linux-x86_64/releases/download/20240202/zeroc_ice-3.6.5-cp311-cp311-manylinux_2_28_x86_64.whl
-````
+```
 
 ## Further Info
 
