@@ -12,4 +12,4 @@ openpyxl
 omero-web>=5.26.0
 dash-renderer
 # omero
-microscopemetrics @ git+https://github.com/MontpellierRessourcesImagerie/microscope-metrics.git
+microscopemetrics @ git+https://github.com/juliomateoslangerak/microscope-metrics.git@dev
