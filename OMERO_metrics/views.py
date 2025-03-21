@@ -245,19 +245,23 @@ def save_config(request, conn=None, **kwargs):
 
 
 @login_required(setGroupContext=True)
-def run_analysis_view(request, conn=None, **kwargs):
-    """Run the analysis"""
+def run_analysis_view(
+        request, 
+        conn, 
+        dataset_id,
+        mm_sample,
+        list_images,
+        mm_input_parameters,
+        comment,
+        progress_callback,
+):
     try:
-        dataset_wrapper = conn.getObject("Dataset", kwargs["dataset_id"])
+        dataset_wrapper = conn.getObject("Dataset", dataset_id)
         project_wrapper = dataset_wrapper.getParent()
-        list_images = kwargs["list_images"]
-        comment = kwargs["comment"]
         list_mm_images = [
             load.load_image(conn.getObject("Image", int(i)))
             for i in list_images
         ]
-        mm_sample = kwargs["mm_sample"]
-        mm_input_parameters = kwargs["mm_input_parameters"]
         input_data = getattr(
             mm_schema, data_type.DATA_TYPE[mm_input_parameters.class_name][1]
         )
@@ -291,7 +295,8 @@ def run_analysis_view(request, conn=None, **kwargs):
             experimenter=mm_experimenter,
         )
         run_status = data_type.DATA_TYPE[mm_input_parameters.class_name][3](
-            mm_dataset
+            mm_dataset,
+            progress_callback
         )
         if run_status and mm_dataset.processed:
             try:

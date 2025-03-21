@@ -2,6 +2,7 @@ import dash
 from dash import html
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
+from dash import dcc
 from dash_iconify import DashIconify
 from microscopemetrics_schema import datamodel as mm_schema
 from OMERO_metrics.tools import dash_forms_tools as dft
@@ -83,6 +84,14 @@ dash_form_project.layout = dmc.MantineProvider(
                         "radius": "sm",
                         "blur": 1,
                     },
+                    children=[
+                        dmc.Text(id="progress-text", children="Progress..."),
+                    ]
+                ),
+                dcc.Interval(
+                    id="progress-interval",
+                    interval=500,
+                    n_intervals=0,
                 ),
                 # Main content
                 dmc.Paper(
@@ -436,6 +445,7 @@ dash_form_project.clientside_callback(
 @dash_form_project.expanded_callback(
     dash.dependencies.Output("main-content", "children"),
     dash.dependencies.Output("loading-overlay", "visible"),
+    dash.dependencies.Output("progress-text", "children"),
     [
         dash.dependencies.Input("next-basic-usage", "n_clicks"),
         dash.dependencies.State("framework-multi-select", "value"),
@@ -460,6 +470,11 @@ def run_analysis(_, list_images, current, comment, **kwargs):
             sample_object = getattr(mm_schema, sample["type"])
             mm_sample = sample_object(**sample["fields"])
 
+            def progress_callback(progress, text):
+                dash.callback_context.response.set_data({
+                    "progress-text": f"{int(progress * 100)}% - {text}"
+                })
+
             msg, color = run_analysis_view(
                 request=kwargs["request"],
                 dataset_id=dataset_id,
@@ -467,6 +482,7 @@ def run_analysis(_, list_images, current, comment, **kwargs):
                 list_images=list_images,
                 mm_input_parameters=mm_input_parameters,
                 comment=comment,
+                progress_callback=progress_callback,
             )
 
             return (
@@ -475,8 +491,6 @@ def run_analysis(_, list_images, current, comment, **kwargs):
                         dmc.Title(
                             children=(
                                 "Your analysis completed successfully!"
-                                if color == "green"
-                                else "Oops! something happened"
                             ),
                             order=4,
                         ),
@@ -489,11 +503,9 @@ def run_analysis(_, list_images, current, comment, **kwargs):
                     icon=DashIconify(
                         icon=(
                             "mdi:check-circle"
-                            if color == "green"
-                            else "mdi:alert"
                         )
                     ),
-                    title="Success!" if color == "green" else "Error!",
+                    title="Success!",
                     radius="md",
                 ),
                 False,
@@ -522,6 +534,13 @@ def run_analysis(_, list_images, current, comment, **kwargs):
             )
     return dash.no_update, False
 
+@dash_form_project.expanded_callback(
+    dash.dependencies.Output("progress-text", "children"),
+    [dash.dependencies.Input("progress-interval", "n_intervals")],
+    prevent_initial_call=True,
+)
+def update_loading_message(n_intervals, **kwargs):
+    return kwargs["session_state"].get("progress-text", "Progress...")
 
 dash_form_project.clientside_callback(
     """
