@@ -40,6 +40,14 @@ OMERO-metrics aims to provide a comprehensive solution for monitoring the perfor
 
 # Who is *OMERO-metrics* for?
 
+# How is *OMERO-metrics* built?
+
+![](./media/sw_infrastructure.png)
+
+# Linked metrology data
+
+![](./media/linked_data.png)
+
 # How does it work?
 
 1. First time **configuration** of the analysis you want to perform
@@ -47,34 +55,59 @@ OMERO-metrics aims to provide a comprehensive solution for monitoring the perfor
 3. **Run** the analysis using the pre-configured parameters
 4. **Visualize** the results in a dashboard
 
-## UML diagram
+[//]: # (## UML diagram)
 
-If you which to see the UML diagram, here it is:
+[//]: # ()
+[//]: # (If you which to see the UML diagram, here it is:)
 
-```{mermaid}
-flowchart LR
-    C0[Create project]
-    T1[Select project]
-    T2{has config?}
-    C1[Create config]
-    V3[Render timecourse view]
-    V4[Render add datasets view]
-    T1 --> T2
-    T2 -- no --> C1
-    T2 -- yes --> V2
-    subgraph CONFIGURATION
-    C1 --> T2
-    end
-    subgraph IMPORT
-    end
-    subgraph RUN
-    end
-    subgraph VISUALIZE
-    V2{has datasets?}
-    V2 -- yes --> V3
-    V2 -- no --> V4
-    end
-   ```
+[//]: # ()
+[//]: # (```{mermaid})
+
+[//]: # (flowchart LR)
+
+[//]: # (    C0[Create project])
+
+[//]: # (    T1[Select project])
+
+[//]: # (    T2{has config?})
+
+[//]: # (    C1[Create config])
+
+[//]: # (    V3[Render timecourse view])
+
+[//]: # (    V4[Render add datasets view])
+
+[//]: # (    T1 --> T2)
+
+[//]: # (    T2 -- no --> C1)
+
+[//]: # (    T2 -- yes --> V2)
+
+[//]: # (    subgraph CONFIGURATION)
+
+[//]: # (    C1 --> T2)
+
+[//]: # (    end)
+
+[//]: # (    subgraph IMPORT)
+
+[//]: # (    end)
+
+[//]: # (    subgraph RUN)
+
+[//]: # (    end)
+
+[//]: # (    subgraph VISUALIZE)
+
+[//]: # (    V2{has datasets?})
+
+[//]: # (    V2 -- yes --> V3)
+
+[//]: # (    V2 -- no --> V4)
+
+[//]: # (    end)
+
+[//]: # (   ```)
 # 0. Core concepts
 ## 0.1. Embracing the ISA abstract model
 
