@@ -59,7 +59,7 @@ setup(
         "dash-iconify",
         "openpyxl",
         "dash-renderer",
-        "microscopemetrics @ git+https://github.com/MontpellierRessourcesImagerie/microscope-metrics.git",
+        "microscopemetrics @ git+https://github.com/juliomateoslangerak/microscope-metrics.git@dev",
         "pytest-django",
         "pytest",
     ],
