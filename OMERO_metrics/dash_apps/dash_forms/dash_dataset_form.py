@@ -302,10 +302,10 @@ def update_setup(_, **kwargs):
     ]
     input_parameters_object = getattr(mm_schema, input_parameters["type"])
     input_parameters_mm = input_parameters_object(**input_parameters["fields"])
-    form = dft.get_form(
+    
+    return dft.get_form(
         input_parameters_mm, disabled=True, form_id="input_parameters_form"
     )
-    return form
 
 
 @dash_form_project.expanded_callback(
@@ -316,8 +316,8 @@ def update_sample(_, **kwargs):
     sample = kwargs["session_state"]["context"]["input_parameters"]["sample"]
     mm_sample = getattr(mm_schema, sample["type"])
     mm_sample = mm_sample(**sample["fields"])
-    form = dft.get_form(mm_sample, disabled=True, form_id="sample_form")
-    return form
+    
+    return dft.get_form(mm_sample, disabled=True, form_id="sample_form")
 
 
 @dash_form_project.expanded_callback(
@@ -442,12 +442,11 @@ dash_form_project.clientside_callback(
     prevent_initial_call=True,
 )
 def run_analysis(_, list_images, current, comment, **kwargs):
-    config = kwargs["session_state"]["context"]["input_parameters"]
-    input_parameters = config["input_parameters"]
-    sample = config["sample"]
     dataset_id = kwargs["session_state"]["context"]["dataset_id"]
     if current == 2:
         sleep(1)
+        input_parameters = kwargs["input_parameters"]
+        sample = kwargs["sample"]
         try:
             input_parameters_object = getattr(
                 mm_schema, input_parameters["type"]

@@ -89,23 +89,23 @@ def get_annotations_list_group(conn, group_id):
         "Type",
     ]
     for p in projects:
-        for ds in p.listAnnotations():
-            data.append(
-                [
-                    ds.getFile().getName(),
-                    ds.getId(),
-                    ds.getFile().getId(),
-                    ds.getDescription(),
-                    ds.getDate(),
-                    ds.getOwner().getName(),
-                    p.getId(),
-                    p.getName(),
-                    ds.getNs(),
-                    ds.__class__.__name__,
-                ]
-            )
-    df = pd.DataFrame(data, columns=columns)
-    return df
+        data.extend(
+            [
+                ds.getFile().getName(),
+                ds.getId(),
+                ds.getFile().getId(),
+                ds.getDescription(),
+                ds.getDate(),
+                ds.getOwner().getName(),
+                p.getId(),
+                p.getName(),
+                ds.getNs(),
+                ds.__class__.__name__,
+            ]
+            for ds in p.listAnnotations()
+        )
+
+    return pd.DataFrame(data, columns=columns)
 
 
 def image_exist(image_id, mm_dataset):
