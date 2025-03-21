@@ -13,6 +13,9 @@ from OMERO_metrics.styles import (
     HEADER_PAPER_STYLE,
     CONTAINER_STYLE,
 )
+from microscopemetrics import (
+    SaturationError
+)
 
 active = 0
 min_step = 0
@@ -494,6 +497,17 @@ def run_analysis(_, list_images, current, comment, **kwargs):
                     radius="md",
                 ),
                 False,
+            )
+        except SaturationError as e:
+            return dmc.Alert(
+                children=[
+                    dmc.Title("Saturation Error", order=4),
+                    dmc.Text(str(e), size="sm"),
+                ],
+                color="red",
+                icon=DashIconify(icon="mdi:scissors-cutting"),
+                title="Error!",
+                radius="md",
             )
         except Exception as e:
             return dmc.Alert(
