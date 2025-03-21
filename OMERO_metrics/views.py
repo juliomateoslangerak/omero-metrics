@@ -162,7 +162,7 @@ def center_viewer_group(request, conn=None, **kwargs):
 
 @login_required(setGroupContext=True)
 def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
-    dash_context = request.session.get("django_plotly_dash", dict())
+    dash_context = request.session.get("django_plotly_dash", {})
     try:
         dataset_wrapper = conn.getObject("Dataset", dataset_id)
         dm = data_managers.DatasetManager(
@@ -199,9 +199,8 @@ def microscope_view(request, conn=None, **kwargs):
     )
 
 
-# These views are called from the dash app, and they return a message and a color to display in the app.
-
-
+# These views are called from the dash app, and they return a message
+# and a color to display in the app.
 @login_required(setGroupContext=True)
 def save_config(request, conn=None, **kwargs):
     """Save the configuration file"""
