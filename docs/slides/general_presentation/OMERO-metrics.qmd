@@ -38,7 +38,17 @@ OMERO-metrics aims to provide a comprehensive solution for monitoring the perfor
 - uses the OMERO platform to store and manage metrology data using a schema: it is FAIR
 - uses OMERO-web's visualization capabilities to provide an interface: it is user-friendly
 
-# Who is *OMERO-metrics* for?
+# but also for reproducibility<br>and recognition of core facility staff
+
+::: {.r-stack}
+![](./media/value_cf_work_1.png){.fragment}
+
+![](./media/value_cf_work_2.png){.fragment}
+:::
+
+# How is *OMERO-metrics* build?
+
+![](./media/structure.png)
 
 # How does it work?
 
@@ -60,6 +70,8 @@ An *investigation* links to one or more *studies*.
 Eg: the field-homogeneity of the 20x objective. A *study* links to one or more *assays*.
 - **Assay / Dataset:** The actual measurements taken at a particular point in time. 
 Those measurements are linked to the raw images stored in OMERO.
+
+# <span class='flow_big'>DEMO</span>
 
 # 2. Configure the analysis
 
