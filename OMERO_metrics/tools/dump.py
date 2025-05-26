@@ -443,12 +443,6 @@ def _dump_output_element(
                 key_values=output_element,
                 target_object=target_dataset,
             )
-    elif isinstance(output_element, mm_schema.Tag):
-        return dump_tag(
-            conn=conn,
-            tag=output_element,
-            target_objects=target_dataset,
-        )
     elif isinstance(output_element, mm_schema.Table):
         return dump_table(
             conn=conn,
