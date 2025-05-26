@@ -38,7 +38,17 @@ OMERO-metrics aims to provide a comprehensive solution for monitoring the perfor
 - uses the OMERO platform to store and manage metrology data using a schema: it is FAIR
 - uses OMERO-web's visualization capabilities to provide an interface: it is user-friendly
 
-# Who is *OMERO-metrics* for?
+# but also for reproducibility<br>and recognition of core facility staff
+
+::: {.r-stack}
+![](./media/value_cf_work_1.png){.fragment}
+
+![](./media/value_cf_work_2.png){.fragment}
+:::
+
+# How is *OMERO-metrics* build?
+
+![](./media/structure.png)
 
 # How is *OMERO-metrics* built?
 
@@ -55,61 +65,8 @@ OMERO-metrics aims to provide a comprehensive solution for monitoring the perfor
 3. **Run** the analysis using the pre-configured parameters
 4. **Visualize** the results in a dashboard
 
-[//]: # (## UML diagram)
-
-[//]: # ()
-[//]: # (If you which to see the UML diagram, here it is:)
-
-[//]: # ()
-[//]: # (```{mermaid})
-
-[//]: # (flowchart LR)
-
-[//]: # (    C0[Create project])
-
-[//]: # (    T1[Select project])
-
-[//]: # (    T2{has config?})
-
-[//]: # (    C1[Create config])
-
-[//]: # (    V3[Render timecourse view])
-
-[//]: # (    V4[Render add datasets view])
-
-[//]: # (    T1 --> T2)
-
-[//]: # (    T2 -- no --> C1)
-
-[//]: # (    T2 -- yes --> V2)
-
-[//]: # (    subgraph CONFIGURATION)
-
-[//]: # (    C1 --> T2)
-
-[//]: # (    end)
-
-[//]: # (    subgraph IMPORT)
-
-[//]: # (    end)
-
-[//]: # (    subgraph RUN)
-
-[//]: # (    end)
-
-[//]: # (    subgraph VISUALIZE)
-
-[//]: # (    V2{has datasets?})
-
-[//]: # (    V2 -- yes --> V3)
-
-[//]: # (    V2 -- no --> V4)
-
-[//]: # (    end)
-
-[//]: # (   ```)
-# 0. Core concepts
-## 0.1. Embracing the ISA abstract model
+# 1. Core concepts
+## 1.1. Embracing the ISA abstract model
 
 The **ISA model** uses three core hierarchically organized entities to capture (meta)data: 
 *Investigation*, *Study* and *Assay*. In OMERO-metrics these entities correspond to 
@@ -122,7 +79,9 @@ Eg: the field-homogeneity of the 20x objective. A *study* links to one or more *
 - **Assay / Dataset:** The actual measurements taken at a particular point in time. 
 Those measurements are linked to the raw images stored in OMERO.
 
-# 1. Configure the analysis
+# <span class='flow_big'>DEMO</span>
+
+# 2. Configure the analysis
 
 The first step, and only to be the first time, is to configure the analysis that you plan to run.
 
@@ -131,11 +90,11 @@ The first step, and only to be the first time, is to configure the analysis that
 - Once the analysis type is chosen, define the parameters that will be used to run the analysis using a form
 - Save the parameters
 
-# 2. Import image data into OMERO
+# 3. Import image data into OMERO
 
 OMERO is a server-client platform for managing, visualizing, and analyzing microscope images and metadata.
 
-## 2.1. Importing images
+## 3.1. Importing images
 
 Acquired images are imported into OMERO following a well-defined structure.
 
@@ -151,32 +110,32 @@ Acquired images are imported into OMERO following a well-defined structure.
 ![](./media/import_image_data_images.png){.fragment}
 :::
 
-# 3. Run the analysis
+# 4. Run the analysis
 
 Now that the images are imported into OMERO, the next step is to run the analysis.
 
-## 3.1. Run the analysis
+## 4.1. Run the analysis
 If a dataset has not been analyzed yet, the user will have the possibility to trigger the analysis.
 
-## 3.2. Parametrize the analysis
+## 4.2. Parametrize the analysis
 The user will be able to parametrize the analysis defaulting to the parameters defined in the configuration step.
 
-# 4. Visualize the results
+# 5. Visualize the results
 
 OMERO-metrics provides a dashboard to visualize the results of the analysis at different levels.
 
-## 4.1. Group level
+## 5.1. Group level
 At the group level, the user will be able to see a summary of the status of the microscope.
 
-## 4.2. Project level
+## 5.2. Project level
 At the project level, the user will be able to see the results of the analysis for all the datasets in the project.
 The user will be able to browse, across time, the results of the analysis.
 
-## 4.3. Dataset level
+## 5.3. Dataset level
 At the dataset level, the user will be able to see the results of the analysis for all the images in the dataset,
 providing a more detailed view of the state of the microscope at that time.
 
-## 4.4. Image level
+## 5.4. Image level
 At the image level, the user will be able to see the results of the analysis for a single image.
 
 # Attributions

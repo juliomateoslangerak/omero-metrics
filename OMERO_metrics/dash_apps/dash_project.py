@@ -2,7 +2,6 @@ import dash
 from dash import html
 from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
-from dash_iconify import DashIconify
 from datetime import datetime
 import pandas as pd
 from linkml_runtime.dumpers import YAMLDumper, JSONDumper
@@ -20,41 +19,11 @@ from OMERO_metrics.styles import (
     DATEPICKER_STYLES,
     TABLE_MANTINE_STYLE,
     MANTINE_THEME,
-    HEADER_PAPER_STYLE,
+    COLORS_CHANNELS,
 )
 import math
-from microscopemetrics.analyses.mappings import MAPPINGS
 from time import sleep
 import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
-
-sample_types = [x[0] for x in MAPPINGS]
-sample_types_dp = [
-    {
-        "label": dft.add_space_between_capitals(x.__name__),
-        "value": f"{i}",
-        "description": f"Configure analysis for {x.__name__}",  # Added descriptions
-    }
-    for i, x in enumerate(sample_types)
-]
-
-colors = ["#FF0000", "#00FF00", "#0000FF", "#FFFF00"]
-
-
-def make_control(text, action_id):
-    return dmc.Flex(
-        [
-            dmc.AccordionControl(text),
-            dmc.ActionIcon(
-                children=DashIconify(icon="lets-icons:check-fill"),
-                color="green",
-                variant="default",
-                n_clicks=0,
-                id={"index": action_id},
-            ),
-        ],
-        justify="center",
-        align="center",
-    )
 
 
 # Initialize the Dash app
@@ -100,53 +69,10 @@ omero_project_dash.layout = dmc.MantineProvider(
         ),
         html.Div(id="blank-input"),
         html.Div(id="save_config_result"),
-        dmc.Paper(
-            children=[
-                dmc.Group(
-                    [
-                        dmc.Group(
-                            [
-                                html.Img(
-                                    src="/static/OMERO_metrics/images/metrics_logo.png",
-                                    style={
-                                        "width": "120px",
-                                        "height": "auto",
-                                    },
-                                ),
-                                dmc.Stack(
-                                    [
-                                        dmc.Title(
-                                            "Project Dashboard",
-                                            c=THEME["primary"],
-                                            size="h2",
-                                        ),
-                                        dmc.Text(
-                                            "Microscopy Image Analysis Dashboard",
-                                            c=THEME["text"]["secondary"],
-                                            size="sm",
-                                        ),
-                                    ],
-                                    gap="xs",
-                                ),
-                            ],
-                        ),
-                        dmc.Group(
-                            [
-                                my_components.download_group,
-                                my_components.delete_button,
-                                dmc.Badge(
-                                    "Project Analysis",
-                                    color=THEME["primary"],
-                                    variant="dot",
-                                    size="lg",
-                                ),
-                            ]
-                        ),
-                    ],
-                    justify="space-between",
-                ),
-            ],
-            **HEADER_PAPER_STYLE,
+        my_components.header_component(
+            "Project Dashboard",
+            "Microscopy Image Analysis Dashboard",
+            "Project Analysis",
         ),
         dmc.Tabs(
             value="dashboard",
@@ -157,21 +83,27 @@ omero_project_dash.layout = dmc.MantineProvider(
                         dmc.TabsTab(
                             "Dashboard",
                             value="dashboard",
-                            leftSection=DashIconify(icon="ph:chart-line-bold"),
+                            leftSection=my_components.get_icon(
+                                icon="ph:chart-line-bold"
+                            ),
                             color=THEME["primary"],
                             style=TAB_ITEM_STYLE,
                         ),
                         dmc.TabsTab(
                             "Settings",
                             value="settings",
-                            leftSection=DashIconify(icon="ph:gear-bold"),
+                            leftSection=my_components.get_icon(
+                                icon="ph:gear-bold"
+                            ),
                             color=THEME["primary"],
                             style=TAB_ITEM_STYLE,
                         ),
                         dmc.TabsTab(
                             "Thresholds",
                             value="thresholds",
-                            leftSection=DashIconify(icon="ph:ruler-bold"),
+                            leftSection=my_components.get_icon(
+                                icon="ph:ruler-bold"
+                            ),
                             color=THEME["primary"],
                             style=TAB_ITEM_STYLE,
                         ),
@@ -206,12 +138,12 @@ omero_project_dash.layout = dmc.MantineProvider(
                                                         id="project-dropdown",
                                                         label="Select Measurement",
                                                         placeholder="Choose a measurement",
-                                                        leftSection=DashIconify(
+                                                        leftSection=my_components.get_icon(
                                                             icon="ph:magnifying-glass"
                                                         ),
                                                         value="0",
                                                         disabled=True,
-                                                        rightSection=DashIconify(
+                                                        rightSection=my_components.get_icon(
                                                             icon="ph:caret-down"
                                                         ),
                                                         allowDeselect=False,
@@ -228,15 +160,17 @@ omero_project_dash.layout = dmc.MantineProvider(
                                                         type="range",
                                                         valueFormat="DD-MM-YYYY",
                                                         placeholder="Select date range",
-                                                        leftSection=DashIconify(
+                                                        leftSection=my_components.get_icon(
                                                             icon="ph:calendar"
                                                         ),
+                                                        miw=150,
                                                         disabledDates=True,
                                                         styles=DATEPICKER_STYLES,
                                                     ),
                                                 ],
                                             ),
                                         ],
+                                        align="flex-end",
                                         style={
                                             "marginBottom": "12px",
                                         },
@@ -256,7 +190,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                                                     "left": 50,
                                                 },
                                                 series=[],
-                                                curveType="natural",
+                                                curveType="linear",
                                                 style={"padding": 20},
                                                 xAxisLabel="Processed Date",
                                                 connectNulls=True,
@@ -373,7 +307,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                                 children=[
                                     dmc.Accordion(
                                         id="accordion-compose-controls",
-                                        chevron=DashIconify(
+                                        chevron=my_components.get_icon(
                                             icon="ant-design:plus-outlined"
                                         ),
                                         disableChevronRotation=True,
@@ -382,15 +316,9 @@ omero_project_dash.layout = dmc.MantineProvider(
                                     dmc.Group(
                                         justify="flex-end",
                                         mt="xl",
-                                        children=[
-                                            dmc.Button(
-                                                "Update",
-                                                id="modal-submit-button",
-                                                style=BUTTON_STYLE,
-                                            ),
-                                        ],
+                                        id="thresholds-button_container",
+                                        children=[],
                                     ),
-                                    html.Div(id="result_data"),
                                     html.Div(id="notifications-container"),
                                 ],
                             ),
@@ -443,82 +371,62 @@ def update_dropdown(*args, **kwargs):
 
 
 @omero_project_dash.expanded_callback(
+    dash.dependencies.Output("graph-project", "children"),
+    [dash.dependencies.Input("blank-input", "children")],
+)
+def check_data(*args, **kwargs):
+    try:
+        data = kwargs["session_state"]["context"]["key_measurements_list"]
+        if data:
+            return dash.no_update
+        return dash.no_update
+    except Exception as e:
+        return [
+            dmc.Stack(
+                children=[
+                    dmc.Text(
+                        "No data available for this project",
+                        size="lg",
+                        fw=500,
+                        c="dimmed",
+                    ),
+                    dmc.Space(h=100),  # Add some vertical spacing
+                ],
+                align="center",
+                justify="center",
+                style={"height": "250px"},
+            )
+        ]
+
+
+@omero_project_dash.expanded_callback(
     dash.dependencies.Output("line-chart", "data"),
     dash.dependencies.Output("line-chart", "series"),
     dash.dependencies.Output("line-chart", "referenceLines"),
-    dash.dependencies.Output("graph-project", "children"),
     [
         dash.dependencies.Input("project-dropdown", "value"),
         dash.dependencies.Input("date-picker", "value"),
     ],
+    prevent_initial_call=True,
 )
 def update_table(measurement, dates_range, **kwargs):
     try:
-        # Check if required data exists in session state
-        if not all(
-            key in kwargs["session_state"]["context"]
-            for key in ["key_measurements_list", "threshold", "kkm", "dates"]
-        ):
-            msg = kwargs["session_state"]["context"]["message"]
-            return (
-                [],
-                [],
-                [],
-                dmc.Stack(
-                    children=[
-                        dmc.Text(
-                            msg,
-                            align="center",
-                            size="lg",
-                            weight=500,
-                            color="dimmed",
-                        ),
-                        dmc.Space(h=100),  # Add some vertical spacing
-                    ],
-                    align="center",
-                    justify="center",
-                    style={"height": "250px"},
-                ),
-            )
 
         df_list = kwargs["session_state"]["context"]["key_measurements_list"]
         threshold = kwargs["session_state"]["context"]["threshold"]
         kkm = kwargs["session_state"]["context"]["kkm"]
+        measurement = int(measurement)
 
         # Check if we have any data
-        if not df_list or not dates_range:
-            msg = kwargs["session_state"]["context"].get(
-                "message", "No data available yet"
-            )
-            return (
-                [],
-                [],
-                [],
-                dmc.Stack(
-                    children=[
-                        dmc.Text(
-                            msg,
-                            align="center",
-                            size="lg",
-                            weight=500,
-                            color="dimmed",
-                        ),
-                        dmc.Space(h=100),  # Add some vertical spacing
-                    ],
-                    align="center",
-                    justify="center",
-                    style={"height": "250px"},
-                ),
-            )
-
-        measurement = int(measurement)
+        if not df_list:
+            return dash.no_update
         if threshold:
             threshold_kkm = threshold[kkm[measurement]]
             ref = [
                 {
                     "y": v,
                     "label": k.replace("_", " ").title(),
-                    "color": "red.6",
+                    "color": "red.6" if k == "upper_limit" else "yellow.6",
                 }
                 for k, v in threshold_kkm.items()
                 if v
@@ -539,90 +447,27 @@ def update_table(measurement, dates_range, **kwargs):
             )
         ].index.to_list()
 
-        # Check if we have any data after filtering
-        if not df_dates:
-            return (
-                [],
-                [],
-                [],
-                dmc.Stack(
-                    children=[
-                        dmc.Text(
-                            "No data available for selected date range",
-                            align="center",
-                            size="lg",
-                            weight=500,
-                            color="dimmed",
-                        ),
-                        dmc.Space(h=100),  # Add some vertical spacing
-                    ],
-                    align="center",
-                    justify="center",
-                    style={"height": "250px"},
-                ),
-            )
-
         df_list_filtered = [df_list[i] for i in df_dates]
         dates_filtered = [dates[i] for i in df_dates]
-        df = get_data_trends(
+        df = my_components.get_data_trends(
             kkm, measurement, dates_filtered, df_list_filtered
         )
-
-        # Check if we have data after processing
-        if df.empty:
-            return (
-                [],
-                [],
-                [],
-                dmc.Stack(
-                    children=[
-                        dmc.Text(
-                            "No data available for selected measurement",
-                            align="center",
-                            size="lg",
-                            weight=500,
-                            color="dimmed",
-                        ),
-                        dmc.Space(h=100),  # Add some vertical spacing
-                    ],
-                    align="center",
-                    justify="center",
-                    style={"height": "250px"},
-                ),
-            )
 
         data = df.to_dict("records")
         channels = [
             c for c in df.columns if c not in ["dataset_index", "date"]
         ]
         series = [
-            {"name": channel, "color": colors[i % len(colors)]}
+            {
+                "name": channel,
+                "color": COLORS_CHANNELS[i % len(COLORS_CHANNELS)],
+            }
             for i, channel in enumerate(channels)
         ]
-        return data, series, ref, dash.no_update
+        return data, series, ref
 
     except Exception as e:
-        msg = kwargs["session_state"]["context"]["message"]
-        return (
-            [],
-            [],
-            [],
-            dmc.Stack(
-                children=[
-                    dmc.Text(
-                        msg,
-                        align="center",
-                        size="lg",
-                        weight=500,
-                        color="dimmed",
-                    ),
-                    dmc.Space(h=100),  # Add some vertical spacing
-                ],
-                align="center",
-                justify="center",
-                style={"height": "250px"},
-            ),
-        )
+        return dash.no_update
 
 
 @omero_project_dash.expanded_callback(
@@ -634,7 +479,6 @@ def update_table(measurement, dates_range, **kwargs):
         dash.dependencies.Input("line-chart", "clickData"),
         dash.dependencies.Input("pagination", "value"),
     ],
-    prevent_initial_call=True,
 )
 def update_project_view(clicked_data, page, **kwargs):
     try:
@@ -644,7 +488,7 @@ def update_project_view(clicked_data, page, **kwargs):
             kkm = kwargs["session_state"]["context"]["kkm"]
             selected_dataset = int(clicked_data["dataset_index"])
             df_selected = table[selected_dataset]
-            table_kkm = df_selected[kkm].copy()
+            table_kkm = df_selected.filter(["channel_name", *kkm])
             table_kkm = table_kkm.round(3)
             total = math.ceil(len(table_kkm) / 4)
             start_idx = (page - 1) * 4
@@ -779,7 +623,7 @@ def update_config_project(submit_click, sample_form, input_form, **kwargs):
                         ),
                     ],
                     color=color,
-                    icon=DashIconify(
+                    icon=my_components.get_icon(
                         icon=(
                             "mdi:check-circle"
                             if color == "green"
@@ -800,7 +644,7 @@ def update_config_project(submit_click, sample_form, input_form, **kwargs):
                         dmc.Text(str(e), size="sm"),
                     ],
                     color="red",
-                    icon=DashIconify(icon="mdi:alert"),
+                    icon=my_components.get_icon(icon="mdi:alert"),
                     title="Error!",
                     radius="md",
                     withCloseButton=True,
@@ -822,7 +666,7 @@ def update_config_project(submit_click, sample_form, input_form, **kwargs):
                     ),
                 ],
                 color="red",
-                icon=DashIconify(icon="mdi:alert"),
+                icon=my_components.get_icon(icon="mdi:alert"),
                 title="Error!",
                 radius="md",
                 withCloseButton=True,
@@ -857,6 +701,7 @@ def update_heart(n, **kwargs):
 
 @omero_project_dash.expanded_callback(
     dash.dependencies.Output("accordion-compose-controls", "children"),
+    dash.dependencies.Output("thresholds-button_container", "children"),
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_thresholds_controls(*args, **kwargs):
@@ -871,7 +716,7 @@ def update_thresholds_controls(*args, **kwargs):
         threshold_control = [
             dmc.AccordionItem(
                 [
-                    make_control(
+                    my_components.make_control(
                         key.replace("_", " ").title(),
                         f"action-{i}",
                     ),
@@ -884,7 +729,7 @@ def update_thresholds_controls(*args, **kwargs):
                                     dmc.NumberInput(
                                         label="Upper Limit",
                                         placeholder="Enter upper limit",
-                                        leftSection=DashIconify(
+                                        leftSection=my_components.get_icon(
                                             icon="hugeicons:chart-maximum",
                                             color=THEME["primary"],
                                         ),
@@ -893,7 +738,7 @@ def update_thresholds_controls(*args, **kwargs):
                                     dmc.NumberInput(
                                         label="Lower Limit",
                                         placeholder="Enter lower limit",
-                                        leftSection=DashIconify(
+                                        leftSection=my_components.get_icon(
                                             icon="hugeicons:chart-minimum",
                                             color=THEME["primary"],
                                         ),
@@ -911,7 +756,12 @@ def update_thresholds_controls(*args, **kwargs):
             )
             for i, (key, value) in enumerate(new_kkm.items())
         ]
-        return threshold_control
+        button = dmc.Button(
+            "Update",
+            id="modal-submit-button",
+            style=BUTTON_STYLE,
+        )
+        return threshold_control, button
     except Exception as e:
         return dash.no_update
 
@@ -931,7 +781,7 @@ def threshold_callback1(*args, **kwargs):
         output = get_accordion_data(args[1], kkm)
         request = kwargs["request"]
         project_id = kwargs["session_state"]["context"]["project_id"]
-        if output:
+        if output and args[0] > 0:
             response, color = views.save_threshold(
                 request=request,
                 project_id=int(project_id),
@@ -945,9 +795,9 @@ def threshold_callback1(*args, **kwargs):
                     action="show",
                     message=response,
                     icon=(
-                        DashIconify(icon="ic:round-celebration")
+                        my_components.get_icon(icon="ic:round-celebration")
                         if color == "green"
-                        else DashIconify(icon="ic:round-error")
+                        else my_components.get_icon(icon="ic:round-error")
                     ),
                 ),
                 False,
@@ -995,6 +845,7 @@ def get_accordion_data(accordion_state, kkm):
 @omero_project_dash.expanded_callback(
     dash.dependencies.Output("delete-confirm_delete", "opened"),
     dash.dependencies.Output("delete-notifications-container", "children"),
+    dash.dependencies.Output("delete-modal-submit-button", "loading"),
     [
         dash.dependencies.Input("delete_data", "n_clicks"),
         dash.dependencies.Input("delete-modal-submit-button", "n_clicks"),
@@ -1020,7 +871,7 @@ def delete_project(*args, **kwargs):
                 id="simple-notify",
                 action="show",
                 message=msg,
-                icon=DashIconify(
+                icon=my_components.get_icon(
                     icon=(
                         "akar-icons:circle-check"
                         if color == "green"
@@ -1029,9 +880,9 @@ def delete_project(*args, **kwargs):
                 ),
                 color=color,
             )
-            return opened, message
+            return opened, message, False
         else:
-            return opened, None
+            return opened, None, False
     except Exception as e:
         return dash.no_update
 
@@ -1080,16 +931,18 @@ def download_project_data(*args, **kwargs):
         return dash.no_update
 
 
-def get_data_trends(kkm, measurement, dates, dfs):
-    complete_df = pd.DataFrame()
-    for i, df in enumerate(dfs):
-        dfi = df.pivot_table(columns="channel_name", values=kkm).reset_index(
-            names="Measurement"
-        )
-        dfi["dataset_index"] = i
-        dfi["date"] = dates[i]
-        complete_df = pd.concat([complete_df, dfi])
-    complete_df = complete_df.reset_index(drop=True)
-    complete_df = complete_df[complete_df["Measurement"] == kkm[measurement]]
-    complete_df = complete_df.drop(columns="Measurement")
-    return complete_df
+omero_project_dash.clientside_callback(
+    """
+    function loadingDeleteButton(n_clicks) {
+        if (n_clicks > 0) {
+            return true;
+        }
+        return false;
+    }
+    """,
+    dash.dependencies.Output(
+        "delete-modal-submit-button", "loading", allow_duplicate=True
+    ),
+    dash.dependencies.Input("delete-modal-submit-button", "n_clicks"),
+    prevent_initial_call=True,
+)

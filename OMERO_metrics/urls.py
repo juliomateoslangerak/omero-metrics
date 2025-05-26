@@ -1,4 +1,13 @@
-from OMERO_metrics.views import *
+from OMERO_metrics.views import (
+    index,
+    microscope_view,
+    center_viewer_project,
+    center_viewer_dataset,
+    center_viewer_group,
+    center_viewer_image,
+    imageJ,
+    center_view_projects,
+)
 from django.urls import re_path
 from OMERO_metrics.dash_apps import (
     dash_feedback,
@@ -19,19 +28,10 @@ from OMERO_metrics.dash_apps.dash_analyses.dash_psf_beads import (
     dash_dataset_psf_beads,
     dash_image_psf_beads,
 )
+from OMERO_metrics.dash_apps.dash_multiple_projects import dash_projects
 
 urlpatterns = [
     re_path(r"^$", index, name="OMERO_metrics_index"),
-    re_path(
-        r"^webgateway_templates/(?P<base_template>[a-z0-9_]+)/",
-        web_gateway_templates,
-        name="webgateway_templates",
-    ),
-    re_path(
-        r"^webclient_templates/(?P<base_template>[a-z0-9_]+)/",
-        webclient_templates,
-        name="webclient_templates",
-    ),
     re_path(
         r"^project/(?P<project_id>[0-9]+)/",
         center_viewer_project,
@@ -47,10 +47,11 @@ urlpatterns = [
         r"^image/(?P<image_id>[0-9]+)/", center_viewer_image, name="image"
     ),
     re_path(
-        r"^image_rois/(?P<image_id>[0-9]+)/",
-        image_rois,
-        name="webtest_image_rois",
+        r"^OMERO_metrics_projects/",
+        center_view_projects,
+        name="OMERO_metrics_projects",
     ),
     # This url is for the app in a new tab
-    re_path(r"^microscope", microscope_view, name="microscope"),
+    re_path(r"^microscope/", microscope_view, name="microscope"),
+    re_path(r"^imageJ_test/", imageJ, name="imageJ_test"),
 ]

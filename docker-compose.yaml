@@ -22,6 +22,7 @@ services:
     build: test/omero-server
     platform: linux/amd64
     environment:
+      CONFIG_omero_client_icetransports: ssl,wss
       CONFIG_omero_db_host: database
       CONFIG_omero_db_user: omero
       CONFIG_omero_db_pass: omero
@@ -29,11 +30,13 @@ services:
       CONFIG_omero_policy_binary__access: +read,+write,+image,+plate
       CONFIG_omero_glacier2_IceSSL_Ciphers: "HIGH:!DH"
       ROOTPASS: omero
+
     networks:
       - omero
     ports:
       - "6063:4063"
       - "6064:4064"
+      - "8443:8443"
     volumes:
       - "omero:/OMERO"
 

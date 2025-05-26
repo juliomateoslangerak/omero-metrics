@@ -6,19 +6,9 @@ import plotly.express as px
 import plotly.graph_objs as go
 import numpy as np
 import logging
-import pandas as pd
-from dash_iconify import DashIconify
-from OMERO_metrics.tools.data_preperation import (
-    crop_bead_index,
-    mip_graphs,
-    fig_mip,
-)
-from OMERO_metrics.styles import THEME, MANTINE_THEME, HEADER_PAPER_STYLE
+import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
+from OMERO_metrics.styles import THEME, MANTINE_THEME
 from OMERO_metrics.tools import load
-
-
-def get_icon(icon, size=20, color=None):
-    return DashIconify(icon=icon, height=size, color=color)
 
 
 logger = logging.getLogger(__name__)
@@ -32,48 +22,11 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
         # Header Section
-        dmc.Paper(
-            children=[
-                dmc.Group(
-                    [
-                        dmc.Group(
-                            [
-                                html.Img(
-                                    src="/static/OMERO_metrics/images/metrics_logo.png",
-                                    style={
-                                        "width": "120px",
-                                        "height": "auto",
-                                    },
-                                ),
-                                dmc.Stack(
-                                    [
-                                        dmc.Title(
-                                            "PSF Beads Analysis",
-                                            c=THEME["primary"],
-                                            size="h2",
-                                        ),
-                                        dmc.Text(
-                                            "Advanced Microscopy Image Analysis",
-                                            c=THEME["text"]["secondary"],
-                                            size="sm",
-                                        ),
-                                    ],
-                                    gap="xs",
-                                ),
-                            ],
-                            gap="md",
-                        ),
-                        dmc.Badge(
-                            "Interactive Analysis",
-                            color=THEME["primary"],
-                            variant="dot",
-                            size="lg",
-                        ),
-                    ],
-                    justify="space-between",
-                ),
-            ],
-            **HEADER_PAPER_STYLE,
+        my_components.header_component(
+            "PSF Beads Analysis",
+            "Advanced Microscopy Image Analysis",
+            "PSF beads Analysis",
+            load_buttons=False,
         ),
         # Main Content
         dmc.Container(
@@ -99,7 +52,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                         dmc.Tooltip(
                                                             label="Click on a bead in the image to view its MIP",
                                                             children=[
-                                                                get_icon(
+                                                                my_components.get_icon(
                                                                     "material-symbols:info",
                                                                     color=THEME[
                                                                         "primary"
@@ -151,10 +104,10 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                             w="100%",
                                                             value="0",
                                                             allowDeselect=False,
-                                                            leftSection=get_icon(
+                                                            leftSection=my_components.get_icon(
                                                                 "material-symbols:layers"
                                                             ),
-                                                            rightSection=get_icon(
+                                                            rightSection=my_components.get_icon(
                                                                 "radix-icons:chevron-down"
                                                             ),
                                                         ),
@@ -227,10 +180,10 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                                 },
                                                             ],
                                                             value="Hot",
-                                                            leftSection=get_icon(
+                                                            leftSection=my_components.get_icon(
                                                                 "material-symbols:palette"
                                                             ),
-                                                            rightSection=get_icon(
+                                                            rightSection=my_components.get_icon(
                                                                 "radix-icons:chevron-down"
                                                             ),
                                                         ),
@@ -267,7 +220,8 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                 dmc.Group(
                                                     [
                                                         dmc.Text(
-                                                            "Maximum Intensity Projection",
+                                                            id="title_mip",
+                                                            children="Maximum Intensity Projection",
                                                             size="lg",
                                                             fw=500,
                                                             c=THEME["primary"],
@@ -315,10 +269,10 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                                     value="x",
                                                                     allowDeselect=False,
                                                                     id="axis_image_psf",
-                                                                    rightSection=get_icon(
+                                                                    rightSection=my_components.get_icon(
                                                                         "radix-icons:chevron-down"
                                                                     ),
-                                                                    leftSection=get_icon(
+                                                                    leftSection=my_components.get_icon(
                                                                         icon="mdi:axis-x-arrow"
                                                                     ),
                                                                 ),
@@ -360,7 +314,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
 )
 def update_icon(axis):
     icon = f"mdi:axis-{axis}-arrow"
-    return get_icon(icon=icon)
+    return my_components.get_icon(icon=icon)
 
 
 @omero_image_psf_beads.expanded_callback(
@@ -387,26 +341,11 @@ def update_image(
         bead_properties_df = load.load_table_mm_metrics(
             mm_dataset.output["bead_properties"]
         )
-        df_beads_location = bead_properties_df[
-            (
-                (bead_properties_df["channel_nr"] == channel_index)
-                & (bead_properties_df["image_id"] == image_id)
-            )
-        ][
-            [
-                "channel_nr",
-                "bead_id",
-                "considered_axial_edge",
-                "considered_valid",
-                "considered_self_proximity",
-                "considered_lateral_edge",
-                "considered_intensity_outlier",
-                "center_z",
-                "center_y",
-                "center_x",
-            ]
-        ].copy()
-
+        df_beads_location = bead_properties_df.loc[
+            (bead_properties_df["image_id"] == image_id)
+            & (bead_properties_df["channel_nr"] == channel_index),
+            :,
+        ]
         beads, roi_rect = get_beads_info(df_beads_location, min_distance)
 
         if invert:
@@ -482,6 +421,7 @@ def update_channels_psf_image(_, **kwargs):
 @omero_image_psf_beads.expanded_callback(
     dash.dependencies.Output("mip_image", "figure"),
     dash.dependencies.Output("mip_chart_image", "figure"),
+    dash.dependencies.Output("title_mip", "children"),
     [
         dash.dependencies.Input("psf_image_graph", "clickData"),
         dash.dependencies.Input("axis_image_psf", "value"),
@@ -492,40 +432,33 @@ def update_channels_psf_image(_, **kwargs):
 def callback_mip(points, axis, channel_index, **kwargs):
     point = points["points"][0]
     axis = axis.lower()
+    channel_names = kwargs["session_state"]["context"]["channel_names"]
+    channels = [c.name for c in channel_names.channels]
     mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
     image_id = int(kwargs["session_state"]["context"]["image_id"])
     channel_index = int(channel_index)
+    channel_name = channels[channel_index]
     bead_properties_df = load.load_table_mm_metrics(
         mm_dataset.output["bead_properties"]
     )
-    df_beads_location = bead_properties_df[
-        (
-            (bead_properties_df["channel_nr"] == channel_index)
-            & (bead_properties_df["image_id"] == image_id)
-        )
-    ][
-        [
-            "channel_nr",
-            "bead_id",
-            "considered_axial_edge",
-            "center_z",
-            "center_x",
-            "center_y",
-        ]
-    ].copy()
+    df_beads_location = bead_properties_df.loc[
+        (bead_properties_df["image_id"] == image_id)
+        & (bead_properties_df["channel_nr"] == channel_index),
+        :,
+    ]
     min_dist = int(mm_dataset.input_parameters.min_lateral_distance_factor)
     if point["curveNumber"] == 1:
         bead_index = point["pointNumber"]
 
-        bead = df_beads_location[
-            df_beads_location["bead_id"] == bead_index
-        ].copy()
+        bead = df_beads_location.loc[
+            df_beads_location["bead_id"] == bead_index, :
+        ]
         stack = kwargs["session_state"]["context"]["image"][
             0, :, :, :, channel_index
         ]
-        x0, xf, y0, yf = crop_bead_index(bead, min_dist, stack)
-        mip_x, mip_y, mip_z = mip_graphs(x0, xf, y0, yf, stack)
-        fig_mip_go = fig_mip(mip_x, mip_y, mip_z)
+        x0, xf, y0, yf = my_components.crop_bead_index(bead, min_dist, stack)
+        mip_x, mip_y, mip_z = my_components.mip_graphs(x0, xf, y0, yf, stack)
+        fig_mip_go = my_components.fig_mip(mip_x, mip_y, mip_z)
         fig_mip_go.update_layout(
             coloraxis={
                 "colorbar": dict(
@@ -540,9 +473,11 @@ def callback_mip(points, axis, channel_index, **kwargs):
             paper_bgcolor=THEME["background"],
             font={"color": THEME["text"]["primary"]},
         )
+        title = f"Maximum Intensity Projection for channel {channel_name} Bead number {bead_index}"
         return (
             fig_mip_go,
             line_graph_axis(bead_index, channel_index, axis, kwargs),
+            title,
         )
     else:
         return dash.no_update
@@ -554,28 +489,9 @@ def line_graph_axis(bead_index, channel_index, axis, kwargs):
         mm_dataset.output[f"bead_profiles_{axis}"]
     )
     image_id = kwargs["session_state"]["context"]["image_id"]
-    df_axis_3d = df_axis[
-        df_axis.columns[df_axis.columns.str.startswith(str(image_id))]
-    ]
-    df_meta_x = pd.DataFrame(
-        data=[
-            [
-                int(col.split("_")[-3]),
-                int(col.split("_")[-4]),
-                col.split("_")[-1],
-                col,
-            ]
-            for col in df_axis_3d.columns
-        ],
-        columns=["bead_id", "channel_nr", "type", "name"],
+    df_x = df_axis.filter(
+        regex=f"^{image_id}_{channel_index}_{bead_index}_{axis}_"
     )
-    cols_x = df_meta_x[
-        (
-            (df_meta_x["bead_id"] == bead_index)
-            & (df_meta_x["channel_nr"] == channel_index)
-        )
-    ]["name"].values
-    df_x = df_axis_3d[cols_x].copy()
     df_x.columns = df_x.columns.str.split("_").str[-1]
     fig_ip_x = px.line(df_x)
     fig_ip_x.update_traces(
