@@ -568,44 +568,6 @@ def dump_roi(
     return omero_roi
 
 
-def dump_tag(
-    conn: BlitzGateway,
-    tag: mm_schema.Tag,
-    target_objects: list[
-        Union[ImageWrapper, DatasetWrapper, ProjectWrapper]
-    ] = None,
-):
-    if target_objects is None:
-        try:
-            target_objects = omero_tools.get_omero_obj_from_mm_obj(
-                conn=conn, mm_obj=tag.linked_references
-            )
-        except AttributeError:
-            logger.error(
-                f"Tag {tag.name} must be linked to an OMERO object. No object provided"
-            )
-            return None
-
-    if tag.data_reference is not None:
-        logger.info(f"Tag {tag.name} already exists in OMERO.")
-        omero_tag = omero_tools.get_omero_obj_from_mm_obj(
-            conn=conn, mm_obj=tag
-        )
-    else:
-        logger.info(f"Creating new tag {tag.name} in OMERO.")
-        omero_tag = omero_tools.create_tag(
-            conn=conn,
-            tag_name=tag.name,
-            tag_description=tag.description,
-            omero_object=target_objects,
-        )
-        tag.data_reference = omero_tools.get_ref_from_object(omero_tag)
-
-    tag.linked_references = [omero_tools.get_ref_from_object(target_objects)]
-
-    return omero_tag
-
-
 def dump_key_measurement(
     conn: BlitzGateway,
     key_measurement: mm_schema.KeyMeasurements,
