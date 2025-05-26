@@ -191,10 +191,10 @@ class DatasetManager:
             logger.error("No configuration to save.")
             return
 
-        update.update_key_value(
+        update.update_key_measurements(
             conn=self._conn,
-            new_key_values=self.analysis_config,
-            target_key_values=self.analysis_config_id,
+            new_key_measurements=self.analysis_config,
+            target_key_measurements=self.analysis_config_id,
             replace=True,
             new_description=f"config saved on {datetime.datetime.now()}",
         )

@@ -431,9 +431,9 @@ def _dump_output_element(
         )
     elif isinstance(output_element, mm_schema.KeyMeasurements):
         if isinstance(output_element, mm_schema.KeyMeasurements):
-            return dump_key_measurement(
+            return dump_key_measurements(
                 conn=conn,
-                key_measurement=output_element,
+                key_measurements=output_element,
                 # KeyMeasurements are linked to the dataset and project
                 target_object=[target_dataset, target_dataset.getParent()],
             )
@@ -568,47 +568,47 @@ def dump_roi(
     return omero_roi
 
 
-def dump_key_measurement(
+def dump_key_measurements(
     conn: BlitzGateway,
-    key_measurement: mm_schema.KeyMeasurements,
+    key_measurements: mm_schema.KeyMeasurements,
     target_object: Union[
         DatasetWrapper,
         ProjectWrapper,
         list[Union[DatasetWrapper, ProjectWrapper]],
     ],
 ):
-    if not isinstance(key_measurement, mm_schema.KeyMeasurements):
+    if not isinstance(key_measurements, mm_schema.KeyMeasurements):
         logger.error(
-            f"Unsupported key measurement type for {key_measurement.name}: {key_measurement.class_name}"
+            f"Unsupported key measurement type for {key_measurements.name}: {key_measurements.class_name}"
         )
         return None
 
     if target_object is None:
         try:
             target_object = omero_tools.get_omero_obj_from_mm_obj(
-                conn=conn, mm_obj=key_measurement.linked_references
+                conn=conn, mm_obj=key_measurements.linked_references
             )
         except AttributeError:
             logger.error(
-                f"Key-measurements {key_measurement.name} must be linked to an OMERO object. No object provided."
+                f"Key-measurements {key_measurements.name} must be linked to an OMERO object. No object provided."
             )
             return None
 
-    if key_measurement.table_data is None:
+    if key_measurements.table_data is None:
         logger.error(
-            f"Key-measurements {key_measurement.name} has no data. Skipping dump."
+            f"Key-measurements {key_measurements.name} has no data. Skipping dump."
         )
         return None
 
     omero_table = omero_tools.create_table(
         conn=conn,
-        table=key_measurement.table_data,
-        table_name=key_measurement.name,
+        table=key_measurements.table_data,
+        table_name=key_measurements.name,
         omero_object=target_object,
-        table_description=key_measurement.description,
-        namespace=key_measurement.class_class_curie,
+        table_description=key_measurements.description,
+        namespace=key_measurements.class_class_curie,
     )
-    key_measurement.data_reference = omero_tools.get_ref_from_object(
+    key_measurements.data_reference = omero_tools.get_ref_from_object(
         omero_table
     )
 
