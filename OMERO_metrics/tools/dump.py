@@ -429,7 +429,7 @@ def _dump_output_element(
             image=output_element,
             target_dataset=target_dataset,
         )
-    elif isinstance(output_element, mm_schema.KeyValues):
+    elif isinstance(output_element, mm_schema.KeyMeasurements):
         if isinstance(output_element, mm_schema.KeyMeasurements):
             return dump_key_measurement(
                 conn=conn,
@@ -617,10 +617,10 @@ def dump_key_measurement(
 
 def dump_key_values(
     conn: BlitzGateway,
-    key_values: mm_schema.KeyValues,
+    key_values: mm_schema.KeyMeasurements,
     target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper] = None,
 ):
-    if not isinstance(key_values, mm_schema.KeyValues):
+    if not isinstance(key_values, mm_schema.KeyMeasurements):
         logger.error(
             f"Unsupported key values type for {key_values.name}: {key_values.class_name}"
         )
