@@ -92,7 +92,7 @@ def field_illumination_generator(args, microscope_name):
                 microscope=mm_schema.Microscope(name=microscope_name),
                 input_parameters=mm_schema.FieldIlluminationInputParameters(),
                 input_data=mm_schema.FieldIlluminationInputData(
-                    field_illumination_image=[
+                    field_illumination_images=[
                         numpy_to_mm_image(
                             array=_gen_field_illumination_image(
                                 y_shape=random.randint(
@@ -392,7 +392,7 @@ def annotate_microscopes(conn, microscopes: dict):
             microscope = mm_schema.Microscope(
                 name=microscope["name"],
                 description=microscope["description"],
-                type=microscope["type"],
+                microscope_type=microscope["type"],
                 manufacturer=microscope["manufacturer"],
                 model=microscope["model"],
                 serial_number=microscope["serial_number"],
@@ -437,7 +437,7 @@ if __name__ == "__main__":
                 mm_project = mm_schema.HarmonizedMetricsDatasetCollection(
                     name=project["name_project"],
                     description=project["description_project"],
-                    datasets=GENERATOR_MAPPER[project["dataset_class"]](
+                    dataset_collection=GENERATOR_MAPPER[project["dataset_class"]](
                         project, microscope_name
                     ),
                     dataset_class=project["dataset_class"],
@@ -475,7 +475,7 @@ if __name__ == "__main__":
                     _attach_config(temp_conn, omero_project, file_path)
 
                 if project["process"]:
-                    for dataset in mm_project.datasets:
+                    for dataset in mm_project.dataset_collection:
                         DATASET_TO_ANALYSIS[project["dataset_class"]](dataset)
 
                     omero_project = dump.dump_project(

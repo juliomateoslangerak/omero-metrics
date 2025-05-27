@@ -117,7 +117,7 @@ def dump_project(
         omero_project = target_project
         project.data_reference = omero_tools.get_ref_from_object(omero_project)
 
-    for dataset in project.datasets:
+    for dataset in project.dataset_collection:
         dump_dataset(
             conn=conn,
             dataset=dataset,
