@@ -368,16 +368,12 @@ def dump_analysis_config():
 def _get_output_metadata(
     dataset_output: mm_schema.MetricsOutput,
 ) -> dict:
-    output_fields = {f.name for f in fields(mm_schema.MetricsOutput)}
-    output_elements = {}
-    for output_field in fields(dataset_output):
-        if output_field.name not in output_fields:
-            continue
-        output_elements[output_field.name] = str(
-            getattr(dataset_output, output_field.name)
-        )
-
-    return output_elements
+    return {
+        "processing_datetime": dataset_output.processing_datetime,
+        "processing_application": dataset_output.processing_application,
+        "processing_entity": dataset_output.processing_entity,
+        "processing_version": dataset_output.processing_version,
+    }
 
 
 def _dump_dataset_output(
