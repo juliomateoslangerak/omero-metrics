@@ -289,7 +289,7 @@ class DatasetManager:
                 ):
                     self.context["image"], self.context["channel_names"] = (
                         load.concatenate_images(
-                            self.mm_dataset.input_data.field_illumination_image
+                            self.mm_dataset.input_data.field_illumination_images
                         )
                     )
                     self.remove_unsupported_data()

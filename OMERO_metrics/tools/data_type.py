@@ -3,14 +3,14 @@ from microscopemetrics.analyses import field_illumination, psf_beads
 DATASET_TYPES = ["FieldIlluminationDataset", "PSFBeadsDataset"]
 
 INPUT_IMAGES_MAPPING = {
-    "FieldIlluminationDataset": "field_illumination_image",
+    "FieldIlluminationDataset": "field_illumination_images",
     "PSFBeadsDataset": "psf_beads_images",
 }
 
 
 DATASET_IMAGES = {
     "FieldIlluminationDataset": {
-        "input_data": ["field_illumination_image"],
+        "input_data": ["field_illumination_images"],
         "output": [],
     },
     "PSFBeadsDataset": {
@@ -23,7 +23,7 @@ DATA_TYPE = {
     "FieldIlluminationInputParameters": [
         "FieldIlluminationDataset",
         "FieldIlluminationInputData",
-        "field_illumination_image",
+        "field_illumination_images",
         field_illumination.analyse_field_illumination,
     ],
     "PSFBeadsInputParameters": [
