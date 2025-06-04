@@ -11,9 +11,7 @@ from OMERO_metrics.styles import (
     MANTINE_THEME,
     CONTAINER_STYLE,
 )
-from microscopemetrics import (
-    SaturationError
-)
+from microscopemetrics import SaturationError
 import OMERO_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 
 active = 0
@@ -411,8 +409,12 @@ def run_analysis(_, list_images, current, comment, **kwargs):
     dataset_id = kwargs["session_state"]["context"]["dataset_id"]
     if current == 2:
         sleep(1)
-        input_parameters = kwargs["input_parameters"]
-        sample = kwargs["sample"]
+        input_parameters = kwargs["session_state"]["context"][
+            "input_parameters"
+        ]["input_parameters"]
+        sample = kwargs["session_state"]["context"]["input_parameters"][
+            "sample"
+        ]
         try:
             input_parameters_object = getattr(
                 mm_schema, input_parameters["type"]
