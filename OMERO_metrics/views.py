@@ -280,7 +280,9 @@ def run_analysis_view(request, conn=None, **kwargs):
             name=project_wrapper.getDetails().getGroup().getName()
         )
         mm_experimenter = mm_schema.Experimenter(
-            orcid="0000-0002-1825-0097", name=conn.getUser().getName()
+            # TODO: we must get the ORCID from somewhere here
+            orcid="0000-0002-1825-0097",
+            name=conn.getUser().getName(),
         )
         mm_dataset = getattr(
             mm_schema, data_type.DATA_TYPE[mm_input_parameters.class_name][0]
