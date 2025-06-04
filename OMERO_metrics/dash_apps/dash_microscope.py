@@ -4,8 +4,14 @@ import pandas as pd
 from dash import html, dash_table
 
 
-df = pd.read_csv(
-    "https://raw.githubusercontent.com/plotly/datasets/master/gapminder2007.csv"
+df = pd.DataFrame(
+    {
+        "country": ["Afghanistan", "Albania", "Algeria"],
+        "continent": ["Asia", "Europe", "Africa"],
+        "lifeExp": [43.828, 76.423, 72.301],
+        "pop": [31889923, 3600523, 33333216],
+        "gdpPercap": [974.5803384, 5937.029526, 6223.367465],
+    }
 )
 
 
