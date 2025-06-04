@@ -16,15 +16,7 @@ maintainers = [
 keywords = ["microscopy", "metrology", "OMERO"]
 license = {text = "GPL-3.0-only"}
 readme = "README.md"
-requires-python = ">=3.9.18,<3.11"
-#packages = [
-#    {include = "OMERO_metrics"},
-#]
-##include = [
-##    "README.md",
-##    "OMERO_metrics",
-##    "project",
-##]
+requires-python = ">=3.9.18,<=3.11"
 dynamic = [
     "version",
     "classifiers",
