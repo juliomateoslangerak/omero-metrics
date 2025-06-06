@@ -1,7 +1,6 @@
 import dash
 from dash import dcc, html
 from django_plotly_dash import DjangoDash
-from plotly.express.imshow_utils import rescale_intensity
 import dash_mantine_components as dmc
 import plotly.express as px
 import plotly.graph_objects as go
@@ -12,6 +11,7 @@ from omero_metrics.styles import (
 )
 from omero_metrics.tools import load
 import pandas as pd
+import numpy as np
 import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 
 
@@ -275,9 +275,7 @@ def callback_image(
         color = color + "_r"
     image_omero = kwargs["session_state"]["context"]["image"]
     image_data = image_omero[0, 0, :, :, int(channel)]
-    image_data = rescale_intensity(
-        image_data, in_range=(0, image_data.max()), out_range=(0.0, 1.0)
-    )
+    image_data = np.float32(image_data / image_data.max())
     rois = load.get_rois_mm_dataset(mm_dataset)
     df_lines = pd.DataFrame(rois[image_id]["roi"]["Line"])
     df_rects = pd.DataFrame(rois[image_id]["roi"]["Rectangle"])
