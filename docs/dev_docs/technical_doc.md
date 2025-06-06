@@ -21,7 +21,7 @@ We are using also microscope-metrics and microscopemetrics-schema developed prev
 
 ![image](media/project_structure.png)
  
-To add a new analysis type, you create a folder under OMERO_metrics/dash_apps/dash_analysis
+To add a new analysis type, you create a folder under omero_metrics/dash_apps/dash_analysis
  
 create two python files, one for the dataset view and the other for the image view. These files will corresponds to your 
 django plotly dash pages.

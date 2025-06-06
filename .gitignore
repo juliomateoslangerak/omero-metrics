@@ -5,5 +5,5 @@ node_modules
 /.venv/
 /var/
 /dist/
-/OMERO_metrics/notebooks/
+/omero_metrics/notebooks/
 /etc/

@@ -18,9 +18,11 @@ from omero.plugins.sessions import SessionsControl
 from omero.plugins.user import UserControl
 from omero.plugins.obj import ObjControl
 
-from OMERO_metrics.tools import dump
+from omero_metrics.tools import dump
 
-from microscopemetrics.strategies.field_illumination import _gen_field_illumination_image
+from microscopemetrics.strategies.field_illumination import (
+    _gen_field_illumination_image,
+)
 from microscopemetrics.strategies.psf_beads import _gen_psf_beads_image
 
 from microscopemetrics.analyses import numpy_to_mm_image
@@ -436,9 +438,9 @@ if __name__ == "__main__":
                 mm_project = mm_schema.HarmonizedMetricsDatasetCollection(
                     name=project["name_project"],
                     description=project["description_project"],
-                    dataset_collection=GENERATOR_MAPPER[project["dataset_class"]](
-                        project, microscope_name
-                    ),
+                    dataset_collection=GENERATOR_MAPPER[
+                        project["dataset_class"]
+                    ](project, microscope_name),
                     dataset_class=project["dataset_class"],
                 )
                 time.sleep(60)

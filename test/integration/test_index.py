@@ -29,7 +29,7 @@ class TestLoadIndexPage(IWebTest):
         conn = get_connection(user1)
         user_name = conn.getUser().getName()
         django_client = self.new_django_client(user_name, user_name)
-        index_url = reverse("OMERO_metrics_index")
+        index_url = reverse("omero_metrics_index")
         rsp = get(django_client, index_url)
         html_str = rsp.content.decode()
         assert "Microscope" in html_str
@@ -37,7 +37,7 @@ class TestLoadIndexPage(IWebTest):
     @pytest.mark.django_db
     def test_app_lookup_dataset_foi(self, user1):
         """Test looking up an existing application for dataset foi"""
-        from OMERO_metrics.dash_apps.dash_analyses.dash_foi.dash_dataset_foi import (
+        from omero_metrics.dash_apps.dash_analyses.dash_foi.dash_dataset_foi import (
             omero_dataset_foi,
         )
         from django_plotly_dash.models import get_stateless_by_name
@@ -49,7 +49,7 @@ class TestLoadIndexPage(IWebTest):
     @pytest.mark.django_db
     def test_app_lookup_dataset_psf(self, user1):
         """Test looking up an existing application for dataset psf"""
-        from OMERO_metrics.dash_apps.dash_analyses.dash_psf_beads.dash_dataset_psf_beads import (
+        from omero_metrics.dash_apps.dash_analyses.dash_psf_beads.dash_dataset_psf_beads import (
             omero_dataset_psf_beads,
         )
         from django_plotly_dash.models import get_stateless_by_name
@@ -61,7 +61,7 @@ class TestLoadIndexPage(IWebTest):
     @pytest.mark.django_db
     def test_app_lookup_project(self, user1):
         """Test looking up an existing application for project"""
-        from OMERO_metrics.dash_apps.dash_project import omero_project_dash
+        from omero_metrics.dash_apps.dash_project import omero_project_dash
         from django_plotly_dash.models import get_stateless_by_name
 
         app = get_stateless_by_name(omero_project_dash._uid)
@@ -71,7 +71,7 @@ class TestLoadIndexPage(IWebTest):
     @pytest.mark.django_db
     def test_app_lookup_image_foi(self, user1):
         """Test looking up an existing application for image foi"""
-        from OMERO_metrics.dash_apps.dash_analyses.dash_foi.dash_image_foi import (
+        from omero_metrics.dash_apps.dash_analyses.dash_foi.dash_image_foi import (
             omero_image_foi,
         )
         from django_plotly_dash.models import get_stateless_by_name
@@ -83,7 +83,7 @@ class TestLoadIndexPage(IWebTest):
     @pytest.mark.django_db
     def test_app_lookup_image_psf(self, user1):
         """Test looking up an existing application for image psf"""
-        from OMERO_metrics.dash_apps.dash_analyses.dash_psf_beads.dash_image_psf_beads import (
+        from omero_metrics.dash_apps.dash_analyses.dash_psf_beads.dash_image_psf_beads import (
             omero_image_psf_beads,
         )
         from django_plotly_dash.models import get_stateless_by_name
@@ -95,7 +95,7 @@ class TestLoadIndexPage(IWebTest):
     @pytest.mark.django_db
     def test_app_lookup_dataset_form(self, user1):
         """Test looking up an existing application for dataset form"""
-        from OMERO_metrics.dash_apps.dash_forms.dash_dataset_form import (
+        from omero_metrics.dash_apps.dash_forms.dash_dataset_form import (
             dash_form_dataset,
         )
         from django_plotly_dash.models import get_stateless_by_name
@@ -107,7 +107,7 @@ class TestLoadIndexPage(IWebTest):
     @pytest.mark.django_db
     def test_app_lookup_project_form(self, user1):
         """Test looking up an existing application for project form"""
-        from OMERO_metrics.dash_apps.dash_forms.dash_project_form import (
+        from omero_metrics.dash_apps.dash_forms.dash_project_form import (
             dash_form_project,
         )
         from django_plotly_dash.models import get_stateless_by_name

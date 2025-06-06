@@ -2,7 +2,7 @@
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/MontpellierRessourcesImagerie/OMERO-metrics/omero_plugin.yml)
 ![GitHub License](https://img.shields.io/github/license/MontpellierRessourcesImagerie/OMERO-metrics)
 
-<img alt="OMERO-metrics logo" height="100" src="OMERO_metrics/static/OMERO_metrics/images/metrics_logo.png"/>
+<img alt="OMERO-metrics logo" height="100" src="omero_metrics/static/omero_metrics/images/metrics_logo.png"/>
 
 This project is financed by [France BioImaging](https://france-bioimaging.org/).
 
@@ -77,7 +77,7 @@ We created a little bash script that is configuring the setup. You can run it by
 ./configuration_omero.sh /path/to/omeroweb /path/to/mydatabase
 ```
 
-where `/path/to/omeroweb` is the path to the OMERO-web directory and `/path/to/mydatabase` is the path to the OMERO_metrics sqlite database.
+where `/path/to/omeroweb` is the path to the OMERO-web directory and `/path/to/mydatabase` is the path to the omero_metrics sqlite database.
 
 ```bash
 export REACT_VERSION=18.2.0

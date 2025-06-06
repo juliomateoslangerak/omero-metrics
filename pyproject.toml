@@ -30,7 +30,7 @@ documentation = "https://montpellierressourcesimagerie.github.io/OMERO-metrics/"
 
 [tool.poetry]
 packages = [
-    { include = "OMERO_metrics" },
+    { include = "omero_metrics" },
 ]
 requires-poetry = ">=2.0"
 classifiers = [
