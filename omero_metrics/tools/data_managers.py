@@ -402,7 +402,7 @@ class ProjectManager:
                     )
                     self.mm_harmonized_dataset = (
                         mm_schema.HarmonizedMetricsDatasetCollection(
-                            datasets=[
+                            dataset_collection=[
                                 dm.mm_dataset
                                 for dm in self.datasets
                                 if dm.processed
