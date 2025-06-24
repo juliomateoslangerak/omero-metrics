@@ -163,7 +163,6 @@ def load_project(
     try:
         for file_ann in project.listAnnotations():
             if isinstance(file_ann, FileAnnotationWrapper):
-
                 ds_type = file_ann.getFileName().split("_")[0]
                 if ds_type in DATASET_TYPES:
                     file_anns.append(file_ann)
