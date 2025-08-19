@@ -62,8 +62,8 @@ dash-iconify = "*"  # current "0.1.2"
 openpyxl = "*"  # TODO: remove dependency
 dash-renderer = "*"  # current "1.9.1"
 microscopemetrics = "0.2.3"
-#zeroc-ice = "3.6.5"
-zeroc-ice = {url = "https://github.com/glencoesoftware/zeroc-ice-py-linux-x86_64/releases/download/20240202/zeroc_ice-3.6.5-cp310-cp310-manylinux_2_28_x86_64.whl"}
+zeroc-ice = "3.6.5"
+#zeroc-ice = {url = "https://github.com/glencoesoftware/zeroc-ice-py-linux-x86_64/releases/download/20240202/zeroc_ice-3.6.5-cp310-cp310-manylinux_2_28_x86_64.whl"}
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8"
