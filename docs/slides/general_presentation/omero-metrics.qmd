@@ -30,9 +30,9 @@ and establish the baseline for the future.
   - when there is a doubt about the performance of the equipment.
   - when there is a change in the equipment or its environment.
 
-# What is *OMERO-metrics*?<br> an OMERO web tool for microscope performance monitoring
+# What is *omero-metrics*?<br> an OMERO web tool for microscope performance monitoring
 
-OMERO-metrics aims to provide a comprehensive solution for monitoring the performance of microscopes.
+omero-metrics aims to provide a comprehensive solution for monitoring the performance of microscopes.
 
 - It draws on the experience of MetroloJ-QC: it is tested
 - uses the OMERO platform to store and manage metrology data using a schema: it is FAIR
@@ -46,11 +46,11 @@ OMERO-metrics aims to provide a comprehensive solution for monitoring the perfor
 ![](./media/value_cf_work_2.png){.fragment}
 :::
 
-# How is *OMERO-metrics* build?
+# How is *omero-metrics* build?
 
 ![](./media/structure.png)
 
-# How is *OMERO-metrics* built?
+# How is *omero-metrics* built?
 
 ![](./media/sw_infrastructure.png)
 
@@ -69,7 +69,7 @@ OMERO-metrics aims to provide a comprehensive solution for monitoring the perfor
 ## 1.1. Embracing the ISA abstract model
 
 The **ISA model** uses three core hierarchically organized entities to capture (meta)data: 
-*Investigation*, *Study* and *Assay*. In OMERO-metrics these entities correspond to 
+*Investigation*, *Study* and *Assay*. In omero-metrics these entities correspond to 
 *Group*, *Project* and *Dataset* and represent:
 
 - **Investigation / Group:** The *instrument / microscope* that we want to monitor. 
@@ -122,7 +122,7 @@ The user will be able to parametrize the analysis defaulting to the parameters d
 
 # 5. Visualize the results
 
-OMERO-metrics provides a dashboard to visualize the results of the analysis at different levels.
+omero-metrics provides a dashboard to visualize the results of the analysis at different levels.
 
 ## 5.1. Group level
 At the group level, the user will be able to see a summary of the status of the microscope.

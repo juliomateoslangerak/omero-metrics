@@ -1,10 +1,10 @@
 ---
-title: OMERO-metrics Technical doc
+title: omero-metrics Technical doc
 
 ---
 
 
-OMERO-metrics is an omero web app. It was initially generated using the cookiecutter https://github.com/ome/cookiecutter-omero-webapp
+omero-metrics is an omero web app. It was initially generated using the cookiecutter https://github.com/ome/cookiecutter-omero-webapp
 
 For visualization, we are using the help of dash and django-plotly-dash. 
 We are using also microscope-metrics and microscopemetrics-schema developed previously by Julio. 
@@ -40,8 +40,8 @@ Make sure to add the django plotly dash pages to the urls.py file to trigger the
 To run the debug mode and run omero locally using a django test server. 
 
 ```bash
-$ git clone https://github.com/MontpellierRessourcesImagerie/OMERO-metrics.git
-$ cd OMERO-metrics
+$ git clone https://github.com/MontpellierRessourcesImagerie/omero-metrics.git
+$ cd omero-metrics
 $ python -m venv my_venv
 $ source my_venv/bin/activate
 $ pip install -e .
@@ -54,7 +54,7 @@ We created a bash script to configure omero. You can run it by typing:
 ```bash
 $ ./configuration_omero.sh /path/to/omeroweb /path/to/mydatabase
 ````
-where `/path/to/omeroweb` is the path to the omero-web installation or path and `/path/to/mydatabase` is the path to the OMERO-metrics sqlite database.
+where `/path/to/omeroweb` is the path to the omero-web installation or path and `/path/to/mydatabase` is the path to the omero-metrics sqlite database.
 
 
 ```bash
@@ -77,7 +77,7 @@ Note: for the pytest to work the omero.web.server_list should start exactly with
 
 For more information about ice.config. Click [Here](https://github.com/ome/openmicroscopy/blob/develop/etc/ice.config).
 
-## Running Pytest on Pycharm for OMERO-metrics
+## Running Pytest on Pycharm for omero-metrics
 
 Try to look for this small menu in the image to run and configure your pytest and Django server:
 
@@ -93,7 +93,7 @@ Click on add new run configuration and click on pytest:
 
 Now, we need to add our configurations: 
 The path to the pytest script you want to run
-Working directory should be the root project OMERO-metrics. and add for Env variables : DJANGO_SETTINGS_MODULE=omeroweb.settings;REACT_VERSION=18.2.0;OMERODIR=~/OMERO-metrics;ICE_CONFIG=~/OMERO-metrics/etc/ice.config
+Working directory should be the root project omero-metrics. and add for Env variables : DJANGO_SETTINGS_MODULE=omeroweb.settings;REACT_VERSION=18.2.0;OMERODIR=~/omero-metrics;ICE_CONFIG=~/omero-metrics/etc/ice.config
 
 ![image](media/set_env_pytest.png)
 
@@ -117,6 +117,6 @@ manage script is manage.py and settings is settings.py
 
 
 The final step is to configure your configuration file to run a django server locally:
-add these Env variables and run your omero web client instance locally DJANGO_SETTINGS_MODULE=omeroweb.settings;REACT_VERSION=18.2.0;OMERODIR=~/OMERO-metrics;ICE_CONFIG=~/OMERO-metrics/etc/ice.config
+add these Env variables and run your omero web client instance locally DJANGO_SETTINGS_MODULE=omeroweb.settings;REACT_VERSION=18.2.0;OMERODIR=~/omero-metrics;ICE_CONFIG=~/omero-metrics/etc/ice.config
 
 ![image](media/set_env_django_server.png)

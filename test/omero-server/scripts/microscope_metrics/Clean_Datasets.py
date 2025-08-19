@@ -19,7 +19,7 @@
 
 ------------------------------------------------------------------------------
 
-This script deletes from a list of datasets the data produced by OMERO-metrics.
+This script deletes from a list of datasets the data produced by omero-metrics.
 
 @author Julio Mateos Langerak
 <a href="mailto:julio.mateos-langerak@igh.cnrs.fr">julio.mateos-langerak@igh.cnrs.fr</a>

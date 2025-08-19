@@ -29,7 +29,7 @@ def warning_message(msg):
 
 class ImageManager:
     """This class is a unit of work that processes
-    data from an image (OMERO-metrics).
+    data from an image (omero-metrics).
     """
 
     def __init__(self, conn: BlitzGateway, omero_image: ImageWrapper):
@@ -110,7 +110,7 @@ class ImageManager:
 class DatasetManager:
     """
     This class is a unit of work that processes
-    data from a dataset or a dataset_collection (OMERO-metrics)
+    data from a dataset or a dataset_collection (omero-metrics)
     It contains the data (microscope-metrics_schema
     datasets and dataset_collections) and the necessary methods
     to interact with OMERO and load and dump data.
@@ -325,7 +325,7 @@ class DatasetManager:
 class ProjectManager:
     """
     This class is a unit of work that processes
-    data from a project (OMERO-metrics)
+    data from a project (omero-metrics)
     It contains the data and the necessary methods
     to interact with OMERO and load and dump data.
     """
@@ -455,7 +455,7 @@ class ProjectManager:
 class MicroscopeManager:
     """
     This class is a unit of work that processes
-    data from a microscope (OMERO-metrics)
+    data from a microscope (omero-metrics)
     It contains the data and the necessary methods
     to interact with OMERO and load and dump data.
     """

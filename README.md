@@ -1,8 +1,8 @@
 
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/MontpellierRessourcesImagerie/OMERO-metrics/omero_plugin.yml)
-![GitHub License](https://img.shields.io/github/license/MontpellierRessourcesImagerie/OMERO-metrics)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/MontpellierRessourcesImagerie/omero-metrics/omero_plugin.yml)
+![GitHub License](https://img.shields.io/github/license/MontpellierRessourcesImagerie/omero-metrics)
 
-<img alt="OMERO-metrics logo" height="100" src="omero_metrics/static/omero_metrics/images/metrics_logo.png"/>
+<img alt="omero-metrics logo" height="100" src="omero_metrics/static/omero_metrics/images/metrics_logo.png"/>
 
 This project is financed by [France BioImaging](https://france-bioimaging.org/).
 
@@ -17,14 +17,14 @@ The following instructions are for Linux. Instructions for other OSs will be add
 
 To be completed
 
-# Try OMERO-metrics using docker
+# Try omero-metrics using docker
 
 Install docker and docker-compose on your computer following the instructions on the [docker website](https://docs.docker.com/get-docker/).
 
 Clone the repository:
 ```bash
-git clone https://github.com/MontpellierRessourcesImagerie/OMERO-metrics.git
-cd OMERO-metrics
+git clone https://github.com/MontpellierRessourcesImagerie/omero-metrics.git
+cd omero-metrics
 ```
 
 Run the following command to start the server:
@@ -52,7 +52,7 @@ Go to <http://localhost:5080/> and log in with the following credentials:
 
 # Installation for development
 
-Here we explain how to install OMERO-metrics using an OMERO-web server running locally. The main advantage is
+Here we explain how to install omero-metrics using an OMERO-web server running locally. The main advantage is
 that you may edit the code and debug very easily.
 
 ## Pre-requirements
@@ -64,8 +64,8 @@ You need to make sure that Python (version 3.9, 3.10 or 3.11) is installed in yo
 Clone the repository and create a virtual environment to run your server in
 
 ```bash
-git clone https://github.com/MontpellierRessourcesImagerie/OMERO-metrics.git
-cd OMERO-metrics
+git clone https://github.com/MontpellierRessourcesImagerie/omero-metrics.git
+cd omero-metrics
 python -m venv my_venv
 source my_venv/bin/activate
 pip install -e .
