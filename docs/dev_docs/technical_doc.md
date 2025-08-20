@@ -1,10 +1,10 @@
 ---
-title: omero-metrics Technical doc
+title: OMERO-metrics Technical doc
 
 ---
 
 
-omero-metrics is an omero web app. It was initially generated using the cookiecutter https://github.com/ome/cookiecutter-omero-webapp
+OMERO-metrics is an omero web app. It was initially generated using the cookiecutter https://github.com/ome/cookiecutter-omero-webapp
 
 For visualization, we are using the help of dash and django-plotly-dash. 
 We are using also microscope-metrics and microscopemetrics-schema developed previously by Julio. 
