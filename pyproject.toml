@@ -5,9 +5,14 @@ build-backend = "poetry_dynamic_versioning.backend"
 [project]
 name = "omero-metrics"
 description = "An OMERO webapp to follow microscope performance over time"
+# Emails are omitted from author list due to PyPI display issue https://github.com/pypi/warehouse/issues/12877
+#authors = [
+#    {name = "Julio Mateos Langerak", email = "julio.mateos-langerak@igh,cnrs.fr"},
+#    {name = "Oumou Dhmine", email = "oumoudhmine@gmail.com"}
+#]
 authors = [
-    {name = "Julio Mateos Langerak", email = "julio.mateos-langerak@igh,cnrs.fr"},
-    {name = "Oumou Dhmine", email = "oumoudhmine@gmail.com"}
+    {name = "Julio Mateos Langerak"},
+    {name = "Oumou Dhmine"}
 ]
 maintainers = [
     {name = "Julio Mateos Langerak", email = "julio.mateos-langerak@igh,cnrs.fr"},
