@@ -55,7 +55,7 @@ version = "1.4.4"
 description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
 optional = false
 python-versions = "*"
-groups = ["main"]
+groups = ["dev"]
 files = [
     {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
     {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},
@@ -67,7 +67,7 @@ version = "3.9.1"
 description = "ASGI specs, helper code, and adapters"
 optional = false
 python-versions = ">=3.9"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "asgiref-3.9.1-py3-none-any.whl", hash = "sha256:f3bba7092a48005b5f5bacd747d36ee4a5a61f4a269a6df590b43144355ebd2c"},
     {file = "asgiref-3.9.1.tar.gz", hash = "sha256:a5ab6582236218e5ef1648f242fd9f10626cfd4de8dc377db215d5d5098e3142"},
@@ -522,7 +522,7 @@ version = "0.9.28"
 description = "RotatingFileHandler replacement with concurrency, gzip and Windows support. Size and time based rotation."
 optional = false
 python-versions = ">=3.6"
-groups = ["main"]
+groups = ["dev"]
 files = [
     {file = "concurrent_log_handler-0.9.28-py3-none-any.whl", hash = "sha256:65db25d05506651a61573937880789fc51c7555e7452303042b5a402fd78939c"},
     {file = "concurrent_log_handler-0.9.28.tar.gz", hash = "sha256:4cc27969b3420239bd153779266f40d9713ece814e312b7aa753ce62c6eacdb8"},
@@ -792,7 +792,7 @@ version = "4.2.23"
 description = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
 optional = false
 python-versions = ">=3.8"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "django-4.2.23-py3-none-any.whl", hash = "sha256:dafbfaf52c2f289bd65f4ab935791cb4fb9a198f2a5ba9faf35d7338a77e9803"},
     {file = "django-4.2.23.tar.gz", hash = "sha256:42fdeaba6e6449d88d4f66de47871015097dc6f1b87910db00a91946295cfae4"},
@@ -829,7 +829,7 @@ version = "3.7.0"
 description = "django-cors-headers is a Django application for handling the server headers required for Cross-Origin Resource Sharing (CORS)."
 optional = false
 python-versions = ">=3.6"
-groups = ["main"]
+groups = ["dev"]
 files = [
     {file = "django-cors-headers-3.7.0.tar.gz", hash = "sha256:96069c4aaacace786a34ee7894ff680780ec2644e4268b31181044410fecd12e"},
     {file = "django_cors_headers-3.7.0-py3-none-any.whl", hash = "sha256:1ac2b1213de75a251e2ba04448da15f99bcfcbe164288ae6b5ff929dc49b372f"},
@@ -844,7 +844,7 @@ version = "4.0.0"
 description = "Pipeline is an asset packaging library for Django."
 optional = false
 python-versions = ">=3.9"
-groups = ["main"]
+groups = ["dev"]
 files = [
     {file = "django_pipeline-4.0.0-py3-none-any.whl", hash = "sha256:90e50c15387a6e051ee1a6ce2aaca333823ccfb23695028790f74412bde7d7db"},
     {file = "django_pipeline-4.0.0.tar.gz", hash = "sha256:0ab1190d9dc64e2f7b72be3f7b023c06aca7cc1cc61e7dc9f0343838e29bbc88"},
@@ -1087,7 +1087,7 @@ version = "1.0.0"
 description = "Clean single-source support for Python 3 and 2"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
-groups = ["main"]
+groups = ["dev"]
 files = [
     {file = "future-1.0.0-py3-none-any.whl", hash = "sha256:929292d34f5872e70396626ef385ec22355a1fae8ad29e1a734c3e43f9fbc216"},
     {file = "future-1.0.0.tar.gz", hash = "sha256:bd2968309307861edae1458a4f8a4f3598c03be43b97521076aebf5d94c07b05"},
@@ -1099,7 +1099,7 @@ version = "23.0.0"
 description = "WSGI HTTP Server for UNIX"
 optional = false
 python-versions = ">=3.7"
-groups = ["main"]
+groups = ["dev"]
 files = [
     {file = "gunicorn-23.0.0-py3-none-any.whl", hash = "sha256:ec400d38950de4dfd418cff8328b2c8faed0edb0d517d3394e457c317908ca4d"},
     {file = "gunicorn-23.0.0.tar.gz", hash = "sha256:f014447a0101dc57e294f6c18ca6b40227a4c90e9bdb586042628030cba004ec"},
@@ -1341,7 +1341,7 @@ version = "6.5.2"
 description = "Read resources from Python packages"
 optional = false
 python-versions = ">=3.9"
-groups = ["main"]
+groups = ["dev"]
 files = [
     {file = "importlib_resources-6.5.2-py3-none-any.whl", hash = "sha256:789cfdc3ed28c78b67a06acb8126751ced69a3d5f79c095a98298cd8a760ccec"},
     {file = "importlib_resources-6.5.2.tar.gz", hash = "sha256:185f87adef5bcc288449d98fb4fba07cea78bc036455dd44c5fc4a2fe78fed2c"},
@@ -1957,7 +1957,7 @@ version = "2.0.2"
 description = "Fundamental package for array computing in Python"
 optional = false
 python-versions = ">=3.9"
-groups = ["main"]
+groups = ["main", "dev"]
 markers = "python_version < \"3.10\""
 files = [
     {file = "numpy-2.0.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:51129a29dbe56f9ca83438b706e2e69a39892b5eda6cedcb6b0c9fdc9b0d3ece"},
@@ -2013,7 +2013,7 @@ version = "2.2.6"
 description = "Fundamental package for array computing in Python"
 optional = false
 python-versions = ">=3.10"
-groups = ["main"]
+groups = ["main", "dev"]
 markers = "python_version == \"3.10\""
 files = [
     {file = "numpy-2.2.6-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:b412caa66f72040e6d268491a59f2c43bf03eb6c96dd8f0307829feb7fa2b6fb"},
@@ -2079,7 +2079,7 @@ version = "2.3.2"
 description = "Fundamental package for array computing in Python"
 optional = false
 python-versions = ">=3.11"
-groups = ["main"]
+groups = ["main", "dev"]
 markers = "python_full_version == \"3.11.0\""
 files = [
     {file = "numpy-2.3.2-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:852ae5bed3478b92f093e30f785c98e0cb62fa0a939ed057c31716e18a7a22b9"},
@@ -2164,7 +2164,7 @@ version = "0.9.0"
 description = "OMERO Marshal"
 optional = false
 python-versions = ">=3"
-groups = ["main"]
+groups = ["dev"]
 files = [
     {file = "omero_marshal-0.9.0-py3-none-any.whl", hash = "sha256:c37b2ab8bd039fd7f310641ddf5d4496ed8a4d94ee6dd4c8d5da9c33f9fd18aa"},
     {file = "omero_marshal-0.9.0.tar.gz", hash = "sha256:5d88d0cc1d2360863ccc06156c7e69910ed10013e3ff731662d574d54b0faf11"},
@@ -2176,7 +2176,7 @@ version = "5.19.2"
 description = "Python bindings to the OMERO.blitz server"
 optional = false
 python-versions = ">=3.8"
-groups = ["main"]
+groups = ["dev"]
 markers = "python_version < \"3.10\""
 files = [
     {file = "omero_py-5.19.2-py3-none-any.whl", hash = "sha256:73f3eeee439b3d5d8ace4c99b4be109815dae06e588ef9bc50b1dcf9cba75c3d"},
@@ -2201,7 +2201,7 @@ version = "5.21.0"
 description = "Python bindings to the OMERO.blitz server"
 optional = false
 python-versions = ">=3.8"
-groups = ["main"]
+groups = ["dev"]
 markers = "python_version == \"3.10\" or python_full_version == \"3.11.0\""
 files = [
     {file = "omero_py-5.21.0-py3-none-any.whl", hash = "sha256:803f97f63c3d17504b4209a628d8e0b8309a727601f916eb0eaf5da912b31efd"},
@@ -2226,7 +2226,7 @@ version = "5.29.2"
 description = "OMERO.web"
 optional = false
 python-versions = ">=3.8"
-groups = ["main"]
+groups = ["dev"]
 files = [
     {file = "omero_web-5.29.2-py3-none-any.whl", hash = "sha256:8b3e6501661525476dc3e5eeebddd95357887d4afaed0481b217ef49db5bc471"},
     {file = "omero_web-5.29.2.tar.gz", hash = "sha256:b0d4284bd1173e30a34bb8241c6c629a2d2488e3009a4ba3ebd79e1abe88f400"},
@@ -2402,7 +2402,7 @@ version = "11.3.0"
 description = "Python Imaging Library (Fork)"
 optional = false
 python-versions = ">=3.9"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "pillow-11.3.0-cp310-cp310-macosx_10_10_x86_64.whl", hash = "sha256:1b9c17fd4ace828b3003dfd1e30bff24863e0eb59b535e8f80194d9cc7ecf860"},
     {file = "pillow-11.3.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:65dc69160114cdd0ca0f35cb434633c75e8e7fad4cf855177a05bf38678f73ad"},
@@ -2640,7 +2640,7 @@ version = "3.2.0"
 description = "Wraps the portalocker recipe for easy usage"
 optional = false
 python-versions = ">=3.9"
-groups = ["main"]
+groups = ["dev"]
 files = [
     {file = "portalocker-3.2.0-py3-none-any.whl", hash = "sha256:3cdc5f565312224bc570c49337bd21428bba0ef363bbcf58b9ef4a9f11779968"},
     {file = "portalocker-3.2.0.tar.gz", hash = "sha256:1f3002956a54a8c3730586c5c77bf18fae4149e07eaf1c29fc3faf4d5a3f89ac"},
@@ -2988,7 +2988,7 @@ version = "2025.2"
 description = "World timezone definitions, modern and historical"
 optional = false
 python-versions = "*"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "pytz-2025.2-py2.py3-none-any.whl", hash = "sha256:5ddf76296dd8c44c26eb8f4b6f35488f3ccbf6fbbd7adee0b7262d43f0ec2f00"},
     {file = "pytz-2025.2.tar.gz", hash = "sha256:360b9e3dbb49a209c21ad61809c7fb453643e048b38924c765813546746e81c3"},
@@ -3000,7 +3000,7 @@ version = "311"
 description = "Python for Window Extensions"
 optional = false
 python-versions = "*"
-groups = ["main"]
+groups = ["dev"]
 markers = "platform_system == \"Windows\""
 files = [
     {file = "pywin32-311-cp310-cp310-win32.whl", hash = "sha256:d03ff496d2a0cd4a5893504789d4a15399133fe82517455e78bad62efbb7f0a3"},
@@ -3769,7 +3769,7 @@ version = "80.9.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 optional = false
 python-versions = ">=3.9"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "setuptools-80.9.0-py3-none-any.whl", hash = "sha256:062d34222ad13e0cc312a4c02d73f059e86a4acbfbdea8f8f76b28c99f306922"},
     {file = "setuptools-80.9.0.tar.gz", hash = "sha256:f36b47402ecde768dbfafc46e8e4207b4360c654f1f3bb84475f0a28628fb19c"},
@@ -3850,7 +3850,7 @@ version = "0.5.3"
 description = "A non-validating SQL parser."
 optional = false
 python-versions = ">=3.8"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "sqlparse-0.5.3-py3-none-any.whl", hash = "sha256:cf2196ed3418f3ba5de6af7e82c694a9fbdbfecccdfc72e281548517081f16ca"},
     {file = "sqlparse-0.5.3.tar.gz", hash = "sha256:09f67787f56a0b16ecdbde1bfc7f5d9c3371ca683cfeaa8e6ff60b4807ec9272"},
@@ -4049,11 +4049,12 @@ version = "2025.2"
 description = "Provider of IANA time zone data"
 optional = false
 python-versions = ">=2"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "tzdata-2025.2-py2.py3-none-any.whl", hash = "sha256:1a403fada01ff9221ca8044d701868fa132215d84beb92242d9acd2147f667a8"},
     {file = "tzdata-2025.2.tar.gz", hash = "sha256:b60a638fcc0daffadf82fe0f57e53d06bdec2f36c4df66280ae79bce6bd6f2b9"},
 ]
+markers = {dev = "sys_platform == \"win32\""}
 
 [[package]]
 name = "urllib3"
@@ -4117,7 +4118,7 @@ version = "0.45.1"
 description = "A built-package format for Python"
 optional = false
 python-versions = ">=3.8"
-groups = ["main"]
+groups = ["dev"]
 files = [
     {file = "wheel-0.45.1-py3-none-any.whl", hash = "sha256:708e7481cc80179af0e556bbf0cc00b8444c7321e2700b8d8580231d13017248"},
     {file = "wheel-0.45.1.tar.gz", hash = "sha256:661e1abd9198507b1409a20c02106d9670b2576e916d58f520316666abca6729"},
@@ -4132,7 +4133,7 @@ version = "6.9.0"
 description = "Radically simplified static file serving for WSGI applications"
 optional = false
 python-versions = ">=3.9"
-groups = ["main"]
+groups = ["dev"]
 files = [
     {file = "whitenoise-6.9.0-py3-none-any.whl", hash = "sha256:c8a489049b7ee9889617bb4c274a153f3d979e8f51d2efd0f5b403caf41c57df"},
     {file = "whitenoise-6.9.0.tar.gz", hash = "sha256:8c4a7c9d384694990c26f3047e118c691557481d624f069b7f7752a2f735d609"},
@@ -4325,7 +4326,8 @@ version = "3.6.5"
 description = "Ice is a comprehensive RPC framework with support for Python, C++, .NET, Java, JavaScript and more."
 optional = false
 python-versions = "*"
-groups = ["main"]
+groups = ["dev"]
+markers = "python_version != \"3.9\" and python_version < \"3.10\" or sys_platform != \"linux\" and sys_platform != \"darwin\" and sys_platform != \"win32\" or python_version == \"3.10\" and sys_platform == \"linux\""
 files = [
     {file = "zeroc_ice-3.6.5-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:30511316787eca4cabf13804373884ec16b385afa8bf2e764c004ffc28f75dcf"},
 ]
@@ -4333,6 +4335,134 @@ files = [
 [package.source]
 type = "url"
 url = "https://github.com/glencoesoftware/zeroc-ice-py-linux-x86_64/releases/download/20240202/zeroc_ice-3.6.5-cp310-cp310-manylinux_2_28_x86_64.whl"
+
+[[package]]
+name = "zeroc-ice"
+version = "3.6.5"
+description = "Ice is a comprehensive RPC framework with support for Python, C++, .NET, Java, JavaScript and more."
+optional = false
+python-versions = "*"
+groups = ["dev"]
+markers = "python_full_version == \"3.11.0\" and sys_platform == \"linux\""
+files = [
+    {file = "zeroc_ice-3.6.5-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:9ca8e9374fbea996264d70098a74f6f1a9cad063921099edc9ab24fce0344b4c"},
+]
+
+[package.source]
+type = "url"
+url = "https://github.com/glencoesoftware/zeroc-ice-py-linux-x86_64/releases/download/20240202/zeroc_ice-3.6.5-cp311-cp311-manylinux_2_28_x86_64.whl"
+
+[[package]]
+name = "zeroc-ice"
+version = "3.6.5"
+description = "Ice is a comprehensive RPC framework with support for Python, C++, .NET, Java, JavaScript and more."
+optional = false
+python-versions = "*"
+groups = ["dev"]
+markers = "python_version == \"3.9\" and sys_platform == \"linux\""
+files = [
+    {file = "zeroc_ice-3.6.5-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:36d2f8448a45d253a4e2aed5c711e1be95b9d32f0afbe6ce42a2e12f04cbe821"},
+]
+
+[package.source]
+type = "url"
+url = "https://github.com/glencoesoftware/zeroc-ice-py-linux-x86_64/releases/download/20240202/zeroc_ice-3.6.5-cp39-cp39-manylinux_2_28_x86_64.whl"
+
+[[package]]
+name = "zeroc-ice"
+version = "3.6.5"
+description = "Ice is a comprehensive RPC framework with support for Python, C++, .NET, Java, JavaScript and more."
+optional = false
+python-versions = "*"
+groups = ["dev"]
+markers = "python_version == \"3.10\" and sys_platform == \"darwin\""
+files = [
+    {file = "zeroc_ice-3.6.5-cp310-cp310-macosx_11_0_universal2.whl", hash = "sha256:6dfb8289c1004785e2a11cc32e8d1e9db84fbe173495d37c9ea46221e64abf56"},
+]
+
+[package.source]
+type = "url"
+url = "https://github.com/glencoesoftware/zeroc-ice-py-macos-universal2/releases/download/20240131/zeroc_ice-3.6.5-cp310-cp310-macosx_11_0_universal2.whl"
+
+[[package]]
+name = "zeroc-ice"
+version = "3.6.5"
+description = "Ice is a comprehensive RPC framework with support for Python, C++, .NET, Java, JavaScript and more."
+optional = false
+python-versions = "*"
+groups = ["dev"]
+markers = "python_full_version == \"3.11.0\" and sys_platform == \"darwin\""
+files = [
+    {file = "zeroc_ice-3.6.5-cp311-cp311-macosx_11_0_universal2.whl", hash = "sha256:115f8e49a65960873fca105dfd949507fff8376177a4abd81dacbc53b039f838"},
+]
+
+[package.source]
+type = "url"
+url = "https://github.com/glencoesoftware/zeroc-ice-py-macos-universal2/releases/download/20240131/zeroc_ice-3.6.5-cp311-cp311-macosx_11_0_universal2.whl"
+
+[[package]]
+name = "zeroc-ice"
+version = "3.6.5"
+description = "Ice is a comprehensive RPC framework with support for Python, C++, .NET, Java, JavaScript and more."
+optional = false
+python-versions = "*"
+groups = ["dev"]
+markers = "python_version == \"3.9\" and sys_platform == \"darwin\""
+files = [
+    {file = "zeroc_ice-3.6.5-cp39-cp39-macosx_11_0_x86_64.whl", hash = "sha256:04dd44b3c4d76f335c9df5222eb99e15810ec227d28f0612e265e4ae972b7a91"},
+]
+
+[package.source]
+type = "url"
+url = "https://github.com/glencoesoftware/zeroc-ice-py-macos-x86_64/releases/download/20231130/zeroc_ice-3.6.5-cp39-cp39-macosx_11_0_x86_64.whl"
+
+[[package]]
+name = "zeroc-ice"
+version = "3.6.5"
+description = "Ice is a comprehensive RPC framework with support for Python, C++, .NET, Java, JavaScript and more."
+optional = false
+python-versions = "*"
+groups = ["dev"]
+markers = "python_version == \"3.10\" and sys_platform == \"win32\""
+files = [
+    {file = "zeroc_ice-3.6.5-cp310-cp310-win_amd64.whl", hash = "sha256:42c91b1c707d3d7bfc9d3d3f50ecfab66f8dcfad57aa5a8c4899ac42cbb2c61d"},
+]
+
+[package.source]
+type = "url"
+url = "https://github.com/glencoesoftware/zeroc-ice-py-win-x86_64/releases/download/20240325/zeroc_ice-3.6.5-cp310-cp310-win_amd64.whl"
+
+[[package]]
+name = "zeroc-ice"
+version = "3.6.5"
+description = "Ice is a comprehensive RPC framework with support for Python, C++, .NET, Java, JavaScript and more."
+optional = false
+python-versions = "*"
+groups = ["dev"]
+markers = "python_full_version == \"3.11.0\" and sys_platform == \"win32\""
+files = [
+    {file = "zeroc_ice-3.6.5-cp311-cp311-win_amd64.whl", hash = "sha256:f3917bf96609ca3bc8ebf315826fb2aa3d4dc9ad7dc4a3b2a938305f3f071ee7"},
+]
+
+[package.source]
+type = "url"
+url = "https://github.com/glencoesoftware/zeroc-ice-py-win-x86_64/releases/download/20240325/zeroc_ice-3.6.5-cp311-cp311-win_amd64.whl"
+
+[[package]]
+name = "zeroc-ice"
+version = "3.6.5"
+description = "Ice is a comprehensive RPC framework with support for Python, C++, .NET, Java, JavaScript and more."
+optional = false
+python-versions = "*"
+groups = ["dev"]
+markers = "python_version == \"3.9\" and sys_platform == \"win32\""
+files = [
+    {file = "zeroc_ice-3.6.5-cp39-cp39-win_amd64.whl", hash = "sha256:51b5ddde7f92692bfed6df25646cda723b4771310ab0a2dea1e842c9dce6221b"},
+]
+
+[package.source]
+type = "url"
+url = "https://github.com/glencoesoftware/zeroc-ice-py-win-x86_64/releases/download/20240325/zeroc_ice-3.6.5-cp39-cp39-win_amd64.whl"
 
 [[package]]
 name = "zipp"
@@ -4470,4 +4600,4 @@ cffi = ["cffi (>=1.17) ; python_version >= \"3.13\" and platform_python_implemen
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9.18,<=3.11"
-content-hash = "02e14322f2a453731a572820912741eaf60eb826c4f6d03848b8045f773863b4"
+content-hash = "257a6ae27d4a99c206a4d729867064f4a0220d5cb0ce2c11d9c32681859cf24f"
