@@ -26,7 +26,7 @@ Microscopes are scientific measuring devices, so it is crucial to:
 Microscope condition should be monitored at key times to ensure performance 
 meets predefined specifications:
 
-1. **At installation:** 
+1. At **installation:** 
    - Confirm _acceptance_
    - Establish _baseline_
 2. During **service life**:
