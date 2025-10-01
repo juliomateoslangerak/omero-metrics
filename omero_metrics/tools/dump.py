@@ -136,7 +136,7 @@ def _remove_unsupported_types(
         mm_schema.MetricsInputData,
         mm_schema.MetricsInputParameters,
         mm_schema.MetricsOutput,
-    ]
+    ],
 ):
     def _remove(_attr):
         if isinstance(_attr, mm_schema.Image):

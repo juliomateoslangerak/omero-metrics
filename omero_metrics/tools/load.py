@@ -163,14 +163,13 @@ def load_project(
     try:
         for file_ann in project.listAnnotations():
             if isinstance(file_ann, FileAnnotationWrapper):
-
                 ds_type = file_ann.getFileName().split("_")[0]
                 if ds_type in DATASET_TYPES:
                     file_anns.append(file_ann)
                     dataset_types.append(ds_type)
 
         for file_ann, ds_type in zip(file_anns, dataset_types):
-            collection.datasets.append(
+            collection.dataset_collection.append(
                 yaml_loader.loads(
                     file_ann.getFileInChunks().__next__().decode(),
                     target_class=getattr(mm_schema, ds_type),
@@ -267,7 +266,7 @@ def load_analysis_config(project_wrapper=ProjectWrapper):
     configs = [
         ann
         for ann in project_wrapper.listAnnotations(
-            ns="OMERO-metrics/analysis_config"
+            ns="omero-metrics/analysis_config"
         )
         if isinstance(ann, MapAnnotationWrapper)
     ]

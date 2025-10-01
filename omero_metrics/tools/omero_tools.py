@@ -963,7 +963,7 @@ def _create_column(data_type, kwargs):
 
 
 def _create_columns(
-    table: Union[DataFrame, list[dict[str, list]], dict[str, list]]
+    table: Union[DataFrame, list[dict[str, list]], dict[str, list]],
 ) -> list[grid.Column]:
     if isinstance(table, pd.DataFrame):
         column_names = table.columns.tolist()
