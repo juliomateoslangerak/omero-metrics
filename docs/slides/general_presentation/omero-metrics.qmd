@@ -1,9 +1,11 @@
 # Why to monitor<br>microscope condition?
 
-Microscopes are sophisticated optical instruments that take extremely precise measurements on biologic samples.
-Therefore, it is essential not only to keep them in good condition but also to know what their condition is.
+Microscopes are scientific measuring devices, so it is crucial to:
 
->Every careful measurement in science is always given with the probable error ...
+- _**Preserve**_ them in good condition
+- _**Track**_ their current condition
+
+>Every careful measurement in science is always given with the probable error \[...\]
 >every observer admits that he is likely wrong,
 >and knows about how much wrong he is likely to be.
 >
@@ -11,32 +13,34 @@ Therefore, it is essential not only to keep them in good condition but also to k
 
 ## Key objectives<br>when monitoring microscope condition
 
-1. Ensure that performance degradation is detected as soon as possible
-2. Help the core staff to diagnose the problem and react accordingly
-3. Provide evidence serving in the dialogue with microscope manufacturers and service providers
+1. Detect performance issues early
+2. Support core staff in diagnosing and responding
+3. Provide evidence for discussions with manufacturers
 4. Calibrate hardware
-5. Provide quality assurance and analysis data and meta-data to the users of the facility
-
+5. Deliver quality assurance data and metadata to:
+   - stakeholders
+   - users
+   - scientific community
 
 # When to monitor<br>microscope condition?
-The monitoring of the microscope condition should be done at different moments to ensure
-that the equipment is performing according to a predefined specifications chart.
+Microscope condition should be monitored at key times to ensure performance 
+meets predefined specifications:
 
-- **During the installation** of new equipment to ensure the acceptance of the installation
-and establish the baseline for the future.
-- **During the service life** of the system:
-  - after the periodic maintenance is carried out either by the core facility staff or by an
-  external service provider.
-  - when there is a doubt about the performance of the equipment.
-  - when there is a change in the equipment or its environment.
+1. At **installation:** 
+   - Confirm _acceptance_
+   - Establish _baseline_
+2. During **service life**:
+   - After _periodic maintenance_ (by staff or external providers)
+   - If performance _issues_ arise
+   - When equipment or environment _changes_
 
-# What is *OMERO-metrics*?<br> an OMERO web tool for microscope performance monitoring
+# What is *OMERO-metrics*?
 
-OMERO-metrics aims to provide a comprehensive solution for monitoring the performance of microscopes.
+OMERO-metrics offers a complete solution for monitoring microscope performance.
 
-- It draws on the experience of MetroloJ-QC: it is tested
-- uses the OMERO platform to store and manage metrology data using a schema: it is FAIR
-- uses OMERO-web's visualization capabilities to provide an interface: it is user-friendly
+- Built on the trusted MetroloJ-QC experience
+- FAIR data management via OMERO
+- User-friendly visualization through OMERO-web
 
 # but also for reproducibility<br>and recognition of core facility staff
 
@@ -46,38 +50,52 @@ OMERO-metrics aims to provide a comprehensive solution for monitoring the perfor
 ![](./media/value_cf_work_2.png){.fragment}
 :::
 
-# How is *OMERO-metrics* build?
-
-![](./media/structure.png)
-
 # How is *OMERO-metrics* built?
 
 ![](./media/sw_infrastructure.png)
 
-# Linked metrology data
+# Explore the Tools
 
-![](./media/linked_data.png)
+::: {.image-hover-zone}
+
+::: columns
+::: {.column width="33%"}
+<a href="https://github.com/MontpellierRessourcesImagerie/microscopemetrics-schema" target="_blank">
+  <img src="../media/logo_microscopemetrics-schema.png" class="hover-img" alt="microscopemetrics-schema" />
+</a>
+
+**microscopemetrics-schema**
+:::
+
+::: {.column width="33%"}
+[![](../media/logo_microscope-metrics.png){.hover-img}](https://github.com/MontpellierRessourcesImagerie/microscope-metrics){target="_blank"}
+
+**microscope-metrics**
+:::
+
+::: {.column width="33%"}
+[![](../media/logo_omero-metrics.png){.hover-img}](https://github.com/MontpellierRessourcesImagerie/omero-metrics){target="_blank"}
+
+**omero-metrics**
+:::
+:::
+:::
 
 # How does it work?
 
-1. First time **configuration** of the analysis you want to perform
+1. First time **configuration** of the analysis
 2. **Import images** into OMERO in a well-defined structure
-3. **Run** the analysis using the pre-configured parameters
-4. **Visualize** the results in a dashboard
+3. **Run** the analysis
+4. **Visualize** the results in the dashboard
 
 # 1. Core concepts
-## 1.1. Embracing the ISA abstract model
+## 1.1. Embracing the ISA model
 
-The **ISA model** uses three core hierarchically organized entities to capture (meta)data: 
-*Investigation*, *Study* and *Assay*. In OMERO-metrics these entities correspond to 
-*Group*, *Project* and *Dataset* and represent:
+The **ISA model** organizes metadata into three levels:
 
-- **Investigation / Group:** The *instrument / microscope* that we want to monitor. 
-An *investigation* links to one or more *studies*.
-- **Study / Project:** The Analysis type that we want to monitor. 
-Eg: the field-homogeneity of the 20x objective. A *study* links to one or more *assays*.
-- **Assay / Dataset:** The actual measurements taken at a particular point in time. 
-Those measurements are linked to the raw images stored in OMERO.
+- **Investigation / Group**: <br> the instrument/microscope
+- **Study / Project**: <br> the analysis type (e.g., 20x field homogeneity)
+- **Assay / Dataset**: <br> the measurements linked to raw images
 
 # <span class='flow_big'>DEMO</span>
 
