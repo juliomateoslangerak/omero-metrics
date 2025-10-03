@@ -345,8 +345,9 @@ def update_image(
             (bead_properties_df["image_id"] == image_id)
             & (bead_properties_df["channel_nr"] == channel_index),
             :,
-        ]
-        beads, roi_rect = get_beads_info(df_beads_location, min_distance)
+        ].copy()
+
+        scatter, roi_rect = beads_scatter_plot(df_beads_location, min_distance)
 
         if invert:
             color = color + "_r"
@@ -355,6 +356,7 @@ def update_image(
         ]
         mip_z = np.max(stack, axis=0)
 
+
         fig = px.imshow(
             mip_z,
             zmin=mip_z.min(),
@@ -362,7 +364,7 @@ def update_image(
             color_continuous_scale=color,
         )
 
-        fig.add_trace(beads)
+        fig.add_trace(scatter)
 
         if roi:
             fig.update_layout(shapes=roi_rect)
@@ -505,24 +507,9 @@ def line_graph_axis(bead_index, channel_index, axis, kwargs):
     return fig_ip_x
 
 
-def get_beads_info(df, min_distance):
-    color_map = {"Yes": "green", "No": "red"}
-    df["considered_axial_edge"] = df["considered_axial_edge"].map(
-        {"False": "No", "True": "Yes"}
-    )
-    df["considered_valid"] = df["considered_valid"].map(
-        {"False": "No", "True": "Yes"}
-    )
-    df["considered_self_proximity"] = df["considered_self_proximity"].map(
-        {"False": "No", "True": "Yes"}
-    )
-    df["considered_lateral_edge"] = df["considered_lateral_edge"].map(
-        {"False": "No", "True": "Yes"}
-    )
-    df["considered_intensity_outlier"] = df[
-        "considered_intensity_outlier"
-    ].map({"False": "No", "True": "Yes"})
-    df["color"] = df["considered_valid"].map(color_map)
+def beads_scatter_plot(df, min_distance):
+    df["color"] = np.where(df["considered_valid"] == "True", "green", "red")
+
     beads_location_plot = go.Scatter(
         y=df["center_y"],
         x=df["center_x"],
@@ -531,29 +518,32 @@ def get_beads_info(df, min_distance):
         marker=dict(
             size=0.001,
             opacity=0.01,
-            color=df["considered_valid"].map(color_map),
+            color=df["color"],
         ),
         text=df["channel_nr"],
         customdata=np.stack(
             (
                 df["bead_id"],
-                df["considered_axial_edge"],
                 df["considered_valid"],
+                df["considered_axial_edge"],
                 df["considered_self_proximity"],
                 df["considered_lateral_edge"],
                 df["considered_intensity_outlier"],
             ),
             axis=-1,
         ),
-        hovertemplate="<b>Bead Number:</b>  %{customdata[0]} <br>"
-        + "<b>Channel Number:</b>  %{text} <br>"
-        + "<b>Considered valid:</b>  %{customdata[2]}<br>"
-        + "<b>Considered self proximity:</b>  %{customdata[3]}<br>"
-        + "<b>Considered lateral edge:</b>  %{customdata[4]}<br>"
-        + "<b>Considered intensity outlier:</b>  %{customdata[5]}<br>"
-        + "<b>Considered Axial Edge:</b> %{customdata[1]} <br><extra></extra>",
+        hovertemplate=(
+            "<b>Bead Number:</b>  %{customdata[0]} <br>"
+            "<b>Channel Number:</b>  %{text} <br>"
+            "<b>Considered valid:</b>  %{customdata[2]}<br>"
+            "<b>Considered self proximity:</b>  %{customdata[3]}<br>"
+            "<b>Considered lateral edge:</b>  %{customdata[4]}<br>"
+            "<b>Considered intensity outlier:</b>  %{customdata[5]}<br>"
+            "<b>Considered Axial Edge:</b> %{customdata[1]} <br><extra></extra>"
+        ),
     )
-    corners = [
+
+    bead_frames = [
         dict(
             type="rect",
             x0=row.center_x - min_distance,
@@ -567,6 +557,7 @@ def get_beads_info(df, min_distance):
                 width=3,
             ),
         )
-        for i, row in df.iterrows()
+        for _, row in df.iterrows()
     ]
-    return beads_location_plot, corners
+
+    return beads_location_plot, bead_frames
