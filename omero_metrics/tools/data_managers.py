@@ -40,9 +40,7 @@ class ImageManager:
             raise ValueError("the object must be an ImageWrapper")
         self.omero_image = omero_image
         self.omero_dataset = self.omero_image.getParent()
-        self.dataset_manager = DatasetManager(
-            self._conn, self.omero_dataset, False
-        )
+        self.dataset_manager = DatasetManager(self._conn, self.omero_dataset, False)
         self.context = {}
         self.mm_image = None
         self.image_exist = None
@@ -146,9 +144,7 @@ class DatasetManager:
         ]
 
     def is_processed(self):
-        self.processed = (
-            self.mm_dataset.processed if self.mm_dataset else False
-        )
+        self.processed = self.mm_dataset.processed if self.mm_dataset else False
         return self.processed
 
     def is_validated(self):
@@ -161,24 +157,16 @@ class DatasetManager:
 
     def load_data(self, force_reload=True):
         if force_reload or self.mm_dataset is None:
-            self.mm_dataset = load.load_dataset(
-                self.omero_dataset, self.load_images
-            )
+            self.mm_dataset = load.load_dataset(self.omero_dataset, self.load_images)
             self.kkm = KKM_MAPPINGS.get(self.mm_dataset.__class__.__name__)
-            self.processed = (
-                self.mm_dataset.processed if self.mm_dataset else False
-            )
+            self.processed = self.mm_dataset.processed if self.mm_dataset else False
         else:
             raise NotImplementedError(
                 "partial loading of data from OMERO is not yet implemented"
             )
 
     def load_analysis_config(self, force_reload=True):
-        if (
-            not force_reload
-            and self.analysis_config
-            and self.analysis_config_id
-        ):
+        if not force_reload and self.analysis_config and self.analysis_config_id:
             return
         else:
             (
@@ -198,9 +186,7 @@ class DatasetManager:
             replace=True,
             new_description=f"config saved on {datetime.datetime.now()}",
         )
-        logger.info(
-            f"Saved configuration on mapAnn id:{self.analysis_config_id}"
-        )
+        logger.info(f"Saved configuration on mapAnn id:{self.analysis_config_id}")
 
     def _update_dataset_input_config(self, config):
         for key, val in config.items():
@@ -231,9 +217,7 @@ class DatasetManager:
             return False
         items_to_remove = []
         config = {
-            k: v
-            for k, v in self.analysis_config.items()
-            if k not in items_to_remove
+            k: v for k, v in self.analysis_config.items() if k not in items_to_remove
         }
 
         self._update_dataset_input_config(config)
@@ -284,9 +268,7 @@ class DatasetManager:
                     self.mm_dataset.__class__.__name__
                 )
 
-                if isinstance(
-                    self.mm_dataset, mm_schema.FieldIlluminationDataset
-                ):
+                if isinstance(self.mm_dataset, mm_schema.FieldIlluminationDataset):
                     self.context["image"], self.context["channel_names"] = (
                         load.concatenate_images(
                             self.mm_dataset.input_data.field_illumination_images
@@ -302,9 +284,7 @@ class DatasetManager:
                 self.context, self.app_name = warning_message(message)
         else:
             if self.omero_project and len(self.attached_images) > 0:
-                self.input_parameters = load.load_config_file_data(
-                    self.omero_project
-                )
+                self.input_parameters = load.load_config_file_data(self.omero_project)
                 if self.input_parameters:
                     self.app_name = "omero_dataset_form"
                     self.context = {
@@ -360,13 +340,9 @@ class ProjectManager:
     def check_processed_data(self):
         for dataset in self.datasets:
             if dataset.processed:
-                self.processed_datasets[dataset.omero_dataset.getId()] = (
-                    dataset
-                )
+                self.processed_datasets[dataset.omero_dataset.getId()] = dataset
             else:
-                self.unprocessed_datasets[dataset.omero_dataset.getId()] = (
-                    dataset
-                )
+                self.unprocessed_datasets[dataset.omero_dataset.getId()] = dataset
 
     def is_homogenized(self):
         unique = set(
@@ -390,9 +366,7 @@ class ProjectManager:
                     ].mm_dataset.__class__.__name__
                     in TEMPLATE_MAPPINGS_DATASET
                 ):
-                    self.context = load.load_dash_data_project(
-                        self.processed_datasets
-                    )
+                    self.context = load.load_dash_data_project(self.processed_datasets)
                     self.context["unprocessed_datasets"] = list(
                         self.unprocessed_datasets.keys()
                     )
@@ -403,13 +377,9 @@ class ProjectManager:
                     self.mm_harmonized_dataset = (
                         mm_schema.HarmonizedMetricsDatasetCollection(
                             dataset_collection=[
-                                dm.mm_dataset
-                                for dm in self.datasets
-                                if dm.processed
+                                dm.mm_dataset for dm in self.datasets if dm.processed
                             ],
-                            dataset_class=self.datasets[
-                                0
-                            ].mm_dataset.class_name,
+                            dataset_class=self.datasets[0].mm_dataset.class_name,
                             name=self.omero_project.getName(),
                             description=self.omero_project.getDescription(),
                         )
@@ -424,9 +394,7 @@ class ProjectManager:
                 logger.warning(message)
             self.context["message"] = message
             self.context["setup"] = self.setup
-            self.context["threshold"] = (
-                self.threshold if self.threshold else ""
-            )
+            self.context["threshold"] = self.threshold if self.threshold else ""
             self.app_name = "omero_project_dash"
         else:
             self.app_name = "omero_project_config_form"

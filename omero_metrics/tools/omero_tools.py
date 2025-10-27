@@ -125,9 +125,7 @@ def get_object_ids_from_url(url: str) -> list[tuple[str, int]]:
     """
     tail = url.split("/")[-1].split("=")[-1]
     if "|" in tail:
-        return [
-            (x.split("-")[0], int(x.split("-")[-1])) for x in tail.split("|")
-        ]
+        return [(x.split("-")[0], int(x.split("-")[-1])) for x in tail.split("|")]
     else:
         return [(tail.split("-")[0], int(tail.split("-")[-1]))]
 
@@ -150,9 +148,7 @@ def get_omero_obj_ids_from_mm_obj(
                 f"Input {mm_obj} should be a metrics object or a list of metrics objects"
             )
     except AttributeError as e:
-        raise AttributeError(
-            f"Object {mm_obj} does not have an OMERO object ID"
-        ) from e
+        raise AttributeError(f"Object {mm_obj} does not have an OMERO object ID") from e
 
 
 def get_refs_from_mm_obj(mm_obj) -> list:
@@ -329,9 +325,7 @@ def get_image_intensities(
             raise TypeError("Range is not provided as a tuple.")
 
         if not 1 <= ranges[dim].stop <= image_shape[dim]:
-            raise IndexError(
-                "Specified range is outside of the image dimensions"
-            )
+            raise IndexError("Specified range is outside of the image dimensions")
 
     output_shape = (
         len(ranges[0]),
@@ -362,9 +356,7 @@ def get_image_intensities(
             len(ranges[3]),
         )
         zct_tile_list = [(z, c, t, tile_region) for z, c, t in zct_list]
-        np.stack(
-            list(pixels.getTiles(zctTileList=zct_tile_list)), out=intensities
-        )
+        np.stack(list(pixels.getTiles(zctTileList=zct_tile_list)), out=intensities)
 
     intensities = np.reshape(intensities, newshape=output_shape)
 
@@ -467,9 +459,7 @@ def _create_image(
     pixels_service = conn.getPixelsService()
     query_service = conn.getQueryService()
 
-    if (
-        data_type not in DTYPES_NP_TO_OMERO
-    ):  # try to look up any not named above
+    if data_type not in DTYPES_NP_TO_OMERO:  # try to look up any not named above
         pixel_type = data_type
     else:
         pixel_type = DTYPES_NP_TO_OMERO[data_type]
@@ -558,17 +548,14 @@ def create_image_from_numpy_array(
     """
 
     zct_list = list(
-        product(
-            range(data.shape[0]), range(data.shape[1]), range(data.shape[2])
-        )
+        product(range(data.shape[0]), range(data.shape[1]), range(data.shape[2]))
     )
     zct_generator = (data[z, c, t, :, :] for z, c, t in zct_list)
 
     # Verify if the image must be tiled
     max_plane_size = conn.getMaxPlaneSize()
     if force_whole_planes or (
-        data.shape[-1] < max_plane_size[-1]
-        and data.shape[-2] < max_plane_size[-2]
+        data.shape[-1] < max_plane_size[-1] and data.shape[-2] < max_plane_size[-2]
     ):
         # Image is small enough to fill it with full planes
         new_image = conn.createImageFromNumpySeq(
@@ -655,9 +642,7 @@ def _update_acquisition_datetime(
     conn: BlitzGateway, image: ImageWrapper, acquisition_datetime: str
 ):
     # image = conn.getObject("Image", image_id)
-    acquisition_datetime = datetime.datetime.fromisoformat(
-        acquisition_datetime
-    )
+    acquisition_datetime = datetime.datetime.fromisoformat(acquisition_datetime)
     milli_secs = acquisition_datetime.timestamp() * 1000
     image = conn.getObject("Image", image.getId())
     image._obj.acquisitionDate = rtime(milli_secs)
@@ -997,9 +982,7 @@ def _create_columns(
                 columns.append(_create_column(data_type="image", kwargs=args))
             elif cn.lower() in ["datasetid", "dataset id", "dataset_id"]:
                 args = {"name": cn, "values": v}
-                columns.append(
-                    _create_column(data_type="dataset", kwargs=args)
-                )
+                columns.append(_create_column(data_type="dataset", kwargs=args))
             elif cn.lower() in ["plateid", "plate id", "plate_id"]:
                 args = {"name": cn, "values": v}
                 columns.append(_create_column(data_type="plate", kwargs=args))
@@ -1030,12 +1013,8 @@ def _create_columns(
         elif isinstance(v[0], (RoiWrapper, RoiI)):
             args = {"name": cn, "values": [roi.getId() for roi in v]}
             columns.append(_create_column(data_type="roi", kwargs=args))
-        elif isinstance(
-            v_type, (list, tuple)
-        ):  # We are creating array columns
-            raise NotImplementedError(
-                f"Array columns are not implemented. Column {cn}"
-            )
+        elif isinstance(v_type, (list, tuple)):  # We are creating array columns
+            raise NotImplementedError(f"Array columns are not implemented. Column {cn}")
         elif v[0] is None:
             continue
         else:
@@ -1065,7 +1044,9 @@ def create_table(
         group_id = omero_object[0].getDetails().getGroup().getId()
     else:
         group_id = omero_object.getDetails().getGroup().getId()
-    table_name = f'{table_name}_{"".join([choice(ascii_letters) for _ in range(32)])}.h5'
+    table_name = (
+        f'{table_name}_{"".join([choice(ascii_letters) for _ in range(32)])}.h5'
+    )
     columns = _create_columns(table)
     resources = conn.c.sf.sharedResources()
     repository_id = resources.repositories().descriptions[0].getId().getValue()
@@ -1192,14 +1173,10 @@ def del_objects(
     wait: bool = True,
 ):
     if check_permission and not have_delete_permission(conn, object_refs):
-        raise PermissionError(
-            "You do not have permission to delete the object"
-        )
+        raise PermissionError("You do not have permission to delete the object")
 
     object_types = {
-        "Annotation": [
-            id for ot, id in object_refs if ot.upper() == "ANNOTATION"
-        ],
+        "Annotation": [id for ot, id in object_refs if ot.upper() == "ANNOTATION"],
         "FileAnnotation": [
             id for ot, id in object_refs if ot.upper() == "FILEANNOTATION"
         ],

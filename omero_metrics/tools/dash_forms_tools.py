@@ -13,10 +13,7 @@ Field_TYPE_MAPPING = {
 
 
 def extract_form_data(form_content):
-    return {
-        i["props"]["id"].split(":")[1]: i["props"]["value"]
-        for i in form_content
-    }
+    return {i["props"]["id"].split(":")[1]: i["props"]["value"] for i in form_content}
 
 
 def disable_all_fields_dash_form(form):
@@ -60,9 +57,7 @@ def get_dmc_field_input(
     input_field = input_field_name()
     input_field.id = f"{mm_object.class_name}:{field_info['field_name']}"
     input_field.label = clean_field_name(field_info["field_name"])
-    input_field.placeholder = (
-        f"Enter {clean_field_name(field_info['field_name'])}"
-    )
+    input_field.placeholder = f"Enter {clean_field_name(field_info['field_name'])}"
     input_field.value = (
         field_info["default"]
         if getattr(mm_object, field.name) is None
@@ -71,9 +66,7 @@ def get_dmc_field_input(
     input_field.w = "auto"
     input_field.disabled = disabled
     input_field.required = not field_info["optional"]
-    input_field.leftSection = DashIconify(
-        icon=type_mapping[field_info["type"]][1]
-    )
+    input_field.leftSection = DashIconify(icon=type_mapping[field_info["type"]][1])
     input_field.maxWidth = "450px"
 
     return input_field

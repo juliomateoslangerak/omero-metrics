@@ -14,9 +14,7 @@ from omero_metrics.tools import load
 logger = logging.getLogger(__name__)
 dashboard_name = "omero_image_psf_beads"
 
-omero_image_psf_beads = DjangoDash(
-    name=dashboard_name, serve_locally=True
-)
+omero_image_psf_beads = DjangoDash(name=dashboard_name, serve_locally=True)
 
 omero_image_psf_beads.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
@@ -130,9 +128,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                                 },
                                                             ],
                                                             fullWidth=True,
-                                                            color=THEME[
-                                                                "primary"
-                                                            ],
+                                                            color=THEME["primary"],
                                                             # w='auto'
                                                         ),
                                                         dmc.Stack(
@@ -192,9 +188,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                             label="Invert Colors",
                                                             checked=False,
                                                             size="md",
-                                                            color=THEME[
-                                                                "primary"
-                                                            ],
+                                                            color=THEME["primary"],
                                                         ),
                                                     ],
                                                     gap="sm",
@@ -247,9 +241,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                                     "Intensity Profiles",
                                                                     size="lg",
                                                                     fw=500,
-                                                                    c=THEME[
-                                                                        "primary"
-                                                                    ],
+                                                                    c=THEME["primary"],
                                                                 ),
                                                                 dmc.Select(
                                                                     data=[
@@ -282,9 +274,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                         dcc.Graph(
                                                             id="mip_chart_image",
                                                             figure={},
-                                                            style={
-                                                                "height": "400px"
-                                                            },
+                                                            style={"height": "400px"},
                                                         ),
                                                     ],
                                                     gap="md",
@@ -328,16 +318,12 @@ def update_icon(axis):
         dash.dependencies.Input("beads_info_segmented", "value"),
     ],
 )
-def update_image(
-    channel_index, color, invert, contour, roi, beads_info, **kwargs
-):
+def update_image(channel_index, color, invert, contour, roi, beads_info, **kwargs):
     try:
         mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
         image_id = int(kwargs["session_state"]["context"]["image_id"])
         channel_index = int(channel_index)
-        min_distance = int(
-            mm_dataset.input_parameters.min_lateral_distance_factor
-        )
+        min_distance = int(mm_dataset.input_parameters.min_lateral_distance_factor)
         bead_properties_df = load.load_table_mm_metrics(
             mm_dataset.output["bead_properties"]
         )
@@ -351,11 +337,8 @@ def update_image(
 
         if invert:
             color = color + "_r"
-        stack = kwargs["session_state"]["context"]["image"][
-            0, :, :, :, channel_index
-        ]
+        stack = kwargs["session_state"]["context"]["image"][0, :, :, :, channel_index]
         mip_z = np.max(stack, axis=0)
-
 
         fig = px.imshow(
             mip_z,
@@ -376,13 +359,9 @@ def update_image(
             fig.update_yaxes(autorange="reversed")
 
         if beads_info == "beads_info":
-            fig.update_traces(
-                visible=True, selector=dict(name="Beads Locations")
-            )
+            fig.update_traces(visible=True, selector=dict(name="Beads Locations"))
         else:
-            fig.update_traces(
-                visible=False, selector=dict(name="Beads Locations")
-            )
+            fig.update_traces(visible=False, selector=dict(name="Beads Locations"))
 
         fig.update_layout(
             paper_bgcolor="rgba(0,0,0,0)",
@@ -414,8 +393,7 @@ def update_image(
 def update_channels_psf_image(_, **kwargs):
     channel_names = kwargs["session_state"]["context"]["channel_names"]
     channel_options = [
-        {"label": c.name, "value": f"{i}"}
-        for i, c in enumerate(channel_names.channels)
+        {"label": c.name, "value": f"{i}"} for i, c in enumerate(channel_names.channels)
     ]
     return channel_options
 
@@ -452,12 +430,8 @@ def callback_mip(points, axis, channel_index, **kwargs):
     if point["curveNumber"] == 1:
         bead_index = point["pointNumber"]
 
-        bead = df_beads_location.loc[
-            df_beads_location["bead_id"] == bead_index, :
-        ]
-        stack = kwargs["session_state"]["context"]["image"][
-            0, :, :, :, channel_index
-        ]
+        bead = df_beads_location.loc[df_beads_location["bead_id"] == bead_index, :]
+        stack = kwargs["session_state"]["context"]["image"][0, :, :, :, channel_index]
         x0, xf, y0, yf = my_components.crop_bead_index(bead, min_dist, stack)
         mip_x, mip_y, mip_z = my_components.mip_graphs(x0, xf, y0, yf, stack)
         fig_mip_go = my_components.fig_mip(mip_x, mip_y, mip_z)
@@ -487,18 +461,12 @@ def callback_mip(points, axis, channel_index, **kwargs):
 
 def line_graph_axis(bead_index, channel_index, axis, kwargs):
     mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
-    df_axis = load.load_table_mm_metrics(
-        mm_dataset.output[f"bead_profiles_{axis}"]
-    )
+    df_axis = load.load_table_mm_metrics(mm_dataset.output[f"bead_profiles_{axis}"])
     image_id = kwargs["session_state"]["context"]["image_id"]
-    df_x = df_axis.filter(
-        regex=f"^{image_id}_{channel_index}_{bead_index}_{axis}_"
-    )
+    df_x = df_axis.filter(regex=f"^{image_id}_{channel_index}_{bead_index}_{axis}_")
     df_x.columns = df_x.columns.str.split("_").str[-1]
     fig_ip_x = px.line(df_x)
-    fig_ip_x.update_traces(
-        patch={"line": {"dash": "dot"}}, selector={"name": "fitted"}
-    )
+    fig_ip_x.update_traces(patch={"line": {"dash": "dot"}}, selector={"name": "fitted"})
     fig_ip_x.update_layout(
         plot_bgcolor=THEME["background"],
         paper_bgcolor=THEME["background"],

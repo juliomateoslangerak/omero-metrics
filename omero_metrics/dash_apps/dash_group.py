@@ -91,9 +91,7 @@ dash_app_group.layout = dmc.MantineProvider(
                         ),
                         dmc.TabsTab(
                             "History",
-                            leftSection=my_components.get_icon(
-                                icon="bx:history"
-                            ),
+                            leftSection=my_components.get_icon(icon="bx:history"),
                             value="history",
                             color=THEME["primary"],
                             style=TAB_ITEM_STYLE,
@@ -397,9 +395,7 @@ dash_app_group.clientside_callback(
         return false;
     }
     """,
-    dash.dependencies.Output(
-        "modal-submit-button", "loading", allow_duplicate=True
-    ),
+    dash.dependencies.Output("modal-submit-button", "loading", allow_duplicate=True),
     dash.dependencies.Input("modal-submit-button", "n_clicks"),
     prevent_initial_call=True,
 )

@@ -94,9 +94,7 @@ def process_dataset(dataset: DatasetWrapper, config: dict) -> None:
     logger.info(f"Analyzing data from Dataset: {dataset.getId()}")
     logger.info(config)
 
-    for analysis_name, analysis_config in config["study_config"][
-        "analysis"
-    ].items():
+    for analysis_name, analysis_config in config["study_config"]["analysis"].items():
         if analysis_config["do_analysis"]:
             logger.info(f"Running analysis {analysis_name}...")
             start_time = datetime.now()
@@ -112,9 +110,7 @@ def process_dataset(dataset: DatasetWrapper, config: dict) -> None:
                 images = [i for i in dataset.listChildren()]
 
             for image in images:
-                mm_dataset = process_image(
-                    image=image, analysis_config=analysis_config
-                )
+                mm_dataset = process_image(image=image, analysis_config=analysis_config)
                 if not mm_dataset.processed:
                     logger.error("Analysis failed. Not dumping data")
 
@@ -129,9 +125,7 @@ def process_dataset(dataset: DatasetWrapper, config: dict) -> None:
                     )
 
                 except KeyError as e:
-                    logger.error(
-                        f"No dump strategy found for {mm_dataset.class_name}"
-                    )
+                    logger.error(f"No dump strategy found for {mm_dataset.class_name}")
                     raise e
 
             try:
@@ -192,8 +186,7 @@ def dump_image_process(
                     target_omero_object=target_omero_object,
                     append_to_existing="append_to_existing" in dump_strategy
                     and dump_strategy["append_to_existing"],
-                    as_table="as_table" in dump_strategy
-                    and dump_strategy["as_table"],
+                    as_table="as_table" in dump_strategy and dump_strategy["as_table"],
                 )
 
 
@@ -219,8 +212,6 @@ def dump_output_element(
                     as_table,
                 )
 
-        logger.info(
-            f"{output_element.class_name} output could not be dumped to OMERO"
-        )
+        logger.info(f"{output_element.class_name} output could not be dumped to OMERO")
 
         return None

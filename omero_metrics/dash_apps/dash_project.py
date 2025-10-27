@@ -44,9 +44,7 @@ omero_project_dash.layout = dmc.MantineProvider(
             title="Confirm Delete",
             id="delete-confirm_delete",
             children=[
-                dmc.Text(
-                    "Are you sure you want to delete this project outputs?"
-                ),
+                dmc.Text("Are you sure you want to delete this project outputs?"),
                 dmc.Space(h=20),
                 dmc.Group(
                     [
@@ -91,18 +89,14 @@ omero_project_dash.layout = dmc.MantineProvider(
                         dmc.TabsTab(
                             "Settings",
                             value="settings",
-                            leftSection=my_components.get_icon(
-                                icon="ph:gear-bold"
-                            ),
+                            leftSection=my_components.get_icon(icon="ph:gear-bold"),
                             color=THEME["primary"],
                             style=TAB_ITEM_STYLE,
                         ),
                         dmc.TabsTab(
                             "Thresholds",
                             value="thresholds",
-                            leftSection=my_components.get_icon(
-                                icon="ph:ruler-bold"
-                            ),
+                            leftSection=my_components.get_icon(icon="ph:ruler-bold"),
                             color=THEME["primary"],
                             style=TAB_ITEM_STYLE,
                         ),
@@ -348,9 +342,7 @@ def update_dropdown(*args, **kwargs):
         kkm = kwargs["session_state"]["context"]["kkm"]
         kkm = [k.replace("_", " ").title() for k in kkm]
         dates = kwargs["session_state"]["context"]["dates"]
-        options = [
-            {"value": f"{i}", "label": f"{k}"} for i, k in enumerate(kkm)
-        ]
+        options = [{"value": f"{i}", "label": f"{k}"} for i, k in enumerate(kkm)]
         min_date = min(dates)
         max_date = max(dates)
         data = options
@@ -453,9 +445,7 @@ def update_table(measurement, dates_range, **kwargs):
         )
 
         data = df.to_dict("records")
-        channels = [
-            c for c in df.columns if c not in ["dataset_index", "date"]
-        ]
+        channels = [c for c in df.columns if c not in ["dataset_index", "date"]]
         series = [
             {
                 "name": channel,
@@ -492,9 +482,7 @@ def update_project_view(clicked_data, page, **kwargs):
             total = math.ceil(len(table_kkm) / 4)
             start_idx = (page - 1) * 4
             end_idx = start_idx + 4
-            table_kkm.columns = table_kkm.columns.str.replace(
-                "_", " "
-            ).str.title()
+            table_kkm.columns = table_kkm.columns.str.replace("_", " ").str.title()
             date = dates[selected_dataset]
             page_data = table_kkm.iloc[start_idx:end_idx]
             grid = {
@@ -525,9 +513,7 @@ def update_modal(*args, **kwargs):
     sample = setup["sample"]
     mm_sample = getattr(mm_schema, sample["type"])
     mm_sample = mm_sample(**sample["fields"])
-    sample_form = dft.get_form(
-        mm_sample, disabled=False, form_id="sample_form"
-    )
+    sample_form = dft.get_form(mm_sample, disabled=False, form_id="sample_form")
     input_parameters = setup["input_parameters"]
     mm_input_parameters = getattr(mm_schema, input_parameters["type"])
     mm_input_parameters = mm_input_parameters(**input_parameters["fields"])
@@ -552,9 +538,7 @@ omero_project_dash.clientside_callback(
 
 
     """,
-    dash.dependencies.Output(
-        "loading-overlay", "visible", allow_duplicate=True
-    ),
+    dash.dependencies.Output("loading-overlay", "visible", allow_duplicate=True),
     dash.dependencies.Input("submit_config", "n_clicks"),
     prevent_initial_call=True,
 )
@@ -815,28 +799,20 @@ def get_accordion_data(accordion_state, kkm):
                 "children"
             ]
             key = (
-                i["props"]["children"][0]["props"]["children"][0]["props"][
-                    "children"
-                ]
+                i["props"]["children"][0]["props"]["children"][0]["props"]["children"]
                 .replace(" ", "_")
                 .lower()
             )
             dict_data[key] = {
                 "upper_limit": (
-                    index[0]["props"]["value"]
-                    if "value" in index[0]["props"]
-                    else ""
+                    index[0]["props"]["value"] if "value" in index[0]["props"] else ""
                 ),
                 "lower_limit": (
-                    index[1]["props"]["value"]
-                    if "value" in index[1]["props"]
-                    else ""
+                    index[1]["props"]["value"] if "value" in index[1]["props"] else ""
                 ),
             }
     except Exception as e:
-        dict_data = {
-            key: {"upper_limit": "", "lower_limit": ""} for key in kkm
-        }
+        dict_data = {key: {"upper_limit": "", "lower_limit": ""} for key in kkm}
         print(f"Error: {e}")
     return dict_data
 
@@ -859,10 +835,7 @@ def delete_project(*args, **kwargs):
         project_id = kwargs["session_state"]["context"]["project_id"]
         request = kwargs["request"]
         opened = not args[3]
-        if (
-            triggered_button == "delete-modal-submit-button.n_clicks"
-            and args[0] > 0
-        ):
+        if triggered_button == "delete-modal-submit-button.n_clicks" and args[0] > 0:
             sleep(1)
             msg, color = views.delete_project(request, project_id=project_id)
             message = dmc.Notification(
@@ -900,9 +873,7 @@ def download_project_data(*args, **kwargs):
         if not kwargs["callback_context"].triggered:
             raise dash.no_update
 
-        triggered_id = (
-            kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
-        )
+        triggered_id = kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
         mm_datasets = kwargs["session_state"]["context"]["mm_datasets"]
         file_name = kwargs["session_state"]["context"]["project_name"]
         yaml_dumper = YAMLDumper()

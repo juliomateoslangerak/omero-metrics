@@ -26,9 +26,7 @@ def index(request, conn=None, **kwargs):
         "lastName": experimenter.lastName,
         "experimenterId": experimenter.id,
     }
-    return render(
-        request, "omero_metrics/top_link_template/index.html", context
-    )
+    return render(request, "omero_metrics/top_link_template/index.html", context)
 
 
 @login_required(setGroupContext=True)
@@ -132,9 +130,7 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
     dash_context = request.session.get("django_plotly_dash", dict())
     try:
         dataset_wrapper = conn.getObject("Dataset", dataset_id)
-        dm = data_managers.DatasetManager(
-            conn, dataset_wrapper, load_images=True
-        )
+        dm = data_managers.DatasetManager(conn, dataset_wrapper, load_images=True)
         dm.load_data()
         dm.visualize_data()
         dash_context["context"] = dm.context
@@ -261,8 +257,7 @@ def run_analysis_view(request, conn=None, **kwargs):
         list_images = kwargs["list_images"]
         comment = kwargs["comment"]
         list_mm_images = [
-            load.load_image(conn.getObject("Image", int(i)))
-            for i in list_images
+            load.load_image(conn.getObject("Image", int(i))) for i in list_images
         ]
         mm_sample = kwargs["mm_sample"]
         mm_input_parameters = kwargs["mm_input_parameters"]
@@ -270,11 +265,7 @@ def run_analysis_view(request, conn=None, **kwargs):
             mm_schema, data_type.DATA_TYPE[mm_input_parameters.class_name][1]
         )
         input_data = input_data(
-            **{
-                data_type.DATA_TYPE[mm_input_parameters.class_name][
-                    2
-                ]: list_mm_images
-            }
+            **{data_type.DATA_TYPE[mm_input_parameters.class_name][2]: list_mm_images}
         )
         mm_microscope = mm_schema.Microscope(
             name=project_wrapper.getDetails().getGroup().getName()
@@ -300,9 +291,7 @@ def run_analysis_view(request, conn=None, **kwargs):
             ),
             experimenter=mm_experimenter,
         )
-        run_status = data_type.DATA_TYPE[mm_input_parameters.class_name][3](
-            mm_dataset
-        )
+        run_status = data_type.DATA_TYPE[mm_input_parameters.class_name][3](mm_dataset)
         if run_status and mm_dataset.processed:
             try:
                 if comment:
