@@ -462,7 +462,7 @@ def load_table_mm_metrics(table):
         table_date = {v.name: v.values for v in table.columns if v}
         df = pd.DataFrame(table_date)
         df = df.replace("nan", np.nan)
-        df = df.apply(lambda col: pd.to_numeric(col, errors="ignore"))
+        df = df.apply(lambda col: pd.to_numeric(col))
         return df
     elif (
         table
@@ -474,7 +474,7 @@ def load_table_mm_metrics(table):
         for i, t in enumerate(table):
             table_date = {v.name: v.values for v in t.columns if v}
             df = pd.DataFrame(table_date)
-            df = df.apply(lambda col: pd.to_numeric(col, errors="ignore"))
+            df = df.apply(lambda col: pd.to_numeric(col))
             df.columns = [modify_column_name(col, start) for col in df.columns]
             df = df.replace("nan", np.nan)
             start = df.columns.str.extract(r"ch(\d+)").astype(int)[0].max() + 1
