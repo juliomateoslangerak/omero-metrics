@@ -112,15 +112,20 @@ Alternatively, you can manually specify the path:
 Once configured, start the OMERO-web server:
 
 ```bash
+export REACT_VERSION=18.2.0
 omero web start
 ```
 
 The server will be available at <http://localhost:8000>
 
+**Note:** The `REACT_VERSION=18.2.0` environment variable is required for dash-mantine-components to work properly. 
+Without it, the app will use React 16 which is incompatible.
+
 ## Debugging
 
-In order to debug the server, you need to start the server in the forground using your
-```aiignore
+In order to debug the server, you need to start the server in the foreground:
+```bash
+export REACT_VERSION=18.2.0
 omero web start --foreground
 ```
 
@@ -139,6 +144,7 @@ A run configuration can be created as follows:
   - Configure the environment variables:
     - DJANGO_SETTINGS_MODULE=omeroweb.settings
     - OMERODIR=/the/path/to/the/omerodir/created/by/the/configuration/script/ eg: home/your_name/PycharmProjects/omero-metrics/omerodir
+    - REACT_VERSION=18.2.0
     - PYTHONUNBUFFERED=1
 - Apply and click OK.
 - Run or debug the configuration as usual.
