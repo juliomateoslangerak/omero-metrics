@@ -25,7 +25,6 @@ dashboard_name = "omero_group_dash"
 dash_app_group = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
-    external_stylesheets=dmc.styles.ALL,
 )
 
 

@@ -39,7 +39,6 @@ dash_form_project = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
     external_stylesheets=[
-        dmc.styles.ALL,
         "/static/omero_metrics/css/style_app.css",
     ],
 )

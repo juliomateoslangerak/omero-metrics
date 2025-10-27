@@ -27,7 +27,6 @@ dashboard_name = "omero_dataset_foi"
 omero_dataset_foi = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
-    external_stylesheets=dmc.styles.ALL,
 )
 
 omero_dataset_foi.layout = dmc.MantineProvider(
@@ -289,6 +288,7 @@ def update_km_table(pagination_value, **kwargs):
     try:
         page = int(pagination_value)
         kkm = kwargs["session_state"]["context"]["kkm"]
+        # TODO: review how we process the tables here.
         table_km = load.get_km_mm_metrics_dataset(
             mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
             table_name="key_measurements",

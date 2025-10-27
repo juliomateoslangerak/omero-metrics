@@ -19,7 +19,6 @@ dashboard_name = "top_iu_microscope"
 dash_app_microscope = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
-    external_stylesheets=dmc.styles.ALL,
 )
 
 dash_app_microscope.layout = dmc.MantineProvider(

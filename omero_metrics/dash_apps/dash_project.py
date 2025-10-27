@@ -31,7 +31,6 @@ dashboard_name = "omero_project_dash"
 omero_project_dash = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
-    external_stylesheets=dmc.styles.ALL,
 )
 
 

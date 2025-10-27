@@ -8,7 +8,6 @@ from omero_metrics.styles import CARD_STYLE1
 omero_multiple_projects = DjangoDash(
     "omero_multiple_projects",
     serve_locally=True,
-    external_stylesheets=dmc.styles.ALL,
 )
 
 omero_multiple_projects.layout = dmc.MantineProvider(
