@@ -154,7 +154,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                                             dmc.GridCol(
                                                 span=6,
                                                 children=[
-                                                    dmc.DatePicker(
+                                                    dmc.DatePickerInput(
                                                         id="date-picker",
                                                         label="Date Range",
                                                         type="range",

@@ -177,7 +177,7 @@ dash_app_group.layout = dmc.MantineProvider(
                                                 w="auto",
                                             ),
                                             dcc.Download(id="download"),
-                                            dmc.DatePicker(
+                                            dmc.DatePickerInput(
                                                 id="date-picker",
                                                 label="Select Date Range",
                                                 valueFormat="DD-MM-YYYY",
