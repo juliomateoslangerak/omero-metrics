@@ -446,23 +446,33 @@ def get_km_mm_metrics_dataset(
     ],
 ):
     table = mm_dataset.output[table_name]
-    table_date = {
+    table_data = {
         k: v
         for k, v in table.__dict__.items()
         if k not in columns_exceptions and v
     }
-    df = pd.DataFrame(table_date)
+    df = pd.DataFrame(table_data)
     df = df.replace("nan", np.nan)
-    df = df.apply(lambda col: pd.to_numeric(col))
-    return df
+    # Try to convert each column to numeric, keep original if it fails
+    for col in df.columns:
+        try:
+            df[col] = pd.to_numeric(df[col])
+        except (ValueError, TypeError):
+            pass
 
+    return df
 
 def load_table_mm_metrics(table):
     if table and isinstance(table, mm_schema.Table):
         table_date = {v.name: v.values for v in table.columns if v}
         df = pd.DataFrame(table_date)
         df = df.replace("nan", np.nan)
-        df = df.apply(lambda col: pd.to_numeric(col))
+        for col in df.columns:
+            try:
+                df[col] = pd.to_numeric(df[col])
+            except (ValueError, TypeError):
+                pass
+
         return df
     elif (
         table
@@ -474,7 +484,11 @@ def load_table_mm_metrics(table):
         for i, t in enumerate(table):
             table_date = {v.name: v.values for v in t.columns if v}
             df = pd.DataFrame(table_date)
-            df = df.apply(lambda col: pd.to_numeric(col))
+            for col in df.columns:
+                try:
+                    df[col] = pd.to_numeric(df[col])
+                except (ValueError, TypeError):
+                    pass
             df.columns = [modify_column_name(col, start) for col in df.columns]
             df = df.replace("nan", np.nan)
             start = df.columns.str.extract(r"ch(\d+)").astype(int)[0].max() + 1
@@ -485,6 +499,7 @@ def load_table_mm_metrics(table):
 
 
 def modify_column_name(col, i):
+    # TODO: On the longer run we need to implement title in the schema
     match = re.search(r"ch(\d+)", col)
     if match:
         new_ch = int(match.group(1)) + i
