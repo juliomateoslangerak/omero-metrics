@@ -142,10 +142,10 @@ A run configuration can be created as follows:
   - Configure the script. This corresponds with the manage.py script in the omeroweb package in your venv. eg: "./.venv/lib/python3.10/site-packages/omeroweb/manage.py"
   - Enter the script parameters: `runserver localhost:8000 --noreload`
   - Configure the environment variables:
-    - DJANGO_SETTINGS_MODULE=omeroweb.settings
-    - OMERODIR=/the/path/to/the/omerodir/created/by/the/configuration/script/ eg: home/your_name/PycharmProjects/omero-metrics/omerodir
-    - REACT_VERSION=18.2.0
-    - PYTHONUNBUFFERED=1
+      - DJANGO_SETTINGS_MODULE=omeroweb.settings
+      - OMERODIR=/the/path/to/the/omerodir/created/by/the/configuration/script/ eg: home/your_name/PycharmProjects/omero-metrics/omerodir
+      - REACT_VERSION=18.2.0
+      - PYTHONUNBUFFERED=1
 - Apply and click OK.
 - Run or debug the configuration as usual.
 
