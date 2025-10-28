@@ -9,6 +9,7 @@ from omero_metrics.tools import data_managers
 from omero_metrics.tools import delete
 from omero_metrics.tools import data_type
 import logging
+import traceback
 from omero.gateway import FileAnnotationWrapper
 import omero
 
@@ -300,10 +301,15 @@ def run_analysis_view(request, conn=None, **kwargs):
             ),
             experimenter=mm_experimenter,
         )
-        run_status = data_type.DATA_TYPE[mm_input_parameters.class_name][3](
-            mm_dataset
-        )
-        if run_status and mm_dataset.processed:
+        try:
+            # Run the analysis
+            data_type.DATA_TYPE[mm_input_parameters.class_name][3](mm_dataset)
+        except Exception as e:
+            tb = traceback.format_exc()
+            logger.error(f"Error running the analysis: {e}")
+            logger.error(tb)
+            return (tb, "red")
+        if mm_dataset.processed:
             try:
                 if comment:
                     mm_comment = mm_schema.Comment(

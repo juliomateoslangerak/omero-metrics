@@ -444,9 +444,16 @@ def run_analysis(_, list_images, current, comment, **kwargs):
                             ),
                             order=4,
                         ),
-                        dmc.Text(
-                            msg,
-                            size="sm",
+                        (
+                            dmc.Code(
+                                msg,
+                                block=True,
+                            )
+                            if color == "red"
+                            else dmc.Text(
+                                msg,
+                                size="sm",
+                            )
                         ),
                     ],
                     color=color,
