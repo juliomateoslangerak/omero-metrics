@@ -60,13 +60,16 @@ def dump_microscope(
             return None
         if (
             microscope.data_reference
-            and microscope.data_reference.omero_object_id != target_group.getId()
+            and microscope.data_reference.omero_object_id
+            != target_group.getId()
         ):
             logger.warning(
                 f"Microscope {microscope.name} is going to be linked to a different OMERO group."
             )
         omero_group = target_group
-        microscope.data_reference = omero_tools.get_ref_from_object(omero_group)
+        microscope.data_reference = omero_tools.get_ref_from_object(
+            omero_group
+        )
 
     omero_tools.create_key_value(
         conn=conn,
@@ -98,7 +101,9 @@ def dump_project(
             omero_project = omero_tools.create_project(
                 conn=conn, name=project.name, description=project.description
             )
-            project.data_reference = omero_tools.get_ref_from_object(omero_project)
+            project.data_reference = omero_tools.get_ref_from_object(
+                omero_project
+            )
     else:
         if not isinstance(target_project, ProjectWrapper):
             logger.error(
@@ -289,7 +294,9 @@ def dump_dataset(
                 conn=conn, mm_dataset=dataset, target_omero_obj=target_objs
             )
     except Exception as e:
-        logger.error(f"Dataset {dataset.name} could not be dumped to OMERO: {e}")
+        logger.error(
+            f"Dataset {dataset.name} could not be dumped to OMERO: {e}"
+        )
         raise e
 
     return omero_dataset
@@ -345,7 +352,9 @@ def _get_input_metadata(
             metadata[f"{input_field.name}_id"] = [
                 i_e.data_reference.omero_object_id for i_e in input_element
             ]
-            metadata[f"{input_field.name}_name"] = [i_e.name for i_e in input_element]
+            metadata[f"{input_field.name}_name"] = [
+                i_e.name for i_e in input_element
+            ]
         else:
             metadata[input_field.name] = str(input_element)
 
@@ -448,7 +457,9 @@ def _dump_output_element(
             target_object=target_dataset,
         )
     else:
-        logger.error(f"{output_element.name} output could not be dumped to OMERO")
+        logger.error(
+            f"{output_element.name} output could not be dumped to OMERO"
+        )
 
     return None
 
@@ -464,7 +475,9 @@ def dump_image(
         )
         return None
     if not isinstance(image, mm_schema.Image):
-        logger.error(f"Invalid image object provided for {image}. Skipping dump.")
+        logger.error(
+            f"Invalid image object provided for {image}. Skipping dump."
+        )
         return None
 
     source_image_id = None
@@ -509,7 +522,9 @@ def dump_roi(
                 f"ROI {roi.name} must be linked to an image. No image provided."
             )
         if len(target_images) != 1:
-            raise TypeError(f"ROI {roi.name} must be linked to a single image.")
+            raise TypeError(
+                f"ROI {roi.name} must be linked to a single image."
+            )
         else:
             target_image = target_images[0]
 
@@ -528,9 +543,13 @@ def dump_roi(
             continue
         shape_handler = handler.get(
             shape_field.name,
-            lambda shape: logger.error(f"Shape {shape} could not be dumped to OMERO"),
+            lambda shape: logger.error(
+                f"Shape {shape} could not be dumped to OMERO"
+            ),
         )
-        shapes += [shape_handler(shape) for shape in getattr(roi, shape_field.name)]
+        shapes += [
+            shape_handler(shape) for shape in getattr(roi, shape_field.name)
+        ]
 
     omero_roi = omero_tools.create_roi(
         conn=conn,
@@ -585,7 +604,9 @@ def dump_key_measurements(
         table_description=key_measurements.description,
         namespace=key_measurements.class_class_curie,
     )
-    key_measurements.data_reference = omero_tools.get_ref_from_object(omero_table)
+    key_measurements.data_reference = omero_tools.get_ref_from_object(
+        omero_table
+    )
 
     return omero_table
 
@@ -620,7 +641,9 @@ def dump_key_values(
         annotation_description=key_values.description,
         namespace=key_values.class_class_curie,
     )
-    key_values.data_reference = omero_tools.get_ref_from_object(omero_key_value)
+    key_values.data_reference = omero_tools.get_ref_from_object(
+        omero_key_value
+    )
 
     return omero_key_value
 
@@ -646,7 +669,9 @@ def dump_table(
     target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper] = None,
 ):
     if not isinstance(table, mm_schema.Table):
-        logger.error(f"Unsupported table type for {table.name}: {table.class_name}")
+        logger.error(
+            f"Unsupported table type for {table.name}: {table.class_name}"
+        )
         return None
 
     if target_object is None:

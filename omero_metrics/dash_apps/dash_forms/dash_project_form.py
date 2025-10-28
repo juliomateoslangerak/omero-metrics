@@ -84,7 +84,9 @@ dash_form_project.layout = dmc.MantineProvider(
                                     id="step_sample",
                                     label="Sample Configuration",
                                     description="Define your sample parameters",
-                                    icon=my_components.get_icon(icon="mdi:microscope"),
+                                    icon=my_components.get_icon(
+                                        icon="mdi:microscope"
+                                    ),
                                     children=[
                                         dmc.Paper(
                                             children=[
@@ -114,7 +116,9 @@ dash_form_project.layout = dmc.MantineProvider(
                                                         }
                                                     },
                                                 ),
-                                                html.Div(id="sample_container"),
+                                                html.Div(
+                                                    id="sample_container"
+                                                ),
                                             ],
                                             p="md",
                                             radius="md",
@@ -311,7 +315,9 @@ def stepper_callback(*args, **kwargs):
 )
 def update_sample_container(sample_type_selector, **kwargs):
     mm_sample = MAPPINGS[int(sample_type_selector)][0]
-    sample_form = dft.get_form(mm_sample, disabled=False, form_id="sample_content")
+    sample_form = dft.get_form(
+        mm_sample, disabled=False, form_id="sample_content"
+    )
     return [sample_form]
 
 
@@ -342,7 +348,9 @@ def update_input_parameters(sample_type_selector, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def review_configuration(_, sample_form, input_parameters_form, current, **kwargs):
+def review_configuration(
+    _, sample_form, input_parameters_form, current, **kwargs
+):
     sample = dft.disable_all_fields_dash_form(sample_form)
     input_parameters = dft.disable_all_fields_dash_form(input_parameters_form)
     if current == 1:
@@ -360,7 +368,9 @@ dash_form_project.clientside_callback(
         return false}
     }
     """,
-    dash.dependencies.Output("loading-overlay", "visible", allow_duplicate=True),
+    dash.dependencies.Output(
+        "loading-overlay", "visible", allow_duplicate=True
+    ),
     dash.dependencies.Input("next-basic-usage", "n_clicks"),
     dash.dependencies.State("stepper-basic-usage", "active"),
     prevent_initial_call=True,

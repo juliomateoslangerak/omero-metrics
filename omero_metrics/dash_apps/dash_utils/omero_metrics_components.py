@@ -153,7 +153,9 @@ download_group = dmc.Group(
                         leftSection=DashIconify(
                             icon="material-symbols:download", width=20
                         ),
-                        rightSection=DashIconify(icon="carbon:chevron-down", width=20),
+                        rightSection=DashIconify(
+                            icon="carbon:chevron-down", width=20
+                        ),
                         color=THEME["primary"],
                         variant="outline",
                     )
@@ -197,7 +199,9 @@ download_table = dmc.Group(
             [
                 dmc.MenuTarget(
                     dmc.ActionIcon(
-                        DashIconify(icon="material-symbols:download", width=20),
+                        DashIconify(
+                            icon="material-symbols:download", width=20
+                        ),
                         color=THEME["primary"],
                     )
                 ),
@@ -206,7 +210,9 @@ download_table = dmc.Group(
                         dmc.MenuItem(
                             "CSV",
                             id="table-download-csv",
-                            leftSection=DashIconify(icon="iwwa:file-csv", width=20),
+                            leftSection=DashIconify(
+                                icon="iwwa:file-csv", width=20
+                            ),
                         ),
                         dmc.MenuItem(
                             "Excel",

@@ -29,7 +29,9 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
             title="Confirm Delete",
             id="confirm_delete",
             children=[
-                dmc.Text("Are you sure you want to delete this dataset outputs?"),
+                dmc.Text(
+                    "Are you sure you want to delete this dataset outputs?"
+                ),
                 dmc.Space(h=20),
                 dmc.Group(
                     [
@@ -78,7 +80,9 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
                                                     children=[
                                                         my_components.get_icon(
                                                             icon="material-symbols:info-outline",
-                                                            color=THEME["primary"],
+                                                            color=THEME[
+                                                                "primary"
+                                                            ],
                                                         )
                                                     ],
                                                 ),
@@ -207,19 +211,27 @@ def download_dataset_data(*args, **kwargs):
     if not kwargs["callback_context"].triggered:
         raise dash.no_update
 
-    triggered_id = kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
+    triggered_id = (
+        kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
+    )
     mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
     file_name = mm_dataset.name
     yaml_dumper = YAMLDumper()
     json_dumper = JSONDumper()
     if triggered_id == "download-yaml":
-        return dict(content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.yaml")
+        return dict(
+            content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.yaml"
+        )
 
     elif triggered_id == "download-json":
-        return dict(content=json_dumper.dumps(mm_dataset), filename=f"{file_name}.json")
+        return dict(
+            content=json_dumper.dumps(mm_dataset), filename=f"{file_name}.json"
+        )
 
     elif triggered_id == "download-text":
-        return dict(content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.txt")
+        return dict(
+            content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.txt"
+        )
 
     raise dash.no_update
 
@@ -237,7 +249,9 @@ def download_table_data(*args, **kwargs):
     if not kwargs["callback_context"].triggered:
         raise dash.no_update
 
-    triggered_id = kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
+    triggered_id = (
+        kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
+    )
     table_km = load.get_km_mm_metrics_dataset(
         mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
         table_name="key_measurements",
@@ -264,7 +278,9 @@ omero_dataset_psf_beads.clientside_callback(
         return false;
     }
     """,
-    dash.dependencies.Output("modal-submit-button", "loading", allow_duplicate=True),
+    dash.dependencies.Output(
+        "modal-submit-button", "loading", allow_duplicate=True
+    ),
     dash.dependencies.Input("modal-submit-button", "n_clicks"),
     prevent_initial_call=True,
 )

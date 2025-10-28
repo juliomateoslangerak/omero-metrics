@@ -41,7 +41,9 @@ class OMEROMetricsConfig(AppConfig):
         ]
         if hasattr(settings, "PLOTLY_COMPONENTS"):
             settings.PLOTLY_COMPONENTS.extend(
-                c for c in plotly_components if c not in settings.PLOTLY_COMPONENTS
+                c
+                for c in plotly_components
+                if c not in settings.PLOTLY_COMPONENTS
             )
         else:
             settings.PLOTLY_COMPONENTS = plotly_components
@@ -67,10 +69,17 @@ class OMEROMetricsConfig(AppConfig):
         """Ensure the required context processor is included."""
         if hasattr(settings, "TEMPLATES") and len(settings.TEMPLATES) > 0:
             context_processors = (
-                settings.TEMPLATES[0].get("OPTIONS", {}).get("context_processors", [])
+                settings.TEMPLATES[0]
+                .get("OPTIONS", {})
+                .get("context_processors", [])
             )
-            if "django.template.context_processors.request" not in context_processors:
-                context_processors.append("django.template.context_processors.request")
+            if (
+                "django.template.context_processors.request"
+                not in context_processors
+            ):
+                context_processors.append(
+                    "django.template.context_processors.request"
+                )
                 settings.TEMPLATES[0]["OPTIONS"][
                     "context_processors"
                 ] = context_processors

@@ -47,8 +47,12 @@ def create_control_panel():
                         w="100%",
                         value="0",
                         allowDeselect=False,
-                        leftSection=my_components.get_icon("material-symbols:layers"),
-                        rightSection=my_components.get_icon("radix-icons:chevron-down"),
+                        leftSection=my_components.get_icon(
+                            "material-symbols:layers"
+                        ),
+                        rightSection=my_components.get_icon(
+                            "radix-icons:chevron-down"
+                        ),
                         styles={
                             "rightSection": {"pointerEvents": "none"},
                             "item": {"fontSize": "14px"},
@@ -108,7 +112,9 @@ def create_control_panel():
                             },
                         ],
                         value="Hot",
-                        leftSection=my_components.get_icon("material-symbols:palette"),
+                        leftSection=my_components.get_icon(
+                            "material-symbols:palette"
+                        ),
                         styles={
                             "rightSection": {"pointerEvents": "none"},
                             "item": {"fontSize": "14px"},
@@ -259,7 +265,9 @@ def callback_channel(_, **kwargs):
         dash.dependencies.Input("segmented", "value"),
     ],
 )
-def callback_image(channel, color, checked_contour, inverted_color, roi, **kwargs):
+def callback_image(
+    channel, color, checked_contour, inverted_color, roi, **kwargs
+):
     mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
     image_id = kwargs["session_state"]["context"]["image_id"]
     if inverted_color:
@@ -376,13 +384,15 @@ def callback_image(channel, color, checked_contour, inverted_color, roi, **kwarg
 def update_intensity_profiles(channel, **kwargs):
     image_index = int(kwargs["session_state"]["context"]["image_index"])
     df_intensity_profiles = load.load_table_mm_metrics(
-        kwargs["session_state"]["context"]["mm_dataset"].output["intensity_profiles"][
-            image_index
-        ]
+        kwargs["session_state"]["context"]["mm_dataset"].output[
+            "intensity_profiles"
+        ][image_index]
     )
     df_profile = df_intensity_profiles.filter(regex=f"ch0*{channel}_")
     df_profile.columns = (
-        df_profile.columns.str.replace("ch\d+_leftTop_to_rightBottom", "Diagonal (↘)")
+        df_profile.columns.str.replace(
+            "ch\d+_leftTop_to_rightBottom", "Diagonal (↘)"
+        )
         .str.replace("ch\d+_leftBottom_to_rightTop", "Diagonal (↗)")
         .str.replace("ch\d+_center_horizontal", "Horizontal (→)")
         .str.replace("ch\d+_center_vertical", "Vertical (↓)")

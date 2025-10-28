@@ -57,7 +57,9 @@ def kkm_tables_projects(*args, **kwargs):
                         ]
                     )
                 )
-        return dmc.Paper(style={**CARD_STYLE1, "marginTop": "12px"}, children=div_data)
+        return dmc.Paper(
+            style={**CARD_STYLE1, "marginTop": "12px"}, children=div_data
+        )
     else:
         return [
             dmc.Text(
