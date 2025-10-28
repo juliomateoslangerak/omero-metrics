@@ -90,7 +90,6 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                                             clearable=False,
                                                             allowDeselect=False,
                                                             w="200",
-                                                            value="0",
                                                             leftSection=my_components.get_icon(
                                                                 icon="material-symbols:layers"
                                                             ),
@@ -264,17 +263,18 @@ omero_dataset_foi.layout = dmc.MantineProvider(
 
 @omero_dataset_foi.expanded_callback(
     dash.dependencies.Output("channel_dropdown_foi", "data"),
+    dash.dependencies.Output("channel_dropdown_foi", "value"),
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_dropdown_menu(*args, **kwargs):
     try:
-        channel = kwargs["session_state"]["context"]["channel_names"]
+        channel_names = kwargs["session_state"]["context"]["channel_names"]
         return [
-            {"label": f"{name}", "value": f"{i}"}
-            for i, name in enumerate(channel)
-        ]
+            {"label": str(name), "value": str(i)}
+            for i, name in enumerate(channel_names)
+        ], "0"
     except Exception as e:
-        return [{"label": "Error loading channels", "value": "0"}]
+        return [{"label": "Error loading channels", "value": "0"}], "0"
 
 
 @omero_dataset_foi.expanded_callback(

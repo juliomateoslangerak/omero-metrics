@@ -140,7 +140,6 @@ omero_project_dash.layout = dmc.MantineProvider(
                                                         leftSection=my_components.get_icon(
                                                             icon="ph:magnifying-glass"
                                                         ),
-                                                        value="0",
                                                         disabled=True,
                                                         rightSection=my_components.get_icon(
                                                             icon="ph:caret-down"

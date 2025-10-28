@@ -100,7 +100,6 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                             id="channel_selector_psf_image",
                                                             label="Channel",
                                                             w="100%",
-                                                            value="0",
                                                             allowDeselect=False,
                                                             leftSection=my_components.get_icon(
                                                                 "material-symbols:layers"
@@ -406,15 +405,15 @@ def update_image(
 
 @omero_image_psf_beads.expanded_callback(
     dash.dependencies.Output("channel_selector_psf_image", "data"),
+    dash.dependencies.Output("channel_selector_psf_image", "value"),
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_channels_psf_image(_, **kwargs):
     channel_names = kwargs["session_state"]["context"]["channel_names"]
-    channel_options = [
-        {"label": c.name, "value": f"{i}"}
+    return [
+        {"label": c.name, "value": str(i)}
         for i, c in enumerate(channel_names.channels)
-    ]
-    return channel_options
+    ], "0"
 
 
 @omero_image_psf_beads.expanded_callback(

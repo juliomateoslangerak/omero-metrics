@@ -45,7 +45,6 @@ def create_control_panel():
                         id="channel_dropdown",
                         label="Channel",
                         w="100%",
-                        value="0",
                         allowDeselect=False,
                         leftSection=my_components.get_icon(
                             "material-symbols:layers"
@@ -244,15 +243,16 @@ omero_image_foi.layout = dmc.MantineProvider(
 
 @omero_image_foi.expanded_callback(
     dash.dependencies.Output("channel_dropdown", "data"),
+    dash.dependencies.Output("channel_dropdown", "value"),
     [dash.dependencies.Input("blank-input", "children")],
 )
 def callback_channel(_, **kwargs):
-    channel_names = kwargs["session_state"]["context"]["channel_names"]
-    channel_list = [
-        {"label": c.name, "value": f"{i}", "description": f"Channel {i+1}"}
-        for i, c in enumerate(channel_names.channels)
-    ]
-    return channel_list
+    # TODO: This context element is confussing. Not channel_names but channels
+    channels = kwargs["session_state"]["context"]["channel_names"]
+    return [
+        {"label": c.name, "value": str(i), "description": f"Channel {i+1}"}
+        for i, c in enumerate(channels.channels)
+    ], "0"
 
 
 @omero_image_foi.expanded_callback(
