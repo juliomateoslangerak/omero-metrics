@@ -1,3 +1,5 @@
+import traceback
+
 import dash
 from dash import html
 from django_plotly_dash import DjangoDash
