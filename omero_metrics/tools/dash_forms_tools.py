@@ -4,18 +4,25 @@ from dash_iconify import DashIconify
 import re
 from typing import get_origin, get_args, Union
 
+# TODO: Modify the schema to make this a mm_schema class
+from linkml_runtime.utils.metamodelcore import XSDDateTime
+from microscopemetrics_schema.datamodel.microscopemetrics_schema import ProtocolUrl
 
-Field_TYPE_MAPPING = {
-    "float": [dmc.NumberInput, "carbon:character-decimal"],
-    "int": [dmc.NumberInput, "carbon:character-whole-number"],
-    "str": [dmc.TextInput, "carbon:string-text"],
+
+# These mappings must be ordered by priority
+FIELD_TYPE_MAPPING = {
+    XSDDateTime: [dmc.DateTimePicker, "carbon:calendar"],
+    ProtocolUrl: [dmc.TextInput, "carbon:copy-link"],
+    float: [dmc.NumberInput, "carbon:character-decimal"],
+    int: [dmc.NumberInput, "carbon:character-whole-number"],
+    bool: [dmc.Switch, "carbon:switch-disabled"],
+    str: [dmc.TextInput, "carbon:string-text"],
 }
 
 
 def extract_form_data(form_content):
     return {
-        i["props"]["id"].split(":")[1]: i["props"]["value"]
-        for i in form_content
+        i["props"]["id"].split(":")[1]: i["props"]["value"] for i in form_content
     }
 
 
@@ -29,7 +36,7 @@ def clean_field_name(field: str):
     return field.replace("_", " ").title()
 
 
-def get_field_types(field, supported_types=(str, int, float, bool)):
+def get_field_types(field):
     data_type = {
         "field_name": field.name,
         "type": None,
@@ -38,31 +45,32 @@ def get_field_types(field, supported_types=(str, int, float, bool)):
     }
     if get_origin(field.type) is Union:
         args = get_args(field.type)
-        if args[1] is type(None):
+        # Check if it's Optional (Union with None)
+        if type(None) in args:
             data_type["optional"] = True
-            data_type["type"] = args[0].__name__
-        elif args[0] in supported_types:
-            data_type["type"] = args[0].__name__
-        else:
-            data_type["type"] = "unsupported"
-    elif field.type in supported_types:
-        data_type["type"] = field.type.__name__
-    else:
-        data_type["type"] = "unsupported"
+            args = [arg for arg in args if arg is not type(None)]
+
+        # Select type by priority based on FIELD_TYPE_MAPPING order
+        selected_type = None
+        for priority_type in FIELD_TYPE_MAPPING.keys():
+            if priority_type in args:
+                selected_type = priority_type
+                break
+
+        data_type["type"] = selected_type
+    elif field.type in FIELD_TYPE_MAPPING.keys():
+        data_type["type"] = field.type
+
     return data_type
 
 
-def get_dmc_field_input(
-    field, mm_object, type_mapping=Field_TYPE_MAPPING, disabled=False
-):
+def get_dmc_field_input(field, mm_object, disabled=False):
     field_info = get_field_types(field)
-    input_field_name = type_mapping[field_info["type"]][0]
+    input_field_name = FIELD_TYPE_MAPPING[field_info["type"]][0]
     input_field = input_field_name()
     input_field.id = f"{mm_object.class_name}:{field_info['field_name']}"
     input_field.label = clean_field_name(field_info["field_name"])
-    input_field.placeholder = (
-        f"Enter {clean_field_name(field_info['field_name'])}"
-    )
+    input_field.placeholder = f"Enter {clean_field_name(field_info['field_name'])}"
     input_field.value = (
         field_info["default"]
         if getattr(mm_object, field.name) is None
@@ -72,7 +80,7 @@ def get_dmc_field_input(
     input_field.disabled = disabled
     input_field.required = not field_info["optional"]
     input_field.leftSection = DashIconify(
-        icon=type_mapping[field_info["type"]][1]
+        icon=FIELD_TYPE_MAPPING[field_info["type"]][1]
     )
     input_field.maxWidth = "450px"
 
