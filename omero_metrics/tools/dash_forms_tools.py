@@ -100,6 +100,7 @@ def get_form(mm_object, disabled=False, form_id="form_content"):
     form_content = dmc.Fieldset(
         id=form_id,
         children=[],
+        # TODO: we have to rather rely on the title of the class
         legend=add_space_between_capitals(mm_object.class_name),
         variant="filled",
         radius="md",
