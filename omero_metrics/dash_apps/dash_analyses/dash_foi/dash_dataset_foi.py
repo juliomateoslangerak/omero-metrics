@@ -399,6 +399,7 @@ def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:
     return df
 
 
+# TODO: These functions can be shared across dataset types
 @omero_dataset_foi.expanded_callback(
     dash.dependencies.Output("confirm_delete", "opened"),
     dash.dependencies.Output("notifications-container", "children"),
