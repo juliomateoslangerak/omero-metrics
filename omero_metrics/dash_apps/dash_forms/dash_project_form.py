@@ -413,7 +413,7 @@ def save_config_dash(
                 mm_input_parameters = mm_input_parameters(**input_parameters)
                 sample = dft.extract_form_data(sample_form)
                 mm_sample = mm_sample(**sample)
-                response, color = views.save_config(
+                response_type, response_msg = views.save_config(
                     request=request,
                     project_id=int(project_id),
                     input_parameters=mm_input_parameters,

@@ -521,21 +521,22 @@ def beads_scatter_plot(df, min_distance):
             (
                 df["bead_id"],
                 df["considered_valid"],
-                df["considered_axial_edge"],
                 df["considered_self_proximity"],
                 df["considered_lateral_edge"],
                 df["considered_intensity_outlier"],
+                df["considered_axial_edge"],
             ),
             axis=-1,
         ),
+        # TODO: We have to make this more robust (f-sting?)
         hovertemplate=(
             "<b>Bead Number:</b>  %{customdata[0]} <br>"
             "<b>Channel Number:</b>  %{text} <br>"
-            "<b>Considered valid:</b>  %{customdata[2]}<br>"
-            "<b>Considered self proximity:</b>  %{customdata[3]}<br>"
-            "<b>Considered lateral edge:</b>  %{customdata[4]}<br>"
-            "<b>Considered intensity outlier:</b>  %{customdata[5]}<br>"
-            "<b>Considered Axial Edge:</b> %{customdata[1]} <br><extra></extra>"
+            "<b>Considered valid:</b>  %{customdata[1]}<br>"
+            "<b>Considered self proximity:</b>  %{customdata[2]}<br>"
+            "<b>Considered lateral edge:</b>  %{customdata[3]}<br>"
+            "<b>Considered intensity outlier:</b>  %{customdata[4]}<br>"
+            "<b>Considered Axial Edge:</b> %{customdata[5]} <br><extra></extra>"
         ),
     )
 
