@@ -238,14 +238,13 @@ def save_config(request, conn=None, **kwargs):
                 "success",
                 "Configuration saved successfully. Select the project to see the changes.",
             )
+        except omero.SecurityViolation:
+            return (
+                "authorisation_error",
+                "You don't have the necessary permissions to save the configuration.",
+            )
         except Exception as e:
-            if isinstance(e, omero.SecurityViolation):
-                return (
-                    "authorisation_error",
-                    "You don't have the necessary permissions to save the configuration.",
-                )
-            else:
-                return "unidentified_error", str(e)
+            return "unidentified_error", str(e)
     except Exception as e:
         return "unidentified_error", str(e)
 
