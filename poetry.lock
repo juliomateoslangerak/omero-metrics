@@ -1909,7 +1909,7 @@ files = [
 
 [[package]]
 name = "microscopemetrics"
-version = "0.2.3.post48.dev0+aadd67f"
+version = "0.0.0"
 description = "A package providing analysis routines to measure the performance of microscopes used in biomedical research"
 optional = false
 python-versions = ">=3.9.18,<3.12"
@@ -1929,11 +1929,11 @@ virtualenv = ">=20.26.6,<20.33.0"
 type = "git"
 url = "https://github.com/juliomateoslangerak/microscope-metrics.git"
 reference = "dev"
-resolved_reference = "aadd67f7d7e888239f8588c62b0696432477fd78"
+resolved_reference = "7c11e4a49684abd70845323a4a18b8bc9c096006"
 
 [[package]]
 name = "microscopemetrics-schema"
-version = "0.0.0.post323.dev0+ae06512"
+version = "0.0.0"
 description = "A schema for microscope-metrics, a python package for microscope QC"
 optional = false
 python-versions = ">=3.9.18,<4.0"
