@@ -600,77 +600,37 @@ def update_config_project(submit_click, sample_form, input_form, **kwargs):
             mm_input_parameters = mm_input_parameters(**input_parameters)
             sample = dft.extract_form_data(sample_form)
             mm_sample = mm_sample(**sample)
-            response, color = views.save_config(
+            response_type, response_msg = views.save_config(
                 request=request,
                 project_id=int(project_id),
                 input_parameters=mm_input_parameters,
                 sample=mm_sample,
             )
             sleep(1)
-            return [
-                dmc.Alert(
-                    children=[
-                        dmc.Title(response, order=4),
-                        dmc.Text(
-                            (
-                                "Your configuration has been saved successfully."
-                                if color == "green"
-                                else "An error occurred while saving your configuration."
-                            ),
-                            size="sm",
-                        ),
-                    ],
-                    color=color,
-                    icon=my_components.get_icon(
-                        icon=(
-                            "mdi:check-circle"
-                            if color == "green"
-                            else "mdi:alert-circle"
-                        )
-                    ),
-                    title="Success!" if color == "green" else "Error!",
-                    radius="md",
-                    withCloseButton=True,
-                    duration=3000,
-                )
-            ], False
-        except Exception as e:
-            return [
-                dmc.Alert(
-                    children=[
-                        dmc.Title("Error", order=4),
-                        dmc.Text(str(e), size="sm"),
-                    ],
-                    color="red",
-                    icon=my_components.get_icon(icon="mdi:alert"),
-                    title="Error!",
-                    radius="md",
-                    withCloseButton=True,
-                    duration=3000,
-                )
-            ], False
-    else:
-        return [
-            dmc.Alert(
-                children=[
-                    dmc.Text("Please fill in all fields", size="sm"),
-                    dmc.Text(
-                        f"Sample form valid: {dft.validate_form(sample_form)}",
-                        size="sm",
-                    ),
-                    dmc.Text(
-                        f"Input parameter form valid: {dft.validate_form(input_form)}",
-                        size="sm",
-                    ),
-                ],
-                color="red",
-                icon=my_components.get_icon(icon="mdi:alert"),
-                title="Error!",
-                radius="md",
-                withCloseButton=True,
+
+            return my_components.alert_handler(
+                response_type,
+                response_msg,
+                with_close_button=True,
                 duration=3000,
             )
-        ], False
+        except Exception as e:
+            return my_components.alert_handler(
+                "unidentified error",
+                str(e),
+                response_details=traceback.format_exc(),
+                with_close_button=True,
+                duration=3000,
+            )
+    else:
+        return my_components.alert_handler(
+            "unidentified error",  # TODO: Make datatype error
+            "Please fill in all fields",
+            response_details=f"Sample form valid: {dft.validate_form(sample_form)}\n"
+            f"Input parameter form valid: {dft.validate_form(input_form)}",
+            with_close_button=True,
+            duration=3000,
+        )
 
 
 @omero_project_dash.expanded_callback(
@@ -780,26 +740,15 @@ def threshold_callback1(*args, **kwargs):
         request = kwargs["request"]
         project_id = kwargs["session_state"]["context"]["project_id"]
         if output and args[0] > 0:
-            response, color = views.save_threshold(
+            response_type, response_msg = views.save_threshold(
                 request=request,
                 project_id=int(project_id),
                 threshold=output,
             )
-            return (
-                dmc.Notification(
-                    title="Thresholds Updated",
-                    id="simple-notify",
-                    color=color,
-                    action="show",
-                    message=response,
-                    icon=(
-                        my_components.get_icon(icon="ic:round-celebration")
-                        if color == "green"
-                        else my_components.get_icon(icon="ic:round-error")
-                    ),
-                ),
-                False,
-            )
+
+            return my_components.notification_handler(
+                response_type, response_msg, None
+            )[1:]
         else:
             return dash.no_update, False
     except Exception as e:
@@ -863,22 +812,13 @@ def delete_project(*args, **kwargs):
             and args[0] > 0
         ):
             sleep(1)
-            msg, color = views.delete_project(request, project_id=project_id)
-            message = dmc.Notification(
-                title="Notification!",
-                id="simple-notify",
-                action="show",
-                message=msg,
-                icon=my_components.get_icon(
-                    icon=(
-                        "akar-icons:circle-check"
-                        if color == "green"
-                        else "akar-icons:circle-x"
-                    )
-                ),
-                color=color,
+            response_type, response_msg = views.delete_project(
+                request, project_id=project_id
             )
-            return opened, message, False
+
+            return my_components.notification_handler(
+                response_type, response_msg, opened
+            )
         else:
             return opened, None, False
     except Exception as e:

@@ -1,5 +1,6 @@
 from django.utils.datetime_safe import datetime
 from django.shortcuts import render
+from microscopemetrics import AnalysisError, SaturationError
 from omeroweb.webclient.decorators import login_required
 from microscopemetrics_schema import datamodel as mm_schema
 from omero_metrics.tools import load
@@ -238,19 +239,19 @@ def save_config(request, conn=None, **kwargs):
                 conn, mm_input_parameters, mm_sample, project_wrapper
             )
             return (
-                "File saved successfully, Re-click on the project to see the changes",
-                "green",
+                "success",
+                "Configuration saved successfully. Select the project to see the changes.",
             )
         except Exception as e:
             if isinstance(e, omero.SecurityViolation):
                 return (
-                    "You don't have the necessary permissions to save the configuration. ",
-                    "red",
+                    "authorisation_error",
+                    "You don't have the necessary permissions to save the configuration.",
                 )
             else:
-                return str(e), "red"
+                return "unidentified_error", str(e)
     except Exception as e:
-        return str(e), "red"
+        return "unidentified_error", str(e)
 
 
 @login_required(setGroupContext=True)
@@ -304,11 +305,18 @@ def run_analysis_view(request, conn=None, **kwargs):
         try:
             # Run the analysis
             data_type.DATA_TYPE[mm_input_parameters.class_name][3](mm_dataset)
+        except AnalysisError or SaturationError as e:
+            logger.error(f"{e}")
+            return ("analysis_error", str(e), e.suggestion)
         except Exception as e:
-            tb = traceback.format_exc()
             logger.error(f"Error running the analysis: {e}")
-            logger.error(tb)
-            return (tb, "red")
+            return (
+                "unidentified_error",
+                "Error during analysis run:\n"
+                f"{e}\n"
+                "Please, contact support with the following traceback:",
+                traceback.format_exc(),
+            )
         if mm_dataset.processed:
             try:
                 if comment:
@@ -328,17 +336,38 @@ def run_analysis_view(request, conn=None, **kwargs):
                     dump_analysis=True,
                 )
 
-                return "Analysis completed successfully", "green"
-            except Exception as e:
+                logger.info(f"Analysis completed successfully")
                 return (
-                    str(e),
-                    "red",
+                    "success",
+                    "Analysis completed successfully.",
+                    mm_dataset.description,
+                )
+            except Exception as e:
+                logger.error(f"Error saving the analysis: {e}")
+                return (
+                    "unidentified_error",
+                    "Error while saving the analysis.\n"
+                    f"{e}\n"
+                    "Please, contact support with the following traceback:",
+                    traceback.format_exc(),
                 )
         else:
-            logger.error("Analysis failed")
-            return "We couldn't process the analysis.", "red"
+            logger.error("Analysis run but dataset.processed is False.")
+            return (
+                "unidentified_error",
+                "Analysis run but something prevented it to be tagged as processed.\n"
+                "Please, contact support with the following traceback:",
+                traceback.format_exc(),
+            )
     except Exception as e:
-        return str(e), "red"
+        logger.error(f"Error during run_analysis_view execution: {e}")
+        return (
+            "unidentified_error",
+            "run_analysis_view could not proceed.\n"
+            f"{e}\n"
+            "Please, contact support with the following traceback:",
+            traceback.format_exc(),
+        )
 
 
 @login_required(setGroupContext=True)
@@ -350,10 +379,9 @@ def delete_all(request, conn=None, **kwargs):
             pm = data_managers.ProjectManager(conn, project)
             pm.load_data()
             pm.delete_processed_data()
-        message, color = delete.delete_all_annotations(conn, group_id)
-        return message, color
+        return delete.delete_all_annotations(conn, group_id)
     except Exception as e:
-        return str(e), "red"
+        return "unidentified_error", str(e)
 
 
 @login_required(setGroupContext=True)
@@ -366,9 +394,9 @@ def delete_dataset(request, conn=None, **kwargs):
     dm.load_data()
     try:
         dm.delete_processed_data(conn)
-        return "Output deleted successfully", "green"
+        return "success", "Output deleted successfully."
     except Exception as e:
-        return str(e), "red"
+        return "unidentified_error", str(e)
 
 
 @login_required(setGroupContext=True)
@@ -381,9 +409,9 @@ def delete_project(request, conn=None, **kwargs):
     pm.load_data()
     try:
         pm.delete_processed_data()
-        return "Output deleted successfully", "green"
+        return "success", "Output deleted successfully."
     except Exception as e:
-        return str(e), "red"
+        return "unidentified_error", str(e)
 
 
 @login_required(setGroupContext=True)
@@ -411,27 +439,30 @@ def save_threshold(request, conn=None, **kwargs):
                 )
             dump.dump_threshold(conn, project_wrapper, threshold)
             return (
-                "Threshold saved successfully, Re-click on the project to see the changes",
-                "green",
+                "success",
+                "Threshold saved successfully. Select the project to see the changes.",
             )
         else:
             return (
-                "Failed to save threshold, a configuration file doesn't exist",
-                "red",
+                "unidentified_error",
+                "Failed to save threshold Configuration file doesn't exist.",
             )
     except Exception as e:
         if isinstance(e, omero.SecurityViolation):
             return (
-                "You don't have the necessary permissions to save the threshold. ",
-                "red",
+                "authorisation_error",
+                "You don't have the necessary permissions to save the threshold.",
             )
         elif isinstance(e, omero.CmdError):
             return (
-                "You don't have the necessary permissions to save the threshold. ",
-                "red",
+                "unidentified_error",
+                "You don't have the necessary permissions to save the threshold.",
             )
         else:
-            return "Something happened. Couldn't save thresholds.", "red"
+            return (
+                "unidentified_error",
+                "Something happened. Couldn't save thresholds.",
+            )
 
 
 @login_required(setGroupContext=True)

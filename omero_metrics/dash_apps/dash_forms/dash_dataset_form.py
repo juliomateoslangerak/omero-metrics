@@ -1,3 +1,5 @@
+import traceback
+
 import dash
 from dash import html
 from django_plotly_dash import DjangoDash
@@ -424,7 +426,7 @@ def run_analysis(_, list_images, current, comment, **kwargs):
             sample_object = getattr(mm_schema, sample["type"])
             mm_sample = sample_object(**sample["fields"])
 
-            msg, color = run_analysis_view(
+            response_type, response_msg, response_details = run_analysis_view(
                 request=kwargs["request"],
                 dataset_id=dataset_id,
                 mm_sample=mm_sample,
@@ -433,64 +435,14 @@ def run_analysis(_, list_images, current, comment, **kwargs):
                 comment=comment,
             )
 
-            return (
-                dmc.Alert(
-                    children=[
-                        dmc.Title(
-                            children=(
-                                "Your analysis completed successfully!"
-                                if color == "green"
-                                else "Oops! something happened"
-                            ),
-                            order=4,
-                        ),
-                        (
-                            dmc.Code(
-                                msg,
-                                block=True,
-                            )
-                            if color == "red"
-                            else dmc.Text(
-                                msg,
-                                size="sm",
-                            )
-                        ),
-                    ],
-                    color=color,
-                    icon=my_components.get_icon(
-                        icon=(
-                            "mdi:check-circle"
-                            if color == "green"
-                            else "mdi:alert"
-                        )
-                    ),
-                    title="Success!" if color == "green" else "Error!",
-                    radius="md",
-                ),
-                False,
+            return my_components.alert_handler(
+                response_type, response_msg, response_details
             )
-        except SaturationError as e:
-            return dmc.Alert(
-                children=[
-                    dmc.Title("Saturation Error", order=4),
-                    dmc.Text(str(e), size="sm"),
-                ],
-                color="red",
-                icon=DashIconify(icon="mdi:scissors-cutting"),
-                title="Error!",
-                radius="md",
-            )
+
         except Exception as e:
-            return dmc.Alert(
-                children=[
-                    dmc.Title("Error", order=4),
-                    dmc.Text(str(e), size="sm"),
-                ],
-                color="red",
-                icon=my_components.get_icon(icon="mdi:alert"),
-                title="Error!",
-                radius="md",
-            )
+            return my_components.alert_handler(
+                "unidentified_error", f"{e}", traceback.format_exc()
+            )[:1]
     return dash.no_update, False
 
 

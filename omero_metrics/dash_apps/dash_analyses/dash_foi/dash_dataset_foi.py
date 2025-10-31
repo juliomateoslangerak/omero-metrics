@@ -426,22 +426,13 @@ def delete_dataset(*args, **kwargs):
     opened = not args[3]
     if triggered_button == "modal-submit-button.n_clicks" and args[0] > 0:
         sleep(1)
-        msg, color = views.delete_dataset(request, dataset_id=dataset_id)
-        message = dmc.Notification(
-            title="Notification!",
-            id="simple-notify",
-            action="show",
-            message=msg,
-            icon=my_components.get_icon(
-                icon=(
-                    "akar-icons:circle-check"
-                    if color == "green"
-                    else "akar-icons:circle-x"
-                )
-            ),
-            color=color,
+        response_type, response_msg = views.delete_dataset(
+            request, dataset_id=dataset_id
         )
-        return opened, message, False
+
+        return my_components.notification_handler(
+            response_type, response_msg, opened
+        )
     else:
         return opened, None, False
 

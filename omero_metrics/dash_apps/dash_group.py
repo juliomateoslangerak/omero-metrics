@@ -356,22 +356,11 @@ def delete_all_callback(*args, **kwargs):
     opened = not args[3]
     if triggered_button == "modal-submit-button.n_clicks" and args[0] > 0:
         sleep(1)
-        msg, color = views.delete_all(request, group_id=group_id)
-        message = dmc.Notification(
-            title="Notification!",
-            id="simple-notify",
-            action="show",
-            message=msg,
-            icon=my_components.get_icon(
-                icon=(
-                    "akar-icons:circle-check"
-                    if color == "green"
-                    else "akar-icons:circle-x"
-                )
-            ),
-            color=color,
+        response_type, response_msg = views.delete_all(request, group_id=group_id)
+
+        return my_components.notification_handler(
+            response_type, response_msg, opened
         )
-        return opened, message, False
     else:
         return opened, None, False
 
@@ -397,9 +386,7 @@ dash_app_group.clientside_callback(
         return false;
     }
     """,
-    dash.dependencies.Output(
-        "modal-submit-button", "loading", allow_duplicate=True
-    ),
+    dash.dependencies.Output("modal-submit-button", "loading", allow_duplicate=True),
     dash.dependencies.Input("modal-submit-button", "n_clicks"),
     prevent_initial_call=True,
 )

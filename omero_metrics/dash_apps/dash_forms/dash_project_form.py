@@ -419,42 +419,12 @@ def save_config_dash(
                     input_parameters=mm_input_parameters,
                     sample=mm_sample,
                 )
-                return [
-                    dmc.Alert(
-                        children=[
-                            dmc.Title(response, order=4),
-                            dmc.Text(
-                                (
-                                    "Your configuration has been saved successfully."
-                                    if color == "green"
-                                    else "An error occurred while saving your configuration."
-                                ),
-                                size="sm",
-                            ),
-                        ],
-                        color=color,
-                        icon=my_components.get_icon(
-                            icon=(
-                                "mdi:check-circle"
-                                if color == "green"
-                                else "mdi:alert-circle"
-                            )
-                        ),
-                        title="Success!" if color == "green" else "Error!",
-                        radius="md",
-                    )
-                ], False
+                sleep(1)
+
+                return my_components.alert_handler(response_type, response_msg)
             except Exception as e:
-                return [
-                    dmc.Alert(
-                        children=[
-                            dmc.Title("Error", order=4),
-                            dmc.Text(str(e), size="sm"),
-                        ],
-                        color="red",
-                        icon=my_components.get_icon(icon="mdi:alert"),
-                        title="Error!",
-                        radius="md",
-                    )
-                ], False
+                return my_components.alert_handler(
+                    "unidentified_error", str(e), traceback.format_exc()
+                )
+
     return dash.no_update, False

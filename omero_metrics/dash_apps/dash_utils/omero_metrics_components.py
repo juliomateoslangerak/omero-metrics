@@ -16,6 +16,73 @@ import pandas as pd
 from omero_metrics.styles import COLORS_CHANNELS
 
 
+def alert_handler(
+    response_type,
+    response_msg,
+    response_details=None,
+    with_close_button=None,
+    duration=None,
+):
+
+    if response_type == "success":
+        title = "Success!"
+        icon = get_icon(icon="radix-icons:check")
+        color = "green"
+    elif response_type == "authorisation_error":
+        title = "Authorisation Error!"
+        icon = get_icon(icon="radix-icons:lock-closed")
+        color = "red"
+    elif response_type == "analysis_error":
+        title = "Analysis Error!"
+        icon = get_icon(icon="radix-icons:alert")
+        color = "orange"
+    elif response_type == "unidentified_error":
+        title = "Error!"
+        icon = get_icon(icon="radix-icons:alert")
+        color = "red"
+
+    children = [dmc.Text(response_msg, size="sm")]
+    if response_details:
+        children.append(dmc.Code(response_details, block=True))
+
+    return [
+        dmc.Alert(
+            children=children,
+            color=color,
+            icon=icon,
+            title=title,
+            radius="md",
+            withCloseButton=with_close_button,
+            duration=duration,
+        )
+    ], False
+
+
+def notification_handler(response_type, response_msg, opened):
+    if response_type == "success":
+        title = "Success!"
+        icon = get_icon(icon="radix-icons:check")
+        color = "green"
+    elif response_type == "authorisation_error":
+        title = "Authorisation Error!"
+        icon = get_icon(icon="radix-icons:lock-closed")
+        color = "red"
+    elif response_type == "unidentified_error":
+        title = "Error!"
+        icon = get_icon(icon="radix-icons:alert")
+        color = "red"
+
+    notification = dmc.Notification(
+        title=title,
+        id="simple-notify",
+        action="show",
+        message=response_msg,
+        icon=icon,
+        color=color,
+    )
+    return opened, notification, False
+
+
 def get_icon(icon, size=20, color=None):
     return DashIconify(icon=icon, height=size, color=color)
 

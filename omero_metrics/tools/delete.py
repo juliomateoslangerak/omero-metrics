@@ -97,14 +97,14 @@ def delete_all_annotations(conn, group_id):
                 wait=True,
             )
         return "All microscopemetrics analysis deleted", "green"
+    # TODO: Introduce proper authorisation error
+    except omero.CmdError as e:
+        return (
+            "authorisation_error",
+            "You don't have the necessary permissions to delete the annotations.",
+        )
     except Exception as e:
-        if isinstance(e, omero.CmdError):
-            return (
-                "You don't have the necessary permissions to delete the annotations.",
-                "red",
-            )
-        else:
-            return (
-                "Something happened. Couldn't delete the annotations.",
-                "red",
-            )
+        return (
+            "unidentified_error",
+            "Something happened. Couldn't delete the annotations.",
+        )
