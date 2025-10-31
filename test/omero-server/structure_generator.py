@@ -308,9 +308,7 @@ def generate_users_groups(conn, users: dict, groups: dict):
                 group["name"],
             ]
         )
-        group_id = (
-            conn.c.sf.getAdminService().lookupGroup(group["name"]).id.val
-        )
+        group_id = conn.c.sf.getAdminService().lookupGroup(group["name"]).id.val
 
         cli.invoke(
             [
@@ -416,9 +414,7 @@ if __name__ == "__main__":
     # port = int(input("OMERO port: ") or 4064)
     # username = input("OMERO username: ")
     # password = input("OMERO password: ")
-    conn = BlitzGateway(
-        "root", "omero", host="localhost", port=6064, secure=True
-    )
+    conn = BlitzGateway("root", "omero", host="localhost", port=6064, secure=True)
 
     try:
         # conn = BlitzGateway(username, password, host=host, port=port, secure=True)
@@ -438,9 +434,9 @@ if __name__ == "__main__":
                 mm_project = mm_schema.HarmonizedMetricsDatasetCollection(
                     name=project["name_project"],
                     description=project["description_project"],
-                    dataset_collection=GENERATOR_MAPPER[
-                        project["dataset_class"]
-                    ](project, microscope_name),
+                    dataset_collection=GENERATOR_MAPPER[project["dataset_class"]](
+                        project, microscope_name
+                    ),
                     dataset_class=project["dataset_class"],
                 )
                 time.sleep(60)
@@ -467,9 +463,7 @@ if __name__ == "__main__":
                 )
                 attachment_files = [
                     os.path.join(dir_path, f)
-                    for (dir_path, dir_names, filenames) in os.walk(
-                        dir_attachments
-                    )
+                    for (dir_path, dir_names, filenames) in os.walk(dir_attachments)
                     for f in filenames
                 ]
                 for file_path in attachment_files:

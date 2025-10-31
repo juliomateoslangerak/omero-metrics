@@ -41,9 +41,7 @@ class OMEROMetricsConfig(AppConfig):
         ]
         if hasattr(settings, "PLOTLY_COMPONENTS"):
             settings.PLOTLY_COMPONENTS.extend(
-                c
-                for c in plotly_components
-                if c not in settings.PLOTLY_COMPONENTS
+                c for c in plotly_components if c not in settings.PLOTLY_COMPONENTS
             )
         else:
             settings.PLOTLY_COMPONENTS = plotly_components

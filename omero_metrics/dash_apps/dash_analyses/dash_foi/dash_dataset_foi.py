@@ -38,9 +38,7 @@ omero_dataset_foi.layout = dmc.MantineProvider(
             title="Confirm Delete",
             id="confirm_delete",
             children=[
-                dmc.Text(
-                    "Are you sure you want to delete this dataset outputs?"
-                ),
+                dmc.Text("Are you sure you want to delete this dataset outputs?"),
                 dmc.Space(h=20),
                 dmc.Group(
                     [
@@ -384,12 +382,8 @@ def update_profile_type(channel, curve_type, **kwargs):
             df_profile.columns.str.replace(
                 "ch\d+_leftTop_to_rightBottom", "Diagonal (↘)", regex=True
             )
-            .str.replace(
-                "ch\d+_leftBottom_to_rightTop", "Diagonal (↗)", regex=True
-            )
-            .str.replace(
-                "ch\d+_center_horizontal", "Horizontal (→)", regex=True
-            )
+            .str.replace("ch\d+_leftBottom_to_rightTop", "Diagonal (↗)", regex=True)
+            .str.replace("ch\d+_center_horizontal", "Horizontal (→)", regex=True)
             .str.replace("ch\d+_center_vertical", "Vertical (↓)", regex=True)
         )
         return df_profile.to_dict("records"), curve_type
@@ -450,9 +444,7 @@ def download_dataset_data(*args, **kwargs):
     if not kwargs["callback_context"].triggered:
         raise dash.no_update
 
-    triggered_id = (
-        kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
-    )
+    triggered_id = kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
     mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
     file_name = mm_dataset.name
     yaml_dumper = YAMLDumper()
@@ -488,9 +480,7 @@ def download_table_data(*args, **kwargs):
     if not kwargs["callback_context"].triggered:
         raise dash.no_update
 
-    triggered_id = (
-        kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
-    )
+    triggered_id = kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
     table_km = load.get_km_mm_metrics_dataset(
         mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
         table_name="key_measurements",
@@ -519,9 +509,7 @@ omero_dataset_foi.clientside_callback(
         return false;
     }
     """,
-    dash.dependencies.Output(
-        "modal-submit-button", "loading", allow_duplicate=True
-    ),
+    dash.dependencies.Output("modal-submit-button", "loading", allow_duplicate=True),
     dash.dependencies.Input("modal-submit-button", "n_clicks"),
     prevent_initial_call=True,
 )

@@ -224,18 +224,14 @@ def load_dataset(
                 )
                 input_image.array_data = _load_image_intensities(image_wrapper)
         else:
-            input_images = [
-                load_image(image) for image in dataset.listChildren()
-            ]
+            input_images = [load_image(image) for image in dataset.listChildren()]
             setattr(
                 mm_dataset,
                 INPUT_IMAGES_MAPPING[mm_dataset.__class__.__name__],
                 input_images,
             )
     else:
-        setattr(
-            mm_dataset, INPUT_IMAGES_MAPPING[mm_dataset.__class__.__name__], []
-        )
+        setattr(mm_dataset, INPUT_IMAGES_MAPPING[mm_dataset.__class__.__name__], [])
 
     return mm_dataset
 
@@ -282,9 +278,7 @@ def load_analysis_config(project_wrapper=ProjectWrapper):
     return configs[-1].getId(), dict(configs[-1].getValue())
 
 
-def load_image(
-    image: ImageWrapper, load_array: bool = True
-) -> mm_schema.Image:
+def load_image(image: ImageWrapper, load_array: bool = True) -> mm_schema.Image:
     """Load an image from OMERO and return it as a schema Image"""
     time_series = None
     channel_series = mm_schema.ChannelSeries(
@@ -416,9 +410,7 @@ def get_rois_mm_dataset(mm_dataset: mm_schema.MetricsDataset):
             ):
                 roi = roi_finder(output[field])
                 if roi:
-                    images_info[item[0]]["roi"][roi["type"]].extend(
-                        roi["data"]
-                    )
+                    images_info[item[0]]["roi"][roi["type"]].extend(roi["data"])
             elif (
                 isinstance(output[field], list)
                 and len(output[field]) == len(images_info)
@@ -426,9 +418,7 @@ def get_rois_mm_dataset(mm_dataset: mm_schema.MetricsDataset):
             ):
                 roi = roi_finder(output[field][i])
                 if roi:
-                    images_info[item[0]]["roi"][roi["type"]].extend(
-                        roi["data"]
-                    )
+                    images_info[item[0]]["roi"][roi["type"]].extend(roi["data"])
     return images_info
 
 
@@ -447,9 +437,7 @@ def get_km_mm_metrics_dataset(
 ):
     table = mm_dataset.output[table_name]
     table_data = {
-        k: v
-        for k, v in table.__dict__.items()
-        if k not in columns_exceptions and v
+        k: v for k, v in table.__dict__.items() if k not in columns_exceptions and v
     }
     df = pd.DataFrame(table_data)
     df = df.replace("nan", np.nan)
@@ -475,11 +463,7 @@ def load_table_mm_metrics(table):
                 pass
 
         return df
-    elif (
-        table
-        and isinstance(table, list)
-        and isinstance(table[0], mm_schema.Table)
-    ):
+    elif table and isinstance(table, list) and isinstance(table[0], mm_schema.Table):
         df_list = []
         start = 0
         for i, t in enumerate(table):

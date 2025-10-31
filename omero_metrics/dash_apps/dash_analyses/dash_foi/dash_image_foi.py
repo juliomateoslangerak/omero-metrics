@@ -265,9 +265,7 @@ def callback_channel(_, **kwargs):
         dash.dependencies.Input("segmented", "value"),
     ],
 )
-def callback_image(
-    channel, color, checked_contour, inverted_color, roi, **kwargs
-):
+def callback_image(channel, color, checked_contour, inverted_color, roi, **kwargs):
     mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
     image_id = kwargs["session_state"]["context"]["image_id"]
     if inverted_color:

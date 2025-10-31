@@ -92,9 +92,7 @@ dash_form_dataset.layout = dmc.MantineProvider(
                                                     fw=500,
                                                     mb="md",
                                                 ),
-                                                html.Div(
-                                                    id="sample_container"
-                                                ),
+                                                html.Div(id="sample_container"),
                                             ],
                                         )
                                     ],
@@ -290,9 +288,7 @@ def update_sample(_, **kwargs):
 )
 def list_images_multi_selector(_, **kwargs):
     list_images = kwargs["session_state"]["context"]["list_images"]
-    return list_images, [
-        list_images[i]["value"] for i, _ in enumerate(list_images)
-    ]
+    return list_images, [list_images[i]["value"] for i, _ in enumerate(list_images)]
 
 
 @dash_form_dataset.expanded_callback(
@@ -326,9 +322,7 @@ def update_review_form(
         clearable=False,
         w="auto",
         disabled=True,
-        leftSection=my_components.get_icon(
-            icon="material-symbols-light:image"
-        ),
+        leftSection=my_components.get_icon(icon="material-symbols-light:image"),
         rightSection=my_components.get_icon(icon="radix-icons:chevron-down"),
     )
     if current == 1:
@@ -386,9 +380,7 @@ dash_form_dataset.clientside_callback(
         }
     }
     """,
-    dash.dependencies.Output(
-        "loading-overlay", "visible", allow_duplicate=True
-    ),
+    dash.dependencies.Output("loading-overlay", "visible", allow_duplicate=True),
     dash.dependencies.Input("next-basic-usage", "n_clicks"),
     dash.dependencies.State("stepper-basic-usage", "active"),
     prevent_initial_call=True,
@@ -410,16 +402,12 @@ def run_analysis(_, list_images, current, comment, **kwargs):
     dataset_id = kwargs["session_state"]["context"]["dataset_id"]
     if current == 2:
         sleep(1)
-        input_parameters = kwargs["session_state"]["context"][
+        input_parameters = kwargs["session_state"]["context"]["input_parameters"][
             "input_parameters"
-        ]["input_parameters"]
-        sample = kwargs["session_state"]["context"]["input_parameters"][
-            "sample"
         ]
+        sample = kwargs["session_state"]["context"]["input_parameters"]["sample"]
         try:
-            input_parameters_object = getattr(
-                mm_schema, input_parameters["type"]
-            )
+            input_parameters_object = getattr(mm_schema, input_parameters["type"])
             mm_input_parameters = input_parameters_object(
                 **input_parameters["fields"]
             )

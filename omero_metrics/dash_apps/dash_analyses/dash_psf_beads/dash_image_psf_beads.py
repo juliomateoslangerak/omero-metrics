@@ -127,9 +127,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                                 },
                                                             ],
                                                             fullWidth=True,
-                                                            color=THEME[
-                                                                "primary"
-                                                            ],
+                                                            color=THEME["primary"],
                                                             # w='auto'
                                                         ),
                                                         dmc.Stack(
@@ -145,7 +143,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                                 dmc.Checkbox(
                                                                     id="roi_checkbox_psf_image",
                                                                     label="Show ROI Boundaries",
-                                                                    checked=False,
+                                                                    checked=True,
                                                                     color=THEME[
                                                                         "primary"
                                                                     ],
@@ -189,9 +187,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                             label="Invert Colors",
                                                             checked=False,
                                                             size="md",
-                                                            color=THEME[
-                                                                "primary"
-                                                            ],
+                                                            color=THEME["primary"],
                                                         ),
                                                     ],
                                                     gap="sm",
@@ -325,16 +321,12 @@ def update_icon(axis):
         dash.dependencies.Input("beads_info_segmented", "value"),
     ],
 )
-def update_image(
-    channel_index, color, invert, contour, roi, beads_info, **kwargs
-):
+def update_image(channel_index, color, invert, contour, roi, beads_info, **kwargs):
     try:
         mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
         image_id = int(kwargs["session_state"]["context"]["image_id"])
         channel_index = int(channel_index)
-        min_distance = int(
-            mm_dataset.input_parameters.min_lateral_distance_factor
-        )
+        min_distance = int(mm_dataset.input_parameters.min_lateral_distance_factor)
         bead_properties_df = load.load_table_mm_metrics(
             mm_dataset.output["bead_properties"]
         )
@@ -372,13 +364,9 @@ def update_image(
             fig.update_yaxes(autorange="reversed")
 
         if beads_info == "beads_info":
-            fig.update_traces(
-                visible=True, selector=dict(name="Beads Locations")
-            )
+            fig.update_traces(visible=True, selector=dict(name="Beads Locations"))
         else:
-            fig.update_traces(
-                visible=False, selector=dict(name="Beads Locations")
-            )
+            fig.update_traces(visible=False, selector=dict(name="Beads Locations"))
 
         fig.update_layout(
             paper_bgcolor="rgba(0,0,0,0)",
@@ -448,9 +436,7 @@ def callback_mip(points, axis, channel_index, **kwargs):
     if point["curveNumber"] == 1:
         bead_index = point["pointNumber"]
 
-        bead = df_beads_location.loc[
-            df_beads_location["bead_id"] == bead_index, :
-        ]
+        bead = df_beads_location.loc[df_beads_location["bead_id"] == bead_index, :]
         stack = kwargs["session_state"]["context"]["image"][
             0, :, :, :, channel_index
         ]
@@ -483,13 +469,9 @@ def callback_mip(points, axis, channel_index, **kwargs):
 
 def line_graph_axis(bead_index, channel_index, axis, kwargs):
     mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
-    df_axis = load.load_table_mm_metrics(
-        mm_dataset.output[f"bead_profiles_{axis}"]
-    )
+    df_axis = load.load_table_mm_metrics(mm_dataset.output[f"bead_profiles_{axis}"])
     image_id = kwargs["session_state"]["context"]["image_id"]
-    df_x = df_axis.filter(
-        regex=f"^{image_id}_{channel_index}_{bead_index}_{axis}_"
-    )
+    df_x = df_axis.filter(regex=f"^{image_id}_{channel_index}_{bead_index}_{axis}_")
     df_x.columns = df_x.columns.str.split("_").str[-1]
     fig_ip_x = px.line(df_x)
     fig_ip_x.update_traces(

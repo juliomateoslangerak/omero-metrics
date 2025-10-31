@@ -94,9 +94,7 @@ def process_dataset(dataset: DatasetWrapper, config: dict) -> None:
     logger.info(f"Analyzing data from Dataset: {dataset.getId()}")
     logger.info(config)
 
-    for analysis_name, analysis_config in config["study_config"][
-        "analysis"
-    ].items():
+    for analysis_name, analysis_config in config["study_config"]["analysis"].items():
         if analysis_config["do_analysis"]:
             logger.info(f"Running analysis {analysis_name}...")
             start_time = datetime.now()

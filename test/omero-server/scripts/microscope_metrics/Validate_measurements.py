@@ -206,9 +206,7 @@ def run_script():
                 script_params[key] = client.getInput(key, unwrap=True)
 
         if script_params["Confirm validation"]:
-            logger.info(
-                f"Validation started using parameters: \n{script_params}"
-            )
+            logger.info(f"Validation started using parameters: \n{script_params}")
 
             conn = gateway.BlitzGateway(client_obj=client)
 

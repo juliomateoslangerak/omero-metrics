@@ -91,9 +91,7 @@ dash_app_group.layout = dmc.MantineProvider(
                         ),
                         dmc.TabsTab(
                             "History",
-                            leftSection=my_components.get_icon(
-                                icon="bx:history"
-                            ),
+                            leftSection=my_components.get_icon(icon="bx:history"),
                             value="history",
                             color=THEME["primary"],
                             style=TAB_ITEM_STYLE,
