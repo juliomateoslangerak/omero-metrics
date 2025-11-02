@@ -231,19 +231,15 @@ def psf_beads_generator(args, microscope_name):
                                     args["sigma_x"]["min"],
                                     args["sigma_x"]["max"],
                                 ),
-                                target_min_intensity=random.uniform(
-                                    args["target_min_intensity"]["min"],
-                                    args["target_min_intensity"]["max"],
+                                background=random.uniform(
+                                    args["background"]["min"],
+                                    args["background"]["max"],
                                 ),
-                                target_max_intensity=random.uniform(
-                                    args["target_max_intensity"]["min"],
-                                    args["target_max_intensity"]["max"],
-                                ),
-                                do_noise=True,
-                                signal=random.randint(
+                                signal=random.uniform(
                                     args["signal"]["min"],
                                     args["signal"]["max"],
                                 ),
+                                do_noise=True,
                                 dtype=BIT_DEPTH_TO_DTYPE[args["bit_depth"]],
                             )[0],
                             name=f"{args['name_dataset']}_{dates[dataset_id]}",

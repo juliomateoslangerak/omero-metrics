@@ -187,15 +187,12 @@ projects:
       sigma_x:
         min: 1.0
         max: 1.2
-      target_min_intensity:
-        min: 0.3
-        max: 0.45
-      target_max_intensity:
-        min: 0.8
-        max: 0.9
+      background:
+        min: 0.01
+        max: 0.02
       signal:
-        min: 100
-        max: 1000
+        min: 0.7
+        max: 0.9
       bit_depth: 16
   IGH-SP8:
     field_illumination_1:
@@ -320,13 +317,10 @@ projects:
       sigma_x:
         min: 1.0
         max: 1.2
-      target_min_intensity:
-        min: 0.3
-        max: 0.45
-      target_max_intensity:
-        min: 0.8
-        max: 0.9
+      background:
+        min: 0.01
+        max: 0.02
       signal:
-        min: 100
-        max: 1000
+        min: 0.7
+        max: 0.9
       bit_depth: 16
