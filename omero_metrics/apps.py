@@ -6,6 +6,7 @@ import logging
 class OMEROMetricsConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "omero_metrics"
+    verbose_name = "OMERO Metrics"
 
     def ready(self):
         # Call functions to dynamically modify settings
