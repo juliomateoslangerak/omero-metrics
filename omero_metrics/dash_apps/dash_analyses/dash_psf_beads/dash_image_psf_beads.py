@@ -222,6 +222,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                     ],
                                                     justify="space-between",
                                                 ),
+                                                # TODO: change here the beads MIP
                                                 dcc.Graph(
                                                     id="mip_image",
                                                     figure={},
@@ -244,6 +245,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                                         "primary"
                                                                     ],
                                                                 ),
+                                                                # TODO: Change here bead intensity profiles
                                                                 dmc.Select(
                                                                     data=[
                                                                         {
