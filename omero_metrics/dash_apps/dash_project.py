@@ -156,7 +156,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                                                             icon="ph:calendar"
                                                         ),
                                                         miw=150,
-                                                        disabledDates=True,
+                                                        disabled=True,
                                                         styles=DATEPICKER_STYLES,
                                                     ),
                                                 ],
@@ -327,10 +327,11 @@ omero_project_dash.layout = dmc.MantineProvider(
 
 @omero_project_dash.expanded_callback(
     dash.dependencies.Output("project-dropdown", "data"),
+    dash.dependencies.Output("project-dropdown", "value"),
     dash.dependencies.Output("date-picker", "minDate"),
     dash.dependencies.Output("date-picker", "maxDate"),
     dash.dependencies.Output("date-picker", "value"),
-    dash.dependencies.Output("date-picker", "disabledDates"),
+    dash.dependencies.Output("date-picker", "disabled"),
     dash.dependencies.Output("project-dropdown", "disabled"),
     dash.dependencies.Output("activate_download", "disabled"),
     dash.dependencies.Output("delete_data", "disabled"),
@@ -346,9 +347,10 @@ def update_dropdown(*args, **kwargs):
         max_date = max(dates)
         data = options
         value_date = [min_date, max_date]
-        return data, min_date, max_date, value_date, False, False, False, False
+        return data, "0", min_date, max_date, value_date, False, False, False, False
     except Exception as e:
         return (
+            dash.no_update,
             dash.no_update,
             dash.no_update,
             dash.no_update,
@@ -401,7 +403,6 @@ def check_data(*args, **kwargs):
 )
 def update_table(measurement, dates_range, **kwargs):
     try:
-
         df_list = kwargs["session_state"]["context"]["key_measurements_list"]
         threshold = kwargs["session_state"]["context"]["threshold"]
         kkm = kwargs["session_state"]["context"]["kkm"]
