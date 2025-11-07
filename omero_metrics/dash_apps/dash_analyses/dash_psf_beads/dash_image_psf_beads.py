@@ -443,7 +443,9 @@ def callback_mip(points, axis, channel_index, **kwargs):
             0, :, :, :, channel_index
         ]
         x0, xf, y0, yf = my_components.crop_bead_index(bead, min_dist, stack)
-        mip_x, mip_y, mip_z = my_components.mip_graphs(x0, xf, y0, yf, stack)
+        mip_x, mip_y, mip_z = my_components.mip_graphs(
+            int(x0), int(xf), int(y0), int(yf), stack
+        )
         fig_mip_go = my_components.fig_mip(mip_x, mip_y, mip_z)
         fig_mip_go.update_layout(
             coloraxis={
