@@ -11,6 +11,7 @@ from datetime import datetime
 import plotly.express as px
 import numpy as np
 from plotly.subplots import make_subplots
+import plotly.graph_objects as go
 from typing import Union
 import pandas as pd
 from omero_metrics.styles import COLORS_CHANNELS
@@ -106,18 +107,51 @@ def make_control(text, action_id):
 
 def fig_mip(mip_x, mip_y, mip_z):
     fig = make_subplots(
-        rows=2,
-        cols=2,
-        specs=[[{}, {}], [{"colspan": 2}, None]],
-        subplot_titles=("MIP X axis", "MIP Y axis", "MIP Z axis"),
+        rows=3,
+        cols=3,
+        # shared_xaxes=True,
+        # shared_yaxes=True,
+        # specs=[[{}, {}, {}], [{}, None]],
+        # subplot_titles=("MIP X axis", "MIP Y axis", "MIP Z axis"),
     )
-    fig = fig.add_trace(mip_x.data[0], row=1, col=1)
-    fig = fig.add_trace(mip_y.data[0], row=1, col=2)
-    fig = fig.add_trace(mip_z.data[0], row=2, col=1)
-    fig = fig.update_layout(
+
+    fig.add_trace(
+        go.Heatmap(
+            z=mip_x,
+            # zmin=mip_x.min(), zmax=mip_x.max(),
+        ),
+        row=2,
+        col=3,
+    )
+    fig.add_trace(
+        go.Heatmap(
+            z=mip_y,
+            # zmin=mip_y.min(), zmax=mip_y.max(),
+        ),
+        row=1,
+        col=2,
+    )
+    fig.add_trace(
+        go.Heatmap(
+            z=mip_z,
+            # zmin=mip_z.min(), zmax=mip_z.max(),
+        ),
+        row=2,
+        col=2,
+    )
+    fig.update_layout(
         coloraxis=dict(colorscale="hot"),
         autosize=False,
     )
+    for r in range(1, 4):
+        for c in range(1, 4):
+            fig.update_yaxes(
+                scaleanchor=f"x{ (r-1)*3 + c if (r,c)!=(1,1) else '' }",
+                scaleratio=1,
+                row=r,
+                col=c,
+            )
+
     fig.update_layout(
         {
             "xaxis": {
@@ -171,32 +205,15 @@ def mip_graphs(
 ):
     image_bead = stack[:, y0:yf, x0:xf]
     image_x = np.max(image_bead, axis=2)
+    image_x = np.transpose(image_x)
     image_y = np.max(image_bead, axis=1)
     image_z = np.max(image_bead, axis=0)
     if do_sqrt:
         image_x = np.sqrt(image_x)
         image_y = np.sqrt(image_y)
         image_z = np.sqrt(image_z)
-    image_x = image_x / image_x.max()
-    image_y = image_y / image_y.max()
-    image_z = image_z / image_z.max()
 
-    mip_x = px.imshow(
-        image_x,
-        zmin=image_x.min(),
-        zmax=image_x.max(),
-    )
-    mip_y = px.imshow(
-        image_y,
-        zmin=image_y.min(),
-        zmax=image_y.max(),
-    )
-    mip_z = px.imshow(
-        image_z,
-        zmin=image_z.min(),
-        zmax=image_z.max(),
-    )
-    return mip_x, mip_y, mip_z
+    return image_x, image_y, image_z
 
 
 def crop_bead_index(bead, min_dist, stack):
