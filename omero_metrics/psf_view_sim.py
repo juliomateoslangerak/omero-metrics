@@ -21,61 +21,37 @@ profiles = {
     "z": profiles_z,
 }
 
-
-def fig_mip(
+def fig_bead(
     mips,
     profiles,
     fwhms,
     r_sq,
     voxel_size=None,
 ):
-    # We want to find the quartiles of the x, y and z axes to plot some pretty tick marks
-    z_axis_quartiles = np.quantile(
-        range(mips["x"].shape[1]), [0.0, 0.25, 0.5, 0.75, 1.0]
-    )
-    y_axis_quartiles = np.quantile(
-        range(mips["z"].shape[0]), [0.0, 0.25, 0.5, 0.75, 1.0]
-    )
-    x_axis_quartiles = np.quantile(
-        range(mips["z"].shape[1]), [0.0, 0.25, 0.5, 0.75, 1.0]
-    )
-
-    # We normalize the quartiles to place the 0 in the center of the plot
+    axis_lengths = {
+        "x": mips["z"].shape[1],
+        "y": mips["z"].shape[0],
+        "z": mips["x"].shape[1],
+    }
     if voxel_size is not None:
-        z_axis_quartiles_norm = (
-            z_axis_quartiles - z_axis_quartiles[2]
-        ) * voxel_size["z"]
-        y_axis_quartiles_norm = (
-            y_axis_quartiles - y_axis_quartiles[2]
-        ) * voxel_size["y"]
-        x_axis_quartiles_norm = (
-            x_axis_quartiles - x_axis_quartiles[2]
-        ) * voxel_size["x"]
-        # We also need to stringify the quartiles to use them as tick texts
-        z_axis_quartiles_norm = [f"{q:.2f}" for q in z_axis_quartiles_norm]
-        y_axis_quartiles_norm = [f"{q:.2f}" for q in y_axis_quartiles_norm]
-        x_axis_quartiles_norm = [f"{q:.2f}" for q in x_axis_quartiles_norm]
         voxel_size_ratio = voxel_size["z"] / voxel_size["x"]
         physical_unit = "µ"
     else:
-        z_axis_quartiles_norm = z_axis_quartiles - z_axis_quartiles[2]
-        y_axis_quartiles_norm = y_axis_quartiles - y_axis_quartiles[2]
-        x_axis_quartiles_norm = x_axis_quartiles - x_axis_quartiles[2]
-        physical_unit = "px"
         voxel_size_ratio = 1
+        physical_unit = "px"
 
     fig = make_subplots(
         rows=3,
         cols=3,
         column_widths=[
-            mips["x"].shape[1] * voxel_size_ratio,
-            mips["z"].shape[1],
-            mips["y"].shape[0] * voxel_size_ratio,
+            axis_lengths["x"] * 1.2,
+            axis_lengths["x"],
+            axis_lengths["z"] * voxel_size_ratio,
         ],
         row_heights=[
-            mips["x"].shape[1] * voxel_size_ratio,
-            mips["z"].shape[0],
-            mips["x"].shape[1] * voxel_size_ratio,
+            axis_lengths["z"] * voxel_size_ratio,
+            axis_lengths["y"],
+            axis_lengths["x"] * 1.2,
         ],
         shared_xaxes=True,
         shared_yaxes=True,
@@ -84,36 +60,37 @@ def fig_mip(
             [{"type": "xy"}, {"type": "heatmap"}, {"type": "heatmap"}],
             [None, {"type": "xy"}, {"type": "xy"}],
         ],
-        # subplot_titles=[
-        #     "XZ-mip",
-        #     "Y-profiles",
-        #     "XY-mip",
-        #     "YZ-mip",
-        #     "X-profiles",
-        #     "Z-profiles"
-        # ],
-        # column_titles=["", "X", "Z"],
-        # row_titles=["Z", "Y", ""],
         horizontal_spacing=0.02,
         vertical_spacing=0.02,
     )
 
     # Add MIP image
-    for axis, row, col, rotate in zip(
+    for proj_axis, h_axis, v_axis, row, col, rotate in zip(
         ("x", "y", "z"),
+        ("z", "x", "x"),
+        ("y", "z", "y"),
         (2, 1, 2),
         (3, 2, 2),
         (False, True, False),
     ):
-        if rotate:
-            plot_x_axis = "y"
-            plot_y_axis = "x"
-        else:
-            plot_x_axis = "x"
-            plot_y_axis = "y"
-
         fig.add_trace(
-            go.Heatmap(z=mips[axis], colorscale="hot", showscale=False),
+            go.Heatmap(z=mips[proj_axis], colorscale="hot", showscale=False),
+            row=row,
+            col=col,
+        )
+        fig.update_xaxes(
+            range=[0, axis_lengths[h_axis]],
+            constrain="domain",
+            scaleanchor="y2",
+            scaleratio=voxel_size_ratio if h_axis == "z" else 1,
+            row=row,
+            col=col,
+        )
+        fig.update_yaxes(
+            range=[0, axis_lengths[v_axis]],
+            constrain="domain",
+            scaleanchor="y2",
+            scaleratio=voxel_size_ratio if v_axis == "z" else 1,
             row=row,
             col=col,
         )
@@ -122,6 +99,19 @@ def fig_mip(
     for axis, row, col, rotate in zip(
         ("x", "y", "z"), (3, 2, 3), (2, 1, 3), (False, True, False)
     ):
+        # We want to find the quartiles of the x, y and z axes to plot some pretty tick marks
+        quartiles = np.quantile(
+            range(axis_lengths[axis]), [0.0, 0.25, 0.5, 0.75, 1.0]
+        )
+
+        # We normalize the quartiles to place the 0 in the center of the axis, and we stringify it
+        if voxel_size is not None:
+            quartiles_norm = [
+                f"{q:.2f}" for q in (quartiles - quartiles[2]) * voxel_size[axis]
+            ]
+        else:
+            quartiles_norm = quartiles - quartiles[2]
+
         if rotate:
             plot_x_axis = "y"
             plot_y_axis = "x"
@@ -129,6 +119,7 @@ def fig_mip(
             plot_x_axis = "x"
             plot_y_axis = "y"
 
+        # Add traces
         fig.add_trace(
             go.Scatter(
                 name=f"{axis.upper()} raw profile",
@@ -187,88 +178,33 @@ def fig_mip(
             },
         )
 
-    # # X profiles
-    # fig.add_trace(
-    #     go.Scatter(
-    #         y=profiles_x["raw"],
-    #         name="X raw profile",
-    #         mode="lines",
-    #         line=dict(color="red"),
-    #     ),
-    #     row=3,
-    #     col=2,
-    # )
-    # fig.add_trace(
-    #     go.Scatter(
-    #         y=profiles_x["fitted"],
-    #         name="X fitted profile",
-    #         mode="lines",
-    #         line=dict(color="blue", dash="dot"),
-    #     ),
-    #     row=3,
-    #     col=2,
-    # )
-    # fig.add_hline(
-    #     y=0.5,
-    #     line_color="gray",
-    #     line_dash="dash",
-    #     annotation_text="FWHM<br><b>0.230µ<b>",
-    #     annotation_align="right",
-    #     row=3, col=2,
-    # )
-    # fig.add_annotation(
-    #     x=int(np.quantile(range(profiles_x["fitted"].shape[0]), .4)),
-    #     y=profiles_x["fitted"][int(np.quantile(range(profiles_x["fitted"].shape[0]), .4))],
-    #     text="R^2<br><b>0.85<b>",
-    #     align="left",
-    #     xanchor="right",
-    #     row=3,
-    #     col=2,
-    # )
-    #
-    # # Y profiles
-    # fig.add_trace(
-    #     go.Scatter(
-    #         x=profiles_y["raw"],
-    #         name="Y raw profile",
-    #         mode="lines",
-    #         line=dict(color="red"),
-    #     ),
-    #     row=2,
-    #     col=1,
-    # )
-    # fig.add_trace(
-    #     go.Scatter(
-    #         x=profiles_y["fitted"],
-    #         name="Y fitted profile",
-    #         mode="lines",
-    #         line=dict(color="blue", dash="dot"),
-    #     ),
-    #     row=2,
-    #     col=1,
-    # )
-    #
-    # # Z profiles
-    # fig.add_trace(
-    #     go.Scatter(
-    #         y=profiles_z["raw"],
-    #         name="Z raw profile",
-    #         mode="lines",
-    #         line=dict(color="red"),
-    #     ),
-    #     row=3,
-    #     col=3,
-    # )
-    # fig.add_trace(
-    #     go.Scatter(
-    #         y=profiles_z["fitted"],
-    #         name="Z fitted profile",
-    #         mode="lines",
-    #         line=dict(color="blue", dash="dot"),
-    #     ),
-    #     row=3,
-    #     col=3,
-    # )
+        # Adapt Axis
+        if rotate:
+            fig.update_xaxes(range=[-0.25, 1.25], constrain="domain", row=row, col=col)
+            fig.update_yaxes(
+                title_text=f"{axis.upper()}-axis ({physical_unit})",
+                constrain="domain",
+                scaleanchor="y2",
+                scaleratio=voxel_size_ratio if axis == "z" else 1,
+                title_font_size=18,
+                ticktext=quartiles_norm,
+                tickvals=quartiles,
+                row=row,
+                col=col,
+            )
+        else:
+            fig.update_xaxes(
+                title_text=f"{axis.upper()}-axis ({physical_unit})",
+                constrain="domain",
+                scaleanchor="y2",
+                scaleratio=voxel_size_ratio if axis == "z" else 1,
+                title_font_size=18,
+                ticktext=quartiles_norm,
+                tickvals=quartiles,
+                row=row,
+                col=col,
+            )
+            fig.update_yaxes(range=[-0.25, 1.25], constrain="domain", row=row, col=col)
 
     # Force identical physical domains (prevents doubled Z)
     fig.update_layout(
@@ -283,112 +219,6 @@ def fig_mip(
         autosize=False,
         margin=dict(l=10, r=10, t=10, b=10),
     )
-
-    # Fix coordinate ranges to match image dimensions
-    # Z-mip: XY plane
-    fig.update_xaxes(
-        range=[0, mips["z"].shape[1]],
-        constrain="domain",
-        scaleanchor="y2",
-        scaleratio=1,
-        row=2,
-        col=2,
-    )
-    fig.update_yaxes(
-        range=[mips["z"].shape[0], 0],
-        constrain="domain",
-        scaleanchor="y2",
-        scaleratio=1,
-        row=2,
-        col=2,
-    )
-
-    # Y-mip: XZ plane
-    fig.update_xaxes(
-        range=[0, mips["y"].shape[1]],
-        constrain="domain",
-        scaleanchor="y2",
-        scaleratio=1,
-        row=1,
-        col=2,
-    )
-    fig.update_yaxes(
-        range=[0, mips["y"].shape[0]],
-        constrain="domain",
-        scaleanchor="y2",
-        scaleratio=voxel_size_ratio,
-        # Replaces automatic tick marks with custom ones
-        ticktext=z_axis_quartiles_norm,
-        tickvals=z_axis_quartiles,
-        row=1,
-        col=2,
-    )
-
-    # X-mip: YZ plane
-    fig.update_xaxes(
-        range=[0, mips["x"].shape[1]],
-        constrain="domain",
-        scaleanchor="y2",
-        scaleratio=voxel_size_ratio,
-        row=2,
-        col=3,
-    )
-    fig.update_yaxes(
-        range=[
-            mips["x"].shape[0],
-            0,
-        ],  # We reverse the Y axis here to match the image orientation
-        constrain="domain",
-        scaleanchor="y2",
-        scaleratio=1,
-        row=2,
-        col=3,
-    )
-
-    # Z-profile
-    fig.update_xaxes(
-        title_text=f"Z-axis ({physical_unit})",
-        constrain="domain",
-        scaleanchor="y2",
-        scaleratio=voxel_size_ratio,
-        title_font_size=18,
-        # Replaces automatic tick marks with custom ones
-        ticktext=z_axis_quartiles_norm,
-        tickvals=z_axis_quartiles,
-        row=3,
-        col=3,
-    )
-    fig.update_yaxes(range=[-0.25, 1.25], constrain="domain", row=3, col=3)
-
-    # Y-profile
-    fig.update_xaxes(range=[-0.25, 1.25], constrain="domain", row=2, col=1)
-    fig.update_yaxes(
-        title_text=f"Y-axis ({physical_unit})",
-        constrain="domain",
-        scaleanchor="y2",
-        scaleratio=1,
-        title_font_size=18,
-        # Replaces automatic tick marks with custom ones
-        ticktext=y_axis_quartiles_norm,
-        tickvals=y_axis_quartiles,
-        row=2,
-        col=1,
-    )
-
-    # X-profile
-    fig.update_xaxes(
-        title_text=f"X-axis ({physical_unit})",
-        constrain="domain",
-        scaleanchor="y2",
-        scaleratio=1,
-        title_font_size=18,
-        # Replaces automatic tick marks with custom ones
-        ticktext=x_axis_quartiles_norm,
-        tickvals=x_axis_quartiles,
-        row=3,
-        col=2,
-    )
-    fig.update_yaxes(range=[-0.25, 1.25], row=3, col=2)
 
     return fig
 
