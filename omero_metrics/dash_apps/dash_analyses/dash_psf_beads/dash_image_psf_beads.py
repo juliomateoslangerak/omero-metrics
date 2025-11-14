@@ -224,7 +224,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                 dcc.Graph(
                                     id="mip_image",
                                     figure={},
-                                    style={"height": "400px"},
+                                    style={"height": "800px"},
                                 ),
                             ],
                         ),
@@ -350,18 +350,21 @@ def callback_mip(points, channel_index, **kwargs):
     mm_image = kwargs["session_state"]["context"]["mm_image"]
     image_id = mm_image.data_reference.omero_object_id
     channel_index = int(channel_index)
-    channel_name = mm_image.channel_series.channels[channel_index].name  # TODO: rename channel_names to channels
+    channel_name = mm_image.channel_series.channels[
+        channel_index
+    ].name  # TODO: rename channel_names to channels
     beads_properties_df = load.load_table_mm_metrics(
         mm_dataset.output["bead_properties"]
     )
-    min_dist = int(mm_dataset.input_parameters.min_lateral_distance_factor)
+    # TODO: This is a hack. We just reproduce what microscope-metrics does to extract the min-distance
+    min_dist = int(mm_dataset.input_parameters.min_lateral_distance_factor * 2)
 
     if point["curveNumber"] == 1:
         bead_index = point["pointNumber"]
         my_bead_df = beads_properties_df.loc[
-            (beads_properties_df["image_id"] == image_id) &
-            (beads_properties_df["channel_nr"] == channel_index) &
-            (beads_properties_df["bead_id"] == bead_index),
+            (beads_properties_df["image_id"] == image_id)
+            & (beads_properties_df["channel_nr"] == channel_index)
+            & (beads_properties_df["bead_id"] == bead_index),
             :,
         ]
         x_pos = int(my_bead_df["center_x"].values[0])
@@ -370,9 +373,15 @@ def callback_mip(points, channel_index, **kwargs):
         stack = kwargs["session_state"]["context"]["image_data"][
             0,  # time
             :,  # z-dimension
-            max(0, y_pos - min_dist):min(kwargs["session_state"]["context"]["image_shape"][2], y_pos + min_dist),  # y-dimension
-            max(0, x_pos - min_dist):min(kwargs["session_state"]["context"]["image_shape"][3], x_pos + min_dist),  # x-dimension
-            channel_index
+            max(0, y_pos - min_dist) : min(
+                kwargs["session_state"]["context"]["image_shape"][2],
+                y_pos + min_dist + 1,
+            ),  # y-dimension
+            max(0, x_pos - min_dist) : min(
+                kwargs["session_state"]["context"]["image_shape"][3],
+                x_pos + min_dist + 1,
+            ),  # x-dimension
+            channel_index,
         ]
 
         mips = {
@@ -381,27 +390,34 @@ def callback_mip(points, channel_index, **kwargs):
             "z": np.max(stack, axis=0),
         }
         mips = {a: np.sqrt(mip) for a, mip in mips.items()}
-        
+
         profiles = get_bead_profiles(
             bead_index=bead_index,
             channel_index=channel_index,
             image_id=image_id,
-            mm_dataset=mm_dataset
+            mm_dataset=mm_dataset,
         )
-        fwhms = {
-            "x": my_bead_df["fwhm_pixel_x"].values[0],
-            "y": my_bead_df["fwhm_pixel_y"].values[0],
-            "z": my_bead_df["fwhm_pixel_z"].values[0],
-        }
-        r_sq = {
-            "x": my_bead_df["fit_r2_x"].values[0],
-            "y": my_bead_df["fit_r2_y"].values[0],
-            "z": my_bead_df["fit_r2_z"].values[0],
-        }
         voxel_size = {
             "x": mm_image.voxel_size_x_micron,
             "y": mm_image.voxel_size_y_micron,
             "z": mm_image.voxel_size_z_micron,
+        }
+        if all(list(voxel_size.values())):
+            fwhms = {
+                "x": my_bead_df["fwhm_micron_x"].values[0],
+                "y": my_bead_df["fwhm_micron_y"].values[0],
+                "z": my_bead_df["fwhm_micron_z"].values[0],
+            }
+        else:
+            fwhms = {
+                "x": my_bead_df["fwhm_pixel_x"].values[0],
+                "y": my_bead_df["fwhm_pixel_y"].values[0],
+                "z": my_bead_df["fwhm_pixel_z"].values[0],
+            }
+        r_sq = {
+            "x": my_bead_df["fit_r2_x"].values[0],
+            "y": my_bead_df["fit_r2_y"].values[0],
+            "z": my_bead_df["fit_r2_z"].values[0],
         }
 
         fig_mip_go = fig_bead(
@@ -439,7 +455,7 @@ def fig_bead(
     profiles,
     fwhms,
     r_sq,
-    voxel_size=None,
+    voxel_size={"x": None, "y": None, "z": None},
 ):
     axis_lengths = {
         "x": mips["z"].shape[1],
@@ -564,36 +580,9 @@ def fig_bead(
                 row=row,
                 col=col,
             )
-        else:
-            fig.add_hline(
-                y=0.5,
-                line_color="gray",
-                line_dash="dash",
-                annotation_text=f"FWHM<br><b>{fwhms[axis]:.3f}{physical_unit}<b>",
-                annotation_align="right",
-                annotation_position="top right",
-                row=row,
-                col=col,
+            fig.update_xaxes(
+                range=[-0.25, 1.25], constrain="domain", row=row, col=col
             )
-        fig.add_annotation(
-            text=f"R^2<br><b>{r_sq[axis]:.3f}<b>",
-            align="right" if rotate else "left",
-            xanchor="left" if rotate else "right",
-            row=row,
-            col=col,
-            **{
-                plot_x_axis: int(
-                    np.quantile(range(profiles[axis]["fitted"].shape[0]), 0.4)
-                ),
-                plot_y_axis: profiles[axis]["fitted"][
-                    int(np.quantile(range(profiles[axis]["fitted"].shape[0]), 0.4))
-                ],
-            },
-        )
-
-        # Adapt Axis
-        if rotate:
-            fig.update_xaxes(range=[-0.25, 1.25], constrain="domain", row=row, col=col)
             fig.update_yaxes(
                 title_text=f"{axis.upper()}-axis ({physical_unit})",
                 constrain="domain",
@@ -606,6 +595,16 @@ def fig_bead(
                 col=col,
             )
         else:
+            fig.add_hline(
+                y=0.5,
+                line_color="gray",
+                line_dash="dash",
+                annotation_text=f"FWHM<br><b>{fwhms[axis]:.3f}{physical_unit}<b>",
+                annotation_align="right",
+                annotation_position="top right",
+                row=row,
+                col=col,
+            )
             fig.update_xaxes(
                 title_text=f"{axis.upper()}-axis ({physical_unit})",
                 constrain="domain",
@@ -617,7 +616,26 @@ def fig_bead(
                 row=row,
                 col=col,
             )
-            fig.update_yaxes(range=[-0.25, 1.25], constrain="domain", row=row, col=col)
+            fig.update_yaxes(
+                range=[-0.25, 1.25], constrain="domain", row=row, col=col
+            )
+        fig.add_annotation(
+            text=f"R^2<br><b>{r_sq[axis]:.3f}<b>",
+            align="right" if rotate else "left",
+            xanchor="left" if rotate else "right",
+            ax=20 if rotate else -40,
+            ay=-40 if rotate else -20,
+            row=row,
+            col=col,
+            **{
+                plot_x_axis: int(
+                    np.quantile(range(profiles[axis]["fitted"].shape[0]), 0.48)
+                ),
+                plot_y_axis: profiles[axis]["fitted"][
+                    int(np.quantile(range(profiles[axis]["fitted"].shape[0]), 0.48))
+                ],
+            },
+        )
 
     # Force identical physical domains (prevents doubled Z)
     fig.update_layout(
@@ -642,13 +660,18 @@ def get_bead_profiles(bead_index, channel_index, image_id, mm_dataset):
         for axis in ("x", "y", "z")
     }
     profiles = {
-        axis: df.loc[:, [
-            f"{image_id}_{channel_index}_{bead_index}_{axis}_raw",
-            f"{image_id}_{channel_index}_{bead_index}_{axis}_fitted"
-        ]].rename(columns={
-            f"{image_id}_{channel_index}_{bead_index}_{axis}_raw": "raw",
-            f"{image_id}_{channel_index}_{bead_index}_{axis}_fitted": "fitted"
-        })
+        axis: df.loc[
+            :,
+            [
+                f"{image_id}_{channel_index}_{bead_index}_{axis}_raw",
+                f"{image_id}_{channel_index}_{bead_index}_{axis}_fitted",
+            ],
+        ].rename(
+            columns={
+                f"{image_id}_{channel_index}_{bead_index}_{axis}_raw": "raw",
+                f"{image_id}_{channel_index}_{bead_index}_{axis}_fitted": "fitted",
+            }
+        )
         for axis, df in profiles.items()
     }
 
