@@ -247,11 +247,10 @@ omero_image_foi.layout = dmc.MantineProvider(
     [dash.dependencies.Input("blank-input", "children")],
 )
 def callback_channel(_, **kwargs):
-    # TODO: This context element is confussing. Not channel_names but channels
-    channels = kwargs["session_state"]["context"]["channel_names"]
+    mm_image = kwargs["session_state"]["context"]["mm_image"]
     return [
         {"label": c.name, "value": str(i), "description": f"Channel {i+1}"}
-        for i, c in enumerate(channels.channels)
+        for i, c in enumerate(mm_image.channel_series.channels)
     ], "0"
 
 
@@ -267,11 +266,11 @@ def callback_channel(_, **kwargs):
 )
 def callback_image(channel, color, checked_contour, inverted_color, roi, **kwargs):
     mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
-    image_id = kwargs["session_state"]["context"]["image_id"]
+    mm_image = kwargs["session_state"]["context"]["mm_image"]
+    image_id = mm_image.data_reference.omero_object_id
     if inverted_color:
         color = color + "_r"
-    image_omero = kwargs["session_state"]["context"]["image_data"]
-    image_data = image_omero[0, 0, :, :, int(channel)]
+    image_data = mm_image.array_data[0, 0, :, :, int(channel)]
     image_data = np.float32(image_data / image_data.max())
     rois = load.get_rois_mm_dataset(mm_dataset)
     df_lines = pd.DataFrame(rois[image_id]["roi"]["Line"])

@@ -275,9 +275,7 @@ def update_image(channel_index, color, invert, contour, roi, beads_info, **kwarg
 
         if invert:
             color = color + "_r"
-        stack = kwargs["session_state"]["context"]["image_data"][
-            0, :, :, :, channel_index
-        ]
+        stack = mm_image.array_data[0, :, :, :, channel_index]
         mip_z = np.max(stack, axis=0)
 
         fig = px.imshow(
@@ -374,15 +372,15 @@ def callback_mip(points, channel_index, **kwargs):
         x_pos = int(my_bead_df["center_x"].values[0])
         y_pos = int(my_bead_df["center_y"].values[0])
 
-        stack = kwargs["session_state"]["context"]["image_data"][
+        stack = mm_image.array_data[
             0,  # time
             :,  # z-dimension
             max(0, y_pos - min_dist) : min(
-                kwargs["session_state"]["context"]["image_shape"][2],
+                mm_image.array_data.shape[2],
                 y_pos + min_dist + 1,
             ),  # y-dimension
             max(0, x_pos - min_dist) : min(
-                kwargs["session_state"]["context"]["image_shape"][3],
+                mm_image.array_data.shape[3],
                 x_pos + min_dist + 1,
             ),  # x-dimension
             channel_index,

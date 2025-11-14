@@ -81,18 +81,10 @@ class ImageManager:
                     )[self.image_location]
                     if self.image_location == "input_data":
                         self.context = {
-                            # "image_index": self.image_index,
+                            "image_index": self.image_index,
                             # "image_id": self.mm_image.data_reference.omero_object_id,
                             "mm_image": self.mm_image,
                             "mm_dataset": self.dataset_manager.mm_dataset,
-                            # "channel_names": self.mm_image.channel_series,
-                            "image_data": self.mm_image.array_data,
-                            "image_shape": self.mm_image.array_data.shape,
-                            "voxel_size": {
-                                "x": self.mm_image.voxel_size_x_micron,
-                                "y": self.mm_image.voxel_size_y_micron,
-                                "z": self.mm_image.voxel_size_z_micron,
-                            }
                         }
                     elif self.image_location == "output":
                         message = "No visualization for output images"
@@ -276,7 +268,7 @@ class DatasetManager:
                 )
 
                 if isinstance(self.mm_dataset, mm_schema.FieldIlluminationDataset):
-                    self.context["image"], self.context["channel_names"] = (
+                    self.context["image_data"], self.context["channel_names"] = (
                         load.concatenate_images(
                             self.mm_dataset.input_data.field_illumination_images
                         )
