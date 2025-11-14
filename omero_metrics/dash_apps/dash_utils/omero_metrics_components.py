@@ -195,37 +195,6 @@ def fig_mip(mip_x, mip_y, mip_z):
     return fig
 
 
-def mip_graphs(
-    x0: int,
-    xf: int,
-    y0: int,
-    yf: int,
-    stack: Union[np.array, list],
-    do_sqrt: bool = True,
-):
-    image_bead = stack[:, y0:yf, x0:xf]
-    image_x = np.max(image_bead, axis=2)
-    image_x = np.transpose(image_x)
-    image_y = np.max(image_bead, axis=1)
-    image_z = np.max(image_bead, axis=0)
-    if do_sqrt:
-        image_x = np.sqrt(image_x)
-        image_y = np.sqrt(image_y)
-        image_z = np.sqrt(image_z)
-
-    return image_x, image_y, image_z
-
-
-def crop_bead_index(bead, min_dist, stack):
-    x = bead["center_x"].values[0]
-    y = bead["center_y"].values[0]
-    x0 = max(0, x - min_dist)
-    y0 = max(0, y - min_dist)
-    xf = min(stack.shape[2], x + min_dist)
-    yf = min(stack.shape[1], y + min_dist)
-    return x0, xf, y0, yf
-
-
 download_group = dmc.Group(
     [
         dmc.Menu(

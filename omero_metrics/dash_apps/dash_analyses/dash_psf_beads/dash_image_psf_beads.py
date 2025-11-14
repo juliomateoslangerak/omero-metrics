@@ -6,6 +6,9 @@ import plotly.express as px
 import plotly.graph_objs as go
 import numpy as np
 import logging
+
+from plotly.subplots import make_subplots
+
 import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 from omero_metrics.styles import THEME, MANTINE_THEME
 from omero_metrics.tools import load
@@ -205,89 +208,23 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                             p="md",
                             radius="md",
                             children=[
-                                dmc.Grid(
+                                dmc.Group(
                                     [
-                                        # MIP Section
-                                        dmc.GridCol(
-                                            [
-                                                dmc.Group(
-                                                    [
-                                                        dmc.Text(
-                                                            id="title_mip",
-                                                            children="Maximum Intensity Projection",
-                                                            size="lg",
-                                                            fw=500,
-                                                            c=THEME["primary"],
-                                                        ),
-                                                    ],
-                                                    justify="space-between",
-                                                ),
-                                                # TODO: change here the beads MIP
-                                                dcc.Graph(
-                                                    id="mip_image",
-                                                    figure={},
-                                                    style={"height": "400px"},
-                                                ),
-                                            ],
-                                            span=6,
-                                        ),
-                                        dmc.GridCol(
-                                            [
-                                                dmc.Stack(
-                                                    [
-                                                        dmc.Group(
-                                                            [
-                                                                dmc.Text(
-                                                                    "Intensity Profiles",
-                                                                    size="lg",
-                                                                    fw=500,
-                                                                    c=THEME[
-                                                                        "primary"
-                                                                    ],
-                                                                ),
-                                                                # TODO: Change here bead intensity profiles
-                                                                dmc.Select(
-                                                                    data=[
-                                                                        {
-                                                                            "label": "X Axis",
-                                                                            "value": "x",
-                                                                        },
-                                                                        {
-                                                                            "label": "Y Axis",
-                                                                            "value": "y",
-                                                                        },
-                                                                        {
-                                                                            "label": "Z Axis",
-                                                                            "value": "z",
-                                                                        },
-                                                                    ],
-                                                                    value="x",
-                                                                    allowDeselect=False,
-                                                                    id="axis_image_psf",
-                                                                    rightSection=my_components.get_icon(
-                                                                        "radix-icons:chevron-down"
-                                                                    ),
-                                                                    leftSection=my_components.get_icon(
-                                                                        icon="mdi:axis-x-arrow"
-                                                                    ),
-                                                                ),
-                                                            ],
-                                                            justify="space-between",
-                                                        ),
-                                                        dcc.Graph(
-                                                            id="mip_chart_image",
-                                                            figure={},
-                                                            style={
-                                                                "height": "400px"
-                                                            },
-                                                        ),
-                                                    ],
-                                                    gap="md",
-                                                ),
-                                            ],
-                                            span=6,
+                                        dmc.Text(
+                                            id="title_mip",
+                                            children="Maximum Intensity Projection",
+                                            size="lg",
+                                            fw=500,
+                                            c=THEME["primary"],
                                         ),
                                     ],
+                                    justify="space-between",
+                                ),
+                                # TODO: change here the beads MIP
+                                dcc.Graph(
+                                    id="mip_image",
+                                    figure={},
+                                    style={"height": "400px"},
                                 ),
                             ],
                         ),
@@ -304,15 +241,6 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
 
 
 @omero_image_psf_beads.expanded_callback(
-    dash.dependencies.Output("axis_image_psf", "leftSection"),
-    [dash.dependencies.Input("axis_image_psf", "value")],
-)
-def update_icon(axis):
-    icon = f"mdi:axis-{axis}-arrow"
-    return my_components.get_icon(icon=icon)
-
-
-@omero_image_psf_beads.expanded_callback(
     dash.dependencies.Output("psf_image_graph", "figure"),
     [
         dash.dependencies.Input("channel_selector_psf_image", "value"),
@@ -326,7 +254,8 @@ def update_icon(axis):
 def update_image(channel_index, color, invert, contour, roi, beads_info, **kwargs):
     try:
         mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
-        image_id = int(kwargs["session_state"]["context"]["image_id"])
+        mm_image = kwargs["session_state"]["context"]["mm_image"]
+        image_id = mm_image.data_reference.omero_object_id
         channel_index = int(channel_index)
         min_distance = int(mm_dataset.input_parameters.min_lateral_distance_factor)
         bead_properties_df = load.load_table_mm_metrics(
@@ -342,7 +271,7 @@ def update_image(channel_index, color, invert, contour, roi, beads_info, **kwarg
 
         if invert:
             color = color + "_r"
-        stack = kwargs["session_state"]["context"]["image"][
+        stack = kwargs["session_state"]["context"]["image_data"][
             0, :, :, :, channel_index
         ]
         mip_z = np.max(stack, axis=0)
@@ -399,94 +328,331 @@ def update_image(channel_index, color, invert, contour, roi, beads_info, **kwarg
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_channels_psf_image(_, **kwargs):
-    channel_names = kwargs["session_state"]["context"]["channel_names"]
+    channel_series = kwargs["session_state"]["context"]["mm_image"].channel_series
     return [
         {"label": c.name, "value": str(i)}
-        for i, c in enumerate(channel_names.channels)
+        for i, c in enumerate(channel_series.channels)
     ], "0"
 
 
 @omero_image_psf_beads.expanded_callback(
     dash.dependencies.Output("mip_image", "figure"),
-    dash.dependencies.Output("mip_chart_image", "figure"),
     dash.dependencies.Output("title_mip", "children"),
     [
         dash.dependencies.Input("psf_image_graph", "clickData"),
-        dash.dependencies.Input("axis_image_psf", "value"),
         dash.dependencies.Input("channel_selector_psf_image", "value"),
     ],
     prevent_initial_call=True,
 )
-def callback_mip(points, axis, channel_index, **kwargs):
-    point = points["points"][0]
-    axis = axis.lower()
-    channel_names = kwargs["session_state"]["context"]["channel_names"]
-    channels = [c.name for c in channel_names.channels]
+def callback_mip(points, channel_index, **kwargs):
+    point = points["points"][0]  # FIXME: point is None at initial call
     mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
-    image_id = int(kwargs["session_state"]["context"]["image_id"])
+    mm_image = kwargs["session_state"]["context"]["mm_image"]
+    image_id = mm_image.data_reference.omero_object_id
     channel_index = int(channel_index)
-    channel_name = channels[channel_index]
-    bead_properties_df = load.load_table_mm_metrics(
+    channel_name = mm_image.channel_series.channels[channel_index].name  # TODO: rename channel_names to channels
+    beads_properties_df = load.load_table_mm_metrics(
         mm_dataset.output["bead_properties"]
     )
-    df_beads_location = bead_properties_df.loc[
-        (bead_properties_df["image_id"] == image_id)
-        & (bead_properties_df["channel_nr"] == channel_index),
-        :,
-    ]
     min_dist = int(mm_dataset.input_parameters.min_lateral_distance_factor)
+
     if point["curveNumber"] == 1:
         bead_index = point["pointNumber"]
-
-        bead = df_beads_location.loc[df_beads_location["bead_id"] == bead_index, :]
-        stack = kwargs["session_state"]["context"]["image"][
-            0, :, :, :, channel_index
+        my_bead_df = beads_properties_df.loc[
+            (beads_properties_df["image_id"] == image_id) &
+            (beads_properties_df["channel_nr"] == channel_index) &
+            (beads_properties_df["bead_id"] == bead_index),
+            :,
         ]
-        x0, xf, y0, yf = my_components.crop_bead_index(bead, min_dist, stack)
-        mip_x, mip_y, mip_z = my_components.mip_graphs(
-            int(x0), int(xf), int(y0), int(yf), stack
+        x_pos = int(my_bead_df["center_x"].values[0])
+        y_pos = int(my_bead_df["center_y"].values[0])
+
+        stack = kwargs["session_state"]["context"]["image_data"][
+            0,  # time
+            :,  # z-dimension
+            max(0, y_pos - min_dist):min(kwargs["session_state"]["context"]["image_shape"][2], y_pos + min_dist),  # y-dimension
+            max(0, x_pos - min_dist):min(kwargs["session_state"]["context"]["image_shape"][3], x_pos + min_dist),  # x-dimension
+            channel_index
+        ]
+
+        mips = {
+            "x": np.transpose(np.max(stack, axis=2)),
+            "y": np.max(stack, axis=1),
+            "z": np.max(stack, axis=0),
+        }
+        mips = {a: np.sqrt(mip) for a, mip in mips.items()}
+        
+        profiles = get_bead_profiles(
+            bead_index=bead_index,
+            channel_index=channel_index,
+            image_id=image_id,
+            mm_dataset=mm_dataset
         )
-        fig_mip_go = my_components.fig_mip(mip_x, mip_y, mip_z)
-        fig_mip_go.update_layout(
-            coloraxis={
-                "colorbar": dict(
-                    thickness=15,
-                    len=0.7,
-                    title=dict(text="Intensity", side="right"),
-                    tickfont=dict(size=10),
-                ),
-            },
-            margin={"l": 20, "r": 20, "t": 30, "b": 20},
-            plot_bgcolor=THEME["background"],
-            paper_bgcolor=THEME["background"],
-            font={"color": THEME["text"]["primary"]},
+        fwhms = {
+            "x": my_bead_df["fwhm_pixel_x"].values[0],
+            "y": my_bead_df["fwhm_pixel_y"].values[0],
+            "z": my_bead_df["fwhm_pixel_z"].values[0],
+        }
+        r_sq = {
+            "x": my_bead_df["fit_r2_x"].values[0],
+            "y": my_bead_df["fit_r2_y"].values[0],
+            "z": my_bead_df["fit_r2_z"].values[0],
+        }
+        voxel_size = {
+            "x": mm_image.voxel_size_x_micron,
+            "y": mm_image.voxel_size_y_micron,
+            "z": mm_image.voxel_size_z_micron,
+        }
+
+        fig_mip_go = fig_bead(
+            mips=mips,
+            profiles=profiles,
+            fwhms=fwhms,
+            r_sq=r_sq,
+            voxel_size=voxel_size,
         )
-        title = f"Maximum Intensity Projection for channel {channel_name} Bead number {bead_index}"
+        # fig_mip_go.update_layout(
+        #     coloraxis={
+        #         "colorbar": dict(
+        #             thickness=15,
+        #             len=0.7,
+        #             title=dict(text="Intensity", side="right"),
+        #             tickfont=dict(size=10),
+        #         ),
+        #     },
+        #     margin={"l": 20, "r": 20, "t": 30, "b": 20},
+        #     plot_bgcolor=THEME["background"],
+        #     paper_bgcolor=THEME["background"],
+        #     font={"color": THEME["text"]["primary"]},
+        # )
+        title = f"Channel {channel_name}: Bead number {bead_index}"
         return (
             fig_mip_go,
-            line_graph_axis(bead_index, channel_index, axis, kwargs),
             title,
         )
     else:
         return dash.no_update
 
 
-def line_graph_axis(bead_index, channel_index, axis, kwargs):
-    mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
-    df_axis = load.load_table_mm_metrics(mm_dataset.output[f"bead_profiles_{axis}"])
-    image_id = kwargs["session_state"]["context"]["image_id"]
-    df_x = df_axis.filter(regex=f"^{image_id}_{channel_index}_{bead_index}_{axis}_")
-    df_x.columns = df_x.columns.str.split("_").str[-1]
-    fig_ip_x = px.line(df_x)
-    fig_ip_x.update_traces(
-        patch={"line": {"dash": "dot"}}, selector={"name": "fitted"}
+def fig_bead(
+    mips,
+    profiles,
+    fwhms,
+    r_sq,
+    voxel_size=None,
+):
+    axis_lengths = {
+        "x": mips["z"].shape[1],
+        "y": mips["z"].shape[0],
+        "z": mips["x"].shape[1],
+    }
+    if all(list(voxel_size.values())):
+        voxel_size_ratio = voxel_size["z"] / voxel_size["x"]
+        physical_unit = "µ"
+    else:
+        voxel_size_ratio = 1
+        physical_unit = "px"
+
+    fig = make_subplots(
+        rows=3,
+        cols=3,
+        column_widths=[
+            axis_lengths["x"] * 1.2,
+            axis_lengths["x"],
+            axis_lengths["z"] * voxel_size_ratio,
+        ],
+        row_heights=[
+            axis_lengths["z"] * voxel_size_ratio,
+            axis_lengths["y"],
+            axis_lengths["x"] * 1.2,
+        ],
+        shared_xaxes=True,
+        shared_yaxes=True,
+        specs=[
+            [None, {"type": "heatmap"}, None],
+            [{"type": "xy"}, {"type": "heatmap"}, {"type": "heatmap"}],
+            [None, {"type": "xy"}, {"type": "xy"}],
+        ],
+        horizontal_spacing=0.02,
+        vertical_spacing=0.02,
     )
-    fig_ip_x.update_layout(
-        plot_bgcolor=THEME["background"],
-        paper_bgcolor=THEME["background"],
-        font={"color": THEME["text"]["primary"]},
+
+    # Add MIP image
+    for proj_axis, h_axis, v_axis, row, col, rotate in zip(
+        ("x", "y", "z"),
+        ("z", "x", "x"),
+        ("y", "z", "y"),
+        (2, 1, 2),
+        (3, 2, 2),
+        (False, True, False),
+    ):
+        fig.add_trace(
+            go.Heatmap(z=mips[proj_axis], colorscale="hot", showscale=False),
+            row=row,
+            col=col,
+        )
+        fig.update_xaxes(
+            range=[0, axis_lengths[h_axis]],
+            constrain="domain",
+            scaleanchor="y2",
+            scaleratio=voxel_size_ratio if h_axis == "z" else 1,
+            row=row,
+            col=col,
+        )
+        fig.update_yaxes(
+            range=[0, axis_lengths[v_axis]],
+            constrain="domain",
+            scaleanchor="y2",
+            scaleratio=voxel_size_ratio if v_axis == "z" else 1,
+            row=row,
+            col=col,
+        )
+
+    # Add profiles
+    for axis, row, col, rotate in zip(
+        ("x", "y", "z"), (3, 2, 3), (2, 1, 3), (False, True, False)
+    ):
+        # We want to find the quartiles of the x, y and z axes to plot some pretty tick marks
+        quartiles = np.quantile(
+            range(axis_lengths[axis]), [0.0, 0.25, 0.5, 0.75, 1.0]
+        )
+
+        # We normalize the quartiles to place the 0 in the center of the axis, and we stringify it
+        if all(list(voxel_size.values())):
+            quartiles_norm = [
+                f"{q:.2f}" for q in (quartiles - quartiles[2]) * voxel_size[axis]
+            ]
+        else:
+            quartiles_norm = quartiles - quartiles[2]
+
+        if rotate:
+            plot_x_axis = "y"
+            plot_y_axis = "x"
+        else:
+            plot_x_axis = "x"
+            plot_y_axis = "y"
+
+        # Add traces
+        fig.add_trace(
+            go.Scatter(
+                name=f"{axis.upper()} raw profile",
+                mode="lines",
+                line=dict(color="red"),
+                **{plot_y_axis: profiles[axis]["raw"]},
+            ),
+            row=row,
+            col=col,
+        )
+        fig.add_trace(
+            go.Scatter(
+                name=f"{axis.upper()} fitted profile",
+                mode="lines",
+                line=dict(color="blue", dash="dot"),
+                **{plot_y_axis: profiles[axis]["fitted"]},
+            ),
+            row=row,
+            col=col,
+        )
+        if rotate:
+            fig.add_vline(
+                x=0.5,
+                line_color="gray",
+                line_dash="dash",
+                annotation_text=f"FWHM<br><b>{fwhms[axis]:.3f}{physical_unit}<b>",
+                annotation_align="right",
+                annotation_position="bottom right",
+                row=row,
+                col=col,
+            )
+        else:
+            fig.add_hline(
+                y=0.5,
+                line_color="gray",
+                line_dash="dash",
+                annotation_text=f"FWHM<br><b>{fwhms[axis]:.3f}{physical_unit}<b>",
+                annotation_align="right",
+                annotation_position="top right",
+                row=row,
+                col=col,
+            )
+        fig.add_annotation(
+            text=f"R^2<br><b>{r_sq[axis]:.3f}<b>",
+            align="right" if rotate else "left",
+            xanchor="left" if rotate else "right",
+            row=row,
+            col=col,
+            **{
+                plot_x_axis: int(
+                    np.quantile(range(profiles[axis]["fitted"].shape[0]), 0.4)
+                ),
+                plot_y_axis: profiles[axis]["fitted"][
+                    int(np.quantile(range(profiles[axis]["fitted"].shape[0]), 0.4))
+                ],
+            },
+        )
+
+        # Adapt Axis
+        if rotate:
+            fig.update_xaxes(range=[-0.25, 1.25], constrain="domain", row=row, col=col)
+            fig.update_yaxes(
+                title_text=f"{axis.upper()}-axis ({physical_unit})",
+                constrain="domain",
+                scaleanchor="y2",
+                scaleratio=voxel_size_ratio if axis == "z" else 1,
+                title_font_size=18,
+                ticktext=quartiles_norm,
+                tickvals=quartiles,
+                row=row,
+                col=col,
+            )
+        else:
+            fig.update_xaxes(
+                title_text=f"{axis.upper()}-axis ({physical_unit})",
+                constrain="domain",
+                scaleanchor="y2",
+                scaleratio=voxel_size_ratio if axis == "z" else 1,
+                title_font_size=18,
+                ticktext=quartiles_norm,
+                tickvals=quartiles,
+                row=row,
+                col=col,
+            )
+            fig.update_yaxes(range=[-0.25, 1.25], constrain="domain", row=row, col=col)
+
+    # Force identical physical domains (prevents doubled Z)
+    fig.update_layout(
+        grid=dict(
+            rows=3,
+            columns=3,
+            pattern="independent",
+        ),
+        legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01),
+        width=800,
+        height=800,
+        autosize=False,
+        margin=dict(l=10, r=10, t=10, b=10),
     )
-    return fig_ip_x
+
+    return fig
+
+
+def get_bead_profiles(bead_index, channel_index, image_id, mm_dataset):
+    profiles = {
+        axis: load.load_table_mm_metrics(mm_dataset.output[f"bead_profiles_{axis}"])
+        for axis in ("x", "y", "z")
+    }
+    profiles = {
+        axis: df.loc[:, [
+            f"{image_id}_{channel_index}_{bead_index}_{axis}_raw",
+            f"{image_id}_{channel_index}_{bead_index}_{axis}_fitted"
+        ]].rename(columns={
+            f"{image_id}_{channel_index}_{bead_index}_{axis}_raw": "raw",
+            f"{image_id}_{channel_index}_{bead_index}_{axis}_fitted": "fitted"
+        })
+        for axis, df in profiles.items()
+    }
+
+    return profiles
 
 
 def beads_scatter_plot(df, min_distance):

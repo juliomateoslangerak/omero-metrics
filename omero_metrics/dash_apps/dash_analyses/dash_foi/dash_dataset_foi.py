@@ -321,7 +321,7 @@ def update_km_table(pagination_value, **kwargs):
 def update_intensity_map(channel, **kwargs):
     try:
         channel = int(channel)
-        images = kwargs["session_state"]["context"]["image"]
+        images = kwargs["session_state"]["context"]["image_data"]
         image = images[channel]
         image_channel = image[0, 0, :, :]
         image_channel = rescale_intensity(

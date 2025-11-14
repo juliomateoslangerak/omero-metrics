@@ -270,7 +270,7 @@ def callback_image(channel, color, checked_contour, inverted_color, roi, **kwarg
     image_id = kwargs["session_state"]["context"]["image_id"]
     if inverted_color:
         color = color + "_r"
-    image_omero = kwargs["session_state"]["context"]["image"]
+    image_omero = kwargs["session_state"]["context"]["image_data"]
     image_data = image_omero[0, 0, :, :, int(channel)]
     image_data = np.float32(image_data / image_data.max())
     rois = load.get_rois_mm_dataset(mm_dataset)
