@@ -21,6 +21,7 @@ profiles = {
     "z": profiles_z,
 }
 
+
 def fig_bead(
     mips,
     profiles,
@@ -180,7 +181,9 @@ def fig_bead(
 
         # Adapt Axis
         if rotate:
-            fig.update_xaxes(range=[-0.25, 1.25], constrain="domain", row=row, col=col)
+            fig.update_xaxes(
+                range=[-0.25, 1.25], constrain="domain", row=row, col=col
+            )
             fig.update_yaxes(
                 title_text=f"{axis.upper()}-axis ({physical_unit})",
                 constrain="domain",
@@ -204,7 +207,9 @@ def fig_bead(
                 row=row,
                 col=col,
             )
-            fig.update_yaxes(range=[-0.25, 1.25], constrain="domain", row=row, col=col)
+            fig.update_yaxes(
+                range=[-0.25, 1.25], constrain="domain", row=row, col=col
+            )
 
     # Force identical physical domains (prevents doubled Z)
     fig.update_layout(
