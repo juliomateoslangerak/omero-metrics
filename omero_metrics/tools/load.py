@@ -455,7 +455,7 @@ def load_table_mm_metrics(table):
     if table and isinstance(table, mm_schema.Table):
         table_date = {v.name: v.values for v in table.columns if v}
         df = pd.DataFrame(table_date)
-        df = df.replace("nan", np.nan)
+        df = df.replace("nan", np.nan)  # FIXME: futureWarning Downcasting behavior in `replace` is deprecated and will be removed in a future version. To retain the old behavior, explicitly call `result.infer_objects(copy=False)`. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
         for col in df.columns:
             try:
                 df[col] = pd.to_numeric(df[col])
