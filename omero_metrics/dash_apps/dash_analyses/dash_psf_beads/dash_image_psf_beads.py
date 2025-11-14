@@ -169,6 +169,10 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                                     "label": "Hot",
                                                                 },
                                                                 {
+                                                                    "value": "Blackbody",
+                                                                    "label": "Blackbody",
+                                                                },
+                                                                {
                                                                     "value": "Viridis",
                                                                     "label": "Viridis",
                                                                 },
@@ -177,7 +181,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                                     "label": "Inferno",
                                                                 },
                                                             ],
-                                                            value="Hot",
+                                                            value="Blackbody",
                                                             leftSection=my_components.get_icon(
                                                                 "material-symbols:palette"
                                                             ),
@@ -503,7 +507,7 @@ def fig_bead(
         (False, True, False),
     ):
         fig.add_trace(
-            go.Heatmap(z=mips[proj_axis], colorscale="hot", showscale=False),
+            go.Heatmap(z=mips[proj_axis], colorscale="Blackbody", showscale=False),
             row=row,
             col=col,
         )
