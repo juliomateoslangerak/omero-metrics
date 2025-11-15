@@ -23,6 +23,7 @@ omero_dataset_psf_beads = DjangoDash(
 omero_dataset_psf_beads.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
+        # TODO: this headers can be shared across datasets
         dmc.NotificationProvider(position="top-center"),
         html.Div(id="notifications-container"),
         dmc.Modal(
@@ -55,6 +56,7 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
         dmc.Container(
             [
                 html.Div(id="blank-input"),
+                # TODO: key-measurements should be shared across dataset interfaces
                 dmc.Paper(
                     shadow="xs",
                     p="md",
@@ -124,6 +126,7 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
 )
 
 
+# TODO: Can be shared across dataset interfaces
 @omero_dataset_psf_beads.expanded_callback(
     dash.dependencies.Output("key_measurements_psf", "data"),
     dash.dependencies.Output("pagination", "total"),
@@ -153,6 +156,7 @@ def func_psf_callback(pagination_value, **kwargs):
     return data, total
 
 
+# TODO: can be shared across dataset interfaces
 @omero_dataset_psf_beads.expanded_callback(
     dash.dependencies.Output("confirm_delete", "opened"),
     dash.dependencies.Output("notifications-container", "children"),
@@ -185,6 +189,7 @@ def delete_dataset(*args, **kwargs):
         return opened, None, False
 
 
+# TODO: can be shared across dataset interfaces
 @omero_dataset_psf_beads.expanded_callback(
     dash.dependencies.Output("download", "data"),
     [
@@ -221,6 +226,7 @@ def download_dataset_data(*args, **kwargs):
     raise dash.no_update
 
 
+# TODO: can be shared across dataset interfaces
 @omero_dataset_psf_beads.expanded_callback(
     dash.dependencies.Output("table-download", "data"),
     [
