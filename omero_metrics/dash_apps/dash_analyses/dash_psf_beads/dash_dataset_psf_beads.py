@@ -11,6 +11,7 @@ from omero_metrics.styles import TABLE_MANTINE_STYLE
 import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 from omero_metrics.tools import load
 
+from omero_metrics.dash_apps.dash_analyses import dataset_shared_components as dsc
 
 dashboard_name = "omero_dataset_psf_beads"
 
@@ -24,11 +25,11 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
         # TODO: this headers can be shared across datasets
-        dmc.NotificationProvider(position="top-center"),
-        html.Div(id="notifications-container"),
+        dsc.notification_provider(),
+        dsc.notifications_container(),
         dmc.Modal(
-            title="Confirm Delete",
             id="confirm_delete",
+            title="Confirm Delete",
             children=[
                 dmc.Text("Are you sure you want to delete this dataset outputs?"),
                 dmc.Space(h=20),
@@ -159,7 +160,7 @@ def func_psf_callback(pagination_value, **kwargs):
 # TODO: can be shared across dataset interfaces
 @omero_dataset_psf_beads.expanded_callback(
     dash.dependencies.Output("confirm_delete", "opened"),
-    dash.dependencies.Output("notifications-container", "children"),
+    dash.dependencies.Output("notifications_container", "children"),
     dash.dependencies.Output("modal-submit-button", "loading"),
     [
         dash.dependencies.Input("delete_data", "n_clicks"),

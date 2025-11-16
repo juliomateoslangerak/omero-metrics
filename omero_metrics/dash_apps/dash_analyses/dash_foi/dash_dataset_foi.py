@@ -23,6 +23,9 @@ import math
 import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 from omero_metrics.tools import load
 
+from omero_metrics.dash_apps.dash_analyses import dataset_shared_components as dsc
+
+
 dashboard_name = "omero_dataset_foi"
 omero_dataset_foi = DjangoDash(
     name=dashboard_name,
@@ -32,8 +35,8 @@ omero_dataset_foi = DjangoDash(
 omero_dataset_foi.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
-        dmc.NotificationProvider(position="top-center"),
-        html.Div(id="notifications-container"),
+        dsc.notification_provider(),
+        dsc.notifications_container(),
         dmc.Modal(
             title="Confirm Delete",
             id="confirm_delete",
@@ -402,7 +405,7 @@ def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:
 # TODO: These functions can be shared across dataset types
 @omero_dataset_foi.expanded_callback(
     dash.dependencies.Output("confirm_delete", "opened"),
-    dash.dependencies.Output("notifications-container", "children"),
+    dash.dependencies.Output("notifications_container", "children"),
     dash.dependencies.Output("modal-submit-button", "loading"),
     [
         dash.dependencies.Input("delete_data", "n_clicks"),
