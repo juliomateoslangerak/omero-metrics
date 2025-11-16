@@ -27,30 +27,7 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
         # TODO: this headers can be shared across datasets
         dsc.notification_provider(),
         dsc.notifications_container(),
-        dmc.Modal(
-            id="confirm_delete",
-            title="Confirm Delete",
-            children=[
-                dmc.Text("Are you sure you want to delete this dataset outputs?"),
-                dmc.Space(h=20),
-                dmc.Group(
-                    [
-                        dmc.Button(
-                            "Submit",
-                            id="modal-submit-button",
-                            color="red",
-                        ),
-                        dmc.Button(
-                            "Close",
-                            color="gray",
-                            variant="outline",
-                            id="modal-close-button",
-                        ),
-                    ],
-                    justify="flex-end",
-                ),
-            ],
-        ),
+        dsc.confirm_delete_modal(),
         my_components.header_component(
             "PSF Beads", "PSF Beads Analysis Dashboard", "PSF Beads Analysis"
         ),
@@ -159,14 +136,14 @@ def func_psf_callback(pagination_value, **kwargs):
 
 # TODO: can be shared across dataset interfaces
 @omero_dataset_psf_beads.expanded_callback(
-    dash.dependencies.Output("confirm_delete", "opened"),
+    dash.dependencies.Output("confirm-delete-modal", "opened"),
     dash.dependencies.Output("notifications_container", "children"),
-    dash.dependencies.Output("modal-submit-button", "loading"),
+    dash.dependencies.Output("confirm-delete-button", "loading"),
     [
         dash.dependencies.Input("delete_data", "n_clicks"),
-        dash.dependencies.Input("modal-submit-button", "n_clicks"),
-        dash.dependencies.Input("modal-close-button", "n_clicks"),
-        dash.dependencies.State("confirm_delete", "opened"),
+        dash.dependencies.Input("confirm-delete-button", "n_clicks"),
+        dash.dependencies.Input("cancel-delete-button", "n_clicks"),
+        dash.dependencies.State("confirm-delete-modal", "opened"),
     ],
     prevent_initial_call=True,
 )
@@ -177,7 +154,7 @@ def delete_dataset(*args, **kwargs):
     ].data_reference.omero_object_id
     request = kwargs["request"]
     opened = not args[3]
-    if triggered_button == "modal-submit-button.n_clicks" and args[0] > 0:
+    if triggered_button == "confirm-delete-button.n_clicks" and args[0] > 0:
         sleep(1)
         response_type, response_msg = views.delete_dataset(
             request, dataset_id=dataset_id
@@ -268,7 +245,7 @@ omero_dataset_psf_beads.clientside_callback(
         return false;
     }
     """,
-    dash.dependencies.Output("modal-submit-button", "loading", allow_duplicate=True),
-    dash.dependencies.Input("modal-submit-button", "n_clicks"),
+    dash.dependencies.Output("confirm-delete-button", "loading", allow_duplicate=True),
+    dash.dependencies.Input("confirm-delete-button", "n_clicks"),
     prevent_initial_call=True,
 )

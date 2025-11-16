@@ -10,6 +10,34 @@ def notifications_container():
     return html.Div(id="notifications_container")
 
 
+def confirm_delete_modal():
+    return dmc.Modal(
+        title="Confirm Delete",
+        id="confirm-delete-modal",
+        children=[
+            dmc.Text("Are you sure you want to delete this dataset outputs?"),
+            dmc.Space(h=20),
+            dmc.Group(
+                [
+                    dmc.Button(
+                        "Delete",
+                        id="confirm-delete-button",
+                        color="red",
+                    ),
+                    dmc.Button(
+                        "Cancel",
+                        id="cancel-delete-button",
+                        color="gray",
+                        variant="outline",
+                    ),
+                ],
+                justify="flex-end",
+            ),
+        ],
+    )
+
+
+
 # # CALLBACKS
 # @omero_dataset_psf_beads.expanded_callback(
 #     dependencies.Output("confirm_delete", "opened"),
