@@ -1,5 +1,13 @@
 import dash_mantine_components as dmc
 from dash import dcc, html, dependencies
+from dash_iconify import DashIconify
+
+from omero_metrics.styles import (
+    THEME,
+    HEADER_PAPER_STYLE,
+    BUTTON_STYLE,
+)
+
 
 # COMPONENTS
 def notification_provider():
@@ -36,6 +44,122 @@ def confirm_delete_modal():
         ],
     )
 
+
+def dataset_header_paper(title, description, tag, load_buttons=True):
+    return dmc.Paper(
+        children=[
+            dmc.Group(
+                [
+                    dmc.Group(
+                        [
+                            html.Img(
+                                src="/static/omero_metrics/images/metrics_logo.png",
+                                style={
+                                    "width": "120px",
+                                    "height": "auto",
+                                },
+                            ),
+                            dmc.Stack(
+                                [
+                                    dmc.Title(
+                                        title,
+                                        c=THEME["primary"],
+                                        size="h2",
+                                    ),
+                                    dmc.Text(
+                                        description,
+                                        c=THEME["text"]["secondary"],
+                                        size="sm",
+                                    ),
+                                ],
+                                gap="xs",
+                            ),
+                        ],
+                    ),
+                    dmc.Group(
+                        [
+                            download_group,
+                            delete_button,
+                            dmc.Badge(
+                                tag,
+                                color=THEME["primary"],
+                                variant="dot",
+                                size="lg",
+                            ),
+                        ]
+                        if load_buttons
+                        else dmc.Badge(
+                            tag,
+                            color=THEME["primary"],
+                            variant="dot",
+                            size="lg",
+                        )
+                    ),
+                ],
+                justify="space-between",
+            ),
+        ],
+        **HEADER_PAPER_STYLE,
+    )
+
+download_group = dmc.Group(
+    [
+        dmc.Menu(
+            [
+                dmc.MenuTarget(
+                    dmc.Button(
+                        id="activate_download",
+                        children="Download",
+                        leftSection=DashIconify(
+                            icon="material-symbols:download", width=20
+                        ),
+                        rightSection=DashIconify(
+                            icon="carbon:chevron-down", width=20
+                        ),
+                        color=THEME["primary"],
+                        variant="outline",
+                    )
+                ),
+                dmc.MenuDropdown(
+                    [
+                        dmc.MenuItem(
+                            "YAML",
+                            id="download-yaml",
+                            leftSection=DashIconify(
+                                icon="vscode-icons:file-type-yaml", width=20
+                            ),
+                        ),
+                        dmc.MenuItem(
+                            "JSON",
+                            id="download-json",
+                            leftSection=DashIconify(
+                                icon="vscode-icons:file-type-json", width=20
+                            ),
+                        ),
+                        dmc.MenuItem(
+                            "Text",
+                            id="download-text",
+                            leftSection=DashIconify(
+                                icon="vscode-icons:file-type-text", width=20
+                            ),
+                        ),
+                    ]
+                ),
+            ],
+            trigger="click",
+        ),
+        dcc.Download(id="download"),
+    ]
+)
+
+
+delete_button = dmc.Button(
+    id="delete_data",
+    children="Delete",
+    color="red",
+    variant="filled",
+    leftSection=DashIconify(icon="ic:round-delete-forever"),
+)
 
 
 # # CALLBACKS

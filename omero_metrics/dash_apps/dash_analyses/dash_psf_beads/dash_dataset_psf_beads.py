@@ -28,7 +28,7 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
         dsc.notification_provider(),
         dsc.notifications_container(),
         dsc.confirm_delete_modal(),
-        my_components.header_component(
+        dsc.dataset_header_paper(
             "PSF Beads", "PSF Beads Analysis Dashboard", "PSF Beads Analysis"
         ),
         dmc.Container(
@@ -104,7 +104,6 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
 )
 
 
-# TODO: Can be shared across dataset interfaces
 @omero_dataset_psf_beads.expanded_callback(
     dash.dependencies.Output("key_measurements_psf", "data"),
     dash.dependencies.Output("pagination", "total"),
