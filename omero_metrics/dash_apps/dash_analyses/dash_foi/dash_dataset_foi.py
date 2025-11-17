@@ -1,29 +1,29 @@
+import math
 from time import sleep
-from omero_metrics import views
+
 import dash
+import dash_mantine_components as dmc
 import pandas as pd
+import plotly.express as px
 from dash import dcc, html
 from django_plotly_dash import DjangoDash
-import plotly.express as px
-import dash_mantine_components as dmc
 from skimage.exposure import rescale_intensity
+
+import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
+from omero_metrics import views
+from omero_metrics.dash_apps.dash_analyses import dataset_shared_components as dsc
 from omero_metrics.styles import (
-    THEME,
-    MANTINE_THEME,
     CONTAINER_STYLE,
     CONTENT_PAPER_STYLE,
     GRAPH_STYLE,
-    PLOT_LAYOUT,
-    LINE_CHART_SERIES,
     INPUT_BASE_STYLES,
+    LINE_CHART_SERIES,
+    MANTINE_THEME,
+    PLOT_LAYOUT,
     TABLE_MANTINE_STYLE,
+    THEME,
 )
-import math
-import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 from omero_metrics.tools import load
-
-from omero_metrics.dash_apps.dash_analyses import dataset_shared_components as dsc
-
 
 dashboard_name = "omero_dataset_foi"
 omero_dataset_foi = DjangoDash(

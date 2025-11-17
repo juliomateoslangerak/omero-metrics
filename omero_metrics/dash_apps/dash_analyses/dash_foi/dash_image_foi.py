@@ -1,19 +1,19 @@
 import dash
-from dash import dcc, html
-from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
+import numpy as np
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from dash import dcc, html
+from django_plotly_dash import DjangoDash
+
+import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 from omero_metrics.styles import (
-    THEME,
-    MANTINE_THEME,
     LINE_CHART_SERIES,
+    MANTINE_THEME,
+    THEME,
 )
 from omero_metrics.tools import load
-import pandas as pd
-import numpy as np
-import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
-
 
 dashboard_name = "omero_image_foi"
 omero_image_foi = DjangoDash(

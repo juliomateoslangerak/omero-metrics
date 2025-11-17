@@ -1,8 +1,7 @@
-from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 import pandas as pd
-from dash import html, dash_table
-
+from dash import dash_table, html
+from django_plotly_dash import DjangoDash
 
 df = pd.DataFrame(
     {

@@ -35,6 +35,8 @@ import logging
 from datetime import datetime
 from io import StringIO
 
+# import metrics
+import microscopemetrics_omero.process as process
 import omero.gateway as gateway
 
 # import omero dependencies
@@ -43,9 +45,6 @@ import omero.scripts as scripts
 # import configuration parser
 import yaml
 from omero.rtypes import rlong, rstring
-
-# import metrics
-import microscopemetrics_omero.process as process
 
 # Creating logging services
 logger = logging.getLogger(__name__)

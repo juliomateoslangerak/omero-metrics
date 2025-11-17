@@ -1,20 +1,20 @@
-import dash_mantine_components as dmc
-from dash import dcc, html, dependencies
-from dash_iconify import DashIconify
-
-from time import sleep
-from linkml_runtime.dumpers import YAMLDumper, JSONDumper
 import math
+from time import sleep
 
-from omero_metrics.styles import (
-    THEME,
-    HEADER_PAPER_STYLE,
-    BUTTON_STYLE,
-    TABLE_MANTINE_STYLE,
-    CONTENT_PAPER_STYLE,
-)
+import dash_mantine_components as dmc
+from dash import dcc, dependencies, html
+from dash_iconify import DashIconify
+from linkml_runtime.dumpers import JSONDumper, YAMLDumper
+
 from omero_metrics import views
 from omero_metrics.dash_apps.dash_utils import omero_metrics_components
+from omero_metrics.styles import (
+    BUTTON_STYLE,
+    CONTENT_PAPER_STYLE,
+    HEADER_PAPER_STYLE,
+    TABLE_MANTINE_STYLE,
+    THEME,
+)
 from omero_metrics.tools import load
 
 
@@ -132,9 +132,7 @@ def dataset_table_paper():
                                         children=[
                                             omero_metrics_components.get_icon(
                                                 icon="material-symbols:info",
-                                                color=THEME[
-                                                    "primary"
-                                                ],
+                                                color=THEME["primary"],
                                             )
                                         ],
                                     ),
@@ -364,7 +362,9 @@ def register_download_table_callback(app):
         if not kwargs["callback_context"].triggered:
             raise dash.no_update
 
-        triggered_id = kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
+        triggered_id = (
+            kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
+        )
         table_km = load.get_km_mm_metrics_dataset(
             mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
             table_name="key_measurements",

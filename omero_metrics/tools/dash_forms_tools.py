@@ -1,13 +1,13 @@
-import dash_mantine_components as dmc
-from dataclasses import fields
-from dash_iconify import DashIconify
 import re
-from typing import get_origin, get_args, Union
+from dataclasses import fields
+from typing import Union, get_args, get_origin
+
+import dash_mantine_components as dmc
+from dash_iconify import DashIconify
 
 # TODO: Modify the schema to make this a mm_schema class
 from linkml_runtime.utils.metamodelcore import XSDDateTime
 from microscopemetrics_schema.datamodel.microscopemetrics_schema import ProtocolUrl
-
 
 # These mappings must be ordered by priority
 FIELD_TYPE_MAPPING = {

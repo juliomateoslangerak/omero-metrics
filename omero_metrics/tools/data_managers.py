@@ -1,22 +1,20 @@
 import datetime
 import logging
 
-from microscopemetrics_schema.datamodel import (
-    microscopemetrics_schema as mm_schema,
-)
+from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
 from omero.gateway import (
     BlitzGateway,
     DatasetWrapper,
     ImageWrapper,
     ProjectWrapper,
 )
-from omero_metrics.tools import load, dump, update, delete
+
+from omero_metrics.tools import delete, dump, load, update
 from omero_metrics.tools.data_type import (
     KKM_MAPPINGS,
     TEMPLATE_MAPPINGS_DATASET,
     TEMPLATE_MAPPINGS_IMAGE,
 )
-
 
 logger = logging.getLogger(__name__)
 

@@ -1,8 +1,10 @@
 import logging
-import omero
-from omero_metrics.tools import omero_tools
+
 import microscopemetrics_schema.datamodel as mm_schema
-from omero.gateway import BlitzGateway, FileAnnotationWrapper, DatasetWrapper
+import omero
+from omero.gateway import BlitzGateway, DatasetWrapper, FileAnnotationWrapper
+
+from omero_metrics.tools import omero_tools
 from omero_metrics.tools.data_type import DATASET_TYPES
 
 logger = logging.getLogger(__name__)

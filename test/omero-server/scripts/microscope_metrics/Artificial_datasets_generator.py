@@ -31,6 +31,7 @@ This script is generating a number of copies of a dataset introducing some noise
 """
 import random
 from itertools import product
+
 import numpy as np
 import omero.gateway as gateway
 from metrics.interface import omero as ome

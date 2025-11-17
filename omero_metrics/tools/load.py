@@ -1,21 +1,23 @@
 import logging
-import yaml
+import re
+from datetime import datetime
+
+import microscopemetrics_schema.datamodel as mm_schema
 import numpy as np
+import omero
+import pandas as pd
+import yaml
+from linkml_runtime.loaders import yaml_loader
 from omero.gateway import (
     BlitzGateway,
     DatasetWrapper,
-    ImageWrapper,
-    ProjectWrapper,
     FileAnnotationWrapper,
+    ImageWrapper,
     MapAnnotationWrapper,
+    ProjectWrapper,
 )
-import microscopemetrics_schema.datamodel as mm_schema
-from linkml_runtime.loaders import yaml_loader
-import pandas as pd
+
 from omero_metrics.tools import omero_tools
-import re
-import omero
-from datetime import datetime
 from omero_metrics.tools.data_type import (
     DATASET_IMAGES,
     DATASET_TYPES,

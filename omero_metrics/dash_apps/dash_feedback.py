@@ -1,9 +1,9 @@
 import dash
+import dash_mantine_components as dmc
 from dash import html
 from django_plotly_dash import DjangoDash
-import dash_mantine_components as dmc
-import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 
+import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 
 warning_app = DjangoDash("WarningApp")
 

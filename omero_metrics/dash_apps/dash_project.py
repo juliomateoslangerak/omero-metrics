@@ -1,30 +1,31 @@
+import math
+from datetime import datetime
+from time import sleep
+
 import dash
+import dash_mantine_components as dmc
+import pandas as pd
 from dash import html
 from django_plotly_dash import DjangoDash
-import dash_mantine_components as dmc
-from datetime import datetime
-import pandas as pd
-from linkml_runtime.dumpers import YAMLDumper, JSONDumper
+from linkml_runtime.dumpers import JSONDumper, YAMLDumper
 from microscopemetrics_schema import datamodel as mm_schema
-from omero_metrics.tools import dash_forms_tools as dft
+
+import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 from omero_metrics import views
 from omero_metrics.styles import (
-    THEME,
-    CARD_STYLE1,
     BUTTON_STYLE,
-    TAB_STYLES,
-    TAB_ITEM_STYLE,
-    CONTAINER_STYLE,
-    SELECT_STYLES,
-    DATEPICKER_STYLES,
-    TABLE_MANTINE_STYLE,
-    MANTINE_THEME,
+    CARD_STYLE1,
     COLORS_CHANNELS,
+    CONTAINER_STYLE,
+    DATEPICKER_STYLES,
+    MANTINE_THEME,
+    SELECT_STYLES,
+    TAB_ITEM_STYLE,
+    TAB_STYLES,
+    TABLE_MANTINE_STYLE,
+    THEME,
 )
-import math
-from time import sleep
-import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
-
+from omero_metrics.tools import dash_forms_tools as dft
 
 # Initialize the Dash app
 dashboard_name = "omero_project_dash"

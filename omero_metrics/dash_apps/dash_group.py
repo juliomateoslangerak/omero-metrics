@@ -1,25 +1,27 @@
-import dash
-import pandas as pd
-from dash import html, dash_table, dcc
-from django_plotly_dash import DjangoDash
-import dash_mantine_components as dmc
-from omero_metrics import views
 from time import sleep
+
+import dash
+import dash_mantine_components as dmc
+import pandas as pd
+from dash import dash_table, dcc, html
+from django_plotly_dash import DjangoDash
+
+import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
+from omero_metrics import views
 from omero_metrics.styles import (
-    THEME,
-    MANTINE_THEME,
     CONTAINER_STYLE,
-    PAPER_STYLE,
-    TABLE_STYLE,
-    TABLE_CELL_STYLE,
-    TABLE_HEADER_STYLE,
-    TAB_STYLES,
-    TAB_ITEM_STYLE,
-    STYLE_DATA_CONDITIONAL,
     DATEPICKER_STYLES,
     HEADER_PAPER_STYLE,
+    MANTINE_THEME,
+    PAPER_STYLE,
+    STYLE_DATA_CONDITIONAL,
+    TAB_ITEM_STYLE,
+    TAB_STYLES,
+    TABLE_CELL_STYLE,
+    TABLE_HEADER_STYLE,
+    TABLE_STYLE,
+    THEME,
 )
-import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 
 dashboard_name = "omero_group_dash"
 dash_app_group = DjangoDash(

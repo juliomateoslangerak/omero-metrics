@@ -1,18 +1,17 @@
-import dash
-from dash import dcc, html
-from django_plotly_dash import DjangoDash
-import dash_mantine_components as dmc
-import plotly.express as px
-import plotly.graph_objs as go
-import numpy as np
 import logging
 
+import dash
+import dash_mantine_components as dmc
+import numpy as np
+import plotly.express as px
+import plotly.graph_objs as go
+from dash import dcc, html
+from django_plotly_dash import DjangoDash
 from plotly.subplots import make_subplots
 
 import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
-from omero_metrics.styles import THEME, MANTINE_THEME
+from omero_metrics.styles import MANTINE_THEME, THEME
 from omero_metrics.tools import load
-
 
 logger = logging.getLogger(__name__)
 dashboard_name = "omero_image_psf_beads"

@@ -3,14 +3,11 @@ from dataclasses import fields
 from datetime import datetime
 from typing import Union
 
-from microscopemetrics.analyses import (
+from microscopemetrics.analyses import (  # numpy_to_image_byref,
     argolight,
     field_illumination,
-    # numpy_to_image_byref,
 )
-from microscopemetrics_schema.datamodel import (
-    microscopemetrics_schema as mm_schema,
-)
+from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
 from omero.gateway import (
     BlitzGateway,
     DatasetWrapper,

@@ -1,18 +1,22 @@
-from django.utils.datetime_safe import datetime
-from django.shortcuts import render
-from microscopemetrics import AnalysisError, SaturationError
-from omeroweb.webclient.decorators import login_required
-from microscopemetrics_schema import datamodel as mm_schema
-from omero_metrics.tools import load
-from omero_metrics.tools import dump
-from omero_metrics.tools import omero_tools
-from omero_metrics.tools import data_managers
-from omero_metrics.tools import delete
-from omero_metrics.tools import data_type
 import logging
 import traceback
-from omero.gateway import FileAnnotationWrapper
+
 import omero
+from django.shortcuts import render
+from django.utils.datetime_safe import datetime
+from microscopemetrics import AnalysisError, SaturationError
+from microscopemetrics_schema import datamodel as mm_schema
+from omero.gateway import FileAnnotationWrapper
+from omeroweb.webclient.decorators import login_required
+
+from omero_metrics.tools import (
+    data_managers,
+    data_type,
+    delete,
+    dump,
+    load,
+    omero_tools,
+)
 
 logger = logging.getLogger(__name__)
 

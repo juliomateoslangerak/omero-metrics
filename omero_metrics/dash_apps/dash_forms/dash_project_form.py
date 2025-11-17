@@ -1,21 +1,21 @@
 import traceback
+from time import sleep
 
 import dash
+import dash_mantine_components as dmc
 from dash import html
 from django_plotly_dash import DjangoDash
-import dash_mantine_components as dmc
 from microscopemetrics.analyses.mappings import MAPPINGS
 from microscopemetrics_schema import datamodel as mm_schema
-from omero_metrics.tools import dash_forms_tools as dft
-from time import sleep
+
+import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 import omero_metrics.views as views
 from omero_metrics.styles import (
+    CONTAINER_STYLE,
     MANTINE_THEME,
     THEME,
-    CONTAINER_STYLE,
 )
-import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
-
+from omero_metrics.tools import dash_forms_tools as dft
 
 # TODO: change the styles import
 

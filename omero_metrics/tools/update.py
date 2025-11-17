@@ -1,7 +1,9 @@
 from typing import Union
-from omero_metrics.tools import omero_tools
+
 import microscopemetrics_schema.datamodel as mm_schema
 from omero.gateway import BlitzGateway, MapAnnotationWrapper
+
+from omero_metrics.tools import omero_tools
 
 
 def update_key_measurements(

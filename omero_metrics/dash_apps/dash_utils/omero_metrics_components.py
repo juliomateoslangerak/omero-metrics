@@ -1,20 +1,21 @@
+from datetime import datetime
+from typing import Union
+
 import dash_mantine_components as dmc
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
 from dash import dcc, html
 from dash_iconify import DashIconify
-from omero_metrics.styles import (
-    THEME,
-    HEADER_PAPER_STYLE,
-    BUTTON_STYLE,
-)
-from datetime import datetime
-
-import plotly.express as px
-import numpy as np
 from plotly.subplots import make_subplots
-import plotly.graph_objects as go
-from typing import Union
-import pandas as pd
-from omero_metrics.styles import COLORS_CHANNELS
+
+from omero_metrics.styles import (
+    BUTTON_STYLE,
+    COLORS_CHANNELS,
+    HEADER_PAPER_STYLE,
+    THEME,
+)
 
 
 def alert_handler(

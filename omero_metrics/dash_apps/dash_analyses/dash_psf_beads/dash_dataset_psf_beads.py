@@ -1,11 +1,16 @@
 import dash
+import dash_mantine_components as dmc
 from dash import dcc, html
 from django_plotly_dash import DjangoDash
-import dash_mantine_components as dmc
-from omero_metrics.styles import THEME, MANTINE_THEME, CONTAINER_STYLE, TABLE_MANTINE_STYLE
-from omero_metrics import views
 
+from omero_metrics import views
 from omero_metrics.dash_apps.dash_analyses import dataset_shared_components as dsc
+from omero_metrics.styles import (
+    CONTAINER_STYLE,
+    MANTINE_THEME,
+    TABLE_MANTINE_STYLE,
+    THEME,
+)
 
 dashboard_name = "omero_dataset_psf_beads"
 

@@ -7,30 +7,28 @@ from itertools import product
 from random import choice
 from string import ascii_letters
 from typing import Union
-from jsonasobj2._jsonobj import JsonObj
+
 import numpy as np
 import pandas as pd
-from microscopemetrics_schema.datamodel import (
-    microscopemetrics_schema as mm_schema,
-)
+from jsonasobj2._jsonobj import JsonObj
+from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
 from omero import grid
 from omero.constants import metadata
 from omero.gateway import (
     BlitzGateway,
+    BlitzObjectWrapper,
+    ChannelWrapper,
+    CommentAnnotationWrapper,
+    DatasetWrapper,
     ExperimenterGroupWrapper,
     ExperimenterWrapper,
-    ProjectWrapper,
-    DatasetWrapper,
-    ImageWrapper,
     FileAnnotationWrapper,
+    ImageWrapper,
     MapAnnotationWrapper,
+    ProjectWrapper,
     RoiWrapper,
     TagAnnotationWrapper,
-    CommentAnnotationWrapper,
-    ChannelWrapper,
-    BlitzObjectWrapper,
 )
-
 from omero.model import (
     DatasetI,
     DatasetImageLinkI,

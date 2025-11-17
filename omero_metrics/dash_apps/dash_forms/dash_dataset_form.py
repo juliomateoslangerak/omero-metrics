@@ -1,20 +1,21 @@
 import traceback
+from time import sleep
 
 import dash
+import dash_mantine_components as dmc
 from dash import html
 from django_plotly_dash import DjangoDash
-import dash_mantine_components as dmc
-from microscopemetrics_schema import datamodel as mm_schema
-from omero_metrics.tools import dash_forms_tools as dft
-from time import sleep
-from omero_metrics.views import run_analysis_view
-from omero_metrics.styles import (
-    THEME,
-    MANTINE_THEME,
-    CONTAINER_STYLE,
-)
 from microscopemetrics import SaturationError
+from microscopemetrics_schema import datamodel as mm_schema
+
 import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
+from omero_metrics.styles import (
+    CONTAINER_STYLE,
+    MANTINE_THEME,
+    THEME,
+)
+from omero_metrics.tools import dash_forms_tools as dft
+from omero_metrics.views import run_analysis_view
 
 active = 0
 min_step = 0

@@ -1,8 +1,7 @@
-from omero.gateway import ProjectWrapper
-from omeroweb.testlib import IWebTest, get
 import pytest
 from django.urls import reverse
-from omero.gateway import BlitzGateway
+from omero.gateway import BlitzGateway, ProjectWrapper
+from omeroweb.testlib import IWebTest, get
 
 
 def get_connection(user, group_id=None):
@@ -37,10 +36,11 @@ class TestLoadIndexPage(IWebTest):
     @pytest.mark.django_db
     def test_app_lookup_dataset_foi(self, user1):
         """Test looking up an existing application for dataset foi"""
+        from django_plotly_dash.models import get_stateless_by_name
+
         from omero_metrics.dash_apps.dash_analyses.dash_foi.dash_dataset_foi import (
             omero_dataset_foi,
         )
-        from django_plotly_dash.models import get_stateless_by_name
 
         app = get_stateless_by_name(omero_dataset_foi._uid)
         assert app
@@ -49,10 +49,11 @@ class TestLoadIndexPage(IWebTest):
     @pytest.mark.django_db
     def test_app_lookup_dataset_psf(self, user1):
         """Test looking up an existing application for dataset psf"""
+        from django_plotly_dash.models import get_stateless_by_name
+
         from omero_metrics.dash_apps.dash_analyses.dash_psf_beads.dash_dataset_psf_beads import (
             omero_dataset_psf_beads,
         )
-        from django_plotly_dash.models import get_stateless_by_name
 
         app = get_stateless_by_name(omero_dataset_psf_beads._uid)
         assert app
@@ -61,8 +62,9 @@ class TestLoadIndexPage(IWebTest):
     @pytest.mark.django_db
     def test_app_lookup_project(self, user1):
         """Test looking up an existing application for project"""
-        from omero_metrics.dash_apps.dash_project import omero_project_dash
         from django_plotly_dash.models import get_stateless_by_name
+
+        from omero_metrics.dash_apps.dash_project import omero_project_dash
 
         app = get_stateless_by_name(omero_project_dash._uid)
         assert app
@@ -71,10 +73,11 @@ class TestLoadIndexPage(IWebTest):
     @pytest.mark.django_db
     def test_app_lookup_image_foi(self, user1):
         """Test looking up an existing application for image foi"""
+        from django_plotly_dash.models import get_stateless_by_name
+
         from omero_metrics.dash_apps.dash_analyses.dash_foi.dash_image_foi import (
             omero_image_foi,
         )
-        from django_plotly_dash.models import get_stateless_by_name
 
         app = get_stateless_by_name(omero_image_foi._uid)
         assert app
@@ -83,10 +86,11 @@ class TestLoadIndexPage(IWebTest):
     @pytest.mark.django_db
     def test_app_lookup_image_psf(self, user1):
         """Test looking up an existing application for image psf"""
+        from django_plotly_dash.models import get_stateless_by_name
+
         from omero_metrics.dash_apps.dash_analyses.dash_psf_beads.dash_image_psf_beads import (
             omero_image_psf_beads,
         )
-        from django_plotly_dash.models import get_stateless_by_name
 
         app = get_stateless_by_name(omero_image_psf_beads._uid)
         assert app
@@ -95,10 +99,11 @@ class TestLoadIndexPage(IWebTest):
     @pytest.mark.django_db
     def test_app_lookup_dataset_form(self, user1):
         """Test looking up an existing application for dataset form"""
+        from django_plotly_dash.models import get_stateless_by_name
+
         from omero_metrics.dash_apps.dash_forms.dash_dataset_form import (
             dash_form_dataset,
         )
-        from django_plotly_dash.models import get_stateless_by_name
 
         app = get_stateless_by_name(dash_form_dataset._uid)
         assert app
@@ -107,10 +112,11 @@ class TestLoadIndexPage(IWebTest):
     @pytest.mark.django_db
     def test_app_lookup_project_form(self, user1):
         """Test looking up an existing application for project form"""
+        from django_plotly_dash.models import get_stateless_by_name
+
         from omero_metrics.dash_apps.dash_forms.dash_project_form import (
             dash_form_project,
         )
-        from django_plotly_dash.models import get_stateless_by_name
 
         app = get_stateless_by_name(dash_form_project._uid)
         assert app
