@@ -169,7 +169,7 @@ delete_button = dmc.Button(
 
 
 # CALLBACKS
-def register_delete_datasets_callback(app):
+def register_delete_dataset_callback(app):
     @app.expanded_callback(
         dependencies.Output("confirm-delete-modal", "opened"),
         dependencies.Output("notifications_container", "children"),

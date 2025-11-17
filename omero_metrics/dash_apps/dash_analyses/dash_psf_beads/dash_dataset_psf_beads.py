@@ -104,7 +104,7 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
 
 
 # Register shared callbacks
-dsc.register_delete_datasets_callback(omero_dataset_psf_beads)
+dsc.register_delete_dataset_callback(omero_dataset_psf_beads)
 dsc.register_download_datasets_callback(omero_dataset_psf_beads)
 
 

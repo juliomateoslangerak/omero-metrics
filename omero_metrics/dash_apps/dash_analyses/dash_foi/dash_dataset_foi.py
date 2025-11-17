@@ -239,7 +239,7 @@ omero_dataset_foi.layout = dmc.MantineProvider(
 
 
 # Register shared callbacks
-dsc.register_delete_datasets_callback(omero_dataset_foi)
+dsc.register_delete_dataset_callback(omero_dataset_foi)
 dsc.register_download_datasets_callback(omero_dataset_foi)
 
 
