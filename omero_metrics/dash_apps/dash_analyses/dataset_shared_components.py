@@ -4,14 +4,18 @@ from dash_iconify import DashIconify
 
 from time import sleep
 from linkml_runtime.dumpers import YAMLDumper, JSONDumper
+import math
 
 from omero_metrics.styles import (
     THEME,
     HEADER_PAPER_STYLE,
     BUTTON_STYLE,
+    TABLE_MANTINE_STYLE,
+    CONTENT_PAPER_STYLE,
 )
 from omero_metrics import views
 from omero_metrics.dash_apps.dash_utils import omero_metrics_components
+from omero_metrics.tools import load
 
 
 # COMPONENTS
@@ -105,6 +109,73 @@ def dataset_header_paper(title, description, tag, load_buttons=True):
             ),
         ],
         **HEADER_PAPER_STYLE,
+    )
+
+
+def dataset_table_paper():
+    return dmc.Paper(
+        children=[
+            dmc.Stack(
+                [
+                    dmc.Group(
+                        [
+                            dmc.Text(
+                                "Key Measurements",
+                                fw=500,
+                                size="lg",
+                            ),
+                            dmc.Group(
+                                [
+                                    omero_metrics_components.download_table,
+                                    dmc.Tooltip(
+                                        label="Key measurements for all the channels",
+                                        children=[
+                                            omero_metrics_components.get_icon(
+                                                icon="material-symbols:info",
+                                                color=THEME[
+                                                    "primary"
+                                                ],
+                                            )
+                                        ],
+                                    ),
+                                ]
+                            ),
+                        ],
+                        justify="space-between",
+                    ),
+                    dmc.ScrollArea(
+                        offsetScrollbars=True,
+                        children=[
+                            dmc.Table(
+                                id="kkm_table",
+                                striped=True,
+                                highlightOnHover=True,
+                                withTableBorder=False,
+                                withColumnBorders=True,
+                                fz="sm",
+                                style=TABLE_MANTINE_STYLE,
+                            ),
+                            dmc.Group(
+                                mt="md",
+                                children=[
+                                    dmc.Pagination(
+                                        id="kkm_table_pagination",
+                                        total=0,
+                                        value=1,
+                                        withEdges=True,
+                                    )
+                                ],
+                                justify="center",
+                            ),
+                        ],
+                    ),
+                ],
+                gap="md",
+                justify="space-between",
+                h="100%",
+            ),
+        ],
+        **CONTENT_PAPER_STYLE,
     )
 
 
@@ -238,4 +309,74 @@ def register_download_datasets_callback(app):
                 content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.txt"
             )
 
+        raise dash.no_update
+
+
+def register_update_kkm_table_callback(app):
+    @app.expanded_callback(
+        dependencies.Output("kkm_table", "data"),
+        dependencies.Output("kkm_table_pagination", "total"),
+        [
+            dependencies.Input("kkm_table_pagination", "value"),
+        ],
+    )
+    def update_kkm_table_callback(pagination_value, **kwargs):
+        try:
+            page = int(pagination_value)
+            kkm = kwargs["session_state"]["context"]["kkm"]
+            # TODO: review how we process the tables here.
+            table_km = load.get_km_mm_metrics_dataset(
+                mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
+                table_name="key_measurements",
+            )
+            start_idx = (page - 1) * 4
+            end_idx = start_idx + 4
+            metrics_df = table_km.filter(["channel_name", *kkm])
+            metrics_df = metrics_df.round(3)
+            metrics_df.columns = metrics_df.columns.str.replace(
+                "_", " ", regex=True
+            ).str.title()
+            page_data = metrics_df.iloc[start_idx:end_idx]
+            return {
+                "head": page_data.columns.tolist(),
+                "body": page_data.values.tolist(),
+                "caption": "Statistical measurements across channels",
+            }, math.ceil(len(metrics_df) / 4)
+        except Exception as e:
+            return {
+                "head": ["Error"],
+                "body": [[str(e)]],
+                "caption": "Error loading measurements",
+            }, 1
+
+
+def register_download_table_callback(app):
+    @app.expanded_callback(
+        dependencies.Output("table-download", "data"),
+        [
+            dependencies.Input("table-download-csv", "n_clicks"),
+            dependencies.Input("table-download-xlsx", "n_clicks"),
+            dependencies.Input("table-download-json", "n_clicks"),
+        ],
+        prevent_initial_call=True,
+    )
+    def download_table_callback(*args, **kwargs):
+        if not kwargs["callback_context"].triggered:
+            raise dash.no_update
+
+        triggered_id = kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
+        table_km = load.get_km_mm_metrics_dataset(
+            mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
+            table_name="key_measurements",
+        )
+        kkm = kwargs["session_state"]["context"]["kkm"]
+        table_kkm = table_km.filter(["channel_name", *kkm])
+        table_kkm = table_kkm.round(3)
+        table_kkm.columns = table_kkm.columns.str.replace("_", " ").str.title()
+        if triggered_id == "table-download-csv":
+            return dcc.send_data_frame(table_kkm.to_csv, "km_table.csv")
+        elif triggered_id == "table-download-xlsx":
+            return dcc.send_data_frame(table_kkm.to_excel, "km_table.xlsx")
+        elif triggered_id == "table-download-json":
+            return dcc.send_data_frame(table_kkm.to_json, "km_table.json")
         raise dash.no_update

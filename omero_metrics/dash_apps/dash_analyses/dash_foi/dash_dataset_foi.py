@@ -104,70 +104,7 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                         dmc.GridCol(
                             span=6,
                             children=[
-                                dmc.Paper(
-                                    children=[
-                                        dmc.Stack(
-                                            [
-                                                dmc.Group(
-                                                    [
-                                                        dmc.Text(
-                                                            "Key Measurements",
-                                                            fw=500,
-                                                            size="lg",
-                                                        ),
-                                                        dmc.Group(
-                                                            [
-                                                                my_components.download_table,
-                                                                dmc.Tooltip(
-                                                                    label="Statistical measurements for all the channels",
-                                                                    children=[
-                                                                        my_components.get_icon(
-                                                                            icon="material-symbols:info",
-                                                                            color=THEME[
-                                                                                "primary"
-                                                                            ],
-                                                                        )
-                                                                    ],
-                                                                ),
-                                                            ]
-                                                        ),
-                                                    ],
-                                                    justify="space-between",
-                                                ),
-                                                dmc.ScrollArea(
-                                                    offsetScrollbars=True,
-                                                    children=[
-                                                        dmc.Table(
-                                                            id="km_table",
-                                                            striped=True,
-                                                            highlightOnHover=True,
-                                                            withTableBorder=False,
-                                                            withColumnBorders=True,
-                                                            fz="sm",
-                                                            style=TABLE_MANTINE_STYLE,
-                                                        ),
-                                                        dmc.Group(
-                                                            mt="md",
-                                                            children=[
-                                                                dmc.Pagination(
-                                                                    id="pagination",
-                                                                    total=0,
-                                                                    value=1,
-                                                                    withEdges=True,
-                                                                )
-                                                            ],
-                                                            justify="center",
-                                                        ),
-                                                    ],
-                                                ),
-                                            ],
-                                            gap="md",
-                                            justify="space-between",
-                                            h="100%",
-                                        ),
-                                    ],
-                                    **CONTENT_PAPER_STYLE,
-                                ),
+                                dsc.dataset_table_paper(),
                             ],
                         ),
                     ],
@@ -241,6 +178,8 @@ omero_dataset_foi.layout = dmc.MantineProvider(
 # Register shared callbacks
 dsc.register_delete_dataset_callback(omero_dataset_foi)
 dsc.register_download_datasets_callback(omero_dataset_foi)
+dsc.register_update_kkm_table_callback(omero_dataset_foi)
+dsc.register_download_table_callback(omero_dataset_foi)
 
 
 @omero_dataset_foi.expanded_callback(
@@ -257,43 +196,6 @@ def update_dropdown_menu(*args, **kwargs):
         ], "0"
     except Exception as e:
         return [{"label": "Error loading channels", "value": "0"}], "0"
-
-
-@omero_dataset_foi.expanded_callback(
-    dash.dependencies.Output("km_table", "data"),
-    dash.dependencies.Output("pagination", "total"),
-    [
-        dash.dependencies.Input("pagination", "value"),
-    ],
-)
-def update_km_table(pagination_value, **kwargs):
-    try:
-        page = int(pagination_value)
-        kkm = kwargs["session_state"]["context"]["kkm"]
-        # TODO: review how we process the tables here.
-        table_km = load.get_km_mm_metrics_dataset(
-            mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
-            table_name="key_measurements",
-        )
-        start_idx = (page - 1) * 4
-        end_idx = start_idx + 4
-        metrics_df = table_km.filter(["channel_name", *kkm])
-        metrics_df = metrics_df.round(3)
-        metrics_df.columns = metrics_df.columns.str.replace(
-            "_", " ", regex=True
-        ).str.title()
-        page_data = metrics_df.iloc[start_idx:end_idx]
-        return {
-            "head": page_data.columns.tolist(),
-            "body": page_data.values.tolist(),
-            "caption": "Statistical measurements across channels",
-        }, math.ceil(len(metrics_df) / 4)
-    except Exception as e:
-        return {
-            "head": ["Error"],
-            "body": [[str(e)]],
-            "caption": "Error loading measurements",
-        }, 1
 
 
 @omero_dataset_foi.expanded_callback(
@@ -381,39 +283,6 @@ def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:
     value = getattr(df, col).str.replace("_", " ", regex=True).str.title()
     setattr(df, col, value)
     return df
-
-
-@omero_dataset_foi.expanded_callback(
-    dash.dependencies.Output("table-download", "data"),
-    [
-        dash.dependencies.Input("table-download-csv", "n_clicks"),
-        dash.dependencies.Input("table-download-xlsx", "n_clicks"),
-        dash.dependencies.Input("table-download-json", "n_clicks"),
-    ],
-    prevent_initial_call=True,
-)
-def download_table_data(*args, **kwargs):
-    if not kwargs["callback_context"].triggered:
-        raise dash.no_update
-
-    triggered_id = kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
-    table_km = load.get_km_mm_metrics_dataset(
-        mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
-        table_name="key_measurements",
-    )
-    kkm = kwargs["session_state"]["context"]["kkm"]
-    metrics_df = table_km.filter(["channel_name", *kkm])
-    metrics_df = metrics_df.round(3)
-    metrics_df.columns = metrics_df.columns.str.replace(
-        "_", " ", regex=True
-    ).str.title()
-    if triggered_id == "table-download-csv":
-        return dcc.send_data_frame(metrics_df.to_csv, "km_table.csv")
-    elif triggered_id == "table-download-xlsx":
-        return dcc.send_data_frame(metrics_df.to_excel, "km_table.xlsx")
-    elif triggered_id == "table-download-json":
-        return dcc.send_data_frame(metrics_df.to_json, "km_table.json")
-    raise dash.no_update
 
 
 omero_dataset_foi.clientside_callback(
