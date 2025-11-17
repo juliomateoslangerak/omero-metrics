@@ -182,7 +182,7 @@ def register_delete_dataset_callback(app):
         ],
         prevent_initial_call=True,
     )
-    def delete_dataset(*args, **kwargs):
+    def delete_dataset_callback(*args, **kwargs):
         triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
         dataset_id = kwargs["session_state"]["context"][
             "mm_dataset"
@@ -212,7 +212,7 @@ def register_download_datasets_callback(app):
         ],
         prevent_initial_call=True,
     )
-    def download_dataset_data(*args, **kwargs):
+    def download_dataset_callback(*args, **kwargs):
         if not kwargs["callback_context"].triggered:
             raise dash.no_update
 
