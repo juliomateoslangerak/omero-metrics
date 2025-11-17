@@ -2,11 +2,16 @@ import dash_mantine_components as dmc
 from dash import dcc, html, dependencies
 from dash_iconify import DashIconify
 
+from time import sleep
+from linkml_runtime.dumpers import YAMLDumper, JSONDumper
+
 from omero_metrics.styles import (
     THEME,
     HEADER_PAPER_STYLE,
     BUTTON_STYLE,
 )
+from omero_metrics import views
+from omero_metrics.dash_apps.dash_utils import omero_metrics_components
 
 
 # COMPONENTS
@@ -102,6 +107,7 @@ def dataset_header_paper(title, description, tag, load_buttons=True):
         **HEADER_PAPER_STYLE,
     )
 
+
 download_group = dmc.Group(
     [
         dmc.Menu(
@@ -162,34 +168,74 @@ delete_button = dmc.Button(
 )
 
 
-# # CALLBACKS
-# @omero_dataset_psf_beads.expanded_callback(
-#     dependencies.Output("confirm_delete", "opened"),
-#     dependencies.Output("notifications_container", "children"),
-#     dependencies.Output("modal-submit-button", "loading"),
-#     [
-#         dependencies.Input("delete_data", "n_clicks"),
-#         dependencies.Input("modal-submit-button", "n_clicks"),
-#         dependencies.Input("modal-close-button", "n_clicks"),
-#         dependencies.State("confirm_delete", "opened"),
-#     ],
-#     prevent_initial_call=True,
-# )
-# def delete_dataset(*args, **kwargs):
-#     triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
-#     dataset_id = kwargs["session_state"]["context"][
-#         "mm_dataset"
-#     ].data_reference.omero_object_id
-#     request = kwargs["request"]
-#     opened = not args[3]
-#     if triggered_button == "modal-submit-button.n_clicks" and args[0] > 0:
-#         sleep(1)
-#         response_type, response_msg = views.delete_dataset(
-#             request, dataset_id=dataset_id
-#         )
-#
-#         return my_components.notification_handler(
-#             response_type, response_msg, opened
-#         )
-#     else:
-#         return opened, None, False
+# CALLBACKS
+def register_delete_datasets_callback(app):
+    @app.expanded_callback(
+        dependencies.Output("confirm-delete-modal", "opened"),
+        dependencies.Output("notifications_container", "children"),
+        dependencies.Output("confirm-delete-button", "loading"),
+        [
+            dependencies.Input("delete_data", "n_clicks"),
+            dependencies.Input("confirm-delete-button", "n_clicks"),
+            dependencies.Input("cancel-delete-button", "n_clicks"),
+            dependencies.State("confirm-delete-modal", "opened"),
+        ],
+        prevent_initial_call=True,
+    )
+    def delete_dataset(*args, **kwargs):
+        triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
+        dataset_id = kwargs["session_state"]["context"][
+            "mm_dataset"
+        ].data_reference.omero_object_id
+        request = kwargs["request"]
+        opened = not args[3]
+        if triggered_button == "confirm-delete-button.n_clicks" and args[0] > 0:
+            sleep(1)
+            response_type, response_msg = views.delete_dataset(
+                request, dataset_id=dataset_id
+            )
+
+            return omero_metrics_components.notification_handler(
+                response_type, response_msg, opened
+            )
+        else:
+            return opened, None, False
+
+
+def register_download_datasets_callback(app):
+    @app.expanded_callback(
+        dependencies.Output("download", "data"),
+        [
+            dependencies.Input("download-yaml", "n_clicks"),
+            dependencies.Input("download-json", "n_clicks"),
+            dependencies.Input("download-text", "n_clicks"),
+        ],
+        prevent_initial_call=True,
+    )
+    def download_dataset_data(*args, **kwargs):
+        if not kwargs["callback_context"].triggered:
+            raise dash.no_update
+
+        triggered_id = (
+            kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
+        )
+        mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
+        file_name = mm_dataset.name
+        yaml_dumper = YAMLDumper()
+        json_dumper = JSONDumper()
+        if triggered_id == "download-yaml":
+            return dict(
+                content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.yaml"
+            )
+
+        elif triggered_id == "download-json":
+            return dict(
+                content=json_dumper.dumps(mm_dataset), filename=f"{file_name}.json"
+            )
+
+        elif triggered_id == "download-text":
+            return dict(
+                content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.txt"
+            )
+
+        raise dash.no_update

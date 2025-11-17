@@ -6,7 +6,6 @@ from dash import dcc, html
 from django_plotly_dash import DjangoDash
 import plotly.express as px
 import dash_mantine_components as dmc
-from linkml_runtime.dumpers import YAMLDumper, JSONDumper
 from skimage.exposure import rescale_intensity
 from omero_metrics.styles import (
     THEME,
@@ -239,6 +238,11 @@ omero_dataset_foi.layout = dmc.MantineProvider(
 )
 
 
+# Register shared callbacks
+dsc.register_delete_datasets_callback(omero_dataset_foi)
+dsc.register_download_datasets_callback(omero_dataset_foi)
+
+
 @omero_dataset_foi.expanded_callback(
     dash.dependencies.Output("channel_dropdown_foi", "data"),
     dash.dependencies.Output("channel_dropdown_foi", "value"),
@@ -379,75 +383,6 @@ def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:
     return df
 
 
-# TODO: These functions can be shared across dataset types
-@omero_dataset_foi.expanded_callback(
-    dash.dependencies.Output("confirm-delete-modal", "opened"),
-    dash.dependencies.Output("notifications_container", "children"),
-    dash.dependencies.Output("confirm-delete-button", "loading"),
-    [
-        dash.dependencies.Input("delete_data", "n_clicks"),
-        dash.dependencies.Input("confirm-delete-button", "n_clicks"),
-        dash.dependencies.Input("cancel-delete-button", "n_clicks"),
-        dash.dependencies.State("confirm-delete-modal", "opened"),
-    ],
-    prevent_initial_call=True,
-)
-def delete_dataset(*args, **kwargs):
-    triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
-    dataset_id = kwargs["session_state"]["context"][
-        "mm_dataset"
-    ].data_reference.omero_object_id
-    request = kwargs["request"]
-    opened = not args[3]
-    if triggered_button == "confirm-delete-button.n_clicks" and args[0] > 0:
-        sleep(1)
-        response_type, response_msg = views.delete_dataset(
-            request, dataset_id=dataset_id
-        )
-
-        return my_components.notification_handler(
-            response_type, response_msg, opened
-        )
-    else:
-        return opened, None, False
-
-
-@omero_dataset_foi.expanded_callback(
-    dash.dependencies.Output("download", "data"),
-    [
-        dash.dependencies.Input("download-yaml", "n_clicks"),
-        dash.dependencies.Input("download-json", "n_clicks"),
-        dash.dependencies.Input("download-text", "n_clicks"),
-    ],
-    prevent_initial_call=True,
-)
-def download_dataset_data(*args, **kwargs):
-    if not kwargs["callback_context"].triggered:
-        raise dash.no_update
-
-    triggered_id = kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
-    mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
-    file_name = mm_dataset.name
-    yaml_dumper = YAMLDumper()
-    json_dumper = JSONDumper()
-    if triggered_id == "download-yaml":
-        return dict(
-            content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.yaml"
-        )
-
-    elif triggered_id == "download-json":
-        return dict(
-            content=json_dumper.dumps(mm_dataset), filename=f"{file_name}.json"
-        )
-
-    elif triggered_id == "download-text":
-        return dict(
-            content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.txt"
-        )
-
-    raise dash.no_update
-
-
 @omero_dataset_foi.expanded_callback(
     dash.dependencies.Output("table-download", "data"),
     [
@@ -490,7 +425,9 @@ omero_dataset_foi.clientside_callback(
         return false;
     }
     """,
-    dash.dependencies.Output("confirm-delete-button", "loading", allow_duplicate=True),
+    dash.dependencies.Output(
+        "confirm-delete-button", "loading", allow_duplicate=True
+    ),
     dash.dependencies.Input("confirm-delete-button", "n_clicks"),
     prevent_initial_call=True,
 )
