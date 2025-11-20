@@ -355,13 +355,13 @@ def header_component(title, description, tag, load_buttons=True):
     )
 
 
-def thresholds_paper(Accordion_children):
+def thresholds_paper(accordion_children):
     return [
         dmc.Accordion(
             id="accordion-compose-controls",
             chevron=DashIconify(icon="ant-design:plus-outlined"),
             disableChevronRotation=True,
-            children=Accordion_children,
+            children=accordion_children,
         ),
         dmc.Group(
             justify="flex-end",
