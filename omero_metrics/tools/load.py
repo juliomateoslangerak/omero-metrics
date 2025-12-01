@@ -1,5 +1,6 @@
 import logging
 import re
+from dataclasses import asdict
 from datetime import datetime
 
 import microscopemetrics_schema.datamodel as mm_schema
@@ -246,9 +247,7 @@ def load_dash_data_project(
     kkm = list(processed_datasets.values())[0].kkm
     dates = []
     for key, value in processed_datasets.items():
-        df = get_km_mm_metrics_dataset(
-            mm_dataset=value.mm_dataset, table_name="key_measurements"
-        )
+        df = get_km_mm_metrics_dataset(mm_dataset=value.mm_dataset)
         date = datetime.strptime(
             value.mm_dataset.acquisition_datetime, "%Y-%m-%dT%H:%M:%S"
         )
@@ -426,22 +425,8 @@ def get_rois_mm_dataset(mm_dataset: mm_schema.MetricsDataset):
 
 def get_km_mm_metrics_dataset(
     mm_dataset,
-    table_name,
-    columns_exceptions=[
-        "omero_object_type",
-        "data_reference",
-        "name",
-        "description",
-        "linked_references",
-        "class_class_name",
-        "table_data",
-    ],
 ):
-    table = mm_dataset.output[table_name]
-    table_data = {
-        k: v for k, v in table.__dict__.items() if k not in columns_exceptions and v
-    }
-    df = pd.DataFrame(table_data)
+    df = pd.DataFrame([asdict(km) for km in mm_dataset.output.key_measurements])
     df = df.replace("nan", np.nan)
     # Try to convert each column to numeric, keep original if it fails
     for col in df.columns:

@@ -176,10 +176,10 @@ class DatasetManager:
             logger.error("No configuration to save.")
             return
 
-        update.update_key_measurements(
+        update.update_map_annotation(
             conn=self._conn,
-            new_key_measurements=self.analysis_config,
-            target_key_measurements=self.analysis_config_id,
+            new_map_annotation=self.analysis_config,
+            target_map_annotation=self.analysis_config_id,
             replace=True,
             new_description=f"config saved on {datetime.datetime.now()}",
         )

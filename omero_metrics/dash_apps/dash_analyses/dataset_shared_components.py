@@ -325,7 +325,6 @@ def register_update_kkm_table_callback(app):
             # TODO: review how we process the tables here.
             table_km = load.get_km_mm_metrics_dataset(
                 mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
-                table_name="key_measurements",
             )
             start_idx = (page - 1) * 4
             end_idx = start_idx + 4
@@ -367,7 +366,6 @@ def register_download_table_callback(app):
         )
         table_km = load.get_km_mm_metrics_dataset(
             mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
-            table_name="key_measurements",
         )
         kkm = kwargs["session_state"]["context"]["kkm"]
         table_kkm = table_km.filter(["channel_name", *kkm])

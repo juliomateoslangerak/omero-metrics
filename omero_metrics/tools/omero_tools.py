@@ -911,7 +911,7 @@ def create_key_value(
     return map_ann
 
 
-def update_key_measurements(
+def update_map_annotation(
     annotation: MapAnnotationWrapper,
     updated_annotation: dict,
     replace=True,
