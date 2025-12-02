@@ -260,17 +260,23 @@ def update_image(channel_index, color, invert, contour, roi, beads_info, **kwarg
         mm_image = kwargs["session_state"]["context"]["mm_image"]
         image_id = mm_image.data_reference.omero_object_id
         channel_index = int(channel_index)
-        min_distance = int(mm_dataset.input_parameters.min_lateral_distance_factor)
+        # TODO: we have to decide, at the scheme level, on weather we set the min_distance in pixels or in FWHM
+        min_distance_px = int(
+            mm_dataset.input_parameters.min_lateral_distance_factor * 2
+        )
+        half_min_distance_px = min_distance_px // 2
         bead_properties_df = load.load_table_mm_metrics(
             mm_dataset.output["bead_properties"]
         )
-        df_beads_location = bead_properties_df.loc[
+        beads_location_df = bead_properties_df.loc[
             (bead_properties_df["image_id"] == image_id)
             & (bead_properties_df["channel_nr"] == channel_index),
             :,
         ].copy()
 
-        scatter, roi_rect = beads_scatter_plot(df_beads_location, min_distance)
+        scatter, roi_rect = beads_scatter_plot(
+            beads_location_df, half_min_distance_px
+        )
 
         if invert:
             color = color + "_r"
@@ -358,7 +364,10 @@ def callback_mip(points, channel_index, **kwargs):
         mm_dataset.output["bead_properties"]
     )
     # TODO: This is a hack. We just reproduce what microscope-metrics does to extract the min-distance
-    min_dist = int(mm_dataset.input_parameters.min_lateral_distance_factor * 2)
+    min_distance_px = int(
+        mm_dataset.input_parameters.min_lateral_distance_factor * 2
+    )
+    half_min_distance_px = min_distance_px // 2
 
     if point["curveNumber"] == 1:
         bead_index = point["pointNumber"]
@@ -374,13 +383,13 @@ def callback_mip(points, channel_index, **kwargs):
         stack = mm_image.array_data[
             0,  # time
             :,  # z-dimension
-            max(0, y_pos - min_dist) : min(
+            max(0, y_pos - half_min_distance_px) : min(
                 mm_image.array_data.shape[2],
-                y_pos + min_dist + 1,
+                y_pos + half_min_distance_px + 1,
             ),  # y-dimension
-            max(0, x_pos - min_dist) : min(
+            max(0, x_pos - half_min_distance_px) : min(
                 mm_image.array_data.shape[3],
-                x_pos + min_dist + 1,
+                x_pos + half_min_distance_px + 1,
             ),  # x-dimension
             channel_index,
         ]
@@ -679,7 +688,7 @@ def get_bead_profiles(bead_index, channel_index, image_id, mm_dataset):
     return profiles
 
 
-def beads_scatter_plot(df, min_distance):
+def beads_scatter_plot(df, half_min_distance_px):
     df["color"] = np.where(df["considered_valid"] == "True", "green", "red")
 
     beads_location_plot = go.Scatter(
@@ -719,10 +728,10 @@ def beads_scatter_plot(df, min_distance):
     bead_frames = [
         dict(
             type="rect",
-            x0=row.center_x - min_distance,
-            y0=row.center_y - min_distance,
-            x1=row.center_x + min_distance,
-            y1=row.center_y + min_distance,
+            x0=row.center_x - half_min_distance_px,
+            y0=row.center_y - half_min_distance_px,
+            x1=row.center_x + half_min_distance_px,
+            y1=row.center_y + half_min_distance_px,
             xref="x",
             yref="y",
             line=dict(
