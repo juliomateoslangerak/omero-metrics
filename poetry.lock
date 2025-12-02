@@ -889,14 +889,14 @@ files = [
 
 [[package]]
 name = "django"
-version = "4.2.26"
+version = "4.2.27"
 description = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
 optional = false
 python-versions = ">=3.8"
 groups = ["main", "dev"]
 files = [
-    {file = "django-4.2.26-py3-none-any.whl", hash = "sha256:c96e64fc3c359d051a6306871bd26243db1bd02317472a62ffdbe6c3cae14280"},
-    {file = "django-4.2.26.tar.gz", hash = "sha256:9398e487bcb55e3f142cb56d19fbd9a83e15bb03a97edc31f408361ee76d9d7a"},
+    {file = "django-4.2.27-py3-none-any.whl", hash = "sha256:f393a394053713e7d213984555c5b7d3caeee78b2ccb729888a0774dff6c11a8"},
+    {file = "django-4.2.27.tar.gz", hash = "sha256:b865fbe0f4a3d1ee36594c5efa42b20db3c8bbb10dff0736face1c6e4bda5b92"},
 ]
 
 [package.dependencies]
@@ -1144,15 +1144,15 @@ files = [
 
 [[package]]
 name = "eval-type-backport"
-version = "0.3.0"
+version = "0.3.1"
 description = "Like `typing._eval_type`, but lets older Python versions use newer typing features."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.7"
 groups = ["main"]
 markers = "python_version < \"3.10\""
 files = [
-    {file = "eval_type_backport-0.3.0-py3-none-any.whl", hash = "sha256:975a10a0fe333c8b6260d7fdb637698c9a16c3a9e3b6eb943fee6a6f67a37fe8"},
-    {file = "eval_type_backport-0.3.0.tar.gz", hash = "sha256:1638210401e184ff17f877e9a2fa076b60b5838790f4532a21761cc2be67aea1"},
+    {file = "eval_type_backport-0.3.1-py3-none-any.whl", hash = "sha256:279ab641905e9f11129f56a8a78f493518515b83402b860f6f06dd7c011fdfa8"},
+    {file = "eval_type_backport-0.3.1.tar.gz", hash = "sha256:57e993f7b5b69d271e37482e62f74e76a0276c82490cf8e4f0dffeb6b332d5ed"},
 ]
 
 [package.extras]
@@ -1971,7 +1971,7 @@ files = [
 
 [[package]]
 name = "microscopemetrics"
-version = "0.2.3.post74.dev0+7df0ed5"
+version = "0.2.3.post75.dev0+622d1ac"
 description = "A package providing analysis routines to measure the performance of microscopes used in biomedical research"
 optional = false
 python-versions = ">=3.9.18,<3.12"
@@ -1980,7 +1980,7 @@ files = []
 develop = false
 
 [package.dependencies]
-microscopemetrics-schema = {git = "https://github.com/juliomateoslangerak/microscopemetrics-schema.git", branch = "dev_km_asrows"}
+microscopemetrics-schema = {git = "https://github.com/juliomateoslangerak/microscopemetrics-schema.git", branch = "dev"}
 numpy = "^2"
 pandas = "^2"
 scikit-image = "^0"
@@ -1990,8 +1990,8 @@ virtualenv = ">=20.26.6,<20.33.0"
 [package.source]
 type = "git"
 url = "https://github.com/juliomateoslangerak/microscope-metrics.git"
-reference = "dev_km_asrows"
-resolved_reference = "7df0ed59d7236be61d5c00362569ca4143429b41"
+reference = "dev"
+resolved_reference = "622d1ac47c96d4dfb1dbda4e58f0b22ead2bd87d"
 
 [[package]]
 name = "microscopemetrics-schema"
@@ -2010,7 +2010,7 @@ linkml-runtime = ">=1.1.24"
 [package.source]
 type = "git"
 url = "https://github.com/juliomateoslangerak/microscopemetrics-schema.git"
-reference = "dev_km_asrows"
+reference = "dev"
 resolved_reference = "d9b091ca14054d3e36e350e89de8f98d9fc3d2ed"
 
 [[package]]
@@ -2111,14 +2111,14 @@ files = [
 
 [[package]]
 name = "narwhals"
-version = "2.12.0"
+version = "2.13.0"
 description = "Extremely lightweight compatibility layer between dataframe libraries"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "narwhals-2.12.0-py3-none-any.whl", hash = "sha256:baeba5d448a30b04c299a696bd9ee5ff73e4742143e06c49ca316b46539a7cbb"},
-    {file = "narwhals-2.12.0.tar.gz", hash = "sha256:075b6d56f3a222613793e025744b129439ecdff9292ea6615dd983af7ba6ea44"},
+    {file = "narwhals-2.13.0-py3-none-any.whl", hash = "sha256:9b795523c179ca78204e3be53726da374168f906e38de2ff174c2363baaaf481"},
+    {file = "narwhals-2.13.0.tar.gz", hash = "sha256:ee94c97f4cf7cfeebbeca8d274784df8b3d7fd3f955ce418af998d405576fdd9"},
 ]
 
 [package.extras]
@@ -4757,14 +4757,14 @@ files = [
 
 [[package]]
 name = "trove-classifiers"
-version = "2025.11.14.15"
+version = "2025.12.1.14"
 description = "Canonical source for classifiers on PyPI (pypi.org)."
 optional = false
 python-versions = "*"
 groups = ["dev"]
 files = [
-    {file = "trove_classifiers-2025.11.14.15-py3-none-any.whl", hash = "sha256:d1dac259c1e908939862e3331177931c6df0a37af2c1a8debcc603d9115fcdd9"},
-    {file = "trove_classifiers-2025.11.14.15.tar.gz", hash = "sha256:6b60f49d40bbd895bc61d8dc414fc2f2286d70eb72ed23548db8cf94f62804ca"},
+    {file = "trove_classifiers-2025.12.1.14-py3-none-any.whl", hash = "sha256:a8206978ede95937b9959c3aff3eb258bbf7b07dff391ddd4ea7e61f316635ab"},
+    {file = "trove_classifiers-2025.12.1.14.tar.gz", hash = "sha256:a74f0400524fc83620a9be74a07074b5cbe7594fd4d97fd4c2bfde625fdc1633"},
 ]
 
 [[package]]
@@ -5380,4 +5380,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9.18,<=3.11"
-content-hash = "3d9bfdb098baa9a0ba833277f91bada9043d14e00600c63c5988c6d9d3159d85"
+content-hash = "f8523ebf2818107bd212e388f29fff956c4ac2aab62fcc226e53487e4f771b2d"
