@@ -21,12 +21,12 @@ maintainers = [
 keywords = ["microscopy", "metrology", "OMERO"]
 license = {text = "GPL-3.0-only"}
 readme = "README.md"
-requires-python = ">=3.9.18,<=3.11"
+requires-python = ">=3.9.18,<3.13"
 dynamic = [
-    "version",
     "classifiers",
     "dependencies",
 ]
+version = "0.2.3.post74.dev0+208830a"
 
 [project.urls]
 homepage = "https://github.com/MontpellierRessourcesImagerie/omero-metrics"
@@ -51,7 +51,6 @@ classifiers = [
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering :: Image Processing"
 ]
-version = "0.0.0"
 
 [tool.poetry.dependencies]
 bootstrap4 = "*"  # Verify this dependency
@@ -102,7 +101,7 @@ pre-commit = "^4"
 poetry-dynamic-versioning = ">=1.5.2"  # current 1.8.2
 
 [tool.poetry-dynamic-versioning]
-enable = true
+enable = false
 vcs = "git"
 style = "pep440"
 #strict = true
