@@ -3,7 +3,7 @@ import traceback
 
 import omero
 from django.shortcuts import render
-from django.utils.datetime_safe import datetime
+from datetime import datetime
 from microscopemetrics import AnalysisError, SaturationError
 from microscopemetrics_schema import datamodel as mm_schema
 from omero.gateway import FileAnnotationWrapper
