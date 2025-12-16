@@ -17,6 +17,7 @@ from omero_metrics.tools import (
     load,
     omero_tools,
 )
+from omero_metrics.tools.serializers import serialize
 
 logger = logging.getLogger(__name__)
 
@@ -43,8 +44,7 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
         im = data_managers.ImageManager(conn, image_wrapper)
         im.load_data()
         im.visualize_data()
-        context = im.context
-        dash_context["context"] = context
+        dash_context["context"] = serialize(im.context)
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
@@ -73,8 +73,7 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
         pm.load_threshold_file()
         pm.check_processed_data()
         pm.visualize_data()
-        context = pm.context
-        dash_context["context"] = context
+        dash_context["context"] = serialize(pm.context)
         dash_context["context"]["project_id"] = project_id
         dash_context["context"]["project_name"] = project_wrapper.getName()
         request.session["django_plotly_dash"] = dash_context
@@ -139,7 +138,7 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
         dm = data_managers.DatasetManager(conn, dataset_wrapper, load_images=True)
         dm.load_data()
         dm.visualize_data()
-        dash_context["context"] = dm.context
+        dash_context["context"] = serialize(dm.context)
         dash_context["context"]["dataset_id"] = dataset_id
         request.session["django_plotly_dash"] = dash_context
         return render(
@@ -199,7 +198,7 @@ def center_view_projects(request, conn=None, **kwargs):
     else:
         projectIds = []
         data = {}
-    dash_context["context"] = data
+    dash_context["context"] = serialize(data)
     request.session["django_plotly_dash"] = dash_context
     return render(
         request,
