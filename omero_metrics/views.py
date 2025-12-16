@@ -1,9 +1,9 @@
 import logging
 import traceback
+from datetime import datetime
 
 import omero
 from django.shortcuts import render
-from datetime import datetime
 from microscopemetrics import AnalysisError, SaturationError
 from microscopemetrics_schema import datamodel as mm_schema
 from omero.gateway import FileAnnotationWrapper
