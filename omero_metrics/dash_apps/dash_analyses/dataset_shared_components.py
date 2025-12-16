@@ -2,11 +2,12 @@ import math
 from time import sleep
 
 import dash_mantine_components as dmc
-from dash import dcc, dependencies, html
+from dash import dcc, dependencies, html, no_update
 from dash_iconify import DashIconify
 from linkml_runtime.dumpers import JSONDumper, YAMLDumper
 
 from omero_metrics import views
+from omero_metrics.tools.serializers import deserialize
 from omero_metrics.dash_apps.dash_utils import omero_metrics_components
 from omero_metrics.styles import (
     BUTTON_STYLE,
@@ -19,6 +20,15 @@ from omero_metrics.tools import load
 
 
 # COMPONENTS
+def store_provider():
+    return html.Div([
+        # Store for deserialized context - uses browser memory (cleared on page refresh)
+        dcc.Store(id='context-store', storage_type='memory'),
+
+        # Hidden div to trigger initial deserialization
+        html.Div(id='init-trigger', style={'display': 'none'}),
+    ])
+
 def notification_provider():
     return dmc.NotificationProvider(position="top-center")
 
@@ -238,6 +248,19 @@ delete_button = dmc.Button(
 
 
 # CALLBACKS
+def register_init_store_callback(app):
+    @app.expanded_callback(
+        dependencies.Output('context-store', 'data'),
+        [dependencies.Input('init-trigger', 'children')],
+    )
+    def initialize_deserialized_store(_, **kwargs):
+        """Deserialize the mm_dataset once and store in memory."""
+        return {
+            'ready': True,
+            'context': kwargs["session_state"]["context"]  # Keep serialized for Store compatibility
+        }
+
+
 def register_delete_dataset_callback(app):
     @app.expanded_callback(
         dependencies.Output("confirm-delete-modal", "opened"),
@@ -251,14 +274,20 @@ def register_delete_dataset_callback(app):
         ],
         prevent_initial_call=True,
     )
-    def delete_dataset_callback(*args, **kwargs):
+    def delete_dataset_callback(
+            delete_data_clicks,
+            confirm_delete_button_clicks,
+            cancel_delete_button_clicks,
+            confirm_delete_modal_opened,
+            **kwargs
+    ):
         triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
         dataset_id = kwargs["session_state"]["context"][
             "mm_dataset"
         ].data_reference.omero_object_id
         request = kwargs["request"]
-        opened = not args[3]
-        if triggered_button == "confirm-delete-button.n_clicks" and args[0] > 0:
+        opened = not confirm_delete_modal_opened
+        if triggered_button == "confirm-delete-button.n_clicks" and delete_data_clicks > 0:
             sleep(1)
             response_type, response_msg = views.delete_dataset(
                 request, dataset_id=dataset_id
@@ -278,17 +307,18 @@ def register_download_datasets_callback(app):
             dependencies.Input("download-yaml", "n_clicks"),
             dependencies.Input("download-json", "n_clicks"),
             dependencies.Input("download-text", "n_clicks"),
+            dependencies.Input("context-store", "data"),
         ],
         prevent_initial_call=True,
     )
-    def download_dataset_callback(*args, **kwargs):
+    def download_dataset_callback(dw_yaml_clicks, dw_json_clicks, dw_text_clicks, data, **kwargs):
         if not kwargs["callback_context"].triggered:
-            raise dash.no_update
+            raise no_update
 
         triggered_id = (
             kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
         )
-        mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
+        mm_dataset = deserialize(data["context"]["mm_dataset"])
         file_name = mm_dataset.name
         yaml_dumper = YAMLDumper()
         json_dumper = JSONDumper()
@@ -307,7 +337,7 @@ def register_download_datasets_callback(app):
                 content=yaml_dumper.dumps(mm_dataset), filename=f"{file_name}.txt"
             )
 
-        raise dash.no_update
+        raise no_update
 
 
 def register_update_kkm_table_callback(app):
@@ -316,15 +346,16 @@ def register_update_kkm_table_callback(app):
         dependencies.Output("kkm_table_pagination", "total"),
         [
             dependencies.Input("kkm_table_pagination", "value"),
+            dependencies.Input("context-store", "data"),
         ],
     )
-    def update_kkm_table_callback(pagination_value, **kwargs):
+    def update_kkm_table_callback(pagination_value, data, **kwargs):
         try:
             page = int(pagination_value)
-            kkm = kwargs["session_state"]["context"]["kkm"]
+            kkm = deserialize(data["context"]["kkm"])
             # TODO: review how we process the tables here.
             table_km = load.get_km_mm_metrics_dataset(
-                mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
+                mm_dataset=deserialize(data["context"]["mm_dataset"])
             )
             start_idx = (page - 1) * 4
             end_idx = start_idx + 4
@@ -357,9 +388,14 @@ def register_download_table_callback(app):
         ],
         prevent_initial_call=True,
     )
-    def download_table_callback(*args, **kwargs):
+    def download_table_callback(
+            tb_dw_csv_clicks,
+            tb_dw_xlsx_clicks,
+            tb_dw_json_clicks,
+            **kwargs
+    ):
         if not kwargs["callback_context"].triggered:
-            raise dash.no_update
+            raise no_update
 
         triggered_id = (
             kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
@@ -377,4 +413,5 @@ def register_download_table_callback(app):
             return dcc.send_data_frame(table_kkm.to_excel, "km_table.xlsx")
         elif triggered_id == "table-download-json":
             return dcc.send_data_frame(table_kkm.to_json, "km_table.json")
-        raise dash.no_update
+
+        raise no_update
