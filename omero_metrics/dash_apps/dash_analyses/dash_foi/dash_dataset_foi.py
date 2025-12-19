@@ -8,6 +8,7 @@ import plotly.express as px
 from dash import dcc, html
 from django_plotly_dash import DjangoDash
 from skimage.exposure import rescale_intensity
+from tools.serializers import deserialize
 
 import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 from omero_metrics import views
@@ -207,7 +208,7 @@ def update_dropdown_menu(*args, **kwargs):
 def update_intensity_map(channel, **kwargs):
     try:
         channel = int(channel)
-        images = kwargs["session_state"]["context"]["image_data"]
+        images = deserialize(kwargs["session_state"]["context"])["image_data"]
         image = images[channel]
         image_channel = image[0, 0, :, :]
         image_channel = rescale_intensity(
@@ -259,10 +260,11 @@ def update_intensity_map(channel, **kwargs):
 def update_profile_type(channel, curve_type, **kwargs):
     try:
         df_intensity_profiles = load.load_table_mm_metrics(
-            kwargs["session_state"]["context"]["mm_dataset"].output[
+            deserialize(kwargs["session_state"]["context"]["mm_dataset"]).output[
                 "intensity_profiles"
             ]
         )
+
         df_profile = df_intensity_profiles.filter(regex=f"ch0*{channel}_")
         df_profile.columns = (
             df_profile.columns.str.replace(

@@ -14,6 +14,7 @@ from omero_metrics.styles import (
     THEME,
 )
 from omero_metrics.tools import load
+from omero_metrics.tools.serializers import deserialize
 
 dashboard_name = "omero_image_foi"
 omero_image_foi = DjangoDash(
@@ -247,7 +248,7 @@ omero_image_foi.layout = dmc.MantineProvider(
     [dash.dependencies.Input("blank-input", "children")],
 )
 def callback_channel(_, **kwargs):
-    mm_image = kwargs["session_state"]["context"]["mm_image"]
+    mm_image = deserialize(kwargs["session_state"]["context"]["mm_image"])
     return [
         {"label": c.name, "value": str(i), "description": f"Channel {i+1}"}
         for i, c in enumerate(mm_image.channel_series.channels)
@@ -265,8 +266,8 @@ def callback_channel(_, **kwargs):
     ],
 )
 def callback_image(channel, color, checked_contour, inverted_color, roi, **kwargs):
-    mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
-    mm_image = kwargs["session_state"]["context"]["mm_image"]
+    mm_dataset = deserialize(kwargs["session_state"]["context"]["mm_dataset"])
+    mm_image = deserialize(kwargs["session_state"]["context"]["mm_image"])
     image_id = mm_image.data_reference.omero_object_id
     if inverted_color:
         color = color + "_r"
@@ -381,7 +382,7 @@ def callback_image(channel, color, checked_contour, inverted_color, roi, **kwarg
 def update_intensity_profiles(channel, **kwargs):
     image_index = int(kwargs["session_state"]["context"]["image_index"])
     df_intensity_profiles = load.load_table_mm_metrics(
-        kwargs["session_state"]["context"]["mm_dataset"].output[
+        deserialize(kwargs["session_state"]["context"]["mm_dataset"]).output[
             "intensity_profiles"
         ][image_index]
     )
