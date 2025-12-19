@@ -42,8 +42,7 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
     try:
         image_wrapper = conn.getObject("Image", image_id)
         im = data_managers.ImageManager(conn, image_wrapper)
-        im.load_data()
-        im.visualize_data()
+        im.load_context()
         dash_context["context"] = serialize(im.context)
         request.session["django_plotly_dash"] = dash_context
         return render(
@@ -135,9 +134,8 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
     dash_context = request.session.get("django_plotly_dash", dict())
     try:
         dataset_wrapper = conn.getObject("Dataset", dataset_id)
-        dm = data_managers.DatasetManager(conn, dataset_wrapper, load_images=True)
-        dm.load_data()
-        dm.visualize_data()
+        dm = data_managers.DatasetManager(conn, dataset_wrapper)
+        dm.load_context()
         dash_context["context"] = serialize(dm.context)
         dash_context["context"]["dataset_id"] = dataset_id
         request.session["django_plotly_dash"] = dash_context
@@ -387,8 +385,9 @@ def delete_dataset(request, conn=None, **kwargs):
     dataset_id = kwargs["dataset_id"]
     logger.info(f"Deleting dataset {dataset_id}")
     dataset_wrapper = conn.getObject("Dataset", dataset_id)
-    dm = data_managers.DatasetManager(conn, dataset_wrapper, load_images=False)
-    dm.load_data()
+    dm = data_managers.DatasetManager(conn, dataset_wrapper)
+    dm.load_data(load_images=False)
+    dm.delete_processed_data()
     try:
         dm.delete_processed_data(conn)
         return "success", "Output deleted successfully."

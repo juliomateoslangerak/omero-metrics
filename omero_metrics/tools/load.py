@@ -213,7 +213,7 @@ def load_dataset(
         logger.info(f"No dataset found in dataset {dataset.getId()}")
         return None
 
-    if load_images and mm_dataset.__class__.__name__ != "PSFBeadsDataset":
+    if load_images:
         # First time loading the images the
         # dataset does not know which images to load
         if mm_dataset.processed:
@@ -318,18 +318,6 @@ def load_image(image: ImageWrapper, load_array: bool = True) -> mm_schema.Image:
 
 def _load_image_intensities(image: ImageWrapper) -> np.ndarray:
     return omero_tools.get_image_intensities(image).transpose((2, 0, 3, 4, 1))
-
-
-def concatenate_images(images: list):
-    list_images = []
-    list_channels = []
-    for mm_image in images:
-        image = mm_image.array_data
-        result = [image[:, :, :, :, i] for i in range(image.shape[4])]
-        channels = [c.name for c in mm_image.channel_series.channels]
-        list_images.extend(result)
-        list_channels.extend(channels)
-    return list_images, list_channels
 
 
 def roi_finder(roi: mm_schema.Roi):

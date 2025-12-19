@@ -10,6 +10,9 @@ from omero.gateway import (
 )
 
 from omero_metrics.tools import delete, dump, load, update
+from omero_metrics.tools.context_loaders import (
+    context_loader_FieldIlluminationDataset,
+)
 from omero_metrics.tools.data_type import (
     KKM_MAPPINGS,
     TEMPLATE_MAPPINGS_DATASET,
@@ -17,6 +20,11 @@ from omero_metrics.tools.data_type import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+CONTEXT_LOADERS = {
+    "FieldIlluminationDataset": context_loader_FieldIlluminationDataset,
+}
 
 
 def warning_message(msg):
@@ -46,7 +54,11 @@ class ImageManager:
         self.image_location = None
         self.app_name = None
 
-    def load_data(self, force_reload=True):
+    def load_context(self):
+        self._load_data()
+        self._visualize_data()
+
+    def _load_data(self, force_reload=True):
         logger.info("Loading data CALL")
         if force_reload or self.mm_image is None:
             self.dataset_manager.load_data()
@@ -60,7 +72,7 @@ class ImageManager:
                 "partial loading of data from OMERO is not yet implemented"
             )
 
-    def visualize_data(self):
+    def _visualize_data(self):
         if self.dataset_manager.processed:
             if (
                 self.dataset_manager.mm_dataset.__class__.__name__
@@ -115,7 +127,6 @@ class DatasetManager:
         self,
         conn: BlitzGateway,
         omero_dataset: DatasetWrapper,
-        load_images=False,
     ):
         self._conn = conn
         if isinstance(omero_dataset, DatasetWrapper):
@@ -124,7 +135,6 @@ class DatasetManager:
             raise ValueError("dataset must be a DatasetWrapper")
         self.omero_project = self.omero_dataset.getParent()
         self.input_parameters = None
-        self.load_images = load_images
         self.mm_dataset = None
         self.analysis_config = None
         self.analysis_config_id = None
@@ -152,9 +162,46 @@ class DatasetManager:
         dump._remove_unsupported_types(self.mm_dataset.input_parameters)
         dump._remove_unsupported_types(self.mm_dataset.output)
 
-    def load_data(self, force_reload=True):
+    def load_context(self):
+        self.load_data(load_images=False)
+        if self.processed:
+            if self.mm_dataset.__class__.__name__ in TEMPLATE_MAPPINGS_DATASET:
+                self.app_name = TEMPLATE_MAPPINGS_DATASET.get(
+                    self.mm_dataset.__class__.__name__
+                )
+                CONTEXT_LOADERS[self.mm_dataset.__class__.__name__](self)
+
+            else:
+                message = "Unknown analysis type. Unable to visualize"
+                logger.warning(message)
+                self.context, self.app_name = warning_message(message)
+
+        else:
+            if self.omero_project and len(self.attached_images) > 0:
+                self.input_parameters = load.load_config_file_data(
+                    self.omero_project
+                )
+                if self.input_parameters:
+                    self.app_name = "omero_dataset_form"
+                    self.context = {
+                        "list_images": self.attached_images,
+                        "input_parameters": self.input_parameters,
+                        "dataset_id": self.omero_dataset.getId(),
+                    }
+
+                else:
+                    message = "No, config file detected. Click on the project parent to load the config file."
+                    logger.warning(message)
+                    self.context, self.app_name = warning_message(message)
+
+            else:
+                message = "The dataset is not under a project or does not contain images. Unable to visualize"
+                logger.warning(message)
+                self.context, self.app_name = warning_message(message)
+
+    def load_data(self, load_images: bool, force_reload: bool = True):
         if force_reload or self.mm_dataset is None:
-            self.mm_dataset = load.load_dataset(self.omero_dataset, self.load_images)
+            self.mm_dataset = load.load_dataset(self.omero_dataset, load_images)
             self.kkm = KKM_MAPPINGS.get(self.mm_dataset.__class__.__name__)
             self.processed = self.mm_dataset.processed if self.mm_dataset else False
         else:
@@ -240,9 +287,6 @@ class DatasetManager:
         else:
             logger.info("Processed data deleted.")
 
-    def process_data_remotely(self):
-        pass
-
     def validate_data(self):
         if not self.mm_dataset.processed:
             logger.error("Data has not been processed. It cannot be validated")
@@ -257,48 +301,6 @@ class DatasetManager:
             logger.warning("Data is already not validated. Keeping unchanged.")
         self.mm_dataset.validated = False
         logger.info("Invalidating dataset.")
-
-    def visualize_data(self):
-        if self.processed:
-            if self.mm_dataset.__class__.__name__ in TEMPLATE_MAPPINGS_DATASET:
-                self.app_name = TEMPLATE_MAPPINGS_DATASET.get(
-                    self.mm_dataset.__class__.__name__
-                )
-
-                if isinstance(self.mm_dataset, mm_schema.FieldIlluminationDataset):
-                    self.context["image_data"], self.context["channel_names"] = (
-                        load.concatenate_images(
-                            self.mm_dataset.input_data.field_illumination_images
-                        )
-                    )
-                    self.remove_unsupported_data()
-                self.context["mm_dataset"] = self.mm_dataset
-                self.context["kkm"] = self.kkm
-
-            else:
-                message = "Unknown analysis type. Unable to visualize"
-                logger.warning(message)
-                self.context, self.app_name = warning_message(message)
-        else:
-            if self.omero_project and len(self.attached_images) > 0:
-                self.input_parameters = load.load_config_file_data(
-                    self.omero_project
-                )
-                if self.input_parameters:
-                    self.app_name = "omero_dataset_form"
-                    self.context = {
-                        "list_images": self.attached_images,
-                        "input_parameters": self.input_parameters,
-                        "dataset_id": self.omero_dataset.getId(),
-                    }
-                else:
-                    message = "No, config file detected. Click on the project parent to load the config file."
-                    logger.warning(message)
-                    self.context, self.app_name = warning_message(message)
-            else:
-                message = "The dataset is not under a project or does not contain images. Unable to visualize"
-                logger.warning(message)
-                self.context, self.app_name = warning_message(message)
 
 
 class ProjectManager:
