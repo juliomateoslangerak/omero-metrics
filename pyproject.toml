@@ -74,7 +74,7 @@ pytest-django = "4.11.1"
 hypothesis = "^6"
 
 [tool.poetry.group.dev.dependencies]
-omero-web = "<5.30" # current "5.29.2"
+omero-web = "<5.31" # current "5.29.2"
 # We provide links to GlencoeSoftware's precompiled binaries
 # see https://www.glencoesoftware.com/blog/2023/12/08/ice-binaries-for-omero.html
 zeroc-ice = [
