@@ -136,7 +136,7 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
         dataset_wrapper = conn.getObject("Dataset", dataset_id)
         dm = data_managers.DatasetManager(conn, dataset_wrapper)
         dm.load_context()
-        dash_context["context"] = serialize(dm.context)
+        dash_context["context"] = dm.context
         dash_context["context"]["dataset_id"] = dataset_id
         request.session["django_plotly_dash"] = dash_context
         return render(
