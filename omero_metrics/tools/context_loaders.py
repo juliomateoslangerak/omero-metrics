@@ -25,3 +25,12 @@ def context_loader_FieldIlluminationDataset(dm):
         "kkm": dm.kkm,
     }
     dm.context = serialize(context)
+
+
+def context_loader_PSFBeadsDataset(dm):
+    dm.load_data(load_images=False, force_reload=True)
+    context = {
+        "mm_dataset": dm.mm_dataset,
+        "kkm": dm.kkm,
+    }
+    dm.context = serialize(context)

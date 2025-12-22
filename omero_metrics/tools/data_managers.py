@@ -12,6 +12,7 @@ from omero.gateway import (
 from omero_metrics.tools import delete, dump, load, update
 from omero_metrics.tools.context_loaders import (
     context_loader_FieldIlluminationDataset,
+    context_loader_PSFBeadsDataset,
 )
 from omero_metrics.tools.data_type import (
     KKM_MAPPINGS,
@@ -24,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 CONTEXT_LOADERS = {
     "FieldIlluminationDataset": context_loader_FieldIlluminationDataset,
+    "PSFBeadsDataset": context_loader_PSFBeadsDataset,
 }
 
 
@@ -61,7 +63,7 @@ class ImageManager:
     def _load_data(self, force_reload=True):
         logger.info("Loading data CALL")
         if force_reload or self.mm_image is None:
-            self.dataset_manager.load_data()
+            self.dataset_manager.load_data(load_images=False, force_reload=force_reload)
             if self.dataset_manager.processed:
                 self.mm_image = load.load_image(self.omero_image)
                 self.dataset_manager.remove_unsupported_data()
@@ -199,7 +201,7 @@ class DatasetManager:
                 logger.warning(message)
                 self.context, self.app_name = warning_message(message)
 
-    def load_data(self, load_images: bool, force_reload: bool = True):
+    def load_data(self, load_images: bool, force_reload: bool = False):
         if force_reload or self.mm_dataset is None:
             self.mm_dataset = load.load_dataset(self.omero_dataset, load_images)
             self.kkm = KKM_MAPPINGS.get(self.mm_dataset.__class__.__name__)
@@ -326,11 +328,11 @@ class ProjectManager:
         self.homogenize = None
         self.mm_harmonized_dataset = None
 
-    def load_data(self, force_reload=True):
-        if force_reload or self.datasets is []:
+    def load_data(self, force_reload=False):
+        if self.datasets is [] or force_reload:
             for dataset in self.omero_project.listChildren():
                 dm = DatasetManager(self._conn, dataset)
-                dm.load_data()
+                dm.load_data(load_images=False, force_reload=force_reload)
                 dm.is_processed()
                 self.datasets_types.append(dm.mm_dataset.__class__.__name__)
                 self.datasets.append(dm)
