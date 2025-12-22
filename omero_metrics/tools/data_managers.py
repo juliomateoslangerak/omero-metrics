@@ -171,6 +171,7 @@ class DatasetManager:
                 self.analysis_config,
             ) = load.load_analysis_config(self.omero_project)
 
+    # TODO; This function can be probably deleted as nobody is calling it
     def dump_analysis_config(self):
         if not self.analysis_config:
             logger.error("No configuration to save.")
