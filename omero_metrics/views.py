@@ -171,7 +171,7 @@ def center_view_projects(request, conn=None, **kwargs):
     for the top link ui"""
     id_list = request.GET.get("projectIds", None)
     id_list = request.GET.get("Project", id_list)
-    dash_context = request.session.get("django_plotly_dash", dict())
+    dash_context = request.session.get("django_plotly_dash", {})
     if id_list:
         projectIds = [int(i) for i in id_list.split(",")]
         data = {}
