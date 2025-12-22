@@ -41,7 +41,7 @@ omero_dataset_foi.layout = dmc.MantineProvider(
             "Field Illumination", "Dataset Analysis", "FOI Analysis"
         ),
         dmc.Container(
-            [
+            children=[
                 # Main Content
                 dmc.Grid(
                     gutter="md",
@@ -167,8 +167,6 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                     mt="md",
                 ),
             ],
-            size="xl",
-            p="md",
             style=CONTAINER_STYLE,
         ),
     ],
