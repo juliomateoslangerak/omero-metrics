@@ -127,8 +127,7 @@ def image_exist(image_id, mm_dataset):
     return image_found, image_location, index
 
 
-def load_config_file_data(project):
-    setup = None
+def load_input_parameters_file(project):
     for ann in project.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
             ns = ann.getNs()
@@ -136,24 +135,23 @@ def load_config_file_data(project):
                 cls.class_class_curie
                 for cls in mm_schema.MetricsInputParameters.__subclasses__()
             ]:
-                setup = yaml.load(
+                return yaml.load(
                     ann.getFileInChunks().__next__().decode(),
                     Loader=yaml.SafeLoader,
                 )
-    return setup
+    return None
 
 
-def load_thresholds_file_data(project):
-    thresholds = None
+def load_thresholds_file(project):
     for ann in project.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
             name = ann.getFile().getName()
             if name.startswith("threshold"):
-                thresholds = yaml.load(
+                return yaml.load(
                     ann.getFileInChunks().__next__().decode(),
                     Loader=yaml.SafeLoader,
                 )
-    return thresholds
+    return None
 
 
 def load_project(
@@ -186,7 +184,7 @@ def load_project(
 
 def load_dataset(
     dataset: DatasetWrapper, load_images: bool
-) -> mm_schema.MetricsDataset:
+) -> mm_schema.MetricsDataset | None:
     mm_datasets = []
     for ann in dataset.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
@@ -237,26 +235,6 @@ def load_dataset(
         setattr(mm_dataset, INPUT_IMAGES_MAPPING[mm_dataset.__class__.__name__], [])
 
     return mm_dataset
-
-
-def load_dash_data_project(
-    processed_datasets: dict,
-) -> (dict, str):
-    dash_context = {}
-    df_list = []
-    kkm = list(processed_datasets.values())[0].kkm
-    dates = []
-    for key, value in processed_datasets.items():
-        df = get_km_mm_metrics_dataset(mm_dataset=value.mm_dataset)
-        date = datetime.strptime(
-            value.mm_dataset.acquisition_datetime, "%Y-%m-%dT%H:%M:%S"
-        )
-        dates.append(date.date())
-        df_list.append(df)
-    dash_context["key_measurements_list"] = df_list
-    dash_context["kkm"] = kkm
-    dash_context["dates"] = dates
-    return dash_context
 
 
 def load_analysis_config(project_wrapper=ProjectWrapper):

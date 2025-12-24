@@ -12,6 +12,7 @@ from omero.gateway import (
 from omero_metrics.tools import delete, dump, load, update
 from omero_metrics.tools.context_loaders import (
     context_loader_FieldIlluminationDataset,
+    context_loader_HarmonizedMetricsDatasetCollection,
     context_loader_PSFBeadsDataset,
 )
 from omero_metrics.tools.data_type import (
@@ -23,7 +24,7 @@ from omero_metrics.tools.data_type import (
 logger = logging.getLogger(__name__)
 
 
-CONTEXT_LOADERS = {
+DATASET_CONTEXT_LOADERS = {
     "FieldIlluminationDataset": context_loader_FieldIlluminationDataset,
     "PSFBeadsDataset": context_loader_PSFBeadsDataset,
 }
@@ -63,8 +64,10 @@ class ImageManager:
     def _load_data(self, force_reload=True):
         logger.info("Loading data CALL")
         if force_reload or self.mm_image is None:
-            self.dataset_manager.load_data(load_images=False, force_reload=force_reload)
-            if self.dataset_manager.processed:
+            self.dataset_manager.load_data(
+                load_images=False, force_reload=force_reload
+            )
+            if self.dataset_manager.is_processed():
                 self.mm_image = load.load_image(self.omero_image)
                 self.dataset_manager.remove_unsupported_data()
             else:
@@ -75,7 +78,7 @@ class ImageManager:
             )
 
     def _visualize_data(self):
-        if self.dataset_manager.processed:
+        if self.dataset_manager.is_processed():
             if (
                 self.dataset_manager.mm_dataset.__class__.__name__
                 in TEMPLATE_MAPPINGS_DATASET
@@ -143,7 +146,6 @@ class DatasetManager:
         self.analysis_func = None
         self.app_name = None
         self.context = {}
-        self.processed = False
         self.microscope = mm_schema.Microscope()
         self.kkm = None
         self.attached_images = [
@@ -153,8 +155,7 @@ class DatasetManager:
         ]
 
     def is_processed(self):
-        self.processed = self.mm_dataset.processed if self.mm_dataset else False
-        return self.processed
+        return self.mm_dataset.processed if self.mm_dataset else False
 
     def is_validated(self):
         return self.mm_dataset.validated if self.mm_dataset else False
@@ -166,12 +167,12 @@ class DatasetManager:
 
     def load_context(self):
         self.load_data(load_images=False)
-        if self.processed:
+        if self.is_processed():
             if self.mm_dataset.__class__.__name__ in TEMPLATE_MAPPINGS_DATASET:
                 self.app_name = TEMPLATE_MAPPINGS_DATASET.get(
                     self.mm_dataset.__class__.__name__
                 )
-                CONTEXT_LOADERS[self.mm_dataset.__class__.__name__](self)
+                DATASET_CONTEXT_LOADERS[self.mm_dataset.__class__.__name__](self)
 
             else:
                 message = "Unknown analysis type. Unable to visualize"
@@ -180,7 +181,7 @@ class DatasetManager:
 
         else:
             if self.omero_project and len(self.attached_images) > 0:
-                self.input_parameters = load.load_config_file_data(
+                self.input_parameters = load.load_input_parameters_file(
                     self.omero_project
                 )
                 if self.input_parameters:
@@ -205,7 +206,6 @@ class DatasetManager:
         if force_reload or self.mm_dataset is None:
             self.mm_dataset = load.load_dataset(self.omero_dataset, load_images)
             self.kkm = KKM_MAPPINGS.get(self.mm_dataset.__class__.__name__)
-            self.processed = self.mm_dataset.processed if self.mm_dataset else False
         else:
             raise NotImplementedError(
                 "partial loading of data from OMERO is not yet implemented"
@@ -240,6 +240,7 @@ class DatasetManager:
             setattr(self.mm_dataset.input_parameters, key, val)
 
     def dump_data(self):
+        # TODO: review this function
         for mm_ds in self.mm_dataset:
             if not mm_ds.processed:
                 logger.error("Dataset not processed. Unable to dump data")
@@ -277,7 +278,7 @@ class DatasetManager:
         logger.debug(
             f"Deleting processed data for dataset {self.omero_dataset.getId()}"
         )
-        if not self.processed:
+        if not self.is_processed():
             logger.warning("Data has not been processed. Nothing to delete")
             return
         try:
@@ -291,7 +292,7 @@ class DatasetManager:
             logger.info("Processed data deleted.")
 
     def validate_data(self):
-        if not self.mm_dataset.processed:
+        if not self.is_processed():
             logger.error("Data has not been processed. It cannot be validated")
         if self.mm_dataset.validated:
             logger.warning("Data was already validated. Keeping unchanged.")
@@ -317,94 +318,59 @@ class ProjectManager:
     def __init__(self, conn: BlitzGateway, omero_project: ProjectWrapper):
         self._conn = conn
         self.omero_project = omero_project
-        self.datasets = []
-        self.context = {}
-        self.setup = None
-        self.threshold = None
-        self.datasets_types = []
-        self.processed_datasets = {}
-        self.unprocessed_datasets = {}
+        self.mm_dataset_collection = None
+        self.unprocessed_datasets = []
+        self.input_parameters = None
+        self.thresholds = None
         self.app_name = None
-        self.homogenize = None
-        self.mm_harmonized_dataset = None
 
     def load_data(self, force_reload=False):
-        if self.datasets is [] or force_reload:
-            for dataset in self.omero_project.listChildren():
-                dm = DatasetManager(self._conn, dataset)
-                dm.load_data(load_images=False, force_reload=force_reload)
-                dm.is_processed()
-                self.datasets_types.append(dm.mm_dataset.__class__.__name__)
-                self.datasets.append(dm)
-        else:
-            raise NotImplementedError(
-                "partial loading of data from OMERO is not yet implemented"
+        if self.mm_dataset_collection is not None and not force_reload:
+            return
+        datasets_types = set()
+        datasets = []
+        for dataset in self.omero_project.listChildren():
+            dm = DatasetManager(self._conn, dataset)
+            dm.load_data(load_images=False, force_reload=force_reload)
+            if dm.mm_dataset is not None:
+                datasets.append(dm.mm_dataset)
+                datasets_types.add(dm.mm_dataset.__class__.__name__)
+            else:
+                self.unprocessed_datasets.append(dataset.getId())
+        if len(datasets_types) == 1:
+            self.mm_dataset_collection = (
+                mm_schema.HarmonizedMetricsDatasetCollection(
+                    name=self.omero_project.getName(),
+                    description=self.omero_project.getDescription(),
+                    dataset_class=datasets_types.pop(),
+                    dataset_collection=datasets,
+                )
             )
+        elif len(datasets_types) > 1:
+            self.mm_dataset_collection = mm_schema.MetricsDatasetCollection(
+                name=self.omero_project.getName(),
+                description=self.omero_project.getDescription(),
+                dataset_collection=datasets,
+            )
+        else:
+            self.mm_dataset_collection = None
 
-    def check_processed_data(self):
-        for dataset in self.datasets:
-            if dataset.processed:
-                self.processed_datasets[dataset.omero_dataset.getId()] = dataset
-            else:
-                self.unprocessed_datasets[dataset.omero_dataset.getId()] = dataset
-
-    def is_homogenized(self):
-        unique = set(
-            [
-                dataset.mm_dataset.__class__.__name__
-                for dataset in self.processed_datasets.values()
-            ]
+    def is_harmonized(self):
+        return isinstance(
+            self.mm_dataset_collection, mm_schema.HarmonizedMetricsDatasetCollection
         )
-        if len(unique) == 1:
-            self.homogenize = True
-        else:
-            self.homogenize = False
-        return self.homogenize
 
-    def visualize_data(self):
-        if self.setup:
-            if self.processed_datasets and self.is_homogenized():
-                if (
-                    list(self.processed_datasets.values())[
-                        0
-                    ].mm_dataset.__class__.__name__
-                    in TEMPLATE_MAPPINGS_DATASET
-                ):
-                    self.context = load.load_dash_data_project(
-                        self.processed_datasets
-                    )
-                    self.context["unprocessed_datasets"] = list(
-                        self.unprocessed_datasets.keys()
-                    )
-                    self.context["datasets_types"] = self.datasets_types
-                    self.context["processed_datasets"] = list(
-                        self.processed_datasets.keys()
-                    )
-                    self.mm_harmonized_dataset = (
-                        mm_schema.HarmonizedMetricsDatasetCollection(
-                            dataset_collection=[
-                                dm.mm_dataset for dm in self.datasets if dm.processed
-                            ],
-                            dataset_class=self.datasets[0].mm_dataset.class_name,
-                            name=self.omero_project.getName(),
-                            description=self.omero_project.getDescription(),
-                        )
-                    )
-                    self.context["mm_datasets"] = self.mm_harmonized_dataset
-                    message = "Data loaded successfully"
-                else:
-                    message = "This project contains unsupported analysis type. Unable to visualize"
-                    logger.warning(message)
+    def load_context(self):
+        self.load_data()
+        if self.is_harmonized():
+            if self.mm_dataset_collection.dataset_class in TEMPLATE_MAPPINGS_DATASET:
+                context_loader_HarmonizedMetricsDatasetCollection(self)
             else:
-                message = "No data or compatible data to visualize. Please process the data first."
-                logger.warning(message)
-            self.context["message"] = message
-            self.context["setup"] = self.setup
-            self.context["threshold"] = self.threshold if self.threshold else ""
-            self.app_name = "omero_project_dash"
+                raise ValueError("Unknown analysis type. Unable to visualize")
         else:
-            self.app_name = "omero_project_config_form"
-            self.context = {}
+            raise ValueError(
+                "OMERO-metrics does not support multiple analysis types in the same project."
+            )
 
     def save_settings(self):
         pass
@@ -413,17 +379,20 @@ class ProjectManager:
         pass
 
     def delete_processed_data(self):
-        for dataset in self.datasets:
+        for dataset in self.mm_dataset_collection.dataset_collection:
             if dataset.processed:
+                # TODO: This is not going to work
                 dataset.delete_processed_data(self._conn)
 
-    def load_config_file(self):
-        if self.setup is None:
-            self.setup = load.load_config_file_data(self.omero_project)
+    def load_input_parameters(self):
+        if self.input_parameters is None:
+            self.input_parameters = load.load_input_parameters_file(
+                self.omero_project
+            )
 
-    def load_threshold_file(self):
-        if self.threshold is None:
-            self.threshold = load.load_thresholds_file_data(self.omero_project)
+    def load_thresholds(self):
+        if self.thresholds is None:
+            self.thresholds = load.load_thresholds_file(self.omero_project)
 
 
 class MicroscopeManager:

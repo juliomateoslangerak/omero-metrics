@@ -17,6 +17,7 @@ from omero_metrics.tools import (
     load,
     omero_tools,
 )
+from omero_metrics.tools.data_type import TEMPLATE_MAPPINGS_DATASET
 from omero_metrics.tools.serializers import serialize
 
 logger = logging.getLogger(__name__)
@@ -66,21 +67,58 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
     try:
         project_wrapper = conn.getObject("Project", project_id)
         pm = data_managers.ProjectManager(conn, project_wrapper)
+        pm.load_input_parameters()
+        pm.load_thresholds()
         pm.load_data()
-        pm.is_homogenized()
-        pm.load_config_file()
-        pm.load_threshold_file()
-        pm.check_processed_data()
-        pm.visualize_data()
-        dash_context["context"] = serialize(pm.context)
-        dash_context["context"]["project_id"] = project_id
-        dash_context["context"]["project_name"] = project_wrapper.getName()
-        request.session["django_plotly_dash"] = dash_context
-        return render(
-            request,
-            template_name=TEMPLATE_DASH_NAME,
-            context={"app_name": pm.app_name},
-        )
+        if pm.mm_dataset_collection:  # There is at least one analyzed dataset
+            if pm.is_harmonized():
+                pm.load_context()
+                dash_context["context"] = pm.context
+                request.session["django_plotly_dash"] = dash_context
+                return render(
+                    request,
+                    template_name=TEMPLATE_DASH_NAME,
+                    context={
+                        "app_name": TEMPLATE_MAPPINGS_DATASET.get(
+                            pm.mm_dataset_collection.class_name, "WarningApp"
+                        )
+                    },
+                )
+            else:
+                dash_context["context"] = {
+                    "message": "OMERO-metrics does not support non-harmonized projects."
+                }
+                request.session["django_plotly_dash"] = dash_context
+                return render(
+                    request,
+                    template_name=TEMPLATE_DASH_NAME,
+                    context={"app_name": "WarningApp"},
+                )
+        elif pm.input_parameters is None:  # No analyzed datasets or input parameters
+            dash_context["context"] = serialize(
+                {
+                    "thresholds": serialize(pm.thresholds),
+                }
+            )
+            return render(
+                request,
+                template_name=TEMPLATE_DASH_NAME,
+                context={"app_name": "omero_project_config_form"},
+            )
+        else:  # No analyzed datasets but input parameters configured
+            dash_context["context"] = serialize(
+                {
+                    "message": "No (analyzed) datasets found in this project.",
+                    "input_parameters": pm.input_parameters,
+                    "thresholds": pm.thresholds,
+                }
+            )
+            request.session["django_plotly_dash"] = dash_context
+            return render(
+                request,
+                template_name=TEMPLATE_DASH_NAME,
+                context={"app_name": "omero_project_dash"},
+            )
     except Exception as e:
         dash_context["context"] = {"message": str(e)}
         request.session["django_plotly_dash"] = dash_context
@@ -131,13 +169,12 @@ def center_viewer_group(request, conn=None, **kwargs):
 
 @login_required(setGroupContext=True)
 def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
-    dash_context = request.session.get("django_plotly_dash", dict())
+    dash_context = request.session.get("django_plotly_dash", {})
     try:
         dataset_wrapper = conn.getObject("Dataset", dataset_id)
         dm = data_managers.DatasetManager(conn, dataset_wrapper)
         dm.load_context()
         dash_context["context"] = dm.context
-        dash_context["context"]["dataset_id"] = dataset_id
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
@@ -179,9 +216,9 @@ def center_view_projects(request, conn=None, **kwargs):
             project_wrapper = conn.getObject("Project", id)
             pm = data_managers.ProjectManager(conn, project_wrapper)
             pm.load_data()
-            pm.is_homogenized()
-            pm.load_config_file()
-            pm.load_threshold_file()
+            pm.is_harmonized()
+            pm.load_input_parameters()
+            pm.load_thresholds()
             pm.check_processed_data()
             pm.visualize_data()
             context = pm.context
@@ -216,7 +253,7 @@ def save_config(request, conn=None, **kwargs):
         mm_input_parameters = kwargs["input_parameters"]
         mm_sample = kwargs["sample"]
         project_wrapper = conn.getObject("Project", project_id)
-        setup = load.load_config_file_data(project_wrapper)
+        setup = load.load_input_parameters_file(project_wrapper)
         try:
             if setup:
                 to_delete = []
@@ -417,7 +454,7 @@ def save_threshold(request, conn=None, **kwargs):
         project_id = kwargs["project_id"]
         threshold = kwargs["threshold"]
         project_wrapper = conn.getObject("Project", project_id)
-        threshold_exist = load.load_thresholds_file_data(project_wrapper)
+        threshold_exist = load.load_thresholds_file(project_wrapper)
         if threshold:
             if threshold_exist:
                 to_delete = []

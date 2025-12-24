@@ -1,3 +1,8 @@
+from dataclasses import asdict
+
+import pandas as pd
+
+from omero_metrics.tools.data_type import KKM_MAPPINGS
 from omero_metrics.tools.serializers import serialize
 
 
@@ -34,3 +39,28 @@ def context_loader_PSFBeadsDataset(dm):
         "kkm": dm.kkm,
     }
     dm.context = serialize(context)
+
+
+def context_loader_HarmonizedMetricsDatasetCollection(pm):
+    pm.load_data()
+    pm.load_input_parameters()
+    pm.load_thresholds()
+    collection_df = pd.DataFrame()
+    for dataset in pm.mm_dataset_collection.dataset_collection:
+        if dataset.processed:
+            dataset_df = pd.DataFrame.from_records(
+                [asdict(km) for km in dataset.output.key_measurements]
+            )
+            dataset_df["acquisition_datetime"] = dataset.acquisition_datetime
+            collection_df = pd.concat([collection_df, dataset_df])
+        else:
+            # In principle, omero-metrics is generating and processing datasets in one go, so this should never happen
+            raise ValueError(f"Dataset {dataset.name} is not processed")
+    context = {
+        "key_measurements_df": collection_df,
+        "unprocessed_datasets": pm.unprocessed_datasets,
+        "input_parameters": pm.input_parameters,
+        "thresholds": pm.thresholds,
+        "kkm": KKM_MAPPINGS.get(pm.mm_dataset_collection.dataset_class),
+    }
+    pm.context = serialize(context)
