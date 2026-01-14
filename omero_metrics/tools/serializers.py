@@ -2,12 +2,14 @@
 Serialization utilities for passing data between Django views and Dash apps.
 Handles microscopemetrics schema objects, pandas dataframes and NumPy arrays for session_state serialization.
 """
+
 import base64
 from dataclasses import fields
 from typing import Any, Dict
-from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
+
 import numpy as np
 import pandas as pd
+from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
 
 # Marker keys for custom types
 NUMPY_MARKER = "__numpy_array__"

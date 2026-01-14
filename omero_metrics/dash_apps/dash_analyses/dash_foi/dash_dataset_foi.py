@@ -5,7 +5,6 @@ import plotly.express as px
 from dash import dcc, html
 from django_plotly_dash import DjangoDash
 from skimage.exposure import rescale_intensity
-from omero_metrics.tools.serializers import deserialize
 
 import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 from omero_metrics.dash_apps.dash_analyses import dataset_shared_components as dsc
@@ -20,6 +19,7 @@ from omero_metrics.styles import (
     THEME,
 )
 from omero_metrics.tools import load
+from omero_metrics.tools.serializers import deserialize
 
 dashboard_name = "omero_dataset_foi"
 omero_dataset_foi = DjangoDash(
