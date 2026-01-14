@@ -52,12 +52,15 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
             context={"app_name": im.app_name},
         )
     except Exception as e:
-        dash_context["context"] = {"message": str(e)}
+        dash_context["context"] = {
+            "message": str(e),
+            "traceback": traceback.format_exc(),
+        }
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
             template_name=TEMPLATE_DASH_NAME,
-            context={"app_name": "WarningApp"},
+            context={"app_name": "ErrorApp"},
         )
 
 
@@ -120,12 +123,15 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
                 context={"app_name": "omero_project_dash"},
             )
     except Exception as e:
-        dash_context["context"] = {"message": str(e)}
+        dash_context["context"] = {
+            "message": str(e),
+            "traceback": traceback.format_exc(),
+        }
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
             template_name=TEMPLATE_DASH_NAME,
-            context={"app_name": "WarningApp"},
+            context={"app_name": "ErrorApp"},
         )
 
 
@@ -158,12 +164,15 @@ def center_viewer_group(request, conn=None, **kwargs):
             context={"app_name": "omero_group_dash"},
         )
     except Exception as e:
-        dash_context["context"] = {"message": str(e)}
+        dash_context["context"] = {
+            "message": str(e),
+            "traceback": traceback.format_exc(),
+        }
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
             template_name=TEMPLATE_DASH_NAME,
-            context={"app_name": "WarningApp"},
+            context={"app_name": "ErrorApp"},
         )
 
 
@@ -182,12 +191,15 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
             context={"app_name": dm.app_name},
         )
     except Exception as e:
-        dash_context["context"] = {"message": str(e)}
+        dash_context["context"] = {
+            "message": str(e),
+            "traceback": traceback.format_exc(),
+        }
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
             template_name=TEMPLATE_DASH_NAME,
-            context={"app_name": "WarningApp"},
+            context={"app_name": "ErrorApp"},
         )
 
 
