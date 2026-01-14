@@ -49,7 +49,7 @@ class ImageManager:
             raise ValueError("the object must be an ImageWrapper")
         self.omero_image = omero_image
         self.omero_dataset = self.omero_image.getParent()
-        self.dataset_manager = DatasetManager(self._conn, self.omero_dataset, False)
+        self.dataset_manager = DatasetManager(self._conn, self.omero_dataset)
         self.context = {}
         self.mm_image = None
         self.image_exist = None
