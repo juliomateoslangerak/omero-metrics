@@ -409,7 +409,7 @@ def save_config_dash(
                 mm_sample = mm_sample(**sample)
                 response_type, response_msg = views.save_config(
                     request=request,
-                    project_id=int(project_id),
+                    project_id=project_id,
                     input_parameters=mm_input_parameters,
                     sample=mm_sample,
                 )

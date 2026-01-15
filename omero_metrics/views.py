@@ -97,12 +97,11 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
                     template_name=TEMPLATE_DASH_NAME,
                     context={"app_name": "WarningApp"},
                 )
-        elif pm.input_parameters is None:  # No analyzed datasets or input parameters
-            dash_context["context"] = serialize(
-                {
-                    "thresholds": serialize(pm.thresholds),
-                }
-            )
+        elif pm.input_parameters is None:
+            # No analyzed datasets or input parameters so we need to trigger
+            # the configuration form
+            dash_context["context"] = {"project_id": project_id}
+            request.session["django_plotly_dash"] = dash_context
             return render(
                 request,
                 template_name=TEMPLATE_DASH_NAME,
