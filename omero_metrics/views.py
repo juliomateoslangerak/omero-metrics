@@ -88,12 +88,7 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
                 return render(
                     request,
                     template_name=TEMPLATE_DASH_NAME,
-                    context={
-                        # FIXME: the warningapp should have specific information that it could not find the dataset type
-                        "app_name": TEMPLATE_MAPPINGS_DATASET.get(
-                            pm.mm_dataset_collection.class_name, "WarningApp"
-                        )
-                    },
+                    context={"app_name": "omero_project_dash"},
                 )
             else:
                 dash_context["context"] = {
