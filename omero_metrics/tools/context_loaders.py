@@ -41,25 +41,40 @@ def context_loader_PSFBeadsDataset(dm):
     dm.context = serialize(context)
 
 
+def context_loader_EmptyMetricsDatasetCollection(pm):
+    pm.load_data()
+    pm.load_input_config()
+    pm.load_thresholds()
+    context = {
+        "project_id": int(pm.omero_project.getId()),
+        "unprocessed_datasets": list(pm.unprocessed_datasets),
+        "input_parameters": pm.input_parameters,
+        "sample": pm.sample,
+        "thresholds": pm.thresholds,
+    }
+    pm.context = serialize(context)
+
+
 def context_loader_HarmonizedMetricsDatasetCollection(pm):
     pm.load_data()
-    pm.load_input_parameters()
+    pm.load_input_config()
     pm.load_thresholds()
     collection_df = pd.DataFrame()
     for dataset in pm.mm_dataset_collection.dataset_collection:
-        if dataset.processed:
-            dataset_df = pd.DataFrame.from_records(
-                [asdict(km) for km in dataset.output.key_measurements]
-            )
-            dataset_df["acquisition_datetime"] = dataset.acquisition_datetime
-            collection_df = pd.concat([collection_df, dataset_df])
-        else:
+        if not dataset.processed:
             # In principle, omero-metrics is generating and processing datasets in one go, so this should never happen
             raise ValueError(f"Dataset {dataset.name} is not processed")
+        dataset_df = pd.DataFrame.from_records(
+            [asdict(km) for km in dataset.output.key_measurements]
+        )
+        dataset_df["acquisition_datetime"] = dataset.acquisition_datetime
+        collection_df = pd.concat([collection_df, dataset_df])
     context = {
+        "project_id": int(pm.omero_project.getId()),
         "key_measurements_df": collection_df,
-        "unprocessed_datasets": pm.unprocessed_datasets,
+        "unprocessed_datasets": list(pm.unprocessed_datasets),
         "input_parameters": pm.input_parameters,
+        "sample": pm.sample,
         "thresholds": pm.thresholds,
         "kkm": KKM_MAPPINGS.get(pm.mm_dataset_collection.dataset_class),
     }

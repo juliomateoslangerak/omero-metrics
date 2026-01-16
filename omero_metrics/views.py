@@ -70,18 +70,26 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
     try:
         project_wrapper = conn.getObject("Project", project_id)
         pm = data_managers.ProjectManager(conn, project_wrapper)
-        pm.load_input_parameters()
-        pm.load_thresholds()
-        pm.load_data()
+        pm.load_context()
+        if pm.input_parameters is None:
+            # No analyzed datasets or input parameters so we need to trigger
+            # the configuration form
+            dash_context["context"] = {"project_id": project_id}
+            request.session["django_plotly_dash"] = dash_context
+            return render(
+                request,
+                template_name=TEMPLATE_DASH_NAME,
+                context={"app_name": "omero_project_config_form"},
+            )
         if pm.mm_dataset_collection:  # There is at least one analyzed dataset
             if pm.is_harmonized():
-                pm.load_context()
                 dash_context["context"] = pm.context
                 request.session["django_plotly_dash"] = dash_context
                 return render(
                     request,
                     template_name=TEMPLATE_DASH_NAME,
                     context={
+                        # FIXME: the warningapp should have specific information that it could not find the dataset type
                         "app_name": TEMPLATE_MAPPINGS_DATASET.get(
                             pm.mm_dataset_collection.class_name, "WarningApp"
                         )
@@ -97,24 +105,8 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
                     template_name=TEMPLATE_DASH_NAME,
                     context={"app_name": "WarningApp"},
                 )
-        elif pm.input_parameters is None:
-            # No analyzed datasets or input parameters so we need to trigger
-            # the configuration form
-            dash_context["context"] = {"project_id": project_id}
-            request.session["django_plotly_dash"] = dash_context
-            return render(
-                request,
-                template_name=TEMPLATE_DASH_NAME,
-                context={"app_name": "omero_project_config_form"},
-            )
         else:  # No analyzed datasets but input parameters configured
-            dash_context["context"] = serialize(
-                {
-                    "message": "No (analyzed) datasets found in this project.",
-                    "input_parameters": pm.input_parameters,
-                    "thresholds": pm.thresholds,
-                }
-            )
+            dash_context["context"] = pm.context
             request.session["django_plotly_dash"] = dash_context
             return render(
                 request,
@@ -228,7 +220,7 @@ def center_view_projects(request, conn=None, **kwargs):
             pm = data_managers.ProjectManager(conn, project_wrapper)
             pm.load_data()
             pm.is_harmonized()
-            pm.load_input_parameters()
+            pm.load_input_config()
             pm.load_thresholds()
             pm.check_processed_data()
             pm.visualize_data()
@@ -264,7 +256,7 @@ def save_config(request, conn=None, **kwargs):
         mm_input_parameters = kwargs["input_parameters"]
         mm_sample = kwargs["sample"]
         project_wrapper = conn.getObject("Project", project_id)
-        setup = load.load_input_parameters_file(project_wrapper)
+        setup = load.load_input_config_file(project_wrapper)
         try:
             if setup:
                 to_delete = []

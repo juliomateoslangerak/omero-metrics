@@ -127,7 +127,7 @@ def image_exist(image_id, mm_dataset):
     return image_found, image_location, index
 
 
-def load_input_parameters_file(project):
+def load_input_config_file(project):
     for ann in project.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
             ns = ann.getNs()

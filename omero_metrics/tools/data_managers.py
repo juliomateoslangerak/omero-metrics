@@ -11,6 +11,7 @@ from omero.gateway import (
 
 from omero_metrics.tools import delete, dump, load, update
 from omero_metrics.tools.context_loaders import (
+    context_loader_EmptyMetricsDatasetCollection,
     context_loader_FieldIlluminationDataset,
     context_loader_HarmonizedMetricsDatasetCollection,
     context_loader_PSFBeadsDataset,
@@ -181,7 +182,7 @@ class DatasetManager:
 
         else:
             if self.omero_project and len(self.attached_images) > 0:
-                self.input_parameters = load.load_input_parameters_file(
+                self.input_parameters = load.load_input_config_file(
                     self.omero_project
                 )
                 if self.input_parameters:
@@ -319,10 +320,12 @@ class ProjectManager:
         self._conn = conn
         self.omero_project = omero_project
         self.mm_dataset_collection = None
-        self.unprocessed_datasets = []
+        self.unprocessed_datasets = set()
         self.input_parameters = None
+        self.sample = None
         self.thresholds = None
         self.app_name = None
+        self.context = {}
 
     def load_data(self, force_reload=False):
         if self.mm_dataset_collection is not None and not force_reload:
@@ -336,7 +339,7 @@ class ProjectManager:
                 datasets.append(dm.mm_dataset)
                 datasets_types.add(dm.mm_dataset.__class__.__name__)
             else:
-                self.unprocessed_datasets.append(dataset.getId())
+                self.unprocessed_datasets.add(int(dataset.getId()))
         if len(datasets_types) == 1:
             self.mm_dataset_collection = (
                 mm_schema.HarmonizedMetricsDatasetCollection(
@@ -362,7 +365,10 @@ class ProjectManager:
 
     def load_context(self):
         self.load_data()
-        if self.is_harmonized():
+        if self.mm_dataset_collection is None:
+            # Empty project or non-analyzed we cannot know if it is harmonized or not
+            context_loader_EmptyMetricsDatasetCollection(self)
+        elif self.is_harmonized():
             if self.mm_dataset_collection.dataset_class in TEMPLATE_MAPPINGS_DATASET:
                 context_loader_HarmonizedMetricsDatasetCollection(self)
             else:
@@ -384,11 +390,12 @@ class ProjectManager:
                 # TODO: This is not going to work
                 dataset.delete_processed_data(self._conn)
 
-    def load_input_parameters(self):
+    def load_input_config(self):
         if self.input_parameters is None:
-            self.input_parameters = load.load_input_parameters_file(
-                self.omero_project
-            )
+            config = load.load_input_config_file(self.omero_project)
+            if config is not None:
+                self.input_parameters = config.get("input_parameters")
+                self.sample = config.get("sample")
 
     def load_thresholds(self):
         if self.thresholds is None:

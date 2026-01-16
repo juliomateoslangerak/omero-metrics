@@ -9,6 +9,7 @@ from dash import html
 from django_plotly_dash import DjangoDash
 from linkml_runtime.dumpers import JSONDumper, YAMLDumper
 from microscopemetrics_schema import datamodel as mm_schema
+from tools.serializers import deserialize
 
 import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 from omero_metrics import views
@@ -340,9 +341,10 @@ omero_project_dash.layout = dmc.MantineProvider(
 )
 def update_dropdown(*args, **kwargs):
     try:
-        kkm = kwargs["session_state"]["context"]["kkm"]
+        context = deserialize(kwargs["session_state"]["context"])
+        kkm = context["kkm"]
         kkm = [k.replace("_", " ").title() for k in kkm]
-        dates = kwargs["session_state"]["context"]["dates"]
+        dates = context["dates"]
         options = [{"value": f"{i}", "label": f"{k}"} for i, k in enumerate(kkm)]
         min_date = min(dates)
         max_date = max(dates)
@@ -369,7 +371,9 @@ def update_dropdown(*args, **kwargs):
 )
 def check_data(*args, **kwargs):
     try:
-        data = kwargs["session_state"]["context"]["key_measurements_list"]
+        data = deserialize(kwargs["session_state"]["context"])[
+            "key_measurements_list"
+        ]
         if data:
             return dash.no_update
         return dash.no_update
@@ -404,9 +408,10 @@ def check_data(*args, **kwargs):
 )
 def update_table(measurement, dates_range, **kwargs):
     try:
-        df_list = kwargs["session_state"]["context"]["key_measurements_list"]
-        threshold = kwargs["session_state"]["context"]["threshold"]
-        kkm = kwargs["session_state"]["context"]["kkm"]
+        context = deserialize(kwargs["session_state"]["context"])
+        df_list = context["key_measurements_list"]
+        threshold = context["threshold"]
+        kkm = context["kkm"]
         measurement = int(measurement)
 
         # Check if we have any data
@@ -426,7 +431,7 @@ def update_table(measurement, dates_range, **kwargs):
         else:
             ref = []
 
-        dates = kwargs["session_state"]["context"]["dates"]
+        dates = context["dates"]
         df_filtering = pd.DataFrame(dates, columns=["Date"])
         df_dates = df_filtering[
             (
@@ -473,9 +478,10 @@ def update_table(measurement, dates_range, **kwargs):
 def update_project_view(clicked_data, page, **kwargs):
     try:
         if clicked_data:
-            table = kwargs["session_state"]["context"]["key_measurements_list"]
-            dates = kwargs["session_state"]["context"]["dates"]
-            kkm = kwargs["session_state"]["context"]["kkm"]
+            context = deserialize(kwargs["session_state"]["context"])
+            table = context["key_measurements_list"]
+            dates = context["dates"]
+            kkm = context["kkm"]
             selected_dataset = int(clicked_data["dataset_index"])
             df_selected = table[selected_dataset]
             table_kkm = df_selected.filter(["channel_name", *kkm])
@@ -510,12 +516,12 @@ def update_project_view(clicked_data, page, **kwargs):
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_modal(*args, **kwargs):
-    setup = kwargs["session_state"]["context"]["setup"]
-    sample = setup["sample"]
+    context = deserialize(kwargs["session_state"]["context"])
+    sample = context["sample"]
     mm_sample = getattr(mm_schema, sample["type"])
     mm_sample = mm_sample(**sample["fields"])
     sample_form = dft.get_form(mm_sample, disabled=False, form_id="sample_form")
-    input_parameters = setup["input_parameters"]
+    input_parameters = context["input_parameters"]
     mm_input_parameters = getattr(mm_schema, input_parameters["type"])
     mm_input_parameters = mm_input_parameters(**input_parameters["fields"])
     input_parameters_form = dft.get_form(
@@ -573,12 +579,12 @@ omero_project_dash.clientside_callback(
     prevent_initial_call=True,
 )
 def update_config_project(submit_click, sample_form, input_form, **kwargs):
-    project_id = int(kwargs["session_state"]["context"]["project_id"])
+    context = deserialize(kwargs["session_state"]["context"])
+    project_id = int(context["project_id"])
     request = kwargs["request"]
-    setup = kwargs["session_state"]["context"]["setup"]
-    sample = setup["sample"]
+    sample = context["sample"]
     mm_sample = getattr(mm_schema, sample["type"])
-    input_parameters = setup["input_parameters"]
+    input_parameters = context["input_parameters"]
     mm_input_parameters = getattr(mm_schema, input_parameters["type"])
     if dft.validate_form(sample_form) and dft.validate_form(input_form):
         try:
@@ -588,7 +594,7 @@ def update_config_project(submit_click, sample_form, input_form, **kwargs):
             mm_sample = mm_sample(**sample)
             response_type, response_msg = views.save_config(
                 request=request,
-                project_id=int(project_id),
+                project_id=project_id,
                 input_parameters=mm_input_parameters,
                 sample=mm_sample,
             )
@@ -625,7 +631,7 @@ def update_config_project(submit_click, sample_form, input_form, **kwargs):
 )
 def update_thresholds(*args, **kwargs):
     try:
-        kkm = kwargs["session_state"]["context"]["kkm"]
+        kkm = deserialize(kwargs["session_state"]["context"])["kkm"]
         # TODO: Fishy replacement of strings. Move to kkm titles
         kkm = [k.replace("_", " ").title() for k in kkm]
         data = [{"value": f"{i}", "label": f"{k}"} for i, k in enumerate(kkm)]
@@ -651,8 +657,9 @@ def update_heart(n, **kwargs):
 )
 def update_thresholds_controls(*args, **kwargs):
     try:
-        kkm = kwargs["session_state"]["context"]["kkm"]
-        threshold = kwargs["session_state"]["context"]["threshold"]
+        context = deserialize(kwargs["session_state"]["context"])
+        kkm = context["kkm"]
+        threshold = context["threshold"]
         if threshold:
             new_kkm = threshold
         else:
@@ -722,14 +729,15 @@ def update_thresholds_controls(*args, **kwargs):
 )
 def threshold_callback1(*args, **kwargs):
     try:
-        kkm = kwargs["session_state"]["context"]["kkm"]
+        context = deserialize(kwargs["session_state"]["context"])
+        kkm = context["kkm"]
         output = get_accordion_data(args[1], kkm)
         request = kwargs["request"]
-        project_id = kwargs["session_state"]["context"]["project_id"]
+        project_id = int(context["project_id"])
         if output and args[0] > 0:
             response_type, response_msg = views.save_threshold(
                 request=request,
-                project_id=int(project_id),
+                project_id=project_id,
                 threshold=output,
             )
 
@@ -789,7 +797,7 @@ def get_accordion_data(accordion_state, kkm):
 def delete_project(*args, **kwargs):
     try:
         triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
-        project_id = kwargs["session_state"]["context"]["project_id"]
+        project_id = deserialize(kwargs["session_state"]["context"])["project_id"]
         request = kwargs["request"]
         opened = not args[3]
         if triggered_button == "delete-modal-submit-button.n_clicks" and args[0] > 0:
@@ -824,8 +832,9 @@ def download_project_data(*args, **kwargs):
         triggered_id = (
             kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
         )
-        mm_datasets = kwargs["session_state"]["context"]["mm_datasets"]
-        file_name = kwargs["session_state"]["context"]["project_name"]
+        context = deserialize(kwargs["session_state"]["context"])
+        mm_datasets = context["mm_datasets"]
+        file_name = context["project_name"]
         yaml_dumper = YAMLDumper()
         json_dumper = JSONDumper()
         if triggered_id == "download-yaml":
