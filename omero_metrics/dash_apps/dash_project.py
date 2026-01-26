@@ -344,10 +344,14 @@ def update_dropdown(*args, **kwargs):
         context = deserialize(kwargs["session_state"]["context"])
         kkm = context["kkm"]
         kkm = [k.replace("_", " ").title() for k in kkm]
-        dates = context["dates"]
+        key_measurements_df = context["key_measurements_df"]
+
+        # Parse datetime strings and get min/max
+        datetimes = pd.to_datetime(key_measurements_df["acquisition_datetime"])
+        min_date = datetimes.min().date()
+        max_date = datetimes.max().date()
+
         options = [{"value": f"{i}", "label": f"{k}"} for i, k in enumerate(kkm)]
-        min_date = min(dates)
-        max_date = max(dates)
         data = options
         value_date = [min_date, max_date]
         return data, "0", min_date, max_date, value_date, False, False, False, False
@@ -371,10 +375,8 @@ def update_dropdown(*args, **kwargs):
 )
 def check_data(*args, **kwargs):
     try:
-        data = deserialize(kwargs["session_state"]["context"])[
-            "key_measurements_list"
-        ]
-        if data:
+        data = deserialize(kwargs["session_state"]["context"])["key_measurements_df"]
+        if not data.empty:
             return dash.no_update
         return dash.no_update
     except Exception as e:
@@ -409,13 +411,13 @@ def check_data(*args, **kwargs):
 def update_table(measurement, dates_range, **kwargs):
     try:
         context = deserialize(kwargs["session_state"]["context"])
-        df_list = context["key_measurements_list"]
-        threshold = context["threshold"]
+        key_measurements_df = context["key_measurements_df"]
+        threshold = context["thresholds"]
         kkm = context["kkm"]
         measurement = int(measurement)
 
         # Check if we have any data
-        if not df_list:
+        if key_measurements_df.empty:
             return dash.no_update
         if threshold:
             threshold_kkm = threshold[kkm[measurement]]
@@ -431,24 +433,35 @@ def update_table(measurement, dates_range, **kwargs):
         else:
             ref = []
 
-        dates = context["dates"]
-        df_filtering = pd.DataFrame(dates, columns=["Date"])
-        df_dates = df_filtering[
-            (
-                df_filtering["Date"]
-                >= datetime.strptime(dates_range[0], "%Y-%m-%d").date()
-            )
-            & (
-                df_filtering["Date"]
-                <= datetime.strptime(dates_range[1], "%Y-%m-%d").date()
-            )
-        ].index.to_list()
+        key_measurements_df = context["key_measurements_df"]
 
-        df_list_filtered = [df_list[i] for i in df_dates]
-        dates_filtered = [dates[i] for i in df_dates]
-        df = my_components.get_data_trends(
-            kkm, measurement, dates_filtered, df_list_filtered
+        # Parse acquisition_datetime and filter by date range
+        key_measurements_df["acquisition_datetime"] = pd.to_datetime(
+            key_measurements_df["acquisition_datetime"]
         )
+        start_date = datetime.strptime(dates_range[0], "%Y-%m-%d").date()
+        end_date = datetime.strptime(dates_range[1], "%Y-%m-%d").date()
+
+        filtered_df = key_measurements_df[
+            (key_measurements_df["acquisition_datetime"].dt.date >= start_date)
+            & (key_measurements_df["acquisition_datetime"].dt.date <= end_date)
+        ].copy()
+
+        # Filter by selected measurement and pivot for chart
+        measurement_name = kkm[measurement]
+        df = (
+            filtered_df[filtered_df["Measurement"] == measurement_name]
+            .pivot_table(
+                columns="channel_name",
+                values=measurement_name,
+                index="acquisition_datetime",
+                aggfunc="first",
+            )
+            .reset_index()
+        )
+        df["date"] = df["acquisition_datetime"].dt.date
+        df["dataset_index"] = range(len(df))
+        df = df.drop(columns=["acquisition_datetime"])
 
         data = df.to_dict("records")
         channels = [c for c in df.columns if c not in ["dataset_index", "date"]]
