@@ -425,9 +425,9 @@ def callback_mip(points, channel_index, **kwargs):
                 "z": my_bead_df["fwhm_pixel_z"].values[0],
             }
         r_sq = {
-            "x": my_bead_df["fit_r2_x"].values[0],
-            "y": my_bead_df["fit_r2_y"].values[0],
-            "z": my_bead_df["fit_r2_z"].values[0],
+            "x": my_bead_df["fit_gaussian_r2_x"].values[0],
+            "y": my_bead_df["fit_gaussian_r2_y"].values[0],
+            "z": my_bead_df["fit_gaussian_r2_z"].values[0],
         }
 
         fig_mip_go = fig_bead(
@@ -669,17 +669,19 @@ def get_bead_profiles(bead_index, channel_index, image_id, mm_dataset):
         axis: load.load_table_mm_metrics(mm_dataset.output[f"bead_profiles_{axis}"])
         for axis in ("x", "y", "z")
     }
+    # TODO: we have chosen to show the gaussian fit but once the airy fit is fixed, we should add the option to
+    #  choose between gaussian and airy
     profiles = {
         axis: df.loc[
             :,
             [
                 f"{image_id}_{channel_index}_{bead_index}_{axis}_raw",
-                f"{image_id}_{channel_index}_{bead_index}_{axis}_fitted",
+                f"{image_id}_{channel_index}_{bead_index}_{axis}_fitted_gaussian",
             ],
         ].rename(
             columns={
                 f"{image_id}_{channel_index}_{bead_index}_{axis}_raw": "raw",
-                f"{image_id}_{channel_index}_{bead_index}_{axis}_fitted": "fitted",
+                f"{image_id}_{channel_index}_{bead_index}_{axis}_fitted_gaussian": "fitted",
             }
         )
         for axis, df in profiles.items()
