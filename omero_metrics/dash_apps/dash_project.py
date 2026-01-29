@@ -310,7 +310,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                                     dmc.Group(
                                         justify="flex-end",
                                         mt="xl",
-                                        id="thresholds-button_container",
+                                        id="thresholds-button-container",
                                         children=[],
                                     ),
                                     html.Div(id="notifications-container"),
@@ -665,7 +665,7 @@ def update_heart(n, **kwargs):
 
 @omero_project_dash.expanded_callback(
     dash.dependencies.Output("accordion-compose-controls", "children"),
-    dash.dependencies.Output("thresholds-button_container", "children"),
+    dash.dependencies.Output("thresholds-button-container", "children"),
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_thresholds_controls(*args, **kwargs):
