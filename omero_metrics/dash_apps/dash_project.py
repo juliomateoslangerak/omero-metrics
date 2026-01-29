@@ -344,17 +344,25 @@ def update_dropdown(*args, **kwargs):
         context = deserialize(kwargs["session_state"]["context"])
         kkm = context["kkm"]
         kkm = [k.replace("_", " ").title() for k in kkm]
-        key_measurements_df = context["key_measurements_df"]
 
         # Parse datetime strings and get min/max
-        datetimes = pd.to_datetime(key_measurements_df["acquisition_datetime"])
-        min_date = datetimes.min().date()
-        max_date = datetimes.max().date()
+        datetimes = context["dates"]
+        min_date = context["min_date"]
+        max_date = context["max_date"]
 
-        options = [{"value": f"{i}", "label": f"{k}"} for i, k in enumerate(kkm)]
-        data = options
+        kkm_options = [{"value": f"{i}", "label": f"{k}"} for i, k in enumerate(kkm)]
         value_date = [min_date, max_date]
-        return data, "0", min_date, max_date, value_date, False, False, False, False
+        return (
+            kkm_options,
+            "0",
+            min_date,
+            max_date,
+            value_date,
+            False,
+            False,
+            False,
+            False,
+        )
     except Exception as e:
         return (
             dash.no_update,
@@ -375,8 +383,9 @@ def update_dropdown(*args, **kwargs):
 )
 def check_data(*args, **kwargs):
     try:
-        data = deserialize(kwargs["session_state"]["context"])["key_measurements_df"]
-        if not data.empty:
+        data = deserialize(kwargs["session_state"]["context"])["key_measurements"]
+        # FIXME: This expression is odd in any case this returns no update
+        if not data:
             return dash.no_update
         return dash.no_update
     except Exception as e:
@@ -411,13 +420,13 @@ def check_data(*args, **kwargs):
 def update_table(measurement, dates_range, **kwargs):
     try:
         context = deserialize(kwargs["session_state"]["context"])
-        key_measurements_df = context["key_measurements_df"]
+        key_measurements = context["key_measurements"]
         threshold = context["thresholds"]
         kkm = context["kkm"]
         measurement = int(measurement)
 
         # Check if we have any data
-        if key_measurements_df.empty:
+        if not key_measurements:
             return dash.no_update
         if threshold:
             threshold_kkm = threshold[kkm[measurement]]
@@ -433,38 +442,45 @@ def update_table(measurement, dates_range, **kwargs):
         else:
             ref = []
 
-        key_measurements_df = context["key_measurements_df"]
-
         # Parse acquisition_datetime and filter by date range
-        key_measurements_df["acquisition_datetime"] = pd.to_datetime(
-            key_measurements_df["acquisition_datetime"]
-        )
-        start_date = datetime.strptime(dates_range[0], "%Y-%m-%d").date()
-        end_date = datetime.strptime(dates_range[1], "%Y-%m-%d").date()
+        # key_measurements["acquisition_datetime"] = pd.to_datetime(
+        #     key_measurements["acquisition_datetime"]
+        # )
+        start_date = datetime.fromisoformat(dates_range[0].split("T")[0]).date()
+        end_date = datetime.fromisoformat(dates_range[1].split("T")[0]).date()
 
-        filtered_df = key_measurements_df[
-            (key_measurements_df["acquisition_datetime"].dt.date >= start_date)
-            & (key_measurements_df["acquisition_datetime"].dt.date <= end_date)
-        ].copy()
+        # filtered = key_measurements[
+        #     (key_measurements["acquisition_datetime"].dt.date >= start_date)
+        #     & (key_measurements["acquisition_datetime"].dt.date <= end_date)
+        # ].copy()
 
         # Filter by selected measurement and pivot for chart
-        measurement_name = kkm[measurement]
-        df = (
-            filtered_df[filtered_df["Measurement"] == measurement_name]
-            .pivot_table(
-                columns="channel_name",
-                values=measurement_name,
-                index="acquisition_datetime",
-                aggfunc="first",
-            )
-            .reset_index()
-        )
-        df["date"] = df["acquisition_datetime"].dt.date
-        df["dataset_index"] = range(len(df))
-        df = df.drop(columns=["acquisition_datetime"])
+        data = key_measurements[kkm[measurement]]
+        # data = [
+        #     {
+        #         "acquisition_datetime": km["acquisition_datetime"],
+        #         "channel_name": km["channel_name"],
+        #         # "channel_nr": km["channel_nr"],
+        #         measurement_name: km[measurement_name]
+        #     } for km in key_measurements
+        # ]
+        # df = (
+        #     filtered[filtered["Measurement"] == measurement_name]
+        #     .pivot_table(
+        #         columns="channel_name",
+        #         values=measurement_name,
+        #         index="acquisition_datetime",
+        #         aggfunc="first",
+        #     )
+        #     .reset_index()
+        # )
+        # df["date"] = df["acquisition_datetime"].dt.date
+        # df["dataset_index"] = range(len(df))
+        # df = df.drop(columns=["acquisition_datetime"])
 
-        data = df.to_dict("records")
-        channels = [c for c in df.columns if c not in ["dataset_index", "date"]]
+        # data = df.to_dict("records")
+        channels = context["channels"]
+        # channels = [c for c in df.columns if c not in ["dataset_index", "date"]]
         series = [
             {
                 "name": channel,
@@ -492,7 +508,7 @@ def update_project_view(clicked_data, page, **kwargs):
     try:
         if clicked_data:
             context = deserialize(kwargs["session_state"]["context"])
-            table = context["key_measurements_list"]
+            table = context["key_measurements"]
             dates = context["dates"]
             kkm = context["kkm"]
             selected_dataset = int(clicked_data["dataset_index"])
@@ -672,7 +688,7 @@ def update_thresholds_controls(*args, **kwargs):
     try:
         context = deserialize(kwargs["session_state"]["context"])
         kkm = context["kkm"]
-        threshold = context["threshold"]
+        threshold = context["thresholds"]
         if threshold:
             new_kkm = threshold
         else:
@@ -747,7 +763,7 @@ def threshold_callback1(*args, **kwargs):
         output = get_accordion_data(args[1], kkm)
         request = kwargs["request"]
         project_id = int(context["project_id"])
-        if output and args[0] > 0:
+        if output and args[0]:
             response_type, response_msg = views.save_threshold(
                 request=request,
                 project_id=project_id,

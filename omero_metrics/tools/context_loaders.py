@@ -1,4 +1,5 @@
 from dataclasses import asdict
+from datetime import datetime
 
 import pandas as pd
 
@@ -59,23 +60,55 @@ def context_loader_HarmonizedMetricsDatasetCollection(pm):
     pm.load_data()
     pm.load_input_config()
     pm.load_thresholds()
-    collection_df = pd.DataFrame()
+    dates = []
+    min_date = None
+    max_date = None
+    channels = set()
+    kkm_list = KKM_MAPPINGS.get(pm.mm_dataset_collection.dataset_class)
+    collection_key_measurements = {kkm: [] for kkm in kkm_list}
     for dataset in pm.mm_dataset_collection.dataset_collection:
         if not dataset.processed:
             # In principle, omero-metrics is generating and processing datasets in one go, so this should never happen
             raise ValueError(f"Dataset {dataset.name} is not processed")
-        dataset_df = pd.DataFrame.from_records(
-            [asdict(km) for km in dataset.output.key_measurements]
+        key_measurements = {
+            kkm: [
+                {
+                    "date": dataset.acquisition_datetime.split("T")[0],
+                    km.channel_name: km[kkm],
+                }
+                for km in dataset.output.key_measurements
+            ]
+            for kkm in kkm_list
+        }
+        channels = channels | {
+            km.channel_name for km in dataset.output.key_measurements
+        }
+        [
+            collection_key_measurements[kkm].extend(key_measurements[kkm])
+            for kkm in kkm_list
+        ]
+        dates.append(dataset.acquisition_datetime)
+        min_date = (
+            min(min_date, dataset.acquisition_datetime)
+            if min_date
+            else dataset.acquisition_datetime
         )
-        dataset_df["acquisition_datetime"] = dataset.acquisition_datetime
-        collection_df = pd.concat([collection_df, dataset_df])
+        max_date = (
+            max(max_date, dataset.acquisition_datetime)
+            if max_date
+            else dataset.acquisition_datetime
+        )
     context = {
         "project_id": int(pm.omero_project.getId()),
-        "key_measurements_df": collection_df,
+        "key_measurements": collection_key_measurements,
+        "channels": list(channels),
+        "dates": dates,
+        "min_date": min_date,
+        "max_date": max_date,
         "unprocessed_datasets": list(pm.unprocessed_datasets),
         "input_parameters": pm.input_parameters,
         "sample": pm.sample,
         "thresholds": pm.thresholds,
-        "kkm": KKM_MAPPINGS.get(pm.mm_dataset_collection.dataset_class),
+        "kkm": kkm_list,
     }
     pm.context = serialize(context)
