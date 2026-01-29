@@ -186,7 +186,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                                                 series=[],
                                                 curveType="linear",
                                                 style={"padding": 20},
-                                                xAxisLabel="Processed Date",
+                                                xAxisLabel="Acquisition Date",
                                                 connectNulls=True,
                                             ),
                                             html.Div(id="feedback_message"),
