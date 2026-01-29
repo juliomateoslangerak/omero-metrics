@@ -130,7 +130,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                                                 span=6,
                                                 children=[
                                                     dmc.Select(
-                                                        id="project-dropdown",
+                                                        id="key-measurement-dropdown",
                                                         label="Select Measurement",
                                                         placeholder="Choose a measurement",
                                                         leftSection=my_components.get_icon(
@@ -328,13 +328,13 @@ omero_project_dash.layout = dmc.MantineProvider(
 
 
 @omero_project_dash.expanded_callback(
-    dash.dependencies.Output("project-dropdown", "data"),
-    dash.dependencies.Output("project-dropdown", "value"),
+    dash.dependencies.Output("key-measurement-dropdown", "data"),
+    dash.dependencies.Output("key-measurement-dropdown", "value"),
     dash.dependencies.Output("date-picker", "minDate"),
     dash.dependencies.Output("date-picker", "maxDate"),
     dash.dependencies.Output("date-picker", "value"),
     dash.dependencies.Output("date-picker", "disabled"),
-    dash.dependencies.Output("project-dropdown", "disabled"),
+    dash.dependencies.Output("key-measurement-dropdown", "disabled"),
     dash.dependencies.Output("activate_download", "disabled"),
     dash.dependencies.Output("delete_data", "disabled"),
     [dash.dependencies.Input("blank-input", "children")],
@@ -403,7 +403,7 @@ def check_data(*args, **kwargs):
     dash.dependencies.Output("line-chart", "series"),
     dash.dependencies.Output("line-chart", "referenceLines"),
     [
-        dash.dependencies.Input("project-dropdown", "value"),
+        dash.dependencies.Input("key-measurement-dropdown", "value"),
         dash.dependencies.Input("date-picker", "value"),
     ],
     prevent_initial_call=True,
