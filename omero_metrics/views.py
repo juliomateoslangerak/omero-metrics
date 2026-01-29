@@ -207,37 +207,49 @@ def center_view_projects(request, conn=None, **kwargs):
     id_list = request.GET.get("projectIds", None)
     id_list = request.GET.get("Project", id_list)
     dash_context = request.session.get("django_plotly_dash", {})
-    if id_list:
-        projectIds = [int(i) for i in id_list.split(",")]
-        data = {}
-        for id in projectIds:
-            project_wrapper = conn.getObject("Project", id)
-            pm = data_managers.ProjectManager(conn, project_wrapper)
-            pm.load_data()
-            pm.is_harmonized()
-            pm.load_input_config()
-            pm.load_thresholds()
-            pm.check_processed_data()
-            pm.visualize_data()
-            context = pm.context
-            if "kkm" in context:
-                data[id] = {
-                    "kkm": context["kkm"],
-                    "key_measurements_list": context["key_measurements_list"],
-                    "dates": context["dates"],
-                }
-            else:
-                data[id] = {}
-    else:
-        projectIds = []
-        data = {}
-    dash_context["context"] = serialize(data)
-    request.session["django_plotly_dash"] = dash_context
-    return render(
-        request,
-        template_name="omero_metrics/projects.html",
-        context={"projectIds": projectIds},
-    )
+    try:
+        if id_list:
+            projectIds = [int(i) for i in id_list.split(",")]
+            data = {}
+            for id in projectIds:
+                project_wrapper = conn.getObject("Project", id)
+                pm = data_managers.ProjectManager(conn, project_wrapper)
+                pm.load_data()
+                pm.is_harmonized()
+                pm.load_input_config()
+                pm.load_thresholds()
+                pm.check_processed_data()
+                pm.visualize_data()
+                context = pm.context
+                if "kkm" in context:
+                    data[id] = {
+                        "kkm": context["kkm"],
+                        "key_measurements_list": context["key_measurements_list"],
+                        "dates": context["dates"],
+                    }
+                else:
+                    data[id] = {}
+        else:
+            projectIds = []
+            data = {}
+        dash_context["context"] = serialize(data)
+        request.session["django_plotly_dash"] = dash_context
+        return render(
+            request,
+            template_name="omero_metrics/projects.html",
+            context={"projectIds": projectIds},
+        )
+    except Exception as e:
+        dash_context["context"] = {
+            "message": str(e),
+            "traceback": traceback.format_exc(),
+        }
+        request.session["django_plotly_dash"] = dash_context
+        return render(
+            request,
+            template_name=TEMPLATE_DASH_NAME,
+            context={"app_name": "ErrorApp"},
+        )
 
 
 # These views are called from the dash app, and they return a message and a color to display in the app.
