@@ -9,7 +9,6 @@ from dash import html
 from django_plotly_dash import DjangoDash
 from linkml_runtime.dumpers import JSONDumper, YAMLDumper
 from microscopemetrics_schema import datamodel as mm_schema
-from tools.serializers import deserialize
 
 import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 from omero_metrics import views
@@ -27,6 +26,7 @@ from omero_metrics.styles import (
     THEME,
 )
 from omero_metrics.tools import dash_forms_tools as dft
+from omero_metrics.tools.serializers import deserialize
 
 # Initialize the Dash app
 dashboard_name = "omero_project_dash"
