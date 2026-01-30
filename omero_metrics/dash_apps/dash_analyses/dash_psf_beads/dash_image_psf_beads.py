@@ -12,6 +12,7 @@ from plotly.subplots import make_subplots
 import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 from omero_metrics.styles import MANTINE_THEME, THEME
 from omero_metrics.tools import load
+from omero_metrics.tools.serializers import deserialize
 
 logger = logging.getLogger(__name__)
 dashboard_name = "omero_image_psf_beads"
@@ -256,8 +257,9 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
 )
 def update_image(channel_index, color, invert, contour, roi, beads_info, **kwargs):
     try:
-        mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
-        mm_image = kwargs["session_state"]["context"]["mm_image"]
+        context = deserialize(kwargs["session_state"]["context"])
+        mm_dataset = context["mm_dataset"]
+        mm_image = context["mm_image"]
         image_id = mm_image.data_reference.omero_object_id
         channel_index = int(channel_index)
         # TODO: we have to decide, at the scheme level, on weather we set the min_distance in pixels or in FWHM
@@ -335,7 +337,8 @@ def update_image(channel_index, color, invert, contour, roi, beads_info, **kwarg
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_channels_psf_image(_, **kwargs):
-    channel_series = kwargs["session_state"]["context"]["mm_image"].channel_series
+    context = deserialize(kwargs["session_state"]["context"])
+    channel_series = context["mm_image"].channel_series
     return [
         {"label": c.name, "value": str(i)}
         for i, c in enumerate(channel_series.channels)
@@ -353,8 +356,9 @@ def update_channels_psf_image(_, **kwargs):
 )
 def callback_mip(points, channel_index, **kwargs):
     point = points["points"][0]  # FIXME: point is None at initial call
-    mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
-    mm_image = kwargs["session_state"]["context"]["mm_image"]
+    context = deserialize(kwargs["session_state"]["context"])
+    mm_dataset = context["mm_dataset"]
+    mm_image = context["mm_image"]
     image_id = mm_image.data_reference.omero_object_id
     channel_index = int(channel_index)
     channel_name = mm_image.channel_series.channels[
