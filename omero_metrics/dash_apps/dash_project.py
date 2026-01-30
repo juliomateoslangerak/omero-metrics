@@ -442,45 +442,11 @@ def update_table(measurement, dates_range, **kwargs):
         else:
             ref = []
 
-        # Parse acquisition_datetime and filter by date range
-        # key_measurements["acquisition_datetime"] = pd.to_datetime(
-        #     key_measurements["acquisition_datetime"]
-        # )
         start_date = datetime.fromisoformat(dates_range[0].split("T")[0]).date()
         end_date = datetime.fromisoformat(dates_range[1].split("T")[0]).date()
 
-        # filtered = key_measurements[
-        #     (key_measurements["acquisition_datetime"].dt.date >= start_date)
-        #     & (key_measurements["acquisition_datetime"].dt.date <= end_date)
-        # ].copy()
-
-        # Filter by selected measurement and pivot for chart
         data = key_measurements[kkm[measurement]]
-        # data = [
-        #     {
-        #         "acquisition_datetime": km["acquisition_datetime"],
-        #         "channel_name": km["channel_name"],
-        #         # "channel_nr": km["channel_nr"],
-        #         measurement_name: km[measurement_name]
-        #     } for km in key_measurements
-        # ]
-        # df = (
-        #     filtered[filtered["Measurement"] == measurement_name]
-        #     .pivot_table(
-        #         columns="channel_name",
-        #         values=measurement_name,
-        #         index="acquisition_datetime",
-        #         aggfunc="first",
-        #     )
-        #     .reset_index()
-        # )
-        # df["date"] = df["acquisition_datetime"].dt.date
-        # df["dataset_index"] = range(len(df))
-        # df = df.drop(columns=["acquisition_datetime"])
-
-        # data = df.to_dict("records")
         channels = context["channels"]
-        # channels = [c for c in df.columns if c not in ["dataset_index", "date"]]
         series = [
             {
                 "name": channel,
