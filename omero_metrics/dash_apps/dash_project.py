@@ -627,7 +627,7 @@ def update_config_project(submit_click, sample_form, input_form, **kwargs):
 def update_thresholds(*args, **kwargs):
     try:
         kkm = deserialize(kwargs["session_state"]["context"])["kkm"]
-        # TODO: Fishy replacement of strings. Move to kkm titles
+        # TODO: Move to kkm titles if and once implemented
         kkm = [k.replace("_", " ").title() for k in kkm]
         data = [{"value": f"{i}", "label": f"{k}"} for i, k in enumerate(kkm)]
         return data
