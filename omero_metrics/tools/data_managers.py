@@ -387,8 +387,21 @@ class ProjectManager:
     def delete_processed_data(self):
         for dataset in self.mm_dataset_collection.dataset_collection:
             if dataset.processed:
-                # TODO: This is not going to work
-                dataset.delete_processed_data(self._conn)
+                logger.debug(f"Deleting processed data for dataset {dataset.name}")
+                try:
+                    delete.delete_mm_obj_omero_refs(self._conn, dataset.output)
+                    delete.delete_dataset_file_ann(
+                        self._conn,
+                        self._conn.getObject(
+                            "Dataset", dataset.data_reference.omero_object_id
+                        ),
+                    )
+                except Exception as e:
+                    logger.error(f"Error deleting processed data: {e}")
+                    dataset.validated = False
+                    raise e
+                else:
+                    logger.info("Processed data deleted.")
 
     def load_input_config(self):
         if self.input_parameters is None:
