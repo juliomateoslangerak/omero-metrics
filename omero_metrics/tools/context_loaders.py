@@ -65,15 +65,19 @@ def context_loader_HarmonizedMetricsDatasetCollection(pm):
     max_date = None
     channels = set()
     kkm_list = KKM_MAPPINGS.get(pm.mm_dataset_collection.dataset_class)
-    collection_key_measurements = {kkm: [] for kkm in kkm_list}
+    collection_key_measurements_by_kkm = {kkm: [] for kkm in kkm_list}
+    collection_key_measurements_by_dataset_id = {}
     for dataset in pm.mm_dataset_collection.dataset_collection:
         if not dataset.processed:
             # In principle, omero-metrics is generating and processing datasets in one go, so this should never happen
             raise ValueError(f"Dataset {dataset.name} is not processed")
-        key_measurements = {
+        key_measurements_by_kkm = {
             kkm: [
                 {
+                    # TODO: We are removing here time from the date, but this might bite us back at some point
+                    # We should consider keeping time in the date
                     "date": dataset.acquisition_datetime.split("T")[0],
+                    "dataset_id": int(dataset.data_reference.omero_object_id),
                     **{
                         km.channel_name: km[kkm]
                         for km in dataset.output.key_measurements
@@ -82,13 +86,25 @@ def context_loader_HarmonizedMetricsDatasetCollection(pm):
             ]
             for kkm in kkm_list
         }
+        [
+            collection_key_measurements_by_kkm[kkm].extend(
+                key_measurements_by_kkm[kkm]
+            )
+            for kkm in kkm_list
+        ]
+        collection_key_measurements_by_dataset_id[
+            int(dataset.data_reference.omero_object_id)
+        ] = {
+            "caption": f"{dataset.name} acquired on {dataset.acquisition_datetime}",
+            "head": [kkm.replace("_", " ").title() for kkm in kkm_list],
+            "body": [
+                [km[kkm] for kkm in kkm_list]
+                for km in dataset.output.key_measurements
+            ],
+        }
         channels = channels | {
             km.channel_name for km in dataset.output.key_measurements
         }
-        [
-            collection_key_measurements[kkm].extend(key_measurements[kkm])
-            for kkm in kkm_list
-        ]
         dates.append(dataset.acquisition_datetime)
         min_date = (
             min(min_date, dataset.acquisition_datetime)
@@ -102,7 +118,8 @@ def context_loader_HarmonizedMetricsDatasetCollection(pm):
         )
     context = {
         "project_id": int(pm.omero_project.getId()),
-        "key_measurements": collection_key_measurements,
+        "key_measurements_by_kkm": collection_key_measurements_by_kkm,
+        "key_measurements_by_dataset_id": collection_key_measurements_by_dataset_id,
         "channels": list(channels),
         "dates": dates,
         "min_date": min_date,

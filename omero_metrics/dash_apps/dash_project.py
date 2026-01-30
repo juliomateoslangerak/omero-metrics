@@ -383,7 +383,9 @@ def update_dropdown(*args, **kwargs):
 )
 def check_data(*args, **kwargs):
     try:
-        data = deserialize(kwargs["session_state"]["context"])["key_measurements"]
+        data = deserialize(kwargs["session_state"]["context"])[
+            "key_measurements_by_kkm"
+        ]
         # FIXME: This expression is odd in any case this returns no update
         if not data:
             return dash.no_update
@@ -420,13 +422,13 @@ def check_data(*args, **kwargs):
 def update_table(measurement, dates_range, **kwargs):
     try:
         context = deserialize(kwargs["session_state"]["context"])
-        key_measurements = context["key_measurements"]
+        key_measurements_by_kkm = context["key_measurements_by_kkm"]
         threshold = context["thresholds"]
         kkm = context["kkm"]
         measurement = int(measurement)
 
         # Check if we have any data
-        if not key_measurements:
+        if not key_measurements_by_kkm:
             return dash.no_update
         if threshold:
             threshold_kkm = threshold[kkm[measurement]]
@@ -445,7 +447,7 @@ def update_table(measurement, dates_range, **kwargs):
         start_date = datetime.fromisoformat(dates_range[0].split("T")[0]).date()
         end_date = datetime.fromisoformat(dates_range[1].split("T")[0]).date()
 
-        data = key_measurements[kkm[measurement]]
+        data = key_measurements_by_kkm[kkm[measurement]]
         channels = context["channels"]
         series = [
             {
@@ -474,27 +476,21 @@ def update_project_view(clicked_data, page, **kwargs):
     try:
         if clicked_data:
             context = deserialize(kwargs["session_state"]["context"])
-            table = context["key_measurements"]
-            dates = context["dates"]
-            kkm = context["kkm"]
-            selected_dataset = int(clicked_data["dataset_index"])
-            df_selected = table[selected_dataset]
-            table_kkm = df_selected.filter(["channel_name", *kkm])
-            table_kkm = table_kkm.round(3)
-            total = math.ceil(len(table_kkm) / 4)
+            key_measurements_by_dataset_id = context[
+                "key_measurements_by_dataset_id"
+            ]
+            data = key_measurements_by_dataset_id[str(clicked_data["dataset_id"])]
+            total = math.ceil(len(data["head"]) / 4)
             start_idx = (page - 1) * 4
             end_idx = start_idx + 4
-            table_kkm.columns = table_kkm.columns.str.replace("_", " ").str.title()
-            date = dates[selected_dataset]
-            page_data = table_kkm.iloc[start_idx:end_idx]
-            grid = {
-                "head": page_data.columns.tolist(),
-                "body": page_data.values.tolist(),
-                "caption": "Key Measurements for the selected dataset",
+            page_data = {
+                "caption": data["caption"],
+                "head": data["head"][start_idx:end_idx],
+                "body": [i[start_idx:end_idx] for i in data["body"]],
             }
             return (
-                f"Key Measurements processed at {str(date)}",
-                grid,
+                data["caption"],
+                page_data,
                 total,
                 {"visible": True},
             )
