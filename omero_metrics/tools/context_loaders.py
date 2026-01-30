@@ -74,9 +74,11 @@ def context_loader_HarmonizedMetricsDatasetCollection(pm):
             kkm: [
                 {
                     "date": dataset.acquisition_datetime.split("T")[0],
-                    km.channel_name: km[kkm],
+                    **{
+                        km.channel_name: km[kkm]
+                        for km in dataset.output.key_measurements
+                    },
                 }
-                for km in dataset.output.key_measurements
             ]
             for kkm in kkm_list
         }
