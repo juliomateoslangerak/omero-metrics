@@ -9,13 +9,7 @@ from omero.gateway import (
     ProjectWrapper,
 )
 
-from omero_metrics.tools import delete, dump, load, update
-from omero_metrics.tools.context_loaders import (
-    context_loader_EmptyMetricsDatasetCollection,
-    context_loader_FieldIlluminationDataset,
-    context_loader_HarmonizedMetricsDatasetCollection,
-    context_loader_PSFBeadsDataset,
-)
+from omero_metrics.tools import context_loaders, delete, dump, load, update
 from omero_metrics.tools.data_type import (
     KKM_MAPPINGS,
     TEMPLATE_MAPPINGS_DATASET,
@@ -26,8 +20,18 @@ logger = logging.getLogger(__name__)
 
 
 DATASET_CONTEXT_LOADERS = {
-    "FieldIlluminationDataset": context_loader_FieldIlluminationDataset,
-    "PSFBeadsDataset": context_loader_PSFBeadsDataset,
+    "FieldIlluminationDataset": context_loaders.FieldIlluminationDataset,
+    "PSFBeadsDataset": context_loaders.PSFBeadsDataset,
+}
+
+IMAGE_CONTEXT_LOADERS = {
+    "FieldIlluminationDataset": {
+        "input_data": context_loaders.FieldIlluminationDataset_input_data_Image,
+    },
+    "PSFBeadsDataset": {
+        "input_data": context_loaders.PSFBeadsDataset_input_data_Image,
+        "output": context_loaders.PSFBeadsDataset_output_AveragePSF,
+    },
 }
 
 
@@ -49,8 +53,11 @@ class ImageManager:
         else:
             raise ValueError("the object must be an ImageWrapper")
         self.omero_image = omero_image
-        self.omero_dataset = self.omero_image.getParent()
-        self.dataset_manager = DatasetManager(self._conn, self.omero_dataset)
+        self.omero_dataset = None
+        self.dataset_manager = None
+        self.image_exist = None
+        self.image_location = None
+        self.image_index = None
         self.context = {}
         self.mm_image = None
         self.image_exist = None
@@ -59,31 +66,13 @@ class ImageManager:
         self.app_name = None
 
     def load_context(self):
-        self._load_data()
-        self._visualize_data()
-
-    def _load_data(self, force_reload=True):
-        logger.info("Loading data CALL")
-        if force_reload or self.mm_image is None:
-            self.dataset_manager.load_data(
-                load_images=False, force_reload=force_reload
-            )
-            if self.dataset_manager.is_processed():
-                self.mm_image = load.load_image(self.omero_image)
-                self.dataset_manager.remove_unsupported_data()
-            else:
-                self.mm_image = None
-        else:
-            raise NotImplementedError(
-                "partial loading of data from OMERO is not yet implemented"
-            )
-
-    def _visualize_data(self):
+        self.load_data()
         if self.dataset_manager.is_processed():
             if (
                 self.dataset_manager.mm_dataset.__class__.__name__
                 in TEMPLATE_MAPPINGS_DATASET
             ):
+                # TODO: move the image_exists call to the load_data method
                 (
                     self.image_exist,
                     self.image_location,
@@ -95,17 +84,9 @@ class ImageManager:
                     self.app_name = TEMPLATE_MAPPINGS_IMAGE.get(
                         self.dataset_manager.mm_dataset.__class__.__name__
                     )[self.image_location]
-                    if self.image_location == "input_data":
-                        self.context = {
-                            "image_index": self.image_index,
-                            # "image_id": self.mm_image.data_reference.omero_object_id,
-                            "mm_image": self.mm_image,
-                            "mm_dataset": self.dataset_manager.mm_dataset,
-                        }
-                    elif self.image_location == "output":
-                        message = "No visualization for output images"
-                        logger.warning(message)
-                        self.context, self.app_name = warning_message(message)
+                    IMAGE_CONTEXT_LOADERS[
+                        self.dataset_manager.mm_dataset.__class__.__name__
+                    ][self.image_location](self)
                 else:
                     message = "Image does not exist in the dataset yaml file. Unable to visualize"
                     logger.warning(message)
@@ -118,6 +99,17 @@ class ImageManager:
             message = "Dataset has not been processed. Unable to visualize"
             logger.warning(message)
             self.context, self.app_name = warning_message(message)
+
+    def load_data(self, force_reload: bool = False):
+        if force_reload or self.dataset_manager is None:
+            self.omero_dataset = self.omero_image.getParent()
+            self.dataset_manager = DatasetManager(self._conn, self.omero_dataset)
+        if force_reload or self.mm_image is None:
+            self.dataset_manager.load_data(
+                load_images=False, force_reload=force_reload
+            )
+            if self.dataset_manager.is_processed():
+                self.dataset_manager.remove_unsupported_data()
 
 
 class DatasetManager:
@@ -367,10 +359,10 @@ class ProjectManager:
         self.load_data()
         if self.mm_dataset_collection is None:
             # Empty project or non-analyzed we cannot know if it is harmonized or not
-            context_loader_EmptyMetricsDatasetCollection(self)
+            context_loaders.EmptyMetricsDatasetCollection(self)
         elif self.is_harmonized():
             if self.mm_dataset_collection.dataset_class in TEMPLATE_MAPPINGS_DATASET:
-                context_loader_HarmonizedMetricsDatasetCollection(self)
+                context_loaders.HarmonizedMetricsDatasetCollection(self)
             else:
                 raise ValueError("Unknown analysis type. Unable to visualize")
         else:

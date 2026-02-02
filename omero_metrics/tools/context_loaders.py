@@ -3,6 +3,7 @@ from datetime import datetime
 
 import pandas as pd
 
+from omero_metrics.tools import load
 from omero_metrics.tools.data_type import KKM_MAPPINGS
 from omero_metrics.tools.serializers import serialize
 
@@ -19,7 +20,34 @@ def concatenate_images(images: list):
     return list_images, list_channels
 
 
-def context_loader_FieldIlluminationDataset(dm):
+## Image context loaders
+def FieldIlluminationDataset_input_data_Image(im):
+    im.mm_image = load.load_image(im.omero_image, load_array=True)
+    context = {
+        "image_index": im.image_index,
+        "mm_image": im.mm_image,
+        "mm_dataset": im.dataset_manager.mm_dataset,
+    }
+    im.context = serialize(context)
+
+
+def PSFBeadsDataset_input_data_Image(im):
+    im.mm_image = load.load_image(im.omero_image, load_array=True)
+    context = {
+        "image_index": im.image_index,
+        "mm_image": im.mm_image,
+        "mm_dataset": im.dataset_manager.mm_dataset,
+    }
+    im.context = serialize(context)
+
+
+def PSFBeadsDataset_output_AveragePSF(im):
+    im.mm_image = load.load_image(im.omero_image, load_array=False)
+    im.context = {"message": "View of output average PSF not supported yet"}
+
+
+## Dataset context loaders
+def FieldIlluminationDataset(dm):
     dm.load_data(load_images=True, force_reload=True)
     list_images, list_channels = concatenate_images(
         dm.mm_dataset.input_data.field_illumination_images
@@ -33,7 +61,7 @@ def context_loader_FieldIlluminationDataset(dm):
     dm.context = serialize(context)
 
 
-def context_loader_PSFBeadsDataset(dm):
+def PSFBeadsDataset(dm):
     dm.load_data(load_images=False, force_reload=True)
     context = {
         "mm_dataset": dm.mm_dataset,
@@ -42,7 +70,7 @@ def context_loader_PSFBeadsDataset(dm):
     dm.context = serialize(context)
 
 
-def context_loader_EmptyMetricsDatasetCollection(pm):
+def EmptyMetricsDatasetCollection(pm):
     pm.load_data()
     pm.load_input_config()
     pm.load_thresholds()
@@ -56,7 +84,7 @@ def context_loader_EmptyMetricsDatasetCollection(pm):
     pm.context = serialize(context)
 
 
-def context_loader_HarmonizedMetricsDatasetCollection(pm):
+def HarmonizedMetricsDatasetCollection(pm):
     pm.load_data()
     pm.load_input_config()
     pm.load_thresholds()

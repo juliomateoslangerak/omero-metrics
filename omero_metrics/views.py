@@ -44,7 +44,7 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
         image_wrapper = conn.getObject("Image", image_id)
         im = data_managers.ImageManager(conn, image_wrapper)
         im.load_context()
-        dash_context["context"] = serialize(im.context)
+        dash_context["context"] = im.context
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,

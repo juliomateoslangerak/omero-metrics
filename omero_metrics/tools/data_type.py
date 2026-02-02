@@ -62,7 +62,6 @@ TEMPLATE_MAPPINGS_DATASET = {
 TEMPLATE_MAPPINGS_IMAGE = {
     "FieldIlluminationDataset": {
         "input_data": "omero_image_foi",
-        "output": "WarningApp",
     },
     "PSFBeadsDataset": {
         "input_data": "omero_image_psf_beads",
