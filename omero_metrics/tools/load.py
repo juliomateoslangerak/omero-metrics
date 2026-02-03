@@ -113,17 +113,16 @@ def image_exist(image_id, mm_dataset):
     image_found = False
     image_location = None
     index = None
-    for k, v in DATASET_IMAGES[mm_dataset.__class__.__name__].items():
-        if v:
-            images_list = getattr(mm_dataset[k], v[0])
+    for location, image_type in DATASET_IMAGES[
+        mm_dataset.__class__.__name__
+    ].items():
+        if image_type:
+            images_list = getattr(mm_dataset[location], image_type[0])
             if not isinstance(images_list, list):
                 images_list = [images_list]
             for i, image in enumerate(images_list):
                 if image_id == image.data_reference.omero_object_id:
-                    image_found = True
-                    image_location = k
-                    index = i
-                    break
+                    return True, location, i
     return image_found, image_location, index
 
 
