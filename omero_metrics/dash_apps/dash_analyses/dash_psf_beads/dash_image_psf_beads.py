@@ -359,22 +359,13 @@ def callback_mip(points, channel_index, **kwargs):
     context = deserialize(kwargs["session_state"]["context"])
     mm_dataset = context["mm_dataset"]
     mm_image = context["mm_image"]
-    image_id = mm_image.data_reference.omero_object_id
-    channel_index = int(channel_index)
-    channel_name = mm_image.channel_series.channels[
-        channel_index
-    ].name  # TODO: rename channel_names to channels
     beads_properties_df = load.load_table_mm_metrics(
         mm_dataset.output["bead_properties"]
     )
-    # TODO: This is a hack. We just reproduce what microscope-metrics does to extract the min-distance
-    min_distance_px = int(
-        mm_dataset.input_parameters.min_lateral_distance_factor * 2
-    )
-    half_min_distance_px = min_distance_px // 2
-
     if point["curveNumber"] == 1:
         bead_index = point["pointNumber"]
+        image_id = mm_image.data_reference.omero_object_id
+        channel_index = int(channel_index)
         my_bead_df = beads_properties_df.loc[
             (beads_properties_df["image_id"] == image_id)
             & (beads_properties_df["channel_nr"] == channel_index)
@@ -383,6 +374,12 @@ def callback_mip(points, channel_index, **kwargs):
         ]
         x_pos = int(my_bead_df["center_x"].values[0])
         y_pos = int(my_bead_df["center_y"].values[0])
+
+        # TODO: This is a hack. We just reproduce what microscope-metrics does to extract the min-distance
+        min_distance_px = int(
+            mm_dataset.input_parameters.min_lateral_distance_factor * 2
+        )
+        half_min_distance_px = min_distance_px // 2
 
         stack = mm_image.array_data[
             0,  # time
@@ -441,6 +438,9 @@ def callback_mip(points, channel_index, **kwargs):
             r_sq=r_sq,
             voxel_size=voxel_size,
         )
+        channel_name = mm_image.channel_series.channels[
+            channel_index
+        ].name  # TODO: rename channel_names to channels
         # fig_mip_go.update_layout(
         #     coloraxis={
         #         "colorbar": dict(
