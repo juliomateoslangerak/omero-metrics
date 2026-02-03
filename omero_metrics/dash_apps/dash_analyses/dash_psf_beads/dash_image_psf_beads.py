@@ -281,9 +281,8 @@ def update_image(channel_index, color, invert, contour, roi, beads_info, **kwarg
         )
 
         if invert:
-            color = color + "_r"
-        stack = mm_image.array_data[0, :, :, :, channel_index]
-        mip_z = np.max(stack, axis=0)
+            color = f"{color}_r"
+        mip_z = context["mip_z"][..., channel_index]
 
         fig = px.imshow(
             mip_z,
@@ -356,112 +355,78 @@ def update_channels_psf_image(_, **kwargs):
 )
 def callback_mip(points, channel_index, **kwargs):
     point = points["points"][0]  # FIXME: point is None at initial call
-    context = deserialize(kwargs["session_state"]["context"])
-    mm_dataset = context["mm_dataset"]
-    mm_image = context["mm_image"]
-    beads_properties_df = load.load_table_mm_metrics(
-        mm_dataset.output["bead_properties"]
-    )
-    if point["curveNumber"] == 1:
-        bead_index = point["pointNumber"]
-        image_id = mm_image.data_reference.omero_object_id
-        channel_index = int(channel_index)
-        my_bead_df = beads_properties_df.loc[
-            (beads_properties_df["image_id"] == image_id)
-            & (beads_properties_df["channel_nr"] == channel_index)
-            & (beads_properties_df["bead_id"] == bead_index),
-            :,
-        ]
-        x_pos = int(my_bead_df["center_x"].values[0])
-        y_pos = int(my_bead_df["center_y"].values[0])
-
-        # TODO: This is a hack. We just reproduce what microscope-metrics does to extract the min-distance
-        min_distance_px = int(
-            mm_dataset.input_parameters.min_lateral_distance_factor * 2
-        )
-        half_min_distance_px = min_distance_px // 2
-
-        stack = mm_image.array_data[
-            0,  # time
-            :,  # z-dimension
-            max(0, y_pos - half_min_distance_px) : min(
-                mm_image.array_data.shape[2],
-                y_pos + half_min_distance_px + 1,
-            ),  # y-dimension
-            max(0, x_pos - half_min_distance_px) : min(
-                mm_image.array_data.shape[3],
-                x_pos + half_min_distance_px + 1,
-            ),  # x-dimension
-            channel_index,
-        ]
-
-        mips = {
-            "x": np.transpose(np.max(stack, axis=2)),
-            "y": np.max(stack, axis=1),
-            "z": np.max(stack, axis=0),
-        }
-        mips = {a: np.sqrt(mip) for a, mip in mips.items()}
-
-        profiles = get_bead_profiles(
-            bead_index=bead_index,
-            channel_index=channel_index,
-            image_id=image_id,
-            mm_dataset=mm_dataset,
-        )
-        voxel_size = {
-            "x": mm_image.voxel_size_x_micron,
-            "y": mm_image.voxel_size_y_micron,
-            "z": mm_image.voxel_size_z_micron,
-        }
-        if all(list(voxel_size.values())):
-            fwhms = {
-                "x": my_bead_df["fwhm_micron_x"].values[0],
-                "y": my_bead_df["fwhm_micron_y"].values[0],
-                "z": my_bead_df["fwhm_micron_z"].values[0],
-            }
-        else:
-            fwhms = {
-                "x": my_bead_df["fwhm_pixel_x"].values[0],
-                "y": my_bead_df["fwhm_pixel_y"].values[0],
-                "z": my_bead_df["fwhm_pixel_z"].values[0],
-            }
-        r_sq = {
-            "x": my_bead_df["fit_gaussian_r2_x"].values[0],
-            "y": my_bead_df["fit_gaussian_r2_y"].values[0],
-            "z": my_bead_df["fit_gaussian_r2_z"].values[0],
-        }
-
-        fig_mip_go = fig_bead(
-            mips=mips,
-            profiles=profiles,
-            fwhms=fwhms,
-            r_sq=r_sq,
-            voxel_size=voxel_size,
-        )
-        channel_name = mm_image.channel_series.channels[
-            channel_index
-        ].name  # TODO: rename channel_names to channels
-        # fig_mip_go.update_layout(
-        #     coloraxis={
-        #         "colorbar": dict(
-        #             thickness=15,
-        #             len=0.7,
-        #             title=dict(text="Intensity", side="right"),
-        #             tickfont=dict(size=10),
-        #         ),
-        #     },
-        #     margin={"l": 20, "r": 20, "t": 30, "b": 20},
-        #     plot_bgcolor=THEME["background"],
-        #     paper_bgcolor=THEME["background"],
-        #     font={"color": THEME["text"]["primary"]},
-        # )
-        title = f"Channel {channel_name}: Bead number {bead_index}"
-        return (
-            fig_mip_go,
-            title,
-        )
-    else:
+    if point["curveNumber"] != 1:
         return dash.no_update
+
+    context = deserialize(kwargs["session_state"]["context"])
+    bead_index = point["pointNumber"]
+    mm_image = context["mm_image"]
+    image_id = mm_image.data_reference.omero_object_id
+    channel_index = int(channel_index)
+    beads_properties_df = context["beads_properties"]
+    bead_df = beads_properties_df.loc[
+        (beads_properties_df["image_id"] == image_id)
+        & (beads_properties_df["channel_nr"] == channel_index)
+        & (beads_properties_df["bead_id"] == bead_index),
+        :,
+    ]
+    beads_array = context["beads_array"]
+
+    bead_array = beads_array[bead_index, :, :, :, channel_index]
+
+    mips = {
+        "x": np.flipud(np.transpose(np.max(bead_array, axis=2))),
+        "y": np.max(bead_array, axis=1),
+        "z": np.flipud(np.max(bead_array, axis=0)),
+    }
+    mips = {a: np.sqrt(mip) for a, mip in mips.items()}
+
+    mm_dataset = context["mm_dataset"]
+    profiles = get_bead_profiles(
+        bead_index=bead_index,
+        channel_index=channel_index,
+        image_id=image_id,
+        mm_dataset=mm_dataset,
+    )
+    voxel_size = {
+        "x": mm_image.voxel_size_x_micron,
+        "y": mm_image.voxel_size_y_micron,
+        "z": mm_image.voxel_size_z_micron,
+    }
+    if all(list(voxel_size.values())):
+        fwhms = {
+            "x": bead_df["fwhm_micron_x"].values[0],
+            "y": bead_df["fwhm_micron_y"].values[0],
+            "z": bead_df["fwhm_micron_z"].values[0],
+        }
+    else:
+        fwhms = {
+            "x": bead_df["fwhm_pixel_x"].values[0],
+            "y": bead_df["fwhm_pixel_y"].values[0],
+            "z": bead_df["fwhm_pixel_z"].values[0],
+        }
+    r_sq = {
+        "x": bead_df["fit_gaussian_r2_x"].values[0],
+        "y": bead_df["fit_gaussian_r2_y"].values[0],
+        "z": bead_df["fit_gaussian_r2_z"].values[0],
+    }
+
+    fig_mip_go = fig_bead(
+        mips=mips,
+        profiles=profiles,
+        fwhms=fwhms,
+        r_sq=r_sq,
+        voxel_size=voxel_size,
+    )
+    channel_name = mm_image.channel_series.channels[
+        channel_index
+    ].name  # TODO: rename channel_names to channels
+
+    title = f"Channel {channel_name}: Bead number {bead_index}"
+    return (
+        fig_mip_go,
+        title,
+    )
 
 
 def fig_bead(
@@ -690,6 +655,8 @@ def get_bead_profiles(bead_index, channel_index, image_id, mm_dataset):
         )
         for axis, df in profiles.items()
     }
+    # We flip the values of the profiles in the y-axis
+    profiles["y"] = profiles["y"].iloc[::-1].reset_index(drop=True)
 
     return profiles
 
