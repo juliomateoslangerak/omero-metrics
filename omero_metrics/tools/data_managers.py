@@ -266,7 +266,7 @@ class DatasetManager:
 
         return True
 
-    def delete_processed_data(self, conn: BlitzGateway):
+    def delete_processed_data(self):
         """This function deletes the output of the dataset"""
         logger.debug(
             f"Deleting processed data for dataset {self.omero_dataset.getId()}"
@@ -275,8 +275,8 @@ class DatasetManager:
             logger.warning("Data has not been processed. Nothing to delete")
             return
         try:
-            delete.delete_mm_obj_omero_refs(conn, self.mm_dataset.output)
-            delete.delete_dataset_file_ann(conn, self.omero_dataset)
+            delete.delete_mm_obj_omero_refs(self._conn, self.mm_dataset.output)
+            delete.delete_dataset_file_ann(self._conn, self.omero_dataset)
         except Exception as e:
             logger.error(f"Error deleting processed data: {e}")
             self.mm_dataset.validated = False

@@ -286,9 +286,8 @@ def register_delete_dataset_callback(app):
         **kwargs,
     ):
         triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
-        dataset_id = kwargs["session_state"]["context"][
-            "mm_dataset"
-        ].data_reference.omero_object_id
+        context = deserialize(kwargs["session_state"]["context"])
+        dataset_id = context["mm_dataset"].data_reference.omero_object_id
         request = kwargs["request"]
         opened = not confirm_delete_modal_opened
         if (

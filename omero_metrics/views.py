@@ -434,9 +434,8 @@ def delete_dataset(request, conn=None, **kwargs):
     dataset_wrapper = conn.getObject("Dataset", dataset_id)
     dm = data_managers.DatasetManager(conn, dataset_wrapper)
     dm.load_data(load_images=False)
-    dm.delete_processed_data()
     try:
-        dm.delete_processed_data(conn)
+        dm.delete_processed_data()
         return "success", "Output deleted successfully."
     except Exception as e:
         return "unidentified_error", str(e)
