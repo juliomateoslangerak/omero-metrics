@@ -11,4 +11,5 @@ class OmeroAuth:
         # code before response is handled goes here
         request.user = "Omero User"
         response = self.get_response(request)
+
         return response
