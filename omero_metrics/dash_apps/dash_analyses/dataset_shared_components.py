@@ -20,17 +20,6 @@ from omero_metrics.tools.serializers import deserialize
 
 
 # COMPONENTS
-def store_provider():
-    return html.Div(
-        [
-            # Store for deserialized context - uses browser memory (cleared on page refresh)
-            dcc.Store(id="context-store", storage_type="memory"),
-            # Hidden div to trigger initial deserialization
-            html.Div(id="init-trigger", style={"display": "none"}),
-        ]
-    )
-
-
 def notification_provider():
     return dmc.NotificationProvider(position="top-center")
 
@@ -250,21 +239,6 @@ delete_button = dmc.Button(
 
 
 # CALLBACKS
-def register_init_store_callback(app):
-    @app.expanded_callback(
-        dependencies.Output("context-store", "data"),
-        [dependencies.Input("init-trigger", "children")],
-    )
-    def initialize_deserialized_store(_, **kwargs):
-        """Deserialize the mm_dataset once and store in memory."""
-        return {
-            "ready": True,
-            "context": kwargs["session_state"][
-                "context"
-            ],  # Keep serialized for Store compatibility
-        }
-
-
 def register_delete_dataset_callback(app):
     @app.expanded_callback(
         dependencies.Output("confirm-delete-modal", "opened"),
@@ -313,20 +287,18 @@ def register_download_datasets_callback(app):
             dependencies.Input("download-yaml", "n_clicks"),
             dependencies.Input("download-json", "n_clicks"),
             dependencies.Input("download-text", "n_clicks"),
-            dependencies.Input("context-store", "data"),
         ],
         prevent_initial_call=True,
     )
-    def download_dataset_callback(
-        dw_yaml_clicks, dw_json_clicks, dw_text_clicks, data, **kwargs
-    ):
+    def download_dataset_callback(_, _, _, **kwargs):
         if not kwargs["callback_context"].triggered:
             raise no_update
 
         triggered_id = (
             kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
         )
-        mm_dataset = deserialize(data["context"]["mm_dataset"])
+        context = deserialize(kwargs["session_state"]["context"])
+        mm_dataset = context["mm_dataset"]
         file_name = mm_dataset.name
         yaml_dumper = YAMLDumper()
         json_dumper = JSONDumper()
@@ -354,16 +326,16 @@ def register_update_kkm_table_callback(app):
         dependencies.Output("kkm_table_pagination", "total"),
         [
             dependencies.Input("kkm_table_pagination", "value"),
-            dependencies.Input("context-store", "data"),
         ],
     )
-    def update_kkm_table_callback(pagination_value, data, **kwargs):
+    def update_kkm_table_callback(pagination_value, **kwargs):
         try:
             page = int(pagination_value)
-            kkm = deserialize(data["context"]["kkm"])
+            context = deserialize(kwargs["session_state"]["context"])
+            kkm = context["kkm"]
             # TODO: review how we process the tables here.
             table_km = load.get_km_mm_metrics_dataset(
-                mm_dataset=deserialize(data["context"]["mm_dataset"])
+                mm_dataset=context["mm_dataset"]
             )
             start_idx = (page - 1) * 4
             end_idx = start_idx + 4

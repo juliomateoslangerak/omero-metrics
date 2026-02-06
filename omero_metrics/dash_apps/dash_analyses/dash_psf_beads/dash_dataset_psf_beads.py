@@ -19,7 +19,6 @@ omero_dataset_psf_beads = DjangoDash(
 omero_dataset_psf_beads.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
-        dsc.store_provider(),
         dsc.notification_provider(),
         dsc.notifications_container(),
         dsc.confirm_delete_modal(),
@@ -37,7 +36,6 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
 
 
 # Register shared callbacks
-dsc.register_init_store_callback(omero_dataset_psf_beads)
 dsc.register_delete_dataset_callback(omero_dataset_psf_beads)
 dsc.register_download_datasets_callback(omero_dataset_psf_beads)
 dsc.register_update_kkm_table_callback(omero_dataset_psf_beads)
