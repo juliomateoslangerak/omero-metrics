@@ -405,10 +405,9 @@ def register_download_table_callback(app):
         triggered_id = (
             kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
         )
-        table_km = load.get_km_mm_metrics_dataset(
-            mm_dataset=kwargs["session_state"]["context"]["mm_dataset"],
-        )
-        kkm = kwargs["session_state"]["context"]["kkm"]
+        context = deserialize(kwargs["session_state"]["context"])
+        table_km = load.get_km_mm_metrics_dataset(mm_dataset=context["mm_dataset"])
+        kkm = context["kkm"]
         table_kkm = table_km.filter(["channel_name", *kkm])
         table_kkm = table_kkm.round(3)
         table_kkm.columns = table_kkm.columns.str.replace("_", " ").str.title()
