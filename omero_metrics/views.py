@@ -353,7 +353,7 @@ def run_analysis_view(request, conn=None, **kwargs):
             data_type.DATA_TYPE[mm_input_parameters.class_name][3](mm_dataset)
         except AnalysisError or SaturationError as e:
             logger.error(f"{e}")
-            return ("analysis_error", str(e), e.suggestion)
+            return "analysis_error", str(e), e.suggestion
         except Exception as e:
             logger.error(f"Error running the analysis: {e}")
             return (
