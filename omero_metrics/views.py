@@ -207,37 +207,41 @@ def center_view_projects(request, conn=None, **kwargs):
     id_list = request.GET.get("projectIds", None)
     id_list = request.GET.get("Project", id_list)
     dash_context = request.session.get("django_plotly_dash", {})
-    try:
-        if id_list:
-            projectIds = [int(i) for i in id_list.split(",")]
-            data = {}
-            for id in projectIds:
-                project_wrapper = conn.getObject("Project", id)
-                pm = data_managers.ProjectManager(conn, project_wrapper)
-                pm.load_data()
-                pm.is_harmonized()
-                pm.load_input_config()
-                pm.load_thresholds()
-                pm.check_processed_data()
-                pm.visualize_data()
-                context = pm.context
-                if "kkm" in context:
-                    data[id] = {
-                        "kkm": context["kkm"],
-                        "key_measurements_list": context["key_measurements_list"],
-                        "dates": context["dates"],
-                    }
-                else:
-                    data[id] = {}
-        else:
-            projectIds = []
-            data = {}
-        dash_context["context"] = serialize(data)
+    if not id_list:
+        # Not really sure when this could happen
+        dash_context["context"] = {"message": "No project ids provided."}
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
-            template_name="omero_metrics/projects.html",
-            context={"projectIds": projectIds},
+            template_name=TEMPLATE_DASH_NAME,
+            context={"app_name": "WarningApp"},
+        )
+    try:
+        project_ids = [int(i) for i in id_list.split(",")]
+        data = {}
+        for project_id in project_ids:
+            project_wrapper = conn.getObject("Project", project_id)
+            pm = data_managers.ProjectManager(conn, project_wrapper)
+            pm.load_context()
+            if pm.input_parameters and pm.is_harmonized():
+                dash_context["context"][f"{project_id}"] = pm.context
+
+        if not dash_context["context"]:
+            dash_context["context"] = {
+                "message": "OMERO-metrics did not detect any analyzed projects in the selection."
+            }
+            request.session["django_plotly_dash"] = dash_context
+            return render(
+                request,
+                template_name=TEMPLATE_DASH_NAME,
+                context={"app_name": "WarningApp"},
+            )
+
+        request.session["django_plotly_dash"] = dash_context
+        return render(
+            request,
+            template_name=TEMPLATE_DASH_NAME,
+            context={"app_name": "omero_multiple_projects"},
         )
     except Exception as e:
         dash_context["context"] = {
