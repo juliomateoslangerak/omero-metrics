@@ -290,7 +290,9 @@ def register_download_datasets_callback(app):
         ],
         prevent_initial_call=True,
     )
-    def download_dataset_callback(_, _, _, **kwargs):
+    def download_dataset_callback(
+        dl_yaml_n_clicks, dl_json_n_clicks, dl_text_n_clicks, **kwargs
+    ):
         if not kwargs["callback_context"].triggered:
             raise no_update
 
