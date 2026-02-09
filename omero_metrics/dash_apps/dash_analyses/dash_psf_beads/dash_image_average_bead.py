@@ -293,7 +293,7 @@ def update_image(channel_index, color, invert, **kwargs):
             (False, True, False),
         ):
             fig.add_trace(
-                go.Heatmap(z=mip[proj_axis], colorscale="Blackbody", showscale=False),
+                go.Heatmap(z=mip[proj_axis], colorscale=color, showscale=False),
                 row=row,
                 col=col,
             )
