@@ -350,10 +350,12 @@ def update_channels_psf_image(_, **kwargs):
     [
         dash.dependencies.Input("psf_image_graph", "clickData"),
         dash.dependencies.Input("channel_selector_psf_image", "value"),
+        dash.dependencies.Input("color_selector_psf_image", "value"),
+        dash.dependencies.Input("color_switch_psf_image", "checked"),
     ],
     prevent_initial_call=True,
 )
-def callback_mip(points, channel_index, **kwargs):
+def callback_mip(points, channel_index, color, invert, **kwargs):
     point = points["points"][0]  # FIXME: point is None at initial call
     if point["curveNumber"] != 1:
         return dash.no_update
@@ -413,6 +415,8 @@ def callback_mip(points, channel_index, **kwargs):
 
     fig_mip_go = fig_bead(
         mips=mips,
+        color=color,
+        invert=invert,
         profiles=profiles,
         fwhms=fwhms,
         r_sq=r_sq,
@@ -431,6 +435,8 @@ def callback_mip(points, channel_index, **kwargs):
 
 def fig_bead(
     mips,
+    color,
+    invert,
     profiles,
     fwhms,
     r_sq,
@@ -443,10 +449,12 @@ def fig_bead(
     }
     if all(list(voxel_size.values())):
         voxel_size_ratio = voxel_size["z"] / voxel_size["x"]
-        physical_unit = "µ"
+        physical_unit = "µm"
     else:
         voxel_size_ratio = 1
         physical_unit = "px"
+    if invert:
+        color = f"{color}_r"
 
     fig = make_subplots(
         rows=3,
@@ -482,7 +490,7 @@ def fig_bead(
         (False, True, False),
     ):
         fig.add_trace(
-            go.Heatmap(z=mips[proj_axis], colorscale="Blackbody", showscale=False),
+            go.Heatmap(z=mips[proj_axis], colorscale=color, showscale=False),
             row=row,
             col=col,
         )
