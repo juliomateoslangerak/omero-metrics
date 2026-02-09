@@ -65,6 +65,6 @@ TEMPLATE_MAPPINGS_IMAGE = {
     },
     "PSFBeadsDataset": {
         "input_data": "omero_image_psf_beads",
-        "output": "WarningApp",
+        "output": "omero_image_average_bead",
     },
 }

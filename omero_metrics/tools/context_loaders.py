@@ -109,9 +109,24 @@ def PSFBeadsDataset_input_data_Image(im):
 
 
 def PSFBeadsDataset_output_AveragePSF(im):
-    im.mm_image = load.load_image(im.omero_image, load_array=False)
-    im.context = {"message": "View of output average PSF not supported yet"}
+    im.mm_image = load.load_image(im.omero_image, load_array=True)
 
+    mips = {
+        "x": np.flipud(np.transpose(np.max(im.mm_image.array_data[0, ...], axis=2),(1,0,2))),
+        "y": np.max(im.mm_image.array_data[0, ...], axis=1),
+        "z": np.flipud(np.max(im.mm_image.array_data[0, ...], axis=0)),
+    }
+    mips = {a: np.sqrt(mip) for a, mip in mips.items()}
+
+    context = {
+        "image_index": im.image_index,
+        "mm_image": im.mm_image,
+        "mm_dataset": im.dataset_manager.mm_dataset,
+        "mips": mips,
+        "kkm": im.dataset_manager.kkm,
+    }
+    im.context = serialize(context)
+ 
 
 ## Dataset context loaders
 def FieldIlluminationDataset(dm):

@@ -13,6 +13,7 @@ from omero_metrics.dash_apps.dash_analyses.dash_foi import (
 from omero_metrics.dash_apps.dash_analyses.dash_psf_beads import (
     dash_dataset_psf_beads,
     dash_image_psf_beads,
+    dash_image_average_bead,
 )
 from omero_metrics.dash_apps.dash_forms import (
     dash_dataset_form,
