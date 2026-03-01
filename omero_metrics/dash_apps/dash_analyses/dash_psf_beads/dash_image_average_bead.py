@@ -421,7 +421,11 @@ def update_image(channel_index, color, invert, **kwargs):
                         np.quantile(range(profiles[axis]["fitted"].shape[0]), 0.48)
                     ),
                     plot_y_axis: profiles[axis]["fitted"][
-                        int(np.quantile(range(profiles[axis]["fitted"].shape[0]), 0.48))
+                        int(
+                            np.quantile(
+                                range(profiles[axis]["fitted"].shape[0]), 0.48
+                            )
+                        )
                     ],
                 },
             )
