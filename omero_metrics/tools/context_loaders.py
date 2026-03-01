@@ -43,8 +43,7 @@ def PSFBeadsDataset_input_data_Image(im):
     ]
     # TODO: This is a hack. We just reproduce what microscope-metrics does to extract the min-distance
     min_distance_px = int(
-        im.dataset_manager.mm_dataset.input_parameters.min_lateral_distance_factor
-        * 2
+        im.dataset_manager.mm_dataset.input_parameters.min_lateral_distance_factor * 2
     )
     half_min_distance_px = min_distance_px // 2
     beads_array = np.zeros(
@@ -109,8 +108,25 @@ def PSFBeadsDataset_input_data_Image(im):
 
 
 def PSFBeadsDataset_output_AveragePSF(im):
-    im.mm_image = load.load_image(im.omero_image, load_array=False)
-    im.context = {"message": "View of output average PSF not supported yet"}
+    im.mm_image = load.load_image(im.omero_image, load_array=True)
+
+    mips = {
+        "x": np.flipud(
+            np.transpose(np.max(im.mm_image.array_data[0, ...], axis=2), (1, 0, 2))
+        ),
+        "y": np.max(im.mm_image.array_data[0, ...], axis=1),
+        "z": np.flipud(np.max(im.mm_image.array_data[0, ...], axis=0)),
+    }
+    mips = {a: np.sqrt(mip) for a, mip in mips.items()}
+
+    context = {
+        "image_index": im.image_index,
+        "mm_image": im.mm_image,
+        "mm_dataset": im.dataset_manager.mm_dataset,
+        "mips": mips,
+        "kkm": im.dataset_manager.kkm,
+    }
+    im.context = serialize(context)
 
 
 ## Dataset context loaders
@@ -182,9 +198,7 @@ def HarmonizedMetricsDatasetCollection(pm):
             for kkm in kkm_list
         }
         [
-            collection_key_measurements_by_kkm[kkm].extend(
-                key_measurements_by_kkm[kkm]
-            )
+            collection_key_measurements_by_kkm[kkm].extend(key_measurements_by_kkm[kkm])
             for kkm in kkm_list
         ]
         collection_key_measurements_by_dataset_id[
@@ -193,8 +207,7 @@ def HarmonizedMetricsDatasetCollection(pm):
             "caption": f"{dataset.name} acquired on {dataset.acquisition_datetime}",
             "head": [kkm.replace("_", " ").title() for kkm in kkm_list],
             "body": [
-                [km[kkm] for kkm in kkm_list]
-                for km in dataset.output.key_measurements
+                [km[kkm] for kkm in kkm_list] for km in dataset.output.key_measurements
             ],
         }
         channels = channels | {
