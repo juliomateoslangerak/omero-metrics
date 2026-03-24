@@ -43,7 +43,10 @@ def serialize_dataframe(df: pd.DataFrame) -> Dict[str, Any]:
 
 def deserialize_dataframe(d: Dict[str, Any]) -> pd.DataFrame:
     """Deserialize a dictionary back to a pandas DataFrame."""
-    return pd.DataFrame(**d["data"])
+    split_data = d["data"]
+    if not split_data["data"] and not split_data["columns"]:
+        return pd.DataFrame()
+    return pd.DataFrame(**split_data)
 
 
 def serialize_mm_schema_obj(obj: mm_schema.YAMLRoot) -> Dict[str, Any]:
