@@ -99,7 +99,10 @@ pre-commit = "^4"
 
 
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "omeroweb.settings"
+# DJANGO_SETTINGS_MODULE is NOT set here — it would force omeroweb.settings
+# to load at pytest startup, which requires OMERODIR (an OMERO server install).
+# CI sets both DJANGO_SETTINGS_MODULE and OMERODIR via environment variables.
+# For local unit tests, use: pytest test/unit/
 python_files = ["tests.py", "test_*.py", "*_tests.py"]
 
 [tool.isort]
