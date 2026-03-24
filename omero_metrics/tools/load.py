@@ -127,17 +127,31 @@ def image_exist(image_id, mm_dataset):
 
 
 def load_input_config_file(project):
+    dataset_curies = {
+        cls.class_class_curie: cls
+        for cls in mm_schema.MetricsDataset.__subclasses__()
+    }
     for ann in project.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
             ns = ann.getNs()
-            if ns in [
-                cls.class_class_curie
-                for cls in mm_schema.MetricsInputParameters.__subclasses__()
-            ]:
-                return yaml.load(
-                    ann.getFileInChunks().__next__().decode(),
-                    Loader=yaml.SafeLoader,
+            if ns in dataset_curies:
+                mm_dataset = yaml_loader.loads(
+                    b"".join(ann.getFileInChunks()).decode(),
+                    target_class=dataset_curies[ns],
                 )
+                config = {}
+                if mm_dataset.input_parameters is not None:
+                    config["input_parameters"] = {
+                        "type": mm_dataset.input_parameters.class_name,
+                        "fields": asdict(mm_dataset.input_parameters),
+                    }
+                if mm_dataset.sample is not None:
+                    config["sample"] = {
+                        "type": mm_dataset.sample.class_name,
+                        "fields": asdict(mm_dataset.sample),
+                    }
+                if config:
+                    return config
     return None
 
 
