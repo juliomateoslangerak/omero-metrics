@@ -16,5 +16,4 @@ dash-renderer  # latest=1.9.1  # OBSOLETE This repository has been merged into t
 omero-web>=5.26.0
 
 # microscope-metrics
-microscopemetrics
-# microscopemetrics @ git+https://github.com/juliomateoslangerak/microscope-metrics.git@dev
+microscopemetrics @ git+https://github.com/juliomateoslangerak/microscope-metrics.git@dev
