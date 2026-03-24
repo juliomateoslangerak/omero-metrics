@@ -273,7 +273,7 @@ dash_app_group.layout = dmc.MantineProvider(
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_date_range(*args, **kwargs):
-    df = kwargs["session_state"]["context"]["file_ann"]
+    df = pd.read_json(kwargs["session_state"]["context"]["file_ann"])
     min_date = df.Date.min()
     max_date = df.Date.max()
     return [min_date, max_date], min_date, max_date
@@ -307,7 +307,7 @@ def render_content(*args, **kwargs):
     prevent_initial_call=True,
 )
 def load_table_project(dates, **kwargs):
-    file_ann = kwargs["session_state"]["context"]["file_ann"]
+    file_ann = pd.read_json(kwargs["session_state"]["context"]["file_ann"])
     if dates is not None:
         file_ann = file_ann[
             (file_ann["Date"].dt.date >= pd.to_datetime(dates[0]).date())

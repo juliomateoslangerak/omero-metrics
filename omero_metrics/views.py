@@ -139,8 +139,8 @@ def center_viewer_group(request, conn=None, **kwargs):
             "group_id": active_group,
             "group_name": group_name,
             "group_description": group_description,
-            "file_ann": file_ann,
-            "map_ann": map_ann,
+            "file_ann": file_ann.to_json(date_format="iso"),
+            "map_ann": map_ann.to_json(date_format="iso"),
         }
         dash_context["context"] = context
         request.session["django_plotly_dash"] = dash_context
