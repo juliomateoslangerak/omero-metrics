@@ -1,19 +1,88 @@
+from datetime import datetime
+from typing import Union
+
 import dash_mantine_components as dmc
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
 from dash import dcc, html
 from dash_iconify import DashIconify
-from omero_metrics.styles import (
-    THEME,
-    HEADER_PAPER_STYLE,
-    BUTTON_STYLE,
-)
-from datetime import datetime
-
-import plotly.express as px
-import numpy as np
 from plotly.subplots import make_subplots
-from typing import Union
-import pandas as pd
-from omero_metrics.styles import COLORS_CHANNELS
+
+from omero_metrics.styles import (
+    BUTTON_STYLE,
+    COLORS_CHANNELS,
+    HEADER_PAPER_STYLE,
+    THEME,
+)
+
+
+def alert_handler(
+    response_type,
+    response_msg,
+    response_details=None,
+    with_close_button=None,
+    duration=None,
+):
+
+    if response_type == "success":
+        title = "Success!"
+        icon = get_icon(icon="radix-icons:check")
+        color = "green"
+    elif response_type == "authorisation_error":
+        title = "Authorisation Error!"
+        icon = get_icon(icon="radix-icons:lock-closed")
+        color = "red"
+    elif response_type == "analysis_error":
+        title = "Analysis Error!"
+        icon = get_icon(icon="radix-icons:alert")
+        color = "orange"
+    elif response_type == "unidentified_error":
+        title = "Error!"
+        icon = get_icon(icon="radix-icons:alert")
+        color = "red"
+
+    children = [dmc.Text(response_msg, size="sm")]
+    if response_details:
+        children.append(dmc.Code(response_details, block=True))
+
+    return [
+        dmc.Alert(
+            children=children,
+            color=color,
+            icon=icon,
+            title=title,
+            radius="md",
+            withCloseButton=with_close_button,
+            duration=duration,
+        )
+    ], False
+
+
+def notification_handler(response_type, response_msg, opened):
+    if response_type == "success":
+        title = "Success!"
+        icon = get_icon(icon="radix-icons:check")
+        color = "green"
+    elif response_type == "authorisation_error":
+        title = "Authorisation Error!"
+        icon = get_icon(icon="radix-icons:lock-closed")
+        color = "red"
+    elif response_type == "unidentified_error":
+        title = "Error!"
+        icon = get_icon(icon="radix-icons:alert")
+        color = "red"
+
+    notification = dmc.Notification(
+        title=title,
+        id="simple-notify",
+        action="show",
+        message=response_msg,
+        icon=icon,
+        color=color,
+    )
+    return opened, notification, False
 
 
 def get_icon(icon, size=20, color=None):
@@ -35,111 +104,6 @@ def make_control(text, action_id):
         justify="center",
         align="center",
     )
-
-
-def fig_mip(mip_x, mip_y, mip_z):
-    fig = make_subplots(
-        rows=2,
-        cols=2,
-        specs=[[{}, {}], [{"colspan": 2}, None]],
-        subplot_titles=("MIP X axis", "MIP Y axis", "MIP Z axis"),
-    )
-    fig = fig.add_trace(mip_x.data[0], row=1, col=1)
-    fig = fig.add_trace(mip_y.data[0], row=1, col=2)
-    fig = fig.add_trace(mip_z.data[0], row=2, col=1)
-    fig = fig.update_layout(
-        coloraxis=dict(colorscale="hot"),
-        autosize=False,
-    )
-    fig.update_layout(
-        {
-            "xaxis": {
-                "visible": False,
-                "automargin": False,
-                "rangemode": "nonnegative",
-            },
-            "xaxis2": {
-                "visible": False,
-                "automargin": False,
-                "rangemode": "nonnegative",
-            },
-            "xaxis3": {
-                "visible": False,
-                "automargin": False,
-                "rangemode": "nonnegative",
-            },
-            "yaxis": {
-                "visible": False,
-                "anchor": "x",
-                "scaleanchor": "x",
-                "autorange": "reversed",
-                "automargin": False,
-            },
-            "yaxis2": {
-                "visible": False,
-                "anchor": "x2",
-                "scaleanchor": "x2",
-                "autorange": "reversed",
-                "automargin": False,
-            },
-            "yaxis3": {
-                "visible": False,
-                "anchor": "x3",
-                "scaleanchor": "x3",
-                "autorange": "reversed",
-                "automargin": False,
-            },
-        }
-    )
-    return fig
-
-
-def mip_graphs(
-    x0: int,
-    xf: int,
-    y0: int,
-    yf: int,
-    stack: Union[np.array, list],
-    do_sqrt: bool = True,
-):
-    image_bead = stack[:, y0:yf, x0:xf]
-    image_x = np.max(image_bead, axis=2)
-    image_y = np.max(image_bead, axis=1)
-    image_z = np.max(image_bead, axis=0)
-    if do_sqrt:
-        image_x = np.sqrt(image_x)
-        image_y = np.sqrt(image_y)
-        image_z = np.sqrt(image_z)
-    image_x = image_x / image_x.max()
-    image_y = image_y / image_y.max()
-    image_z = image_z / image_z.max()
-
-    mip_x = px.imshow(
-        image_x,
-        zmin=image_x.min(),
-        zmax=image_x.max(),
-    )
-    mip_y = px.imshow(
-        image_y,
-        zmin=image_y.min(),
-        zmax=image_y.max(),
-    )
-    mip_z = px.imshow(
-        image_z,
-        zmin=image_z.min(),
-        zmax=image_z.max(),
-    )
-    return mip_x, mip_y, mip_z
-
-
-def crop_bead_index(bead, min_dist, stack):
-    x = bead["center_x"].values[0]
-    y = bead["center_y"].values[0]
-    x0 = max(0, x - min_dist)
-    y0 = max(0, y - min_dist)
-    xf = min(stack.shape[2], x + min_dist)
-    yf = min(stack.shape[1], y + min_dist)
-    return x0, xf, y0, yf
 
 
 download_group = dmc.Group(
@@ -199,9 +163,7 @@ download_table = dmc.Group(
             [
                 dmc.MenuTarget(
                     dmc.ActionIcon(
-                        DashIconify(
-                            icon="material-symbols:download", width=20
-                        ),
+                        DashIconify(icon="material-symbols:download", width=20),
                         color=THEME["primary"],
                     )
                 ),
@@ -210,9 +172,7 @@ download_table = dmc.Group(
                         dmc.MenuItem(
                             "CSV",
                             id="table-download-csv",
-                            leftSection=DashIconify(
-                                icon="iwwa:file-csv", width=20
-                            ),
+                            leftSection=DashIconify(icon="iwwa:file-csv", width=20),
                         ),
                         dmc.MenuItem(
                             "Excel",
@@ -305,13 +265,13 @@ def header_component(title, description, tag, load_buttons=True):
     )
 
 
-def thresholds_paper(Accordion_children):
+def thresholds_paper(accordion_children):
     return [
         dmc.Accordion(
             id="accordion-compose-controls",
             chevron=DashIconify(icon="ant-design:plus-outlined"),
             disableChevronRotation=True,
-            children=Accordion_children,
+            children=accordion_children,
         ),
         dmc.Group(
             justify="flex-end",

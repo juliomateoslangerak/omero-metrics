@@ -1,11 +1,13 @@
+import logging
+
 from django.apps import AppConfig
 from django.conf import settings
-import logging
 
 
 class OMEROMetricsConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "omero_metrics"
+    verbose_name = "OMERO Metrics"
 
     def ready(self):
         # Call functions to dynamically modify settings
@@ -41,9 +43,7 @@ class OMEROMetricsConfig(AppConfig):
         ]
         if hasattr(settings, "PLOTLY_COMPONENTS"):
             settings.PLOTLY_COMPONENTS.extend(
-                c
-                for c in plotly_components
-                if c not in settings.PLOTLY_COMPONENTS
+                c for c in plotly_components if c not in settings.PLOTLY_COMPONENTS
             )
         else:
             settings.PLOTLY_COMPONENTS = plotly_components

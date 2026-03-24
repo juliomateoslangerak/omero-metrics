@@ -1,5 +1,6 @@
-from django import forms
 from dataclasses import fields
+
+from django import forms
 from microscopemetrics_schema import datamodel as mm_schema
 
 

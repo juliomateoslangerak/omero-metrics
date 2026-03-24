@@ -1,16 +1,24 @@
-from django.utils.datetime_safe import datetime
-from django.shortcuts import render
-from omeroweb.webclient.decorators import login_required
-from microscopemetrics_schema import datamodel as mm_schema
-from omero_metrics.tools import load
-from omero_metrics.tools import dump
-from omero_metrics.tools import omero_tools
-from omero_metrics.tools import data_managers
-from omero_metrics.tools import delete
-from omero_metrics.tools import data_type
 import logging
-from omero.gateway import FileAnnotationWrapper
+import traceback
+from datetime import datetime
+
 import omero
+from django.shortcuts import render
+from microscopemetrics import AnalysisError, SaturationError
+from microscopemetrics_schema import datamodel as mm_schema
+from omero.gateway import FileAnnotationWrapper
+from omeroweb.webclient.decorators import login_required
+
+from omero_metrics.tools import (
+    data_managers,
+    data_type,
+    delete,
+    dump,
+    load,
+    omero_tools,
+)
+from omero_metrics.tools.data_type import TEMPLATE_MAPPINGS_DATASET
+from omero_metrics.tools.serializers import serialize
 
 logger = logging.getLogger(__name__)
 
@@ -26,9 +34,7 @@ def index(request, conn=None, **kwargs):
         "lastName": experimenter.lastName,
         "experimenterId": experimenter.id,
     }
-    return render(
-        request, "omero_metrics/top_link_template/index.html", context
-    )
+    return render(request, "omero_metrics/top_link_template/index.html", context)
 
 
 @login_required(setGroupContext=True)
@@ -37,10 +43,8 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
     try:
         image_wrapper = conn.getObject("Image", image_id)
         im = data_managers.ImageManager(conn, image_wrapper)
-        im.load_data()
-        im.visualize_data()
-        context = im.context
-        dash_context["context"] = context
+        im.load_context()
+        dash_context["context"] = im.context
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
@@ -48,12 +52,15 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
             context={"app_name": im.app_name},
         )
     except Exception as e:
-        dash_context["context"] = {"message": str(e)}
+        dash_context["context"] = {
+            "message": str(e),
+            "traceback": traceback.format_exc(),
+        }
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
             template_name=TEMPLATE_DASH_NAME,
-            context={"app_name": "WarningApp"},
+            context={"app_name": "ErrorApp"},
         )
 
 
@@ -63,29 +70,54 @@ def center_viewer_project(request, project_id, conn=None, **kwargs):
     try:
         project_wrapper = conn.getObject("Project", project_id)
         pm = data_managers.ProjectManager(conn, project_wrapper)
-        pm.load_data()
-        pm.is_homogenized()
-        pm.load_config_file()
-        pm.load_threshold_file()
-        pm.check_processed_data()
-        pm.visualize_data()
-        context = pm.context
-        dash_context["context"] = context
-        dash_context["context"]["project_id"] = project_id
-        dash_context["context"]["project_name"] = project_wrapper.getName()
-        request.session["django_plotly_dash"] = dash_context
-        return render(
-            request,
-            template_name=TEMPLATE_DASH_NAME,
-            context={"app_name": pm.app_name},
-        )
+        pm.load_context()
+        if pm.input_parameters is None:
+            # No analyzed datasets or input parameters so we need to trigger
+            # the configuration form
+            dash_context["context"] = {"project_id": project_id}
+            request.session["django_plotly_dash"] = dash_context
+            return render(
+                request,
+                template_name=TEMPLATE_DASH_NAME,
+                context={"app_name": "omero_project_config_form"},
+            )
+        if pm.mm_dataset_collection:  # There is at least one analyzed dataset
+            if pm.is_harmonized():
+                dash_context["context"] = pm.context
+                request.session["django_plotly_dash"] = dash_context
+                return render(
+                    request,
+                    template_name=TEMPLATE_DASH_NAME,
+                    context={"app_name": "omero_project_dash"},
+                )
+            else:
+                dash_context["context"] = {
+                    "message": "OMERO-metrics does not support non-harmonized projects."
+                }
+                request.session["django_plotly_dash"] = dash_context
+                return render(
+                    request,
+                    template_name=TEMPLATE_DASH_NAME,
+                    context={"app_name": "WarningApp"},
+                )
+        else:  # No analyzed datasets but input parameters configured
+            dash_context["context"] = pm.context
+            request.session["django_plotly_dash"] = dash_context
+            return render(
+                request,
+                template_name=TEMPLATE_DASH_NAME,
+                context={"app_name": "omero_project_dash"},
+            )
     except Exception as e:
-        dash_context["context"] = {"message": str(e)}
+        dash_context["context"] = {
+            "message": str(e),
+            "traceback": traceback.format_exc(),
+        }
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
             template_name=TEMPLATE_DASH_NAME,
-            context={"app_name": "WarningApp"},
+            context={"app_name": "ErrorApp"},
         )
 
 
@@ -118,27 +150,26 @@ def center_viewer_group(request, conn=None, **kwargs):
             context={"app_name": "omero_group_dash"},
         )
     except Exception as e:
-        dash_context["context"] = {"message": str(e)}
+        dash_context["context"] = {
+            "message": str(e),
+            "traceback": traceback.format_exc(),
+        }
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
             template_name=TEMPLATE_DASH_NAME,
-            context={"app_name": "WarningApp"},
+            context={"app_name": "ErrorApp"},
         )
 
 
 @login_required(setGroupContext=True)
 def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
-    dash_context = request.session.get("django_plotly_dash", dict())
+    dash_context = request.session.get("django_plotly_dash", {})
     try:
         dataset_wrapper = conn.getObject("Dataset", dataset_id)
-        dm = data_managers.DatasetManager(
-            conn, dataset_wrapper, load_images=True
-        )
-        dm.load_data()
-        dm.visualize_data()
+        dm = data_managers.DatasetManager(conn, dataset_wrapper)
+        dm.load_context()
         dash_context["context"] = dm.context
-        dash_context["context"]["dataset_id"] = dataset_id
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
@@ -146,12 +177,15 @@ def center_viewer_dataset(request, dataset_id, conn=None, **kwargs):
             context={"app_name": dm.app_name},
         )
     except Exception as e:
-        dash_context["context"] = {"message": str(e)}
+        dash_context["context"] = {
+            "message": str(e),
+            "traceback": traceback.format_exc(),
+        }
         request.session["django_plotly_dash"] = dash_context
         return render(
             request,
             template_name=TEMPLATE_DASH_NAME,
-            context={"app_name": "WarningApp"},
+            context={"app_name": "ErrorApp"},
         )
 
 
@@ -172,38 +206,54 @@ def center_view_projects(request, conn=None, **kwargs):
     for the top link ui"""
     id_list = request.GET.get("projectIds", None)
     id_list = request.GET.get("Project", id_list)
-    dash_context = request.session.get("django_plotly_dash", dict())
-    if id_list:
-        projectIds = [int(i) for i in id_list.split(",")]
+    dash_context = request.session.get("django_plotly_dash", {})
+    if not id_list:
+        # Not really sure when this could happen
+        dash_context["context"] = {"message": "No project ids provided."}
+        request.session["django_plotly_dash"] = dash_context
+        return render(
+            request,
+            template_name=TEMPLATE_DASH_NAME,
+            context={"app_name": "WarningApp"},
+        )
+    try:
+        project_ids = [int(i) for i in id_list.split(",")]
         data = {}
-        for id in projectIds:
-            project_wrapper = conn.getObject("Project", id)
+        for project_id in project_ids:
+            project_wrapper = conn.getObject("Project", project_id)
             pm = data_managers.ProjectManager(conn, project_wrapper)
-            pm.load_data()
-            pm.is_homogenized()
-            pm.load_config_file()
-            pm.load_threshold_file()
-            pm.check_processed_data()
-            pm.visualize_data()
-            context = pm.context
-            if "kkm" in context:
-                data[id] = {
-                    "kkm": context["kkm"],
-                    "key_measurements_list": context["key_measurements_list"],
-                    "dates": context["dates"],
-                }
-            else:
-                data[id] = {}
-    else:
-        projectIds = []
-        data = {}
-    dash_context["context"] = data
-    request.session["django_plotly_dash"] = dash_context
-    return render(
-        request,
-        template_name="omero_metrics/projects.html",
-        context={"projectIds": projectIds},
-    )
+            pm.load_context()
+            if pm.input_parameters and pm.is_harmonized():
+                dash_context["context"][f"{project_id}"] = pm.context
+
+        if not dash_context["context"]:
+            dash_context["context"] = {
+                "message": "OMERO-metrics did not detect any analyzed projects in the selection."
+            }
+            request.session["django_plotly_dash"] = dash_context
+            return render(
+                request,
+                template_name=TEMPLATE_DASH_NAME,
+                context={"app_name": "WarningApp"},
+            )
+
+        request.session["django_plotly_dash"] = dash_context
+        return render(
+            request,
+            template_name=TEMPLATE_DASH_NAME,
+            context={"app_name": "omero_multiple_projects"},
+        )
+    except Exception as e:
+        dash_context["context"] = {
+            "message": str(e),
+            "traceback": traceback.format_exc(),
+        }
+        request.session["django_plotly_dash"] = dash_context
+        return render(
+            request,
+            template_name=TEMPLATE_DASH_NAME,
+            context={"app_name": "ErrorApp"},
+        )
 
 
 # These views are called from the dash app, and they return a message and a color to display in the app.
@@ -217,7 +267,7 @@ def save_config(request, conn=None, **kwargs):
         mm_input_parameters = kwargs["input_parameters"]
         mm_sample = kwargs["sample"]
         project_wrapper = conn.getObject("Project", project_id)
-        setup = load.load_config_file_data(project_wrapper)
+        setup = load.load_input_config_file(project_wrapper)
         try:
             if setup:
                 to_delete = []
@@ -237,19 +287,18 @@ def save_config(request, conn=None, **kwargs):
                 conn, mm_input_parameters, mm_sample, project_wrapper
             )
             return (
-                "File saved successfully, Re-click on the project to see the changes",
-                "green",
+                "success",
+                "Configuration saved successfully. Select the project to see the changes.",
+            )
+        except omero.SecurityViolation:
+            return (
+                "authorisation_error",
+                "You don't have the necessary permissions to save the configuration.",
             )
         except Exception as e:
-            if isinstance(e, omero.SecurityViolation):
-                return (
-                    "You don't have the necessary permissions to save the configuration. ",
-                    "red",
-                )
-            else:
-                return str(e), "red"
+            return "unidentified_error", str(e)
     except Exception as e:
-        return str(e), "red"
+        return "unidentified_error", str(e)
 
 
 @login_required(setGroupContext=True)
@@ -261,8 +310,7 @@ def run_analysis_view(request, conn=None, **kwargs):
         list_images = kwargs["list_images"]
         comment = kwargs["comment"]
         list_mm_images = [
-            load.load_image(conn.getObject("Image", int(i)))
-            for i in list_images
+            load.load_image(conn.getObject("Image", int(i))) for i in list_images
         ]
         mm_sample = kwargs["mm_sample"]
         mm_input_parameters = kwargs["mm_input_parameters"]
@@ -300,10 +348,22 @@ def run_analysis_view(request, conn=None, **kwargs):
             ),
             experimenter=mm_experimenter,
         )
-        run_status = data_type.DATA_TYPE[mm_input_parameters.class_name][3](
-            mm_dataset
-        )
-        if run_status and mm_dataset.processed:
+        try:
+            # Run the analysis
+            data_type.DATA_TYPE[mm_input_parameters.class_name][3](mm_dataset)
+        except AnalysisError or SaturationError as e:
+            logger.error(f"{e}")
+            return "analysis_error", str(e), e.suggestion
+        except Exception as e:
+            logger.error(f"Error running the analysis: {e}")
+            return (
+                "unidentified_error",
+                "Error during analysis run:\n"
+                f"{e}\n"
+                "Please, contact support with the following traceback:",
+                traceback.format_exc(),
+            )
+        if mm_dataset.processed:
             try:
                 if comment:
                     mm_comment = mm_schema.Comment(
@@ -322,17 +382,38 @@ def run_analysis_view(request, conn=None, **kwargs):
                     dump_analysis=True,
                 )
 
-                return "Analysis completed successfully", "green"
-            except Exception as e:
+                logger.info(f"Analysis completed successfully")
                 return (
-                    str(e),
-                    "red",
+                    "success",
+                    "Analysis completed successfully.",
+                    mm_dataset.description,
+                )
+            except Exception as e:
+                logger.error(f"Error saving the analysis: {e}")
+                return (
+                    "unidentified_error",
+                    "Error while saving the analysis.\n"
+                    f"{e}\n"
+                    "Please, contact support with the following traceback:",
+                    traceback.format_exc(),
                 )
         else:
-            logger.error("Analysis failed")
-            return "We couldn't process the analysis.", "red"
+            logger.error("Analysis run but dataset.processed is False.")
+            return (
+                "unidentified_error",
+                "Analysis run but something prevented it to be tagged as processed.\n"
+                "Please, contact support with the following traceback:",
+                traceback.format_exc(),
+            )
     except Exception as e:
-        return str(e), "red"
+        logger.error(f"Error during run_analysis_view execution: {e}")
+        return (
+            "unidentified_error",
+            "run_analysis_view could not proceed.\n"
+            f"{e}\n"
+            "Please, contact support with the following traceback:",
+            traceback.format_exc(),
+        )
 
 
 @login_required(setGroupContext=True)
@@ -344,10 +425,9 @@ def delete_all(request, conn=None, **kwargs):
             pm = data_managers.ProjectManager(conn, project)
             pm.load_data()
             pm.delete_processed_data()
-        message, color = delete.delete_all_annotations(conn, group_id)
-        return message, color
+        return delete.delete_all_annotations(conn, group_id)
     except Exception as e:
-        return str(e), "red"
+        return "unidentified_error", str(e)
 
 
 @login_required(setGroupContext=True)
@@ -356,13 +436,13 @@ def delete_dataset(request, conn=None, **kwargs):
     dataset_id = kwargs["dataset_id"]
     logger.info(f"Deleting dataset {dataset_id}")
     dataset_wrapper = conn.getObject("Dataset", dataset_id)
-    dm = data_managers.DatasetManager(conn, dataset_wrapper, load_images=False)
-    dm.load_data()
+    dm = data_managers.DatasetManager(conn, dataset_wrapper)
+    dm.load_data(load_images=False)
     try:
-        dm.delete_processed_data(conn)
-        return "Output deleted successfully", "green"
+        dm.delete_processed_data()
+        return "success", "Output deleted successfully."
     except Exception as e:
-        return str(e), "red"
+        return "unidentified_error", str(e)
 
 
 @login_required(setGroupContext=True)
@@ -375,9 +455,9 @@ def delete_project(request, conn=None, **kwargs):
     pm.load_data()
     try:
         pm.delete_processed_data()
-        return "Output deleted successfully", "green"
+        return "success", "Output deleted successfully."
     except Exception as e:
-        return str(e), "red"
+        return "unidentified_error", str(e)
 
 
 @login_required(setGroupContext=True)
@@ -387,7 +467,7 @@ def save_threshold(request, conn=None, **kwargs):
         project_id = kwargs["project_id"]
         threshold = kwargs["threshold"]
         project_wrapper = conn.getObject("Project", project_id)
-        threshold_exist = load.load_thresholds_file_data(project_wrapper)
+        threshold_exist = load.load_thresholds_file(project_wrapper)
         if threshold:
             if threshold_exist:
                 to_delete = []
@@ -405,27 +485,30 @@ def save_threshold(request, conn=None, **kwargs):
                 )
             dump.dump_threshold(conn, project_wrapper, threshold)
             return (
-                "Threshold saved successfully, Re-click on the project to see the changes",
-                "green",
+                "success",
+                "Threshold saved successfully. Select the project to see the changes.",
             )
         else:
             return (
-                "Failed to save threshold, a configuration file doesn't exist",
-                "red",
+                "unidentified_error",
+                "Failed to save threshold Configuration file doesn't exist.",
             )
     except Exception as e:
         if isinstance(e, omero.SecurityViolation):
             return (
-                "You don't have the necessary permissions to save the threshold. ",
-                "red",
+                "authorisation_error",
+                "You don't have the necessary permissions to save the threshold.",
             )
         elif isinstance(e, omero.CmdError):
             return (
-                "You don't have the necessary permissions to save the threshold. ",
-                "red",
+                "unidentified_error",
+                "You don't have the necessary permissions to save the threshold.",
             )
         else:
-            return "Something happened. Couldn't save thresholds.", "red"
+            return (
+                "unidentified_error",
+                "Something happened. Couldn't save thresholds.",
+            )
 
 
 @login_required(setGroupContext=True)

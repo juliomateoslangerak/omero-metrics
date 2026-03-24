@@ -2,8 +2,9 @@ build
 node_modules
 *.pyc
 *.DS_Store
-/.venv/
-/var/
-/dist/
-/omero_metrics/notebooks/
-/etc/
+.venv
+dist
+omerodir
+.hypothesis
+.poetry
+.idea

@@ -1,31 +1,32 @@
-import dash
-import pandas as pd
-from dash import html, dash_table, dcc
-from django_plotly_dash import DjangoDash
-import dash_mantine_components as dmc
-from omero_metrics import views
 from time import sleep
+
+import dash
+import dash_mantine_components as dmc
+import pandas as pd
+from dash import dash_table, dcc, html
+from django_plotly_dash import DjangoDash
+
+import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
+from omero_metrics import views
 from omero_metrics.styles import (
-    THEME,
-    MANTINE_THEME,
     CONTAINER_STYLE,
-    PAPER_STYLE,
-    TABLE_STYLE,
-    TABLE_CELL_STYLE,
-    TABLE_HEADER_STYLE,
-    TAB_STYLES,
-    TAB_ITEM_STYLE,
-    STYLE_DATA_CONDITIONAL,
     DATEPICKER_STYLES,
     HEADER_PAPER_STYLE,
+    MANTINE_THEME,
+    PAPER_STYLE,
+    STYLE_DATA_CONDITIONAL,
+    TAB_ITEM_STYLE,
+    TAB_STYLES,
+    TABLE_CELL_STYLE,
+    TABLE_HEADER_STYLE,
+    TABLE_STYLE,
+    THEME,
 )
-import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 
 dashboard_name = "omero_group_dash"
 dash_app_group = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
-    external_stylesheets=dmc.styles.ALL,
 )
 
 
@@ -92,9 +93,7 @@ dash_app_group.layout = dmc.MantineProvider(
                         ),
                         dmc.TabsTab(
                             "History",
-                            leftSection=my_components.get_icon(
-                                icon="bx:history"
-                            ),
+                            leftSection=my_components.get_icon(icon="bx:history"),
                             value="history",
                             color=THEME["primary"],
                             style=TAB_ITEM_STYLE,
@@ -177,7 +176,7 @@ dash_app_group.layout = dmc.MantineProvider(
                                                 w="auto",
                                             ),
                                             dcc.Download(id="download"),
-                                            dmc.DatePicker(
+                                            dmc.DatePickerInput(
                                                 id="date-picker",
                                                 label="Select Date Range",
                                                 valueFormat="DD-MM-YYYY",
@@ -357,22 +356,11 @@ def delete_all_callback(*args, **kwargs):
     opened = not args[3]
     if triggered_button == "modal-submit-button.n_clicks" and args[0] > 0:
         sleep(1)
-        msg, color = views.delete_all(request, group_id=group_id)
-        message = dmc.Notification(
-            title="Notification!",
-            id="simple-notify",
-            action="show",
-            message=msg,
-            icon=my_components.get_icon(
-                icon=(
-                    "akar-icons:circle-check"
-                    if color == "green"
-                    else "akar-icons:circle-x"
-                )
-            ),
-            color=color,
+        response_type, response_msg = views.delete_all(request, group_id=group_id)
+
+        return my_components.notification_handler(
+            response_type, response_msg, opened
         )
-        return opened, message, False
     else:
         return opened, None, False
 
@@ -398,9 +386,7 @@ dash_app_group.clientside_callback(
         return false;
     }
     """,
-    dash.dependencies.Output(
-        "modal-submit-button", "loading", allow_duplicate=True
-    ),
+    dash.dependencies.Output("modal-submit-button", "loading", allow_duplicate=True),
     dash.dependencies.Input("modal-submit-button", "n_clicks"),
     prevent_initial_call=True,
 )

@@ -97,9 +97,7 @@ def clean_dataset(connection, dataset, namespace_like=None):
                 ann,
                 (gateway.MapAnnotationWrapper, gateway.FileAnnotationWrapper),
             ):
-                connection.deleteObjects(
-                    "Annotation", [ann.getId()], wait=True
-                )
+                connection.deleteObjects("Annotation", [ann.getId()], wait=True)
 
     # Delete all rois
     roi_service = connection.getRoiService()
@@ -181,9 +179,7 @@ def run_script():
                 script_params[key] = client.getInput(key, unwrap=True)
 
         if script_params["Confirm deletion"]:
-            logger.info(
-                f"Deletion started using parameters: \n{script_params}"
-            )
+            logger.info(f"Deletion started using parameters: \n{script_params}")
 
             conn = gateway.BlitzGateway(client_obj=client)
 

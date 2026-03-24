@@ -3,31 +3,31 @@
 
 import logging
 import mimetypes
-import time
-
-import yaml
-import numpy as np
-import random
-from datetime import datetime
 import os
+import random
+import time
+from datetime import datetime
 
-from omero.gateway import BlitzGateway
-from omero.cli import CLI
-from omero.plugins.group import GroupControl
-from omero.plugins.sessions import SessionsControl
-from omero.plugins.user import UserControl
-from omero.plugins.obj import ObjControl
-
-from omero_metrics.tools import dump
-
+import numpy as np
+import yaml
+from microscopemetrics.analyses import (
+    field_illumination,
+    numpy_to_mm_image,
+    psf_beads,
+)
 from microscopemetrics.strategies.field_illumination import (
     _gen_field_illumination_image,
 )
 from microscopemetrics.strategies.psf_beads import _gen_psf_beads_image
-
-from microscopemetrics.analyses import numpy_to_mm_image
-from microscopemetrics.analyses import field_illumination, psf_beads
 from microscopemetrics_schema import datamodel as mm_schema
+from omero.cli import CLI
+from omero.gateway import BlitzGateway
+from omero.plugins.group import GroupControl
+from omero.plugins.obj import ObjControl
+from omero.plugins.sessions import SessionsControl
+from omero.plugins.user import UserControl
+
+from omero_metrics.tools import dump
 
 logger = logging.getLogger(__name__)
 
@@ -231,19 +231,15 @@ def psf_beads_generator(args, microscope_name):
                                     args["sigma_x"]["min"],
                                     args["sigma_x"]["max"],
                                 ),
-                                target_min_intensity=random.uniform(
-                                    args["target_min_intensity"]["min"],
-                                    args["target_min_intensity"]["max"],
+                                background=random.uniform(
+                                    args["background"]["min"],
+                                    args["background"]["max"],
                                 ),
-                                target_max_intensity=random.uniform(
-                                    args["target_max_intensity"]["min"],
-                                    args["target_max_intensity"]["max"],
-                                ),
-                                do_noise=True,
-                                signal=random.randint(
+                                signal=random.uniform(
                                     args["signal"]["min"],
                                     args["signal"]["max"],
                                 ),
+                                do_noise=True,
                                 dtype=BIT_DEPTH_TO_DTYPE[args["bit_depth"]],
                             )[0],
                             name=f"{args['name_dataset']}_{dates[dataset_id]}",
@@ -308,9 +304,7 @@ def generate_users_groups(conn, users: dict, groups: dict):
                 group["name"],
             ]
         )
-        group_id = (
-            conn.c.sf.getAdminService().lookupGroup(group["name"]).id.val
-        )
+        group_id = conn.c.sf.getAdminService().lookupGroup(group["name"]).id.val
 
         cli.invoke(
             [
@@ -416,9 +410,7 @@ if __name__ == "__main__":
     # port = int(input("OMERO port: ") or 4064)
     # username = input("OMERO username: ")
     # password = input("OMERO password: ")
-    conn = BlitzGateway(
-        "root", "omero", host="localhost", port=6064, secure=True
-    )
+    conn = BlitzGateway("root", "omero", host="localhost", port=6064, secure=True)
 
     try:
         # conn = BlitzGateway(username, password, host=host, port=port, secure=True)
@@ -438,9 +430,9 @@ if __name__ == "__main__":
                 mm_project = mm_schema.HarmonizedMetricsDatasetCollection(
                     name=project["name_project"],
                     description=project["description_project"],
-                    dataset_collection=GENERATOR_MAPPER[
-                        project["dataset_class"]
-                    ](project, microscope_name),
+                    dataset_collection=GENERATOR_MAPPER[project["dataset_class"]](
+                        project, microscope_name
+                    ),
                     dataset_class=project["dataset_class"],
                 )
                 time.sleep(60)
@@ -467,9 +459,7 @@ if __name__ == "__main__":
                 )
                 attachment_files = [
                     os.path.join(dir_path, f)
-                    for (dir_path, dir_names, filenames) in os.walk(
-                        dir_attachments
-                    )
+                    for (dir_path, dir_names, filenames) in os.walk(dir_attachments)
                     for f in filenames
                 ]
                 for file_path in attachment_files:

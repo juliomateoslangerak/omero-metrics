@@ -1,21 +1,24 @@
 import logging
-import yaml
+import re
+from dataclasses import asdict
+from datetime import datetime
+
+import microscopemetrics_schema.datamodel as mm_schema
 import numpy as np
+import omero
+import pandas as pd
+import yaml
+from linkml_runtime.loaders import yaml_loader
 from omero.gateway import (
     BlitzGateway,
     DatasetWrapper,
-    ImageWrapper,
-    ProjectWrapper,
     FileAnnotationWrapper,
+    ImageWrapper,
     MapAnnotationWrapper,
+    ProjectWrapper,
 )
-import microscopemetrics_schema.datamodel as mm_schema
-from linkml_runtime.loaders import yaml_loader
-import pandas as pd
+
 from omero_metrics.tools import omero_tools
-import re
-import omero
-from datetime import datetime
 from omero_metrics.tools.data_type import (
     DATASET_IMAGES,
     DATASET_TYPES,
@@ -110,22 +113,20 @@ def image_exist(image_id, mm_dataset):
     image_found = False
     image_location = None
     index = None
-    for k, v in DATASET_IMAGES[mm_dataset.__class__.__name__].items():
-        if v:
-            images_list = getattr(mm_dataset[k], v[0])
+    for location, image_type in DATASET_IMAGES[
+        mm_dataset.__class__.__name__
+    ].items():
+        if image_type:
+            images_list = getattr(mm_dataset[location], image_type[0])
             if not isinstance(images_list, list):
                 images_list = [images_list]
             for i, image in enumerate(images_list):
                 if image_id == image.data_reference.omero_object_id:
-                    image_found = True
-                    image_location = k
-                    index = i
-                    break
+                    return True, location, i
     return image_found, image_location, index
 
 
-def load_config_file_data(project):
-    setup = None
+def load_input_config_file(project):
     for ann in project.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
             ns = ann.getNs()
@@ -133,24 +134,23 @@ def load_config_file_data(project):
                 cls.class_class_curie
                 for cls in mm_schema.MetricsInputParameters.__subclasses__()
             ]:
-                setup = yaml.load(
+                return yaml.load(
                     ann.getFileInChunks().__next__().decode(),
                     Loader=yaml.SafeLoader,
                 )
-    return setup
+    return None
 
 
-def load_thresholds_file_data(project):
-    thresholds = None
+def load_thresholds_file(project):
     for ann in project.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
             name = ann.getFile().getName()
             if name.startswith("threshold"):
-                thresholds = yaml.load(
+                return yaml.load(
                     ann.getFileInChunks().__next__().decode(),
                     Loader=yaml.SafeLoader,
                 )
-    return thresholds
+    return None
 
 
 def load_project(
@@ -183,7 +183,7 @@ def load_project(
 
 def load_dataset(
     dataset: DatasetWrapper, load_images: bool
-) -> mm_schema.MetricsDataset:
+) -> mm_schema.MetricsDataset | None:
     mm_datasets = []
     for ann in dataset.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
@@ -210,7 +210,7 @@ def load_dataset(
         logger.info(f"No dataset found in dataset {dataset.getId()}")
         return None
 
-    if load_images and mm_dataset.__class__.__name__ != "PSFBeadsDataset":
+    if load_images:
         # First time loading the images the
         # dataset does not know which images to load
         if mm_dataset.processed:
@@ -224,42 +224,16 @@ def load_dataset(
                 )
                 input_image.array_data = _load_image_intensities(image_wrapper)
         else:
-            input_images = [
-                load_image(image) for image in dataset.listChildren()
-            ]
+            input_images = [load_image(image) for image in dataset.listChildren()]
             setattr(
                 mm_dataset,
                 INPUT_IMAGES_MAPPING[mm_dataset.__class__.__name__],
                 input_images,
             )
     else:
-        setattr(
-            mm_dataset, INPUT_IMAGES_MAPPING[mm_dataset.__class__.__name__], []
-        )
+        setattr(mm_dataset, INPUT_IMAGES_MAPPING[mm_dataset.__class__.__name__], [])
 
     return mm_dataset
-
-
-def load_dash_data_project(
-    processed_datasets: dict,
-) -> (dict, str):
-    dash_context = {}
-    df_list = []
-    kkm = list(processed_datasets.values())[0].kkm
-    dates = []
-    for key, value in processed_datasets.items():
-        df = get_km_mm_metrics_dataset(
-            mm_dataset=value.mm_dataset, table_name="key_measurements"
-        )
-        date = datetime.strptime(
-            value.mm_dataset.acquisition_datetime, "%Y-%m-%dT%H:%M:%S"
-        )
-        dates.append(date.date())
-        df_list.append(df)
-    dash_context["key_measurements_list"] = df_list
-    dash_context["kkm"] = kkm
-    dash_context["dates"] = dates
-    return dash_context
 
 
 def load_analysis_config(project_wrapper=ProjectWrapper):
@@ -282,9 +256,7 @@ def load_analysis_config(project_wrapper=ProjectWrapper):
     return configs[-1].getId(), dict(configs[-1].getValue())
 
 
-def load_image(
-    image: ImageWrapper, load_array: bool = True
-) -> mm_schema.Image:
+def load_image(image: ImageWrapper, load_array: bool = True) -> mm_schema.Image:
     """Load an image from OMERO and return it as a schema Image"""
     time_series = None
     channel_series = mm_schema.ChannelSeries(
@@ -323,18 +295,6 @@ def load_image(
 
 def _load_image_intensities(image: ImageWrapper) -> np.ndarray:
     return omero_tools.get_image_intensities(image).transpose((2, 0, 3, 4, 1))
-
-
-def concatenate_images(images: list):
-    list_images = []
-    list_channels = []
-    for mm_image in images:
-        image = mm_image.array_data
-        result = [image[:, :, :, :, i] for i in range(image.shape[4])]
-        channels = [c.name for c in mm_image.channel_series.channels]
-        list_images.extend(result)
-        list_channels.extend(channels)
-    return list_images, list_channels
 
 
 def roi_finder(roi: mm_schema.Roi):
@@ -416,9 +376,7 @@ def get_rois_mm_dataset(mm_dataset: mm_schema.MetricsDataset):
             ):
                 roi = roi_finder(output[field])
                 if roi:
-                    images_info[item[0]]["roi"][roi["type"]].extend(
-                        roi["data"]
-                    )
+                    images_info[item[0]]["roi"][roi["type"]].extend(roi["data"])
             elif (
                 isinstance(output[field], list)
                 and len(output[field]) == len(images_info)
@@ -426,34 +384,22 @@ def get_rois_mm_dataset(mm_dataset: mm_schema.MetricsDataset):
             ):
                 roi = roi_finder(output[field][i])
                 if roi:
-                    images_info[item[0]]["roi"][roi["type"]].extend(
-                        roi["data"]
-                    )
+                    images_info[item[0]]["roi"][roi["type"]].extend(roi["data"])
     return images_info
 
 
 def get_km_mm_metrics_dataset(
     mm_dataset,
-    table_name,
-    columns_exceptions=[
-        "omero_object_type",
-        "data_reference",
-        "name",
-        "description",
-        "linked_references",
-        "class_class_name",
-        "table_data",
-    ],
 ):
-    table = mm_dataset.output[table_name]
-    table_date = {
-        k: v
-        for k, v in table.__dict__.items()
-        if k not in columns_exceptions and v
-    }
-    df = pd.DataFrame(table_date)
+    df = pd.DataFrame([asdict(km) for km in mm_dataset.output.key_measurements])
     df = df.replace("nan", np.nan)
-    df = df.apply(lambda col: pd.to_numeric(col, errors="ignore"))
+    # Try to convert each column to numeric, keep original if it fails
+    for col in df.columns:
+        try:
+            df[col] = pd.to_numeric(df[col])
+        except (ValueError, TypeError):
+            pass
+
     return df
 
 
@@ -461,20 +407,27 @@ def load_table_mm_metrics(table):
     if table and isinstance(table, mm_schema.Table):
         table_date = {v.name: v.values for v in table.columns if v}
         df = pd.DataFrame(table_date)
-        df = df.replace("nan", np.nan)
-        df = df.apply(lambda col: pd.to_numeric(col, errors="ignore"))
+        df = df.replace(
+            "nan", np.nan
+        )  # FIXME: futureWarning Downcasting behavior in `replace` is deprecated and will be removed in a future version. To retain the old behavior, explicitly call `result.infer_objects(copy=False)`. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+        for col in df.columns:
+            try:
+                df[col] = pd.to_numeric(df[col])
+            except (ValueError, TypeError):
+                pass
+
         return df
-    elif (
-        table
-        and isinstance(table, list)
-        and isinstance(table[0], mm_schema.Table)
-    ):
+    elif table and isinstance(table, list) and isinstance(table[0], mm_schema.Table):
         df_list = []
         start = 0
         for i, t in enumerate(table):
             table_date = {v.name: v.values for v in t.columns if v}
             df = pd.DataFrame(table_date)
-            df = df.apply(lambda col: pd.to_numeric(col, errors="ignore"))
+            for col in df.columns:
+                try:
+                    df[col] = pd.to_numeric(df[col])
+                except (ValueError, TypeError):
+                    pass
             df.columns = [modify_column_name(col, start) for col in df.columns]
             df = df.replace("nan", np.nan)
             start = df.columns.str.extract(r"ch(\d+)").astype(int)[0].max() + 1
@@ -485,6 +438,7 @@ def load_table_mm_metrics(table):
 
 
 def modify_column_name(col, i):
+    # TODO: On the longer run we need to implement title in the schema
     match = re.search(r"ch(\d+)", col)
     if match:
         new_ch = int(match.group(1)) + i

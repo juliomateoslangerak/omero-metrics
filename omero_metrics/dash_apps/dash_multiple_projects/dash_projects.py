@@ -1,14 +1,16 @@
 import dash
+import dash_mantine_components as dmc
 from dash import html
 from django_plotly_dash import DjangoDash
-import dash_mantine_components as dmc
+
 import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 from omero_metrics.styles import CARD_STYLE1
 
+# Initialize the Dash app
+dashboard_name = "omero_multiple_projects"
 omero_multiple_projects = DjangoDash(
-    "omero_multiple_projects",
+    dashboard_name,
     serve_locally=True,
-    external_stylesheets=dmc.styles.ALL,
 )
 
 omero_multiple_projects.layout = dmc.MantineProvider(

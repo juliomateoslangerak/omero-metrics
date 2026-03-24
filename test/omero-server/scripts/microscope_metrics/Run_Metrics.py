@@ -35,6 +35,8 @@ import logging
 from datetime import datetime
 from io import StringIO
 
+# import metrics
+import microscopemetrics_omero.process as process
 import omero.gateway as gateway
 
 # import omero dependencies
@@ -43,9 +45,6 @@ import omero.scripts as scripts
 # import configuration parser
 import yaml
 from omero.rtypes import rlong, rstring
-
-# import metrics
-import microscopemetrics_omero.process as process
 
 # Creating logging services
 logger = logging.getLogger(__name__)
@@ -63,9 +62,7 @@ string_hdl.setFormatter(formatter)
 # create console handler with a higher log level
 console_hdl = logging.StreamHandler()
 console_hdl.setLevel(logging.DEBUG)
-formatter = logging.Formatter(
-    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 console_hdl.setFormatter(formatter)
 
 # add the handlers to the logger
@@ -85,9 +82,7 @@ def run_script():
         with open("/etc/microscopemetrics_omero/main_config.yaml", "r") as f:
             main_config = yaml.load(f, Loader=yaml.SafeLoader)
     except FileNotFoundError:
-        logger.error(
-            "No main configuration file found: Contact your administrator."
-        )
+        logger.error("No main configuration file found: Contact your administrator.")
         return
 
     client = scripts.client(
@@ -132,9 +127,7 @@ def run_script():
         datasets = conn.getObjects("Dataset", script_params["IDs"])
 
         for dataset in datasets:
-            microscope_prj = (
-                dataset.getParent()
-            )  # We assume one project per dataset
+            microscope_prj = dataset.getParent()  # We assume one project per dataset
 
             if microscope_prj is None:
                 logger.error(

@@ -1,8 +1,10 @@
 import logging
-import omero
-from omero_metrics.tools import omero_tools
+
 import microscopemetrics_schema.datamodel as mm_schema
-from omero.gateway import BlitzGateway, FileAnnotationWrapper, DatasetWrapper
+import omero
+from omero.gateway import BlitzGateway, DatasetWrapper, FileAnnotationWrapper
+
+from omero_metrics.tools import omero_tools
 from omero_metrics.tools.data_type import DATASET_TYPES
 
 logger = logging.getLogger(__name__)
@@ -29,9 +31,7 @@ def delete_data_references(mm_obj: mm_schema.MetricsObject) -> list:
         )
 
 
-def delete_mm_obj_omero_refs(
-    conn: BlitzGateway, mm_obj: mm_schema.MetricsObject
-):
+def delete_mm_obj_omero_refs(conn: BlitzGateway, mm_obj: mm_schema.MetricsObject):
     refs_to_del = omero_tools.get_refs_from_mm_obj(mm_obj)
     refs_to_del = [
         (ref.omero_object_type.code.text, ref.omero_object_id)
@@ -39,9 +39,7 @@ def delete_mm_obj_omero_refs(
         if all([ref, ref.omero_object_type, ref.omero_object_id])
     ]
 
-    if not omero_tools.have_delete_permission(
-        conn=conn, object_refs=refs_to_del
-    ):
+    if not omero_tools.have_delete_permission(conn=conn, object_refs=refs_to_del):
         raise PermissionError(
             "You don't have the necessary permissions to delete the dataset output."
         )
@@ -68,9 +66,7 @@ def delete_dataset_file_ann(conn: BlitzGateway, dataset: DatasetWrapper):
             ns = ann.getNs()
             if ns.startswith("microscopemetrics_schema:analyses"):
                 ds_type = ns.split("/")[-1]
-                logger.info(
-                    f"Deleting {ds_type} file annotation {ann.getId()}"
-                )
+                logger.info(f"Deleting {ds_type} file annotation {ann.getId()}")
                 if ds_type in DATASET_TYPES:
                     omero_tools.del_object(
                         conn=conn,
@@ -97,14 +93,14 @@ def delete_all_annotations(conn, group_id):
                 wait=True,
             )
         return "All microscopemetrics analysis deleted", "green"
+    # TODO: Introduce proper authorisation error
+    except omero.CmdError as e:
+        return (
+            "authorisation_error",
+            "You don't have the necessary permissions to delete the annotations.",
+        )
     except Exception as e:
-        if isinstance(e, omero.CmdError):
-            return (
-                "You don't have the necessary permissions to delete the annotations.",
-                "red",
-            )
-        else:
-            return (
-                "Something happened. Couldn't delete the annotations.",
-                "red",
-            )
+        return (
+            "unidentified_error",
+            "Something happened. Couldn't delete the annotations.",
+        )

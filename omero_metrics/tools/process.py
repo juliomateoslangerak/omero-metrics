@@ -3,14 +3,11 @@ from dataclasses import fields
 from datetime import datetime
 from typing import Union
 
-from microscopemetrics.analyses import (
+from microscopemetrics.analyses import (  # numpy_to_image_byref,
     argolight,
     field_illumination,
-    # numpy_to_image_byref,
 )
-from microscopemetrics_schema.datamodel import (
-    microscopemetrics_schema as mm_schema,
-)
+from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
 from omero.gateway import (
     BlitzGateway,
     DatasetWrapper,
@@ -31,7 +28,6 @@ ANALYSIS_CLASS_MAPPINGS = {
 OBJECT_TO_DUMP_FUNCTION = {
     mm_schema.Image: dump.dump_image,
     mm_schema.Roi: dump.dump_roi,
-    mm_schema.KeyMeasurements: dump.dump_key_measurements,
     mm_schema.Table: dump.dump_table,
 }
 
@@ -94,9 +90,7 @@ def process_dataset(dataset: DatasetWrapper, config: dict) -> None:
     logger.info(f"Analyzing data from Dataset: {dataset.getId()}")
     logger.info(config)
 
-    for analysis_name, analysis_config in config["study_config"][
-        "analysis"
-    ].items():
+    for analysis_name, analysis_config in config["study_config"]["analysis"].items():
         if analysis_config["do_analysis"]:
             logger.info(f"Running analysis {analysis_name}...")
             start_time = datetime.now()

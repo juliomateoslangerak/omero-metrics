@@ -1,25 +1,25 @@
 import dash
-from dash import dcc, html
-from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
+import numpy as np
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from dash import dcc, html
+from django_plotly_dash import DjangoDash
+
+import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 from omero_metrics.styles import (
-    THEME,
-    MANTINE_THEME,
     LINE_CHART_SERIES,
+    MANTINE_THEME,
+    THEME,
 )
 from omero_metrics.tools import load
-import pandas as pd
-import numpy as np
-import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
-
+from omero_metrics.tools.serializers import deserialize
 
 dashboard_name = "omero_image_foi"
 omero_image_foi = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
-    external_stylesheets=dmc.styles.ALL,
 )
 
 
@@ -46,7 +46,6 @@ def create_control_panel():
                         id="channel_dropdown",
                         label="Channel",
                         w="100%",
-                        value="0",
                         allowDeselect=False,
                         leftSection=my_components.get_icon(
                             "material-symbols:layers"
@@ -245,15 +244,15 @@ omero_image_foi.layout = dmc.MantineProvider(
 
 @omero_image_foi.expanded_callback(
     dash.dependencies.Output("channel_dropdown", "data"),
+    dash.dependencies.Output("channel_dropdown", "value"),
     [dash.dependencies.Input("blank-input", "children")],
 )
 def callback_channel(_, **kwargs):
-    channel_names = kwargs["session_state"]["context"]["channel_names"]
-    channel_list = [
-        {"label": c.name, "value": f"{i}", "description": f"Channel {i+1}"}
-        for i, c in enumerate(channel_names.channels)
-    ]
-    return channel_list
+    mm_image = deserialize(kwargs["session_state"]["context"]["mm_image"])
+    return [
+        {"label": c.name, "value": str(i), "description": f"Channel {i+1}"}
+        for i, c in enumerate(mm_image.channel_series.channels)
+    ], "0"
 
 
 @omero_image_foi.expanded_callback(
@@ -266,15 +265,13 @@ def callback_channel(_, **kwargs):
         dash.dependencies.Input("segmented", "value"),
     ],
 )
-def callback_image(
-    channel, color, checked_contour, inverted_color, roi, **kwargs
-):
-    mm_dataset = kwargs["session_state"]["context"]["mm_dataset"]
-    image_id = kwargs["session_state"]["context"]["image_id"]
+def callback_image(channel, color, checked_contour, inverted_color, roi, **kwargs):
+    mm_dataset = deserialize(kwargs["session_state"]["context"]["mm_dataset"])
+    mm_image = deserialize(kwargs["session_state"]["context"]["mm_image"])
+    image_id = mm_image.data_reference.omero_object_id
     if inverted_color:
         color = color + "_r"
-    image_omero = kwargs["session_state"]["context"]["image"]
-    image_data = image_omero[0, 0, :, :, int(channel)]
+    image_data = mm_image.array_data[0, 0, :, :, int(channel)]
     image_data = np.float32(image_data / image_data.max())
     rois = load.get_rois_mm_dataset(mm_dataset)
     df_lines = pd.DataFrame(rois[image_id]["roi"]["Line"])
@@ -385,7 +382,7 @@ def callback_image(
 def update_intensity_profiles(channel, **kwargs):
     image_index = int(kwargs["session_state"]["context"]["image_index"])
     df_intensity_profiles = load.load_table_mm_metrics(
-        kwargs["session_state"]["context"]["mm_dataset"].output[
+        deserialize(kwargs["session_state"]["context"]["mm_dataset"]).output[
             "intensity_profiles"
         ][image_index]
     )

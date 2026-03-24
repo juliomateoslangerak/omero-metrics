@@ -1,8 +1,7 @@
-from django_plotly_dash import DjangoDash
 import dash_mantine_components as dmc
 import pandas as pd
-from dash import html, dash_table
-
+from dash import dash_table, html
+from django_plotly_dash import DjangoDash
 
 df = pd.DataFrame(
     {
@@ -19,7 +18,6 @@ dashboard_name = "top_iu_microscope"
 dash_app_microscope = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
-    external_stylesheets=dmc.styles.ALL,
 )
 
 dash_app_microscope.layout = dmc.MantineProvider(

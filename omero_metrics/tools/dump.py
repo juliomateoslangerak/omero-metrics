@@ -3,17 +3,17 @@ import contextlib
 import logging
 import tempfile
 from dataclasses import fields
-from typing import Union
+from typing import Dict, List, Union
+
+import pandas as pd
 from linkml_runtime.dumpers import YAMLDumper
-from microscopemetrics_schema.datamodel import (
-    microscopemetrics_schema as mm_schema,
-)
+from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
 from omero.gateway import (
     BlitzGateway,
     DatasetWrapper,
+    ExperimenterGroupWrapper,
     ImageWrapper,
     ProjectWrapper,
-    ExperimenterGroupWrapper,
 )
 
 from omero_metrics.tools import omero_tools
@@ -60,16 +60,13 @@ def dump_microscope(
             return None
         if (
             microscope.data_reference
-            and microscope.data_reference.omero_object_id
-            != target_group.getId()
+            and microscope.data_reference.omero_object_id != target_group.getId()
         ):
             logger.warning(
                 f"Microscope {microscope.name} is going to be linked to a different OMERO group."
             )
         omero_group = target_group
-        microscope.data_reference = omero_tools.get_ref_from_object(
-            omero_group
-        )
+        microscope.data_reference = omero_tools.get_ref_from_object(omero_group)
 
     omero_tools.create_key_value(
         conn=conn,
@@ -101,9 +98,7 @@ def dump_project(
             omero_project = omero_tools.create_project(
                 conn=conn, name=project.name, description=project.description
             )
-            project.data_reference = omero_tools.get_ref_from_object(
-                omero_project
-            )
+            project.data_reference = omero_tools.get_ref_from_object(omero_project)
     else:
         if not isinstance(target_project, ProjectWrapper):
             logger.error(
@@ -142,8 +137,6 @@ def _remove_unsupported_types(
         if isinstance(_attr, mm_schema.Image):
             _attr.array_data = None
         elif isinstance(_attr, mm_schema.Table):
-            _attr.table_data = None
-        elif isinstance(_attr, mm_schema.KeyMeasurements):
             _attr.table_data = None
         elif isinstance(_attr, mm_schema.Roi):
             if _attr.masks:
@@ -294,9 +287,7 @@ def dump_dataset(
                 conn=conn, mm_dataset=dataset, target_omero_obj=target_objs
             )
     except Exception as e:
-        logger.error(
-            f"Dataset {dataset.name} could not be dumped to OMERO: {e}"
-        )
+        logger.error(f"Dataset {dataset.name} could not be dumped to OMERO: {e}")
         raise e
 
     return omero_dataset
@@ -425,20 +416,6 @@ def _dump_output_element(
             image=output_element,
             target_dataset=target_dataset,
         )
-    elif isinstance(output_element, mm_schema.KeyMeasurements):
-        if isinstance(output_element, mm_schema.KeyMeasurements):
-            return dump_key_measurements(
-                conn=conn,
-                key_measurements=output_element,
-                # KeyMeasurements are linked to the dataset and project
-                target_object=[target_dataset, target_dataset.getParent()],
-            )
-        else:
-            return dump_key_values(
-                conn=conn,
-                key_values=output_element,
-                target_object=target_dataset,
-            )
     elif isinstance(output_element, mm_schema.Table):
         return dump_table(
             conn=conn,
@@ -457,9 +434,7 @@ def _dump_output_element(
             target_object=target_dataset,
         )
     else:
-        logger.error(
-            f"{output_element.name} output could not be dumped to OMERO"
-        )
+        logger.error(f"{output_element.name} output could not be dumped to OMERO")
 
     return None
 
@@ -475,9 +450,7 @@ def dump_image(
         )
         return None
     if not isinstance(image, mm_schema.Image):
-        logger.error(
-            f"Invalid image object provided for {image}. Skipping dump."
-        )
+        logger.error(f"Invalid image object provided for {image}. Skipping dump.")
         return None
 
     source_image_id = None
@@ -522,9 +495,7 @@ def dump_roi(
                 f"ROI {roi.name} must be linked to an image. No image provided."
             )
         if len(target_images) != 1:
-            raise TypeError(
-                f"ROI {roi.name} must be linked to a single image."
-            )
+            raise TypeError(f"ROI {roi.name} must be linked to a single image.")
         else:
             target_image = target_images[0]
 
@@ -547,9 +518,7 @@ def dump_roi(
                 f"Shape {shape} could not be dumped to OMERO"
             ),
         )
-        shapes += [
-            shape_handler(shape) for shape in getattr(roi, shape_field.name)
-        ]
+        shapes += [shape_handler(shape) for shape in getattr(roi, shape_field.name)]
 
     omero_roi = omero_tools.create_roi(
         conn=conn,
@@ -564,88 +533,22 @@ def dump_roi(
     return omero_roi
 
 
-def dump_key_measurements(
-    conn: BlitzGateway,
-    key_measurements: mm_schema.KeyMeasurements,
-    target_object: Union[
-        DatasetWrapper,
-        ProjectWrapper,
-        list[Union[DatasetWrapper, ProjectWrapper]],
-    ],
-):
-    if not isinstance(key_measurements, mm_schema.KeyMeasurements):
-        logger.error(
-            f"Unsupported key measurement type for {key_measurements.name}: {key_measurements.class_name}"
-        )
-        return None
-
-    if target_object is None:
-        try:
-            target_object = omero_tools.get_omero_obj_from_mm_obj(
-                conn=conn, mm_obj=key_measurements.linked_references
-            )
-        except AttributeError:
-            logger.error(
-                f"Key-measurements {key_measurements.name} must be linked to an OMERO object. No object provided."
-            )
-            return None
-
-    if key_measurements.table_data is None:
-        logger.error(
-            f"Key-measurements {key_measurements.name} has no data. Skipping dump."
-        )
-        return None
-
-    omero_table = omero_tools.create_table(
-        conn=conn,
-        table=key_measurements.table_data,
-        table_name=key_measurements.name,
-        omero_object=target_object,
-        table_description=key_measurements.description,
-        namespace=key_measurements.class_class_curie,
-    )
-    key_measurements.data_reference = omero_tools.get_ref_from_object(
-        omero_table
-    )
-
-    return omero_table
-
-
 def dump_key_values(
     conn: BlitzGateway,
-    key_values: mm_schema.KeyMeasurements,
-    target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper] = None,
+    key_values: Dict,
+    name: str,
+    description: str,
+    curie: str,
+    target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
 ):
-    if not isinstance(key_values, mm_schema.KeyMeasurements):
-        logger.error(
-            f"Unsupported key values type for {key_values.name}: {key_values.class_name}"
-        )
-        return None
-
-    if target_object is None:
-        try:
-            target_object = omero_tools.get_omero_obj_from_mm_obj(
-                conn=conn, mm_obj=key_values.linked_references
-            )
-        except AttributeError:
-            logger.error(
-                f"Key-values {key_values.name} must be linked to an OMERO object. No object provided."
-            )
-            return None
-
-    omero_key_value = omero_tools.create_key_value(
+    return omero_tools.create_key_value(
         conn=conn,
-        annotation=key_values._as_dict,
+        annotation=key_values,
         omero_object=target_object,
-        annotation_name=key_values.name,
-        annotation_description=key_values.description,
-        namespace=key_values.class_class_curie,
+        annotation_name=name,
+        annotation_description=description,
+        namespace=curie,
     )
-    key_values.data_reference = omero_tools.get_ref_from_object(
-        omero_key_value
-    )
-
-    return omero_key_value
 
 
 def _eval(s):
@@ -669,9 +572,7 @@ def dump_table(
     target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper] = None,
 ):
     if not isinstance(table, mm_schema.Table):
-        logger.error(
-            f"Unsupported table type for {table.name}: {table.class_name}"
-        )
+        logger.error(f"Unsupported table type for {table.name}: {table.class_name}")
         return None
 
     if target_object is None:

@@ -1,19 +1,21 @@
+import traceback
+from time import sleep
+
 import dash
+import dash_mantine_components as dmc
 from dash import html
 from django_plotly_dash import DjangoDash
-import dash_mantine_components as dmc
 from microscopemetrics.analyses.mappings import MAPPINGS
 from microscopemetrics_schema import datamodel as mm_schema
-from omero_metrics.tools import dash_forms_tools as dft
-from time import sleep
+
+import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 import omero_metrics.views as views
 from omero_metrics.styles import (
+    CONTAINER_STYLE,
     MANTINE_THEME,
     THEME,
-    CONTAINER_STYLE,
 )
-import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
-
+from omero_metrics.tools import dash_forms_tools as dft
 
 # TODO: change the styles import
 
@@ -23,7 +25,7 @@ DATASET_TO_INPUT = {
     "PSFBeadsDataset": mm_schema.PSFBeadsInputParameters,
 }
 
-sample_types = [x[0] for x in MAPPINGS]
+sample_types = [x[0] for x in MAPPINGS if x[0]]
 sample_types_dp = [
     {
         "label": dft.add_space_between_capitals(x.__name__),
@@ -39,7 +41,6 @@ dash_form_project = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
     external_stylesheets=[
-        dmc.styles.ALL,
         "/static/omero_metrics/css/style_app.css",
     ],
 )
@@ -117,9 +118,7 @@ dash_form_project.layout = dmc.MantineProvider(
                                                         }
                                                     },
                                                 ),
-                                                html.Div(
-                                                    id="sample_container"
-                                                ),
+                                                html.Div(id="sample_container"),
                                             ],
                                             p="md",
                                             radius="md",
@@ -316,9 +315,7 @@ def stepper_callback(*args, **kwargs):
 )
 def update_sample_container(sample_type_selector, **kwargs):
     mm_sample = MAPPINGS[int(sample_type_selector)][0]
-    sample_form = dft.get_form(
-        mm_sample, disabled=False, form_id="sample_content"
-    )
+    sample_form = dft.get_form(mm_sample, disabled=False, form_id="sample_content")
     return [sample_form]
 
 
@@ -349,9 +346,7 @@ def update_input_parameters(sample_type_selector, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def review_configuration(
-    _, sample_form, input_parameters_form, current, **kwargs
-):
+def review_configuration(_, sample_form, input_parameters_form, current, **kwargs):
     sample = dft.disable_all_fields_dash_form(sample_form)
     input_parameters = dft.disable_all_fields_dash_form(input_parameters_form)
     if current == 1:
@@ -369,9 +364,7 @@ dash_form_project.clientside_callback(
         return false}
     }
     """,
-    dash.dependencies.Output(
-        "loading-overlay", "visible", allow_duplicate=True
-    ),
+    dash.dependencies.Output("loading-overlay", "visible", allow_duplicate=True),
     dash.dependencies.Input("next-basic-usage", "n_clicks"),
     dash.dependencies.State("stepper-basic-usage", "active"),
     prevent_initial_call=True,
@@ -414,48 +407,18 @@ def save_config_dash(
                 mm_input_parameters = mm_input_parameters(**input_parameters)
                 sample = dft.extract_form_data(sample_form)
                 mm_sample = mm_sample(**sample)
-                response, color = views.save_config(
+                response_type, response_msg = views.save_config(
                     request=request,
-                    project_id=int(project_id),
+                    project_id=project_id,
                     input_parameters=mm_input_parameters,
                     sample=mm_sample,
                 )
-                return [
-                    dmc.Alert(
-                        children=[
-                            dmc.Title(response, order=4),
-                            dmc.Text(
-                                (
-                                    "Your configuration has been saved successfully."
-                                    if color == "green"
-                                    else "An error occurred while saving your configuration."
-                                ),
-                                size="sm",
-                            ),
-                        ],
-                        color=color,
-                        icon=my_components.get_icon(
-                            icon=(
-                                "mdi:check-circle"
-                                if color == "green"
-                                else "mdi:alert-circle"
-                            )
-                        ),
-                        title="Success!" if color == "green" else "Error!",
-                        radius="md",
-                    )
-                ], False
+                sleep(1)
+
+                return my_components.alert_handler(response_type, response_msg)
             except Exception as e:
-                return [
-                    dmc.Alert(
-                        children=[
-                            dmc.Title("Error", order=4),
-                            dmc.Text(str(e), size="sm"),
-                        ],
-                        color="red",
-                        icon=my_components.get_icon(icon="mdi:alert"),
-                        title="Error!",
-                        radius="md",
-                    )
-                ], False
+                return my_components.alert_handler(
+                    "unidentified_error", str(e), traceback.format_exc()
+                )
+
     return dash.no_update, False
