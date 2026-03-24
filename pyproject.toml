@@ -29,9 +29,9 @@ dynamic = [
 version = "0.2.3.post74.dev0+208830a"
 
 [project.urls]
-homepage = "https://github.com/MontpellierRessourcesImagerie/omero-metrics"
-repository = "https://github.com/MontpellierRessourcesImagerie/omero-metrics"
-documentation = "https://montpellierressourcesimagerie.github.io/omero-metrics/"
+homepage = "https://github.com/pro-dho/omero-metrics"
+repository = "https://github.com/pro-dho/omero-metrics"
+documentation = "https://pro-dho.github.io/omero-metrics/"
 
 [tool.poetry]
 packages = [
