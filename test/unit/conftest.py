@@ -9,7 +9,6 @@ import pandas as pd
 import pytest
 from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
 
-
 # --- Mock OMERO objects ---
 
 
@@ -33,7 +32,13 @@ class MockFile:
 class MockAnnotation:
     """Base mock for OMERO annotations."""
 
-    def __init__(self, ann_id=1, ns="microscopemetrics_schema:core", description="desc", date=None):
+    def __init__(
+        self,
+        ann_id=1,
+        ns="microscopemetrics_schema:core",
+        description="desc",
+        date=None,
+    ):
         self._id = ann_id
         self._ns = ns
         self._description = description
@@ -59,7 +64,9 @@ class MockAnnotation:
 class MockFileAnnotation(MockAnnotation):
     """Mock for OMERO FileAnnotationWrapper."""
 
-    def __init__(self, name="test.yaml", file_id=100, content=b"test: data", **kwargs):
+    def __init__(
+        self, name="test.yaml", file_id=100, content=b"test: data", **kwargs
+    ):
         super().__init__(**kwargs)
         self._file = MockFile(name, file_id)
         self._content = content
@@ -113,7 +120,7 @@ class MockConnection:
     def getObject(self, obj_type, obj_id=None):
         objects = self._objects.get(obj_type, [])
         for obj in objects:
-            if hasattr(obj, 'getId') and obj.getId() == obj_id:
+            if hasattr(obj, "getId") and obj.getId() == obj_id:
                 return obj
         if objects:
             return objects[0]

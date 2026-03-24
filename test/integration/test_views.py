@@ -94,7 +94,12 @@ class TestProjectView(IWebTest):
         # Should show either the config form or an error/warning
         assert any(
             term in html
-            for term in ["omero_project_config_form", "ErrorApp", "WarningApp", "omero_project_dash"]
+            for term in [
+                "omero_project_config_form",
+                "ErrorApp",
+                "WarningApp",
+                "omero_project_dash",
+            ]
         )
 
 

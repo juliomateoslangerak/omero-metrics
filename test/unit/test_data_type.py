@@ -22,35 +22,36 @@ class TestDatasetTypes:
 
     def test_all_types_have_input_mapping(self):
         for ds_type in DATASET_TYPES:
-            assert ds_type in INPUT_IMAGES_MAPPING, (
-                f"{ds_type} missing from INPUT_IMAGES_MAPPING"
-            )
+            assert (
+                ds_type in INPUT_IMAGES_MAPPING
+            ), f"{ds_type} missing from INPUT_IMAGES_MAPPING"
 
     def test_all_types_have_image_mapping(self):
         for ds_type in DATASET_TYPES:
-            assert ds_type in DATASET_IMAGES, (
-                f"{ds_type} missing from DATASET_IMAGES"
-            )
+            assert (
+                ds_type in DATASET_IMAGES
+            ), f"{ds_type} missing from DATASET_IMAGES"
 
     def test_all_types_have_kkm_mapping(self):
         for ds_type in DATASET_TYPES:
-            assert ds_type in KKM_MAPPINGS, (
-                f"{ds_type} missing from KKM_MAPPINGS"
-            )
+            assert ds_type in KKM_MAPPINGS, f"{ds_type} missing from KKM_MAPPINGS"
 
     def test_all_types_have_template_mapping(self):
         for ds_type in DATASET_TYPES:
-            assert ds_type in TEMPLATE_MAPPINGS_DATASET, (
-                f"{ds_type} missing from TEMPLATE_MAPPINGS_DATASET"
-            )
-            assert ds_type in TEMPLATE_MAPPINGS_IMAGE, (
-                f"{ds_type} missing from TEMPLATE_MAPPINGS_IMAGE"
-            )
+            assert (
+                ds_type in TEMPLATE_MAPPINGS_DATASET
+            ), f"{ds_type} missing from TEMPLATE_MAPPINGS_DATASET"
+            assert (
+                ds_type in TEMPLATE_MAPPINGS_IMAGE
+            ), f"{ds_type} missing from TEMPLATE_MAPPINGS_IMAGE"
 
 
 class TestInputImagesMapping:
     def test_field_illumination(self):
-        assert INPUT_IMAGES_MAPPING["FieldIlluminationDataset"] == "field_illumination_images"
+        assert (
+            INPUT_IMAGES_MAPPING["FieldIlluminationDataset"]
+            == "field_illumination_images"
+        )
 
     def test_psf_beads(self):
         assert INPUT_IMAGES_MAPPING["PSFBeadsDataset"] == "psf_beads_images"
@@ -108,9 +109,9 @@ class TestKkmMappings:
     def test_kkm_values_are_strings(self):
         for ds_type, kkm_list in KKM_MAPPINGS.items():
             for item in kkm_list:
-                assert isinstance(item, str), (
-                    f"KKM item '{item}' in {ds_type} should be a string"
-                )
+                assert isinstance(
+                    item, str
+                ), f"KKM item '{item}' in {ds_type} should be a string"
 
 
 class TestTemplateMappings:
@@ -120,6 +121,6 @@ class TestTemplateMappings:
 
     def test_image_templates_have_input_data(self):
         for ds_type, mapping in TEMPLATE_MAPPINGS_IMAGE.items():
-            assert "input_data" in mapping, (
-                f"{ds_type} missing 'input_data' in image template mapping"
-            )
+            assert (
+                "input_data" in mapping
+            ), f"{ds_type} missing 'input_data' in image template mapping"

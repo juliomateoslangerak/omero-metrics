@@ -74,8 +74,12 @@ class TestCenterViewerGroupSessionSerialization:
 
         # Verify session contains JSON strings, not DataFrames
         dash_ctx = request.session["django_plotly_dash"]["context"]
-        assert isinstance(dash_ctx["file_ann"], str), "file_ann should be a JSON string"
-        assert isinstance(dash_ctx["map_ann"], str), "map_ann should be a JSON string"
+        assert isinstance(
+            dash_ctx["file_ann"], str
+        ), "file_ann should be a JSON string"
+        assert isinstance(
+            dash_ctx["map_ann"], str
+        ), "map_ann should be a JSON string"
 
         # Verify the JSON can be parsed back to a DataFrame
         restored = pd.read_json(dash_ctx["file_ann"])
@@ -116,7 +120,9 @@ class TestViewErrorHandling:
         request.session = FakeSession()
         mock_conn = MagicMock()
 
-        result = center_viewer_dataset.__wrapped__(request, dataset_id=1, conn=mock_conn)
+        result = center_viewer_dataset.__wrapped__(
+            request, dataset_id=1, conn=mock_conn
+        )
 
         call_kwargs = mock_render.call_args
         assert call_kwargs[1]["context"]["app_name"] == "ErrorApp"

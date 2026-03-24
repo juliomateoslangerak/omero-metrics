@@ -46,9 +46,7 @@ class TestSchemaContract:
             "data_reference",
             "microscope",
         ]:
-            assert required in field_names, (
-                f"{cls_name} missing field '{required}'"
-            )
+            assert required in field_names, f"{cls_name} missing field '{required}'"
 
     @pytest.mark.parametrize(
         "cls_name,input_attr",
@@ -58,13 +56,13 @@ class TestSchemaContract:
         """The input data class must have the image list field we expect."""
         input_data_cls_name = cls_name.replace("Dataset", "InputData")
         input_data_cls = getattr(mm_schema, input_data_cls_name, None)
-        assert input_data_cls is not None, (
-            f"{input_data_cls_name} not found in schema"
-        )
+        assert (
+            input_data_cls is not None
+        ), f"{input_data_cls_name} not found in schema"
         field_names = {f.name for f in dataclasses.fields(input_data_cls)}
-        assert input_attr in field_names, (
-            f"{input_data_cls_name} missing field '{input_attr}'"
-        )
+        assert (
+            input_attr in field_names
+        ), f"{input_data_cls_name} missing field '{input_attr}'"
 
     def test_field_illumination_key_measurement_is_singular(self):
         """The new schema uses FieldIlluminationKeyMeasurement (singular),
@@ -80,9 +78,9 @@ class TestSchemaContract:
         for f in dataclasses.fields(cls):
             if f.name == "key_measurements":
                 type_str = str(f.type)
-                assert "list" in type_str.lower() or "List" in type_str, (
-                    f"key_measurements type should contain list, got: {f.type}"
-                )
+                assert (
+                    "list" in type_str.lower() or "List" in type_str
+                ), f"key_measurements type should contain list, got: {f.type}"
                 return
         pytest.fail("FieldIlluminationOutput has no key_measurements field")
 
@@ -106,9 +104,7 @@ class TestSchemaContract:
         assert km_cls is not None, f"{km_cls_name} not found in schema"
         field_names = {f.name for f in dataclasses.fields(km_cls)}
         for kkm in kkm_fields:
-            assert kkm in field_names, (
-                f"{km_cls_name} missing KKM field '{kkm}'"
-            )
+            assert kkm in field_names, f"{km_cls_name} missing KKM field '{kkm}'"
 
     def test_key_measurement_supports_bracket_access(self):
         """context_loaders.py uses km[kkm] — schema objects must support it."""
@@ -197,7 +193,6 @@ class TestSchemaContract:
             ),
         )
 
-
         # analyse modifies dataset in-place and returns bool
         success = field_illumination.analyse_field_illumination(dataset)
         assert success is True
@@ -254,7 +249,9 @@ class TestSchemaContract:
             yaml_str, target_class=mm_schema.FieldIlluminationDataset
         )
         assert len(loaded.output.key_measurements) == 2
-        assert loaded.output.key_measurements[0].channel_name == km_list[0].channel_name
+        assert (
+            loaded.output.key_measurements[0].channel_name == km_list[0].channel_name
+        )
 
 
 pytest.importorskip("omero", reason="omero package not available locally")
