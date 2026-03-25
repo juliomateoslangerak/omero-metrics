@@ -6,9 +6,9 @@ input_parameters:
     sigma: 5.0
     bit_depth: 16
 sample:
-  type: FluorescentHomogeneousThickField
+  type: HomogeneousField
   fields:
     name: Chroma Slide
     description: A set of Chroma slides with different emission spectra
-    protocol: https://www.chroma.com/products/accessories/92001-autofluorescent-plastic-slides
+    preparation_protocol: https://www.chroma.com/products/accessories/92001-autofluorescent-plastic-slides
     manufacturer: Chroma Technology Corp
