@@ -10,7 +10,7 @@ from django_plotly_dash import DjangoDash
 from plotly.subplots import make_subplots
 
 import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
-from omero_metrics.styles import MANTINE_THEME, THEME
+from omero_metrics.styles import MANTINE_THEME, PLOTLY_LAYOUT, THEME
 from omero_metrics.tools import load
 from omero_metrics.tools.serializers import deserialize
 
@@ -307,26 +307,19 @@ def update_image(channel_index, color, invert, contour, roi, beads_info, **kwarg
         else:
             fig.update_traces(visible=False, selector=dict(name="Beads Locations"))
 
+        fig.update_layout(**PLOTLY_LAYOUT)
         fig.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
             margin=dict(l=20, r=20, t=20, b=20),
             xaxis=dict(showgrid=False, zeroline=False, visible=False),
             yaxis=dict(showgrid=False, zeroline=False, visible=False),
             xaxis1=dict(showgrid=False, zeroline=False, visible=False),
             yaxis1=dict(showgrid=False, zeroline=False, visible=False),
-            coloraxis_colorbar=dict(
-                thickness=15,
-                len=0.7,
-                title=dict(text="Intensity", side="right"),
-                tickfont=dict(size=10),
-            ),
         )
 
         return fig
 
     except Exception as e:
-        logger.error(f"Error updating image: {str(e)}")
+        logger.error(f"Error updating image: {e}", exc_info=True)
         return px.imshow([[0]], title="Error loading image")
 
 
@@ -625,6 +618,7 @@ def fig_bead(
         )
 
     # Force identical physical domains (prevents doubled Z)
+    fig.update_layout(**PLOTLY_LAYOUT)
     fig.update_layout(
         grid=dict(
             rows=3,
@@ -632,9 +626,8 @@ def fig_bead(
             pattern="independent",
         ),
         legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01),
-        width=800,
-        height=800,
-        autosize=False,
+        autosize=True,
+        height=700,
         margin=dict(l=10, r=10, t=10, b=10),
     )
 
