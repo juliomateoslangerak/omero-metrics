@@ -26,7 +26,7 @@ dynamic = [
     "classifiers",
     "dependencies",
 ]
-version = "0.2.5"
+version = "0.2.6"
 
 [project.urls]
 homepage = "https://github.com/pro-dho/omero-metrics"

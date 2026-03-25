@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.6](https://github.com/pro-dho/omero-metrics/compare/omero-metrics-v0.2.5...omero-metrics-v0.2.6) (2026-03-25)
+
+
+### Bug Fixes
+
+* **deps:** update vulnerable dependencies ([2d4a69b](https://github.com/pro-dho/omero-metrics/commit/2d4a69bc3606782e94c1f2c8da2d81b7ef229371))
+* **security:** add permissions to workflow files ([cd5eec3](https://github.com/pro-dho/omero-metrics/commit/cd5eec383534baca6f4149787fb80c035f6b28a1))
+* **security:** add SRI integrity attributes to CDN resources ([5c321aa](https://github.com/pro-dho/omero-metrics/commit/5c321aa5bca8840ca1ee188cb448284b07ede1d3))
+
 ## [0.2.5](https://github.com/pro-dho/omero-metrics/compare/omero-metrics-v0.2.4...omero-metrics-v0.2.5) (2026-03-24)
 
 
