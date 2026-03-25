@@ -115,3 +115,13 @@ def deserialize(obj: Any) -> Any:
         return [deserialize(item) for item in obj]
     else:
         return obj
+
+
+def deserialize_partial(context: dict, *keys: str) -> dict:
+    """Deserialize only the specified keys from a context dict.
+
+    This avoids the cost of recursively deserializing the entire context
+    (which may contain large numpy arrays and mm_schema objects) when
+    a callback only needs a few plain-value keys.
+    """
+    return {k: deserialize(context[k]) for k in keys if k in context}

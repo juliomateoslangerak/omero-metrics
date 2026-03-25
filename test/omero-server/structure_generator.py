@@ -267,13 +267,20 @@ GENERATOR_MAPPER = {
 
 
 def _attach_config(conn, project, file_path):
+    """Attach a config YAML file to a project with the correct schema namespace."""
     mimetype, _ = mimetypes.guess_type(file_path)
-    file_path_split = file_path.split("/")
+    # Read the config to get the InputParameters type name, then use the
+    # canonical class_class_curie from the schema instead of constructing
+    # the namespace from the file path (which is fragile).
+    with open(file_path) as f:
+        config = yaml.safe_load(f)
+    input_params_type = config["input_parameters"]["type"]
+    input_params_cls = getattr(mm_schema, input_params_type)
     file_ann = conn.createFileAnnfromLocalFile(
         file_path,
         mimetype=mimetype,
-        desc="configuration file",
-        ns=f"microscopemetrics_schema:analyses/{file_path_split[-2]}_schema/{file_path_split[-1].split('_')[-1].split('.')[0]}InputParameters",
+        desc="Configuration file",
+        ns=input_params_cls.class_class_curie,
     )
     project.linkAnnotation(file_ann)
 

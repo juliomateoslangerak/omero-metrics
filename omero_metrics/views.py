@@ -42,6 +42,11 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
     dash_context = request.session.get("django_plotly_dash", dict())
     try:
         image_wrapper = conn.getObject("Image", image_id)
+        if image_wrapper is None:
+            raise ValueError(
+                f"Image {image_id} not found. "
+                "Check that you are in the correct group."
+            )
         im = data_managers.ImageManager(conn, image_wrapper)
         im.load_context()
         dash_context["context"] = im.context
