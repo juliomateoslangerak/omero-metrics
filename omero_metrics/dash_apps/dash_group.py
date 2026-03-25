@@ -1,5 +1,3 @@
-from time import sleep
-
 import dash
 import dash_mantine_components as dmc
 import pandas as pd
@@ -167,12 +165,8 @@ dash_app_group.layout = dmc.MantineProvider(
                                                     ),
                                                     "Download",
                                                 ],
-                                                variant="gradient",
-                                                gradient={
-                                                    "from": THEME["secondary"],
-                                                    "to": THEME["primary"],
-                                                    "deg": 105,
-                                                },
+                                                variant="filled",
+                                                color=THEME["primary"],
                                                 w="auto",
                                             ),
                                             dcc.Download(id="download"),
@@ -195,12 +189,8 @@ dash_app_group.layout = dmc.MantineProvider(
                                                     ),
                                                     "Delete All",
                                                 ],
-                                                variant="gradient",
-                                                gradient={
-                                                    "from": THEME["error"],
-                                                    "to": THEME["primary"],
-                                                    "deg": 105,
-                                                },
+                                                variant="filled",
+                                                color="red",
                                                 w=250,
                                             ),
                                             dmc.Modal(
@@ -355,7 +345,6 @@ def delete_all_callback(*args, **kwargs):
     request = kwargs["request"]
     opened = not args[3]
     if triggered_button == "modal-submit-button.n_clicks" and args[0] > 0:
-        sleep(1)
         response_type, response_msg = views.delete_all(request, group_id=group_id)
 
         return my_components.notification_handler(
