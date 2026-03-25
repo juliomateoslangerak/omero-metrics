@@ -131,6 +131,16 @@ def load_input_config_file(project):
         cls.class_class_curie: cls
         for cls in mm_schema.MetricsDataset.__subclasses__()
     }
+    # First, look for a standalone config file (study_config prefix)
+    for ann in project.listAnnotations():
+        if isinstance(ann, FileAnnotationWrapper):
+            name = ann.getFile().getName()
+            if name.startswith("study_config"):
+                return yaml.load(
+                    b"".join(ann.getFileInChunks()).decode(),
+                    Loader=yaml.SafeLoader,
+                )
+    # Fall back to extracting from dataset annotations
     for ann in project.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
             ns = ann.getNs()
