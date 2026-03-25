@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.7](https://github.com/pro-dho/omero-metrics/compare/omero-metrics-v0.2.6...omero-metrics-v0.2.7) (2026-03-25)
+
+
+### Bug Fixes
+
+* load input config from dataset annotations with standalone fallback ([4cdaebc](https://github.com/pro-dho/omero-metrics/commit/4cdaebce86e1817e855256e162514abe9cd5515d))
+
+
+### Performance Improvements
+
+* eliminate redundant deserialization in all Dash callbacks ([a279f84](https://github.com/pro-dho/omero-metrics/commit/a279f8439c234263f7f00935578bfbe2045cbf78))
+
 ## [0.2.6](https://github.com/pro-dho/omero-metrics/compare/omero-metrics-v0.2.5...omero-metrics-v0.2.6) (2026-03-25)
 
 
