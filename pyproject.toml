@@ -92,7 +92,7 @@ zeroc-ice = [
     { platform = "win32", python = "3.12", url = "https://github.com/glencoesoftware/zeroc-ice-py-win-x86_64/releases/download/20240325/zeroc_ice-3.6.5-cp312-cp312-win_amd64.whl"}
 ]
 
-black = "^25"
+black = {version = "^26", python = ">=3.10"}
 poetry = "^2"
 isort = "^6"
 pre-commit = "^4"
