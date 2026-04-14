@@ -607,7 +607,7 @@ def fig_bead(
                 range=[-0.25, 1.25], constrain="domain", row=row, col=col
             )
         fig.add_annotation(
-            text=f"R^2<br><b>{r_sq[axis]:.3f}<b>",
+            text=f"R&#178;<br><b>{r_sq[axis]:.3f}<b>",
             align="right" if rotate else "left",
             xanchor="left" if rotate else "right",
             ax=20 if rotate else -40,
