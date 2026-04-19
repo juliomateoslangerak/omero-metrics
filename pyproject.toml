@@ -64,8 +64,7 @@ dash-mantine-components = "*" #"0.14.5"  # current 2.3.0
 dash-iconify = "*"  # current "0.1.2"
 openpyxl = "*"  # TODO: remove dependency
 dash-renderer = "*"  # current "1.9.1"
-microscopemetrics = { git = "https://github.com/juliomateoslangerak/microscope-metrics.git", branch = "dev" }
-#microscopemetrics = "0.2.3"
+microscopemetrics = "0.2.4"
 
 
 [tool.poetry.group.test.dependencies]
