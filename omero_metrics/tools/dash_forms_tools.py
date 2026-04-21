@@ -7,12 +7,10 @@ from dash_iconify import DashIconify
 
 # TODO: Modify the schema to make this a mm_schema class
 from linkml_runtime.utils.metamodelcore import XSDDateTime
-from microscopemetrics_schema.datamodel.microscopemetrics_schema import ProtocolUrl
 
 # These mappings must be ordered by priority
 FIELD_TYPE_MAPPING = {
     XSDDateTime: [dmc.DateTimePicker, "carbon:calendar"],
-    ProtocolUrl: [dmc.TextInput, "carbon:copy-link"],
     float: [dmc.NumberInput, "carbon:character-decimal"],
     int: [dmc.NumberInput, "carbon:character-whole-number"],
     bool: [dmc.Switch, "carbon:switch-disabled"],
