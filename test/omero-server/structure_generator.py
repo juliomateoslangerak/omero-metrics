@@ -216,9 +216,9 @@ def psf_beads_generator(args, microscope_name):
                                     args["nr_clustering_beads"]["min"],
                                     args["nr_clustering_beads"]["max"],
                                 ),
-                                min_distance_z=args["min_distance_z"],
-                                min_distance_y=args["min_distance_y"],
-                                min_distance_x=args["min_distance_x"],
+                                min_distance_z_px=args["min_distance_z"],
+                                min_distance_y_px=args["min_distance_y"],
+                                min_distance_x_px=args["min_distance_x"],
                                 sigma_z=random.uniform(
                                     args["sigma_z"]["min"],
                                     args["sigma_z"]["max"],
