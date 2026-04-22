@@ -129,7 +129,11 @@ def get_form(mm_dataclass, disabled=False, form_id="form_content"):
         id=form_id,
         children=[],
         # TODO: we have to rather rely on the title of the class
-        legend=add_space_between_capitals(mm_object.class_name),
+        legend=dmc.Text(
+            add_space_between_capitals(mm_dataclass.class_name),
+            fw=700,
+            fz="md",  # or fz="lg" for larger
+        ),
         variant="filled",
         radius="md",
     )
