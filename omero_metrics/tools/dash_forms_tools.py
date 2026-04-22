@@ -108,14 +108,13 @@ def get_dmc_field_input(field, mm_object, disabled=False):
 
 
 def validate_form(state):
-    return all(
-        i["props"]["id"] == "submit_id"
-        or not (
-            i["props"]["required"]
-            and (i["props"]["value"] is None or i["props"]["value"] == "")
-        )
-        for i in state
-    )
+    for item in state:
+        if item.get("type") == "Fieldset":
+            if not validate_form(item["props"]["children"]):
+                return False
+        elif item["props"].get("required") and not item["props"].get("value"):
+            return False
+    return True
 
 
 def add_space_between_capitals(s: str) -> str:
