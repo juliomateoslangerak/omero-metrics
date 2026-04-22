@@ -1,3 +1,4 @@
+import dataclasses
 import re
 from dataclasses import fields
 from typing import Union, get_args, get_origin
@@ -19,9 +20,15 @@ FIELD_TYPE_MAPPING = {
 
 
 def extract_form_data(form_content):
-    return {
-        i["props"]["id"].split(":")[1]: i["props"]["value"] for i in form_content
-    }
+    result = {}
+    for item in form_content:
+        if item.get("type") == "Fieldset":
+            field_name = item["props"]["id"].split(":")[-1]
+            result[field_name] = extract_form_data(item["props"]["children"])
+        else:
+            field_name = item["props"]["id"].split(":")[1]
+            result[field_name] = item["props"]["value"]
+    return result
 
 
 def disable_all_fields_dash_form(form):
@@ -40,6 +47,7 @@ def get_field_types(field):
         "type": None,
         "optional": False,
         "default": field.default,
+        "is_dataclass": False,
     }
     if get_origin(field.type) is Union:
         args = get_args(field.type)
@@ -48,16 +56,30 @@ def get_field_types(field):
             data_type["optional"] = True
             args = [arg for arg in args if arg is not type(None)]
 
+        # Check for a nested dataclass before scalar type matching
+        dc_args = [a for a in args if dataclasses.is_dataclass(a)]
+        if dc_args:
+            data_type["type"] = dc_args[0]
+            data_type["is_dataclass"] = True
+            return data_type
+
         # Select type by priority based on FIELD_TYPE_MAPPING order
-        selected_type = None
         for priority_type in FIELD_TYPE_MAPPING.keys():
             if priority_type in args:
-                selected_type = priority_type
+                data_type["type"] = priority_type
                 break
 
-        data_type["type"] = selected_type
+    elif dataclasses.is_dataclass(field.type):
+        data_type["type"] = field.type
+        data_type["is_dataclass"] = True
+
     elif field.type in FIELD_TYPE_MAPPING.keys():
         data_type["type"] = field.type
+
+    else:
+        raise TypeError(
+            f"A corresponding datatype could not be found for form field {field}"
+        )
 
     return data_type
 
@@ -102,7 +124,7 @@ def add_space_between_capitals(s: str) -> str:
     return label
 
 
-def get_form(mm_object, disabled=False, form_id="form_content"):
+def get_form(mm_dataclass, disabled=False, form_id="form_content"):
     form_content = dmc.Fieldset(
         id=form_id,
         children=[],
@@ -111,8 +133,18 @@ def get_form(mm_object, disabled=False, form_id="form_content"):
         variant="filled",
         radius="md",
     )
-    for field in fields(mm_object):
-        form_content.children.append(
-            get_dmc_field_input(field, mm_object, disabled=disabled)
-        )
+    for field in fields(mm_dataclass):
+        field_info = get_field_types(field)
+        if field_info["is_dataclass"]:
+            form_content.children.append(
+                get_form(
+                    mm_dataclass=field_info["type"],
+                    disabled=disabled,
+                    form_id=f"{form_id}:{field.name}",
+                )
+            )
+        elif field_info["type"] is not None:
+            form_content.children.append(
+                get_dmc_field_input(field, mm_dataclass, disabled=disabled)
+            )
     return form_content
