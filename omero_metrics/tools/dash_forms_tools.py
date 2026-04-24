@@ -141,7 +141,8 @@ def get_form(mm_dataclass, disabled=False, form_id="form_content"):
         if field_info["is_dataclass"]:
             form_content.children.append(
                 get_form(
-                    mm_dataclass=field_info["type"],
+                    mm_dataclass=getattr(mm_dataclass, field.name)
+                    or field_info["type"],
                     disabled=disabled,
                     form_id=f"{form_id}:{field.name}",
                 )
