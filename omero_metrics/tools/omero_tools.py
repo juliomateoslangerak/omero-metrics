@@ -358,7 +358,7 @@ def get_image_intensities(
         zct_tile_list = [(z, c, t, tile_region) for z, c, t in zct_list]
         np.stack(list(pixels.getTiles(zctTileList=zct_tile_list)), out=intensities)
 
-    intensities = np.reshape(intensities, newshape=output_shape)
+    intensities = np.reshape(intensities, shape=output_shape)
 
     return intensities
 
