@@ -367,7 +367,9 @@ def run_analysis_view(request, conn=None, **kwargs):
             try:
                 if comment:
                     mm_comment = mm_schema.Comment(
-                        datetime=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        comment_datetime=datetime.now().strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        ),
                         text=comment,
                         comment_type="PROCESSING",
                     )
