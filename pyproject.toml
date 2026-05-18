@@ -21,7 +21,7 @@ maintainers = [
 keywords = ["microscopy", "metrology", "OMERO"]
 license = {text = "GPL-3.0-only"}
 readme = "README.md"
-requires-python = ">=3.9.18,<3.13"
+requires-python = ">=3.10,<3.13"
 dynamic = [
     "classifiers",
     "dependencies",
@@ -42,7 +42,6 @@ classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -53,48 +52,45 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-bootstrap4 = "*"  # Verify this dependency
-django-plotly-dash = "*" #"2.4.3"  # current 2.5
-dash = "*" #">=2.18.0,<3.0"  # current 3.2.0
-plotly = "*" #"5.20.0"  # current 6.3.1
+bootstrap4 = ">=0.1.0,<1.0"
+django-plotly-dash = ">=2.5.0,<3.0"
+dash = ">=4.1.0,<5.0"
+plotly = ">=6.7.0,<7.0"
 dpd_static_support = "0.0.5"
-dash-bootstrap-components = "*"  # current "2.0.4"
-django-bootstrap4 = "*"  # current 25.2
-dash-mantine-components = "*" #"0.14.5"  # current 2.3.0
-dash-iconify = "*"  # current "0.1.2"
-openpyxl = "*"  # TODO: remove dependency
-dash-renderer = "*"  # current "1.9.1"
+dash-bootstrap-components = ">=2.0.4,<3.0"
+django-bootstrap4 = ">=25.2,<27.0"
+dash-mantine-components = ">=2.7.0,<3.0"
+dash-iconify = ">=0.1.2,<1.0"
+openpyxl = ">=3.1.5,<4.0"
+dash-renderer = ">=1.9.1,<2.0"
 microscopemetrics = { git = "https://github.com/juliomateoslangerak/microscope-metrics.git", branch = "dev"}
 
 
 [tool.poetry.group.test.dependencies]
-pytest = "^8"
-pytest-django = "4.11.1"
-hypothesis = "^6"
+pytest = ">=8.0.0,<9.0"
+pytest-django = ">=4.11.1,<5.0"
+hypothesis = ">=6.0.0,<7.0"
 
 [tool.poetry.group.dev.dependencies]
-omero-web = "<5.31" # current "5.29.2"
+omero-web = ">=5.29.3,<5.31"
 # We provide links to GlencoeSoftware's precompiled binaries
 # see https://www.glencoesoftware.com/blog/2023/12/08/ice-binaries-for-omero.html
 zeroc-ice = [
-    { platform = "linux", python = "3.9", url = "https://github.com/glencoesoftware/zeroc-ice-py-linux-x86_64/releases/download/20240202/zeroc_ice-3.6.5-cp39-cp39-manylinux_2_28_x86_64.whl"},
     { platform = "linux", python = "3.10", url = "https://github.com/glencoesoftware/zeroc-ice-py-linux-x86_64/releases/download/20240202/zeroc_ice-3.6.5-cp310-cp310-manylinux_2_28_x86_64.whl"},
     { platform = "linux", python = "3.11", url = "https://github.com/glencoesoftware/zeroc-ice-py-linux-x86_64/releases/download/20240202/zeroc_ice-3.6.5-cp311-cp311-manylinux_2_28_x86_64.whl"},
     { platform = "linux", python = "3.12", url = "https://github.com/glencoesoftware/zeroc-ice-py-linux-x86_64/releases/download/20240202/zeroc_ice-3.6.5-cp312-cp312-manylinux_2_28_x86_64.whl"},
-    { platform = "darwin", python = "3.9", url = "https://github.com/glencoesoftware/zeroc-ice-py-macos-x86_64/releases/download/20231130/zeroc_ice-3.6.5-cp39-cp39-macosx_11_0_x86_64.whl"},
     { platform = "darwin", python = "3.10", url = "https://github.com/glencoesoftware/zeroc-ice-py-macos-universal2/releases/download/20240131/zeroc_ice-3.6.5-cp310-cp310-macosx_11_0_universal2.whl"},
     { platform = "darwin", python = "3.11", url = "https://github.com/glencoesoftware/zeroc-ice-py-macos-universal2/releases/download/20240131/zeroc_ice-3.6.5-cp311-cp311-macosx_11_0_universal2.whl"},
     { platform = "darwin", python = "3.12", url = "https://github.com/glencoesoftware/zeroc-ice-py-macos-universal2/releases/download/20240131/zeroc_ice-3.6.5-cp312-cp312-macosx_11_0_universal2.whl"},
-    { platform = "win32", python = "3.9", url = "https://github.com/glencoesoftware/zeroc-ice-py-win-x86_64/releases/download/20240325/zeroc_ice-3.6.5-cp39-cp39-win_amd64.whl"},
     { platform = "win32", python = "3.10", url = "https://github.com/glencoesoftware/zeroc-ice-py-win-x86_64/releases/download/20240325/zeroc_ice-3.6.5-cp310-cp310-win_amd64.whl"},
     { platform = "win32", python = "3.11", url = "https://github.com/glencoesoftware/zeroc-ice-py-win-x86_64/releases/download/20240325/zeroc_ice-3.6.5-cp311-cp311-win_amd64.whl"},
     { platform = "win32", python = "3.12", url = "https://github.com/glencoesoftware/zeroc-ice-py-win-x86_64/releases/download/20240325/zeroc_ice-3.6.5-cp312-cp312-win_amd64.whl"}
 ]
 
-black = "^25"
-poetry = "^2"
-isort = "^6"
-pre-commit = "^4"
+black = ">=25.0.0,<26.0"
+poetry = ">=2.0.0,<3.0"
+isort = ">=6.0.0,<7.0"
+pre-commit = ">=4.0.0,<5.0"
 
 [tool.poetry.requires-plugins]
 poetry-dynamic-versioning = ">=1.5.2"  # current 1.8.2
