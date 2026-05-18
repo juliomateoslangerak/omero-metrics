@@ -131,7 +131,7 @@ class DatasetManager:
         if isinstance(omero_dataset, DatasetWrapper):
             self.omero_dataset = omero_dataset
         else:
-            raise ValueError("dataset must be a DatasetWrapper")
+            raise ValueError("omero_dataset must be a DatasetWrapper")
         self.omero_project = self.omero_dataset.getParent()
         self.input_parameters = None
         self.mm_dataset = None
@@ -311,7 +311,10 @@ class ProjectManager:
 
     def __init__(self, conn: BlitzGateway, omero_project: ProjectWrapper):
         self._conn = conn
-        self.omero_project = omero_project
+        if isinstance(omero_project, ProjectWrapper):
+            self.omero_project = omero_project
+        else:
+            raise ValueError("omero_project must be a ProjectWrapper")
         self.mm_dataset_collection = None
         self.unprocessed_datasets = set()
         self.input_parameters = None
