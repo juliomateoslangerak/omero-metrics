@@ -30,48 +30,38 @@ logger = logging.getLogger(__name__)
 
 def get_annotations_tables(conn, group_id):
     all_annotations = conn.getObjects("Annotation", opts={"group": group_id})
-    file_ann_cols = [
-        "Name",
-        "ID",
-        "File_ID",
-        "Description",
-        "Date",
-        "Owner",
-        "NS",
-    ]
-    file_ann_rows = []
-    map_ann_cols = ["Name", "ID", "Description", "Date", "Owner", "NS"]
-    map_ann_rows = []
+    file_anns = []
+    map_anns = []
     for ann in all_annotations:
         if ann.getNs() and ann.getNs().startswith("microscopemetrics"):
             if isinstance(ann, FileAnnotationWrapper):
-                file_ann_rows.append(
-                    [
-                        ann.getFile().getName(),
-                        ann.getId(),
-                        ann.getFile().getId(),
-                        ann.getDescription(),
-                        ann.getDate(),
-                        ann.getOwner().getName(),
-                        ann.getNs(),
-                    ]
+                file_anns.append(
+                    {
+                        "name": ann.getFile().getName(),
+                        "id": ann.getId(),
+                        "file_id": ann.getFile().getId(),
+                        "description": ann.getDescription(),
+                        "annotation_date": ann.getDate().isoformat(
+                            timespec="seconds"
+                        ),
+                        "owner": ann.getOwner().getName(),
+                        "ns": ann.getNs(),
+                    }
                 )
             elif isinstance(ann, omero.gateway.MapAnnotationWrapper):
-                map_ann_rows.append(
-                    [
-                        ann.getName(),
-                        ann.getId(),
-                        ann.getDescription(),
-                        ann.getDate(),
-                        ann.getOwner().getName(),
-                        ann.getNs(),
-                    ]
+                map_anns.append(
+                    {
+                        "name": ann.getName(),
+                        "id": ann.getId(),
+                        "description": ann.getDescription(),
+                        "annotation_date": ann.getDate().isoformat(
+                            timespec="seconds"
+                        ),
+                        "owner": ann.getOwner().getName(),
+                        "ns": ann.getNs(),
+                    }
                 )
-    file_ann_df = pd.DataFrame(file_ann_rows, columns=file_ann_cols)
-    map_ann_df = pd.DataFrame(map_ann_rows, columns=map_ann_cols)
-    file_ann_df["Date"] = pd.to_datetime(file_ann_df["Date"])
-    map_ann_df["Date"] = pd.to_datetime(map_ann_df["Date"])
-    return file_ann_df, map_ann_df
+    return file_anns, map_anns
 
 
 def get_annotations_list_group(conn, group_id):

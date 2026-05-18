@@ -5,6 +5,7 @@ from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_sc
 from omero.gateway import (
     BlitzGateway,
     DatasetWrapper,
+    ExperimenterGroupWrapper,
     ImageWrapper,
     ProjectWrapper,
 )
@@ -407,7 +408,7 @@ class ProjectManager:
             self.thresholds = load.load_thresholds_file(self.omero_project)
 
 
-class MicroscopeManager:
+class ExperimenterGroupManager:
     """
     This class is a unit of work that processes
     data from a microscope (omero-metrics)
@@ -415,12 +416,41 @@ class MicroscopeManager:
     to interact with OMERO and load and dump data.
     """
 
-    def __init__(self, conn: BlitzGateway, microscope_id: int):
+    def __init__(
+        self, conn: BlitzGateway, omero_experimenter_group: ExperimenterGroupWrapper
+    ):
         self._conn = conn
-        self.microscope_id = microscope_id
-        self.microscope = conn.getObject("Microscope", microscope_id)
-        self.data = None
-        self.context = None
+        if isinstance(omero_experimenter_group, ExperimenterGroupWrapper):
+            self.omero_experimenter_group = omero_experimenter_group
+            self.omero_experimenter_group_id = self.omero_experimenter_group.getId()
+        else:
+            raise ValueError(
+                "omero_experimenter_group must be an ExperimenterGroupWrapper"
+            )
+        self.file_ann_table = None
+        self.map_ann_table = None
+        self.experimenters = []
+        self.context = {}
+
+    def load_data(self, force_reload=False):
+        if (
+            self.map_ann_table is not None
+            and self.file_ann_table is not None
+            and not force_reload
+        ):
+            return
+        self.file_ann_table, self.map_ann_table = load.get_annotations_tables(
+            self._conn,
+            self.omero_experimenter_group_id,
+        )
+        self.experimenters = self.omero_experimenter_group.loadLeadersAndMembers()
+
+    def load_context(self):
+        self.load_data()
+        if not self.file_ann_table or not self.map_ann_table:
+            context_loaders.EmptyMetricsDatasetCollections(self)
+        else:
+            context_loaders.MetricsDatasetCollections(self)
 
     def visualize_data(self):
         pass
