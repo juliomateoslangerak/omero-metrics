@@ -108,7 +108,7 @@ dash_app_group.layout = dmc.MantineProvider(
                     dmc.SimpleGrid(
                         id="microscope-cards-grid",
                         children=[],
-                        cols={"base": 2, "lg": 3},
+                        cols={"base": 3, "lg": 4},
                         spacing="md",
                         style=CONTAINER_STYLE,
                     ),
@@ -228,6 +228,61 @@ dash_app_group.layout = dmc.MantineProvider(
 )
 
 
+def _make_card(
+    last_acquisition_date, analysis_class, project_name, project_description
+):
+    return dmc.Card(
+        children=[
+            dmc.CardSection(
+                dmc.Image(
+                    src=f"/static/omero_metrics/images/assay_images/{analysis_class}.png",
+                    h=140,
+                    alt=analysis_class,
+                )
+            ),
+            dmc.Stack(
+                [
+                    dmc.Group(
+                        [
+                            dmc.Title(
+                                last_acquisition_date,
+                                c=THEME["primary"],
+                                size="h3",
+                            ),
+                            dmc.Text(
+                                analysis_class[:-7],
+                                c=THEME["primary"],
+                                size="md",
+                            ),
+                        ],
+                        justify="space-between",
+                    ),
+                    dmc.Text(
+                        project_name,
+                        c=THEME["text"]["secondary"],
+                        size="md",
+                    ),
+                ],
+                gap=0,
+                # justify="space-between",
+                # align="center",
+            ),
+            dmc.Divider(my="sm"),
+            dmc.Stack(
+                [
+                    dmc.Text(f"{project_name}", size="sm"),
+                    dmc.Text(f"{project_description}", size="sm"),
+                ],
+                gap="xs",
+            ),
+        ],
+        withBorder=True,
+        shadow="md",
+        radius="xl",
+        # p="lg",  # padding
+    )
+
+
 @dash_app_group.expanded_callback(
     dash.dependencies.Output("date-picker", "value"),
     dash.dependencies.Output("date-picker", "minDate"),
@@ -235,9 +290,13 @@ dash_app_group.layout = dmc.MantineProvider(
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_date_range(*args, **kwargs):
-    df = kwargs["session_state"]["context"]["file_ann"]
-    min_date = df.Date.min()
-    max_date = df.Date.max()
+    project_contexts = kwargs["session_state"]["context"]["project_contexts"]
+    dates = [ctx["min_date"] for ctx in project_contexts if ctx.get("min_date")]
+    dates += [ctx["max_date"] for ctx in project_contexts if ctx.get("max_date")]
+    if not dates:
+        return dash.no_update, dash.no_update, dash.no_update
+    min_date = min(dates)
+    max_date = max(dates)
     return [min_date, max_date], min_date, max_date
 
 
@@ -246,54 +305,16 @@ def update_date_range(*args, **kwargs):
     dash.dependencies.Input("blank-input", "children"),
 )
 def render_content(*args, **kwargs):
-    group_name = kwargs["session_state"]["context"]["experimenter_group_name"]
-    group_id = kwargs["session_state"]["context"]["experimenter_group_id"]
-    group_description = kwargs["session_state"]["context"][
-        "experimenter_group_description"
-    ]
-
-    def make_card(title, description):
-        return dmc.Card(
-            children=[
-                dmc.Group(
-                    [
-                        html.Img(
-                            src="/static/omero_metrics/images/microscope.png",
-                            style={"width": "100px", "objectFit": "contain"},
-                        ),
-                        dmc.Stack(
-                            [
-                                dmc.Title(title, c=THEME["primary"], size="h3"),
-                                dmc.Text(description, c="dimmed", size="sm"),
-                            ],
-                            gap=5,
-                        ),
-                    ],
-                    justify="space-between",
-                    align="center",
-                ),
-                dmc.Divider(my="sm"),
-                dmc.Stack(
-                    [
-                        dmc.Text(f"Group: {group_name}", size="sm"),
-                        dmc.Text(f"ID: {group_id}", size="sm"),
-                        dmc.Text(f"Description: {group_description}", size="sm"),
-                    ],
-                    gap="xs",
-                ),
-            ],
-            withBorder=True,
-            shadow="sm",
-            radius="md",
-            p="lg",
-        )
-
     return [
-        make_card(
-            "Microscope Health Dashboard",
-            "View information about your microscope group",
+        _make_card(
+            last_acquisition_date=(
+                proj_ctx["max_date"][:10] if proj_ctx["max_date"] else "No data"
+            ),
+            analysis_class=proj_ctx["dataset_class"] or "Not analyzed",
+            project_name=proj_ctx["project_name"],
+            project_description=proj_ctx["project_description"] or "",
         )
-        for _ in range(6)
+        for proj_ctx in kwargs["session_state"]["context"]["project_contexts"]
     ]
 
 
@@ -305,15 +326,15 @@ def render_content(*args, **kwargs):
     prevent_initial_call=True,
 )
 def load_table_project(dates, **kwargs):
-    file_ann = kwargs["session_state"]["context"]["file_ann"]
+    context = kwargs["session_state"]["context"]
+    file_ann = context.get("file_ann")
+    if file_ann is None:
+        return dash.no_update
     if dates is not None:
         file_ann = file_ann[
             (file_ann["Date"].dt.date >= pd.to_datetime(dates[0]).date())
             & (file_ann["Date"].dt.date <= pd.to_datetime(dates[1]).date())
         ]
-
-    else:
-        pass
 
     file_ann_subset = file_ann[
         file_ann.columns[~file_ann.columns.str.contains("ID")]

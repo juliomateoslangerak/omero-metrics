@@ -160,6 +160,11 @@ def EmptyMetricsDatasetCollection(pm):
     pm.load_thresholds()
     context = {
         "project_id": int(pm.omero_project.getId()),
+        "project_name": pm.omero_project.getName(),
+        "project_description": pm.omero_project.getDescription() or "",
+        "dataset_class": None,
+        "min_date": None,
+        "max_date": None,
         "unprocessed_datasets": list(pm.unprocessed_datasets),
         "input_parameters": pm.input_parameters,
         "sample": pm.sample,
@@ -230,6 +235,9 @@ def HarmonizedMetricsDatasetCollection(pm):
         )
     context = {
         "project_id": int(pm.omero_project.getId()),
+        "dataset_class": pm.mm_dataset_collection.dataset_class,
+        "project_name": pm.mm_dataset_collection.name,
+        "project_description": pm.mm_dataset_collection.description,
         "key_measurements_by_kkm": collection_key_measurements_by_kkm,
         "key_measurements_by_dataset_id": collection_key_measurements_by_dataset_id,
         "channels": list(channels),

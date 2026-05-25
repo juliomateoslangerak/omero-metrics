@@ -7,7 +7,6 @@ INPUT_IMAGES_MAPPING = {
     "PSFBeadsDataset": "psf_beads_images",
 }
 
-
 DATASET_IMAGES = {
     "FieldIlluminationDataset": {
         "input_data": ["field_illumination_images"],
@@ -35,7 +34,6 @@ DATA_TYPE = {
 }
 
 # All the selected kkm should be numerical.
-
 KKM_MAPPINGS = {
     "FieldIlluminationDataset": [
         "max_intensity",
