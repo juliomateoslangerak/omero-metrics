@@ -323,7 +323,7 @@ class ProjectManager:
         self.app_name = None
         self.context = {}
 
-    def load_data(self, force_reload=False):
+    def load_data(self, force_reload: bool = False):
         if self.mm_dataset_collection is not None and not force_reload:
             return
         datasets_types = set()
@@ -357,6 +357,12 @@ class ProjectManager:
     def is_harmonized(self):
         return isinstance(
             self.mm_dataset_collection, mm_schema.HarmonizedMetricsDatasetCollection
+        )
+
+    def sort_by_acquisition_datetime(self):
+        self.mm_dataset_collection.dataset_collection = sorted(
+            self.mm_dataset_collection.dataset_collection,
+            key=lambda x: x.acquisition_datetime,
         )
 
     def load_context(self):
@@ -430,27 +436,26 @@ class ExperimenterGroupManager:
             raise ValueError(
                 "omero_experimenter_group must be an ExperimenterGroupWrapper"
             )
-        self.file_ann_table = None
-        self.map_ann_table = None
+        self.mm_dataset_collections = []
         self.experimenters = []
         self.context = {}
 
     def load_data(self, force_reload=False):
-        if (
-            self.map_ann_table is not None
-            and self.file_ann_table is not None
-            and not force_reload
-        ):
+        if self.mm_dataset_collections and not force_reload:
             return
-        self.file_ann_table, self.map_ann_table = load.get_annotations_tables(
-            self._conn,
-            self.omero_experimenter_group_id,
-        )
+        for project in self._conn.getObjects(
+            "Project", opts={"group": self.omero_experimenter_group_id}
+        ):
+            pm = ProjectManager(self._conn, project)
+            pm.load_data()
+            pm.sort_by_acquisition_datetime()
+            self.mm_dataset_collections.append(pm)
+
         self.experimenters = self.omero_experimenter_group.loadLeadersAndMembers()
 
     def load_context(self):
         self.load_data()
-        if not self.file_ann_table or not self.map_ann_table:
+        if not self.mm_dataset_collections:
             context_loaders.EmptyMetricsDatasetCollections(self)
         else:
             context_loaders.MetricsDatasetCollections(self)

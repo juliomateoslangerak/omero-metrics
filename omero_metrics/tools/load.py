@@ -28,12 +28,12 @@ from omero_metrics.tools.data_type import (
 logger = logging.getLogger(__name__)
 
 
-def get_annotations_tables(conn, group_id):
+def get_annotations_tables(conn, group_id, ns_filter="microscopemetrics"):
     all_annotations = conn.getObjects("Annotation", opts={"group": group_id})
     file_anns = []
     map_anns = []
     for ann in all_annotations:
-        if ann.getNs() and ann.getNs().startswith("microscopemetrics"):
+        if ann.getNs() and ns_filter in ann.getNs():
             if isinstance(ann, FileAnnotationWrapper):
                 file_anns.append(
                     {
@@ -64,7 +64,7 @@ def get_annotations_tables(conn, group_id):
     return file_anns, map_anns
 
 
-def get_annotations_list_group(conn, group_id):
+def get_last_datasets_in_projects(conn, group_id):
     projects = conn.getObjects("Project", opts={"group": group_id})
     data = []
     columns = [

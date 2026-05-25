@@ -33,7 +33,7 @@ SHAPE_TO_FUNCTION = {
 def dump_microscope(
     conn: BlitzGateway,
     microscope: mm_schema.Microscope,
-    target_group: ExperimenterGroupWrapper = None,
+    target_group: ExperimenterGroupWrapper | None = None,
 ) -> ExperimenterGroupWrapper:
     """
     This function is dumping the microscope metadata into an existing Group in OMERO.
@@ -155,6 +155,46 @@ def _remove_unsupported_types(
                 continue
 
 
+def _dump_last_key_measurement_as_project_mapping_annotation(
+    conn: BlitzGateway,
+    mm_dataset: mm_schema.MetricsDataset,
+    target_project: ProjectWrapper,
+):
+    # TODO: add namespaces to omero-metrics
+    # TODO: delete the last measurements upon project deletion
+    last_key_measurement = target_project.getAnnotation(
+        ns="omero-metrics:last-key-key-measurement"
+    )
+    if last_key_measurement is None:
+        omero_tools.create_key_value(
+            conn=conn,
+            annotation=dict(
+                acquisition_datetime=mm_dataset.acquisition_datetime,
+                **{
+                    str(i): v._as_json
+                    for i, v in enumerate(mm_dataset.output.key_measurements)
+                },
+            ),
+            omero_object=target_project,
+            annotation_name="last Key Measurements",
+            annotation_description="Last Key Key Measurements acquired for this Study",
+            namespace="omero-metrics:last-key-key-measurement",
+        )
+    else:
+        existing_kv = {v[0]: v[1] for v in last_key_measurement.getValue()}
+        if existing_kv["acquisition_datetime"] < mm_dataset.acquisition_datetime:
+            omero_tools.update_map_annotation(
+                annotation=last_key_measurement,
+                updated_annotation=dict(
+                    acquisition_datetime=mm_dataset.acquisition_datetime,
+                    **{
+                        str(i): v._as_json
+                        for i, v in enumerate(mm_dataset.output.key_measurements)
+                    },
+                ),
+            )
+
+
 def _dump_mm_dataset_as_file_annotation(
     conn: BlitzGateway,
     mm_dataset: mm_schema.MetricsDataset,
@@ -199,7 +239,8 @@ def dump_dataset(
     dump_input_images: bool = False,
     dump_analysis: bool = True,
     dump_as_project_file_annotation: bool = True,
-    dump_as_dataset_file_annotation: bool = False,
+    dump_as_dataset_file_annotation: bool = True,
+    replace_project_last_key_measurement: bool = True,
 ) -> DatasetWrapper:
 
     if dataset.data_reference:
@@ -289,6 +330,11 @@ def dump_dataset(
     except Exception as e:
         logger.error(f"Dataset {dataset.name} could not be dumped to OMERO: {e}")
         raise e
+
+    if replace_project_last_key_measurement:
+        _dump_last_key_measurement_as_project_mapping_annotation(
+            conn=conn, mm_dataset=dataset, target_project=target_project
+        )
 
     return omero_dataset
 

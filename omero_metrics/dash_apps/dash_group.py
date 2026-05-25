@@ -105,49 +105,11 @@ dash_app_group.layout = dmc.MantineProvider(
                     style={"backgroundColor": THEME["surface"]},
                 ),
                 dmc.TabsPanel(
-                    dmc.Container(
-                        [
-                            dmc.Paper(
-                                children=[
-                                    dmc.Group(
-                                        [
-                                            html.Img(
-                                                src="/static/omero_metrics/images/microscope.png",
-                                                style={
-                                                    "width": "100px",
-                                                    "objectFit": "contain",
-                                                },
-                                            ),
-                                            dmc.Stack(
-                                                [
-                                                    dmc.Title(
-                                                        "Microscope Health Dashboard",
-                                                        c=THEME["primary"],
-                                                        size="h3",
-                                                    ),
-                                                    dmc.Text(
-                                                        "View information about your microscope group",
-                                                        c="dimmed",
-                                                        size="sm",
-                                                    ),
-                                                ],
-                                                gap=5,
-                                            ),
-                                        ],
-                                        justify="space-between",
-                                        align="center",
-                                    ),
-                                    dmc.Divider(mb="md"),
-                                    html.Div(id="microscope_info"),
-                                ],
-                                withBorder=True,
-                                shadow="sm",
-                                radius="md",
-                                p="lg",
-                                style=PAPER_STYLE,
-                            ),
-                        ],
-                        fluid=True,
+                    dmc.SimpleGrid(
+                        id="microscope-cards-grid",
+                        children=[],
+                        cols={"base": 2, "lg": 3},
+                        spacing="md",
                         style=CONTAINER_STYLE,
                     ),
                     value="microscope_health",
@@ -280,23 +242,59 @@ def update_date_range(*args, **kwargs):
 
 
 @dash_app_group.expanded_callback(
-    dash.dependencies.Output("microscope_info", "children"),
+    dash.dependencies.Output("microscope-cards-grid", "children"),
     dash.dependencies.Input("blank-input", "children"),
 )
 def render_content(*args, **kwargs):
-    group_name = kwargs["session_state"]["context"]["group_name"]
-    group_id = kwargs["session_state"]["context"]["group_id"]
-    group_description = kwargs["session_state"]["context"]["group_description"]
-    return dmc.Stack(
-        [
-            dmc.Title("Microscope Information", c=THEME["primary"], order=4),
-            dmc.Text(f"Group Name: {group_name}", size="sm"),
-            dmc.Text(f"Group ID: {group_id}", size="sm"),
-            dmc.Text(f"Group Description: {group_description}", size="sm"),
-        ],
-        align="flex-start",
-        gap="xs",
-    )
+    group_name = kwargs["session_state"]["context"]["experimenter_group_name"]
+    group_id = kwargs["session_state"]["context"]["experimenter_group_id"]
+    group_description = kwargs["session_state"]["context"][
+        "experimenter_group_description"
+    ]
+
+    def make_card(title, description):
+        return dmc.Card(
+            children=[
+                dmc.Group(
+                    [
+                        html.Img(
+                            src="/static/omero_metrics/images/microscope.png",
+                            style={"width": "100px", "objectFit": "contain"},
+                        ),
+                        dmc.Stack(
+                            [
+                                dmc.Title(title, c=THEME["primary"], size="h3"),
+                                dmc.Text(description, c="dimmed", size="sm"),
+                            ],
+                            gap=5,
+                        ),
+                    ],
+                    justify="space-between",
+                    align="center",
+                ),
+                dmc.Divider(my="sm"),
+                dmc.Stack(
+                    [
+                        dmc.Text(f"Group: {group_name}", size="sm"),
+                        dmc.Text(f"ID: {group_id}", size="sm"),
+                        dmc.Text(f"Description: {group_description}", size="sm"),
+                    ],
+                    gap="xs",
+                ),
+            ],
+            withBorder=True,
+            shadow="sm",
+            radius="md",
+            p="lg",
+        )
+
+    return [
+        make_card(
+            "Microscope Health Dashboard",
+            "View information about your microscope group",
+        )
+        for _ in range(6)
+    ]
 
 
 @dash_app_group.expanded_callback(

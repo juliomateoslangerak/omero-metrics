@@ -246,14 +246,15 @@ def HarmonizedMetricsDatasetCollection(pm):
 
 
 def MetricsDatasetCollections(gm):
-    gm.load_data()
+    # gm.load_data()
+    for pm in gm.mm_dataset_collections:
+        pm.load_context()
     context = {
         "experimenter_group_id": int(gm.omero_experimenter_group_id),
         "experimenter_group_name": gm.omero_experimenter_group.getName(),
         "experimenter_group_description": gm.omero_experimenter_group.getDescription(),
         "experimenters": gm.experimenters,
-        "file_ann_table": gm.file_ann_table,
-        "map_ann_table": gm.map_ann_table,
+        "project_contexts": [p.context for p in gm.mm_dataset_collections],
     }
     gm.context = serialize(context)
 

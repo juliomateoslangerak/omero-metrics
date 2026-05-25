@@ -133,7 +133,7 @@ def center_viewer_group(request, conn=None, **kwargs):
         active_group_wrapper = conn.getObject("ExperimenterGroup", active_group_id)
         gm = data_managers.ExperimenterGroupManager(conn, active_group_wrapper)
         gm.load_context()
-        if not gm.file_ann_table or not gm.file_ann_table:
+        if not gm.mm_dataset_collections:
             dash_context["context"] = {
                 "message": "This group does not have any analysis."
             }
