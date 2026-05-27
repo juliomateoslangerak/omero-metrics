@@ -343,15 +343,17 @@ omero_project_dash.layout = dmc.MantineProvider(
 def update_dropdown(*args, **kwargs):
     try:
         context = deserialize(kwargs["session_state"]["context"])
-        kkm = context["kkm"]
-        kkm = [k.replace("_", " ").title() for k in kkm]
+        kkm_config = context["kkm_config"]
+        kkm_options = [
+            {"value": str(i), "label": k["display_name"]}
+            for i, k in enumerate(kkm_config)
+        ]
 
         # Parse datetime strings and get min/max
         datetimes = context["dates"]
         min_date = context["min_date"]
         max_date = context["max_date"]
 
-        kkm_options = [{"value": f"{i}", "label": f"{k}"} for i, k in enumerate(kkm)]
         value_date = [min_date, max_date]
         return (
             kkm_options,
@@ -425,14 +427,14 @@ def update_table(measurement, dates_range, **kwargs):
         context = deserialize(kwargs["session_state"]["context"])
         key_measurements_by_kkm = context["key_measurements_by_kkm"]
         threshold = context["thresholds"]
-        kkm = context["kkm"]
+        kkm_config = context["kkm_config"]
         measurement = int(measurement)
 
         # Check if we have any data
         if not key_measurements_by_kkm:
             return dash.no_update
         if threshold:
-            threshold_kkm = threshold[kkm[measurement]]
+            threshold_kkm = threshold[kkm_config[measurement]]
             ref = [
                 {
                     "y": v,
@@ -448,14 +450,14 @@ def update_table(measurement, dates_range, **kwargs):
         start_date = datetime.fromisoformat(dates_range[0].split("T")[0]).date()
         end_date = datetime.fromisoformat(dates_range[1].split("T")[0]).date()
 
-        data = key_measurements_by_kkm[kkm[measurement]]
-        channels = context["channels"]
+        data = key_measurements_by_kkm[kkm_config[measurement]["value"]]
+        keys = {k for d in data for k in d if k not in ["date", "dataset_id"]}
         series = [
             {
-                "name": channel,
+                "name": k,
                 "color": COLORS_CHANNELS[i % len(COLORS_CHANNELS)],
             }
-            for i, channel in enumerate(channels)
+            for i, k in enumerate(keys)
         ]
         return data, series, ref
 

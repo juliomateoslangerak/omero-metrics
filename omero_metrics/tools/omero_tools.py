@@ -369,7 +369,7 @@ def get_tagged_images_in_dataset(dataset, tag_id):
         images.extend(
             image
             for ann in image.listAnnotations()
-            if type(ann) == TagAnnotationWrapper and ann.getId() == tag_id
+            if type(ann) is TagAnnotationWrapper and ann.getId() is tag_id
         )
     return images
 

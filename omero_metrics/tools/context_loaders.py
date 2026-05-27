@@ -140,7 +140,7 @@ def FieldIlluminationDataset(dm):
         "mm_dataset": dm.mm_dataset,
         "image_data": list_images,
         "channel_names": list_channels,
-        "kkm": [k._asdict() for k in dm.kkm],
+        "kkm": [k._asdict() for k in dm.kkm_configuration],
     }
     dm.context = serialize(context)
 
@@ -149,7 +149,7 @@ def PSFBeadsDataset(dm):
     dm.load_data(load_images=False, force_reload=True)
     context = {
         "mm_dataset": dm.mm_dataset,
-        "kkm": [k._asdict() for k in dm.kkm],
+        "kkm": [k._asdict() for k in dm.kkm_configuration],
     }
     dm.context = serialize(context)
 
@@ -180,53 +180,44 @@ def HarmonizedMetricsDatasetCollection(pm):
     dates = []
     min_date = None
     max_date = None
-    channels = set()
-    kkm_list = [
-        kkm.value
-        for kkm in ASSAY_CONFIGURATIONS[
-            pm.mm_dataset_collection.dataset_class
-        ].kkm_configuration
-    ]
-    collection_key_measurements_by_kkm = {kkm: [] for kkm in kkm_list}
+    collection_key_measurements_by_kkm = {x.value: [] for x in pm.kkm_configuration}
     collection_key_measurements_by_dataset_id = {}
     for dataset in pm.mm_dataset_collection.dataset_collection:
         if not dataset.processed:
             # In principle, omero-metrics is generating and processing datasets in one go, so this should never happen
             raise ValueError(f"Dataset {dataset.name} is not processed")
         key_measurements_by_kkm = {
-            kkm: [
+            x.value: [
                 {
                     # TODO: We are removing here time from the date, but this might bite us back at some point
                     # We should consider keeping time in the date
                     "date": dataset.acquisition_datetime.split("T")[0],
                     "dataset_id": int(dataset.data_reference.omero_object_id),
                     **{
-                        km.channel_name: km[kkm]
+                        km[x.key]: km[x.value]
                         for km in dataset.output.key_measurements
                     },
                 }
             ]
-            for kkm in kkm_list
+            for x in pm.kkm_configuration
         }
         [
-            collection_key_measurements_by_kkm[kkm].extend(
-                key_measurements_by_kkm[kkm]
+            collection_key_measurements_by_kkm[x.value].extend(
+                key_measurements_by_kkm[x.value]
             )
-            for kkm in kkm_list
+            for x in pm.kkm_configuration
         ]
         collection_key_measurements_by_dataset_id[
             int(dataset.data_reference.omero_object_id)
         ] = {
             "caption": f"{dataset.name} acquired on {dataset.acquisition_datetime}",
-            "head": [kkm.replace("_", " ").title() for kkm in kkm_list],
+            "head": [x.display_name for x in pm.kkm_configuration],
             "body": [
-                [km[kkm] for kkm in kkm_list]
+                [km[x.value] for x in pm.kkm_configuration]
                 for km in dataset.output.key_measurements
             ],
         }
-        channels = channels | {
-            km.channel_name for km in dataset.output.key_measurements
-        }
+
         dates.append(dataset.acquisition_datetime)
         min_date = (
             min(min_date, dataset.acquisition_datetime)
@@ -245,7 +236,6 @@ def HarmonizedMetricsDatasetCollection(pm):
         "project_description": pm.mm_dataset_collection.description,
         "key_measurements_by_kkm": collection_key_measurements_by_kkm,
         "key_measurements_by_dataset_id": collection_key_measurements_by_dataset_id,
-        "channels": list(channels),
         "dates": dates,
         "min_date": min_date,
         "max_date": max_date,
@@ -253,7 +243,7 @@ def HarmonizedMetricsDatasetCollection(pm):
         "input_parameters": pm.input_parameters,
         "sample": pm.sample,
         "thresholds": pm.thresholds,
-        "kkm": kkm_list,
+        "kkm_config": [k._asdict() for k in pm.kkm_configuration],
     }
     pm.context = serialize(context)
 
