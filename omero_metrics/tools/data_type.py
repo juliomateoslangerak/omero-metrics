@@ -2,6 +2,7 @@ from functools import lru_cache
 from typing import NamedTuple, get_args, get_type_hints
 
 from microscopemetrics.analyses import field_illumination, psf_beads
+from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
 from microscopemetrics_schema.datamodel.microscopemetrics_schema import Image
 
 
@@ -38,19 +39,32 @@ def get_image_fields(dataset_class) -> dict[str, list[str]]:
     return result
 
 
-DATA_TYPE = {
-    "FieldIlluminationInputParameters": [
-        "FieldIlluminationDataset",
-        "FieldIlluminationInputData",
-        "field_illumination_images",
-        field_illumination.analyse_field_illumination,
-    ],
-    "PSFBeadsInputParameters": [
-        "PSFBeadsDataset",
-        "PSFBeadsInputData",
-        "psf_beads_images",
-        psf_beads.analyse_psf_beads,
-    ],
+@lru_cache(maxsize=None)
+def get_dataset_class(input_parameters_class):
+    """Find the MetricsDataset subclass whose input_parameters field is typed as the given class."""
+    for subclass in mm_schema.MetricsDataset.__subclasses__():
+        for arg in get_args(
+            get_type_hints(subclass).get("input_parameters", None) or ()
+        ):
+            if arg is input_parameters_class:
+                return subclass
+    raise ValueError(
+        f"No Dataset class found for input parameters class {input_parameters_class}"
+    )
+
+
+@lru_cache(maxsize=None)
+def get_input_data_class(dataset_class):
+    """Resolve the InputData class from a dataset class's input_data type hint."""
+    for arg in get_args(get_type_hints(dataset_class).get("input_data")):
+        if arg is not dict and arg is not type(None):
+            return arg
+    raise ValueError(f"No InputData class found for {dataset_class}")
+
+
+ANALYSIS_FUNCTIONS = {
+    "FieldIlluminationInputParameters": field_illumination.analyse_field_illumination,
+    "PSFBeadsInputParameters": psf_beads.analyse_psf_beads,
 }
 
 

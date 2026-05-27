@@ -315,16 +315,10 @@ def run_analysis_view(request, conn=None, **kwargs):
         ]
         mm_sample = kwargs["mm_sample"]
         mm_input_parameters = kwargs["mm_input_parameters"]
-        input_data = getattr(
-            mm_schema, data_type.DATA_TYPE[mm_input_parameters.class_name][1]
-        )
-        input_data = input_data(
-            **{
-                data_type.DATA_TYPE[mm_input_parameters.class_name][
-                    2
-                ]: list_mm_images
-            }
-        )
+        dataset_class = data_type.get_dataset_class(mm_input_parameters.__class__)
+        input_data_class = data_type.get_input_data_class(dataset_class)
+        images_field = data_type.get_image_fields(dataset_class)["input_data"][0]
+        input_data = input_data_class(**{images_field: list_mm_images})
         mm_microscope = mm_schema.Microscope(
             name=project_wrapper.getDetails().getGroup().getName()
         )
@@ -333,10 +327,7 @@ def run_analysis_view(request, conn=None, **kwargs):
             orcid="0000-0002-1825-0097",
             name=conn.getUser().getName(),
         )
-        mm_dataset = getattr(
-            mm_schema, data_type.DATA_TYPE[mm_input_parameters.class_name][0]
-        )
-        mm_dataset = mm_dataset(
+        mm_dataset = dataset_class(
             name=dataset_wrapper.getName(),
             description=dataset_wrapper.getDescription(),
             data_reference=omero_tools.get_ref_from_object(dataset_wrapper),
@@ -351,7 +342,7 @@ def run_analysis_view(request, conn=None, **kwargs):
         )
         try:
             # Run the analysis
-            data_type.DATA_TYPE[mm_input_parameters.class_name][3](mm_dataset)
+            data_type.ANALYSIS_FUNCTIONS[mm_input_parameters.class_name](mm_dataset)
         except AnalysisError or SaturationError as e:
             logger.error(f"{e}")
             return "analysis_error", str(e), e.suggestion
