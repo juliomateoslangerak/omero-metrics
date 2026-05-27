@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import NamedTuple, get_args, get_type_hints
 
-from microscopemetrics.analyses import field_illumination, psf_beads
+from microscopemetrics.analyses.mappings import MAPPINGS
 from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
 from microscopemetrics_schema.datamodel.microscopemetrics_schema import Image
 
@@ -62,10 +62,12 @@ def get_input_data_class(dataset_class):
     raise ValueError(f"No InputData class found for {dataset_class}")
 
 
-ANALYSIS_FUNCTIONS = {
-    "FieldIlluminationInputParameters": field_illumination.analyse_field_illumination,
-    "PSFBeadsInputParameters": psf_beads.analyse_psf_beads,
-}
+def get_analysis_function(dataset_class):
+    """Find the analysis function for a given dataset class from microscopemetrics MAPPINGS."""
+    try:
+        return MAPPINGS[dataset_class].analysis_function
+    except KeyError:
+        raise ValueError(f"No analysis function found for {dataset_class}")
 
 
 class KKMConfig(NamedTuple):

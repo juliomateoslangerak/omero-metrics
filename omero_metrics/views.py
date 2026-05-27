@@ -342,7 +342,7 @@ def run_analysis_view(request, conn=None, **kwargs):
         )
         try:
             # Run the analysis
-            data_type.ANALYSIS_FUNCTIONS[mm_input_parameters.class_name](mm_dataset)
+            data_type.get_analysis_function(dataset_class)(mm_dataset)
         except AnalysisError or SaturationError as e:
             logger.error(f"{e}")
             return "analysis_error", str(e), e.suggestion
