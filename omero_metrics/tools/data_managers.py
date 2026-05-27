@@ -11,11 +11,7 @@ from omero.gateway import (
 )
 
 from omero_metrics.tools import context_loaders, delete, dump, load, update
-from omero_metrics.tools.data_type import (
-    KKM_MAPPINGS,
-    TEMPLATE_MAPPINGS_DATASET,
-    TEMPLATE_MAPPINGS_IMAGE,
-)
+from omero_metrics.tools.data_type import ASSAY_CONFIGURATIONS
 
 logger = logging.getLogger(__name__)
 
@@ -61,18 +57,12 @@ class ImageManager:
         self.image_index = None
         self.context = {}
         self.mm_image = None
-        self.image_exist = None
-        self.image_index = None
-        self.image_location = None
         self.app_name = None
 
     def load_context(self):
         self.load_data()
         if self.dataset_manager.is_processed():
-            if (
-                self.dataset_manager.mm_dataset.__class__.__name__
-                in TEMPLATE_MAPPINGS_DATASET
-            ):
+            try:
                 # TODO: move the image_exists call to the load_data method
                 (
                     self.image_exist,
@@ -82,9 +72,9 @@ class ImageManager:
                     self.omero_image.getId(), self.dataset_manager.mm_dataset
                 )
                 if self.image_exist:
-                    self.app_name = TEMPLATE_MAPPINGS_IMAGE.get(
+                    self.app_name = ASSAY_CONFIGURATIONS.get(
                         self.dataset_manager.mm_dataset.__class__.__name__
-                    )[self.image_location]
+                    ).image_app_name[self.image_location]
                     IMAGE_CONTEXT_LOADERS[
                         self.dataset_manager.mm_dataset.__class__.__name__
                     ][self.image_location](self)
@@ -92,7 +82,7 @@ class ImageManager:
                     message = "Image does not exist in the dataset yaml file. Unable to visualize"
                     logger.warning(message)
                     self.context, self.app_name = warning_message(message)
-            else:
+            except KeyError as e:
                 message = "Unknown analysis type. Unable to visualize"
                 logger.warning(message)
                 self.context, self.app_name = warning_message(message)
@@ -162,13 +152,13 @@ class DatasetManager:
     def load_context(self):
         self.load_data(load_images=False)
         if self.is_processed():
-            if self.mm_dataset.__class__.__name__ in TEMPLATE_MAPPINGS_DATASET:
-                self.app_name = TEMPLATE_MAPPINGS_DATASET.get(
+            try:
+                self.app_name = ASSAY_CONFIGURATIONS[
                     self.mm_dataset.__class__.__name__
-                )
+                ].assay_app_name
                 DATASET_CONTEXT_LOADERS[self.mm_dataset.__class__.__name__](self)
 
-            else:
+            except KeyError as e:
                 message = "Unknown analysis type. Unable to visualize"
                 logger.warning(message)
                 self.context, self.app_name = warning_message(message)
@@ -199,7 +189,13 @@ class DatasetManager:
     def load_data(self, load_images: bool, force_reload: bool = False):
         if force_reload or self.mm_dataset is None:
             self.mm_dataset = load.load_dataset(self.omero_dataset, load_images)
-            self.kkm = KKM_MAPPINGS.get(self.mm_dataset.__class__.__name__)
+            if self.mm_dataset is not None:
+                self.kkm = [
+                    kkm
+                    for kkm in ASSAY_CONFIGURATIONS[
+                        self.mm_dataset.__class__.__name__
+                    ].kkm_configuration
+                ]
         else:
             raise NotImplementedError(
                 "partial loading of data from OMERO is not yet implemented"
@@ -371,7 +367,7 @@ class ProjectManager:
             # Empty project or non-analyzed we cannot know if it is harmonized or not
             context_loaders.EmptyMetricsDatasetCollection(self)
         elif self.is_harmonized():
-            if self.mm_dataset_collection.dataset_class in TEMPLATE_MAPPINGS_DATASET:
+            if self.mm_dataset_collection.dataset_class in ASSAY_CONFIGURATIONS:
                 context_loaders.HarmonizedMetricsDatasetCollection(self)
             else:
                 raise ValueError("Unknown analysis type. Unable to visualize")

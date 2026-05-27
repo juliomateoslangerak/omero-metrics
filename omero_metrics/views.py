@@ -17,7 +17,6 @@ from omero_metrics.tools import (
     load,
     omero_tools,
 )
-from omero_metrics.tools.data_type import TEMPLATE_MAPPINGS_DATASET
 from omero_metrics.tools.serializers import serialize
 
 logger = logging.getLogger(__name__)

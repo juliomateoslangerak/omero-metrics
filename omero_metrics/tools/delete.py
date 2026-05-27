@@ -5,7 +5,7 @@ import omero
 from omero.gateway import BlitzGateway, DatasetWrapper, FileAnnotationWrapper
 
 from omero_metrics.tools import omero_tools
-from omero_metrics.tools.data_type import DATASET_TYPES
+from omero_metrics.tools.data_type import ASSAY_CONFIGURATIONS
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ def delete_dataset_file_ann(conn: BlitzGateway, dataset: DatasetWrapper):
             if ns.startswith("microscopemetrics_schema:analyses"):
                 ds_type = ns.split("/")[-1]
                 logger.info(f"Deleting {ds_type} file annotation {ann.getId()}")
-                if ds_type in DATASET_TYPES:
+                if ds_type in ASSAY_CONFIGURATIONS:
                     omero_tools.del_object(
                         conn=conn,
                         object_ref=("Annotation", ann.getId()),

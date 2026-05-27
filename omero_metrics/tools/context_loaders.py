@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from omero_metrics.tools import load
-from omero_metrics.tools.data_type import KKM_MAPPINGS
+from omero_metrics.tools.data_type import ASSAY_CONFIGURATIONS
 from omero_metrics.tools.serializers import serialize
 
 
@@ -181,7 +181,12 @@ def HarmonizedMetricsDatasetCollection(pm):
     min_date = None
     max_date = None
     channels = set()
-    kkm_list = KKM_MAPPINGS.get(pm.mm_dataset_collection.dataset_class)
+    kkm_list = [
+        kkm.value
+        for kkm in ASSAY_CONFIGURATIONS[
+            pm.mm_dataset_collection.dataset_class
+        ].kkm_configuration
+    ]
     collection_key_measurements_by_kkm = {kkm: [] for kkm in kkm_list}
     collection_key_measurements_by_dataset_id = {}
     for dataset in pm.mm_dataset_collection.dataset_collection:

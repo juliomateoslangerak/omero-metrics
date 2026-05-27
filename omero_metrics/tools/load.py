@@ -20,9 +20,8 @@ from omero.gateway import (
 
 from omero_metrics.tools import omero_tools
 from omero_metrics.tools.data_type import (
+    ASSAY_CONFIGURATIONS,
     DATASET_IMAGES,
-    DATASET_TYPES,
-    INPUT_IMAGES_MAPPING,
 )
 
 logger = logging.getLogger(__name__)
@@ -99,6 +98,7 @@ def get_last_datasets_in_projects(conn, group_id):
     return pd.DataFrame(data, columns=columns)
 
 
+# FIXME: We support here only one type of input images
 def image_exist(image_id, mm_dataset):
     image_found = False
     image_location = None
@@ -154,7 +154,7 @@ def load_project(
         for file_ann in project.listAnnotations():
             if isinstance(file_ann, FileAnnotationWrapper):
                 ds_type = file_ann.getFileName().split("_")[0]
-                if ds_type in DATASET_TYPES:
+                if ds_type in ASSAY_CONFIGURATIONS:
                     file_anns.append(file_ann)
                     dataset_types.append(ds_type)
 
@@ -180,7 +180,7 @@ def load_dataset(
             ns = ann.getNs()
             if ns.startswith("microscopemetrics_schema:analyses"):
                 ds_type = ns.split("/")[-1]
-                if ds_type in DATASET_TYPES:
+                if ds_type in ASSAY_CONFIGURATIONS:
                     mm_datasets.append(
                         yaml_loader.loads(
                             ann.getFileInChunks().__next__().decode(),
@@ -200,13 +200,14 @@ def load_dataset(
         logger.info(f"No dataset found in dataset {dataset.getId()}")
         return None
 
+    # FIXME: We support here only one type of input images
     if load_images:
         # First time loading the images the
         # dataset does not know which images to load
         if mm_dataset.processed:
             input_images = getattr(
                 mm_dataset.input_data,
-                INPUT_IMAGES_MAPPING[mm_dataset.__class__.__name__],
+                ASSAY_CONFIGURATIONS[mm_dataset.__class__.__name__].input_images[0],
             )
             for input_image in input_images:
                 image_wrapper = omero_tools.get_omero_obj_from_mm_obj(
@@ -217,11 +218,15 @@ def load_dataset(
             input_images = [load_image(image) for image in dataset.listChildren()]
             setattr(
                 mm_dataset,
-                INPUT_IMAGES_MAPPING[mm_dataset.__class__.__name__],
+                ASSAY_CONFIGURATIONS[mm_dataset.__class__.__name__].input_images[0],
                 input_images,
             )
     else:
-        setattr(mm_dataset, INPUT_IMAGES_MAPPING[mm_dataset.__class__.__name__], [])
+        setattr(
+            mm_dataset,
+            ASSAY_CONFIGURATIONS[mm_dataset.__class__.__name__].input_images[0],
+            [],
+        )
 
     return mm_dataset
 
@@ -336,10 +341,11 @@ def roi_finder(roi: mm_schema.Roi):
         return None
 
 
+# FIXME: We support here only one type of input images
 def get_image_info_mm_dataset(mm_dataset: mm_schema.MetricsDataset):
     mm_images = getattr(
         mm_dataset["input_data"],
-        DATASET_IMAGES[mm_dataset.class_name]["input_data"][0],
+        ASSAY_CONFIGURATIONS[mm_dataset.class_name].input_images[0],
     )
     image_info = {
         i.data_reference.omero_object_id: {
