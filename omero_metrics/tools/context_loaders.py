@@ -125,7 +125,7 @@ def PSFBeadsDataset_output_AveragePSF(im):
         "mm_image": im.mm_image,
         "mm_dataset": im.dataset_manager.mm_dataset,
         "mips": mips,
-        "kkm": im.dataset_manager.kkm,
+        "kkm": [k._asdict() for k in im.dataset_manager.kkm],
     }
     im.context = serialize(context)
 
@@ -140,7 +140,7 @@ def FieldIlluminationDataset(dm):
         "mm_dataset": dm.mm_dataset,
         "image_data": list_images,
         "channel_names": list_channels,
-        "kkm": dm.kkm,
+        "kkm": [k._asdict() for k in dm.kkm],
     }
     dm.context = serialize(context)
 
@@ -149,7 +149,7 @@ def PSFBeadsDataset(dm):
     dm.load_data(load_images=False, force_reload=True)
     context = {
         "mm_dataset": dm.mm_dataset,
-        "kkm": dm.kkm,
+        "kkm": [k._asdict() for k in dm.kkm],
     }
     dm.context = serialize(context)
 

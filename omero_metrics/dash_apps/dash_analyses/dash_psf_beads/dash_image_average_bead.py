@@ -222,12 +222,13 @@ def update_image(channel_index, color, invert, **kwargs):
         }
 
         kkm = context["kkm"]
+        kkm_values = [k["value"] for k in kkm]
 
         table_km = load.get_km_mm_metrics_dataset(
             mm_dataset=deserialize(context["mm_dataset"])
         )
 
-        metrics_df = table_km.filter(["channel_name", *kkm])
+        metrics_df = table_km.filter(["channel_name", *kkm_values])
 
         if all(list(voxel_size.values())):
             fwhms = {

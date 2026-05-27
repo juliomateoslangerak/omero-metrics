@@ -335,13 +335,14 @@ def register_update_kkm_table_callback(app):
             page = int(pagination_value)
             context = deserialize(kwargs["session_state"]["context"])
             kkm = context["kkm"]
+            kkm_values = [k["value"] for k in kkm]
             # TODO: review how we process the tables here.
             table_km = load.get_km_mm_metrics_dataset(
                 mm_dataset=context["mm_dataset"]
             )
             start_idx = (page - 1) * 4
             end_idx = start_idx + 4
-            metrics_df = table_km.filter(["channel_name", *kkm])
+            metrics_df = table_km.filter(["channel_name", *kkm_values])
             metrics_df = metrics_df.round(3)
             metrics_df.columns = metrics_df.columns.str.replace(
                 "_", " ", regex=True
@@ -382,7 +383,8 @@ def register_download_table_callback(app):
         context = deserialize(kwargs["session_state"]["context"])
         table_km = load.get_km_mm_metrics_dataset(mm_dataset=context["mm_dataset"])
         kkm = context["kkm"]
-        table_kkm = table_km.filter(["channel_name", *kkm])
+        kkm_values = [k["value"] for k in kkm]
+        table_kkm = table_km.filter(["channel_name", *kkm_values])
         table_kkm = table_kkm.round(3)
         table_kkm.columns = table_kkm.columns.str.replace("_", " ").str.title()
         if triggered_id == "table-download-csv":
