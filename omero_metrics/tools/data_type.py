@@ -66,8 +66,8 @@ def get_analysis_function(dataset_class):
     """Find the analysis function for a given dataset class from microscopemetrics MAPPINGS."""
     try:
         return MAPPINGS[dataset_class].analysis_function
-    except KeyError:
-        raise ValueError(f"No analysis function found for {dataset_class}")
+    except KeyError as e:
+        raise ValueError(f"No analysis function found for {dataset_class}") from e
 
 
 class KKMConfig(NamedTuple):
