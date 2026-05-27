@@ -25,7 +25,13 @@ DATASET_TO_INPUT = {
     "PSFBeadsDataset": mm_schema.PSFBeadsInputParameters,
 }
 
-sample_types = [x[0] for x in MAPPINGS if x[0]]
+sample_types = list(
+    dict.fromkeys(
+        sample_cls
+        for mapping in MAPPINGS.values()
+        for sample_cls in mapping.sample_classes
+    )
+)
 sample_types_dp = [
     {
         "label": dft.add_space_between_capitals(x.__name__),
