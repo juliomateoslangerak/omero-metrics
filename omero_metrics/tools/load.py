@@ -21,7 +21,7 @@ from omero.gateway import (
 from omero_metrics.tools import omero_tools
 from omero_metrics.tools.data_type import (
     ASSAY_CONFIGURATIONS,
-    DATASET_IMAGES,
+    get_image_fields,
 )
 
 logger = logging.getLogger(__name__)
@@ -103,11 +103,9 @@ def image_exist(image_id, mm_dataset):
     image_found = False
     image_location = None
     index = None
-    for location, image_type in DATASET_IMAGES[
-        mm_dataset.__class__.__name__
-    ].items():
-        if image_type:
-            images_list = getattr(mm_dataset[location], image_type[0])
+    for location, image_fields in get_image_fields(mm_dataset.__class__).items():
+        if image_fields:
+            images_list = getattr(getattr(mm_dataset, location), image_fields[0])
             if not isinstance(images_list, list):
                 images_list = [images_list]
             for i, image in enumerate(images_list):

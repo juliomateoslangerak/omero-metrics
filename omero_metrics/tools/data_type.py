@@ -1,17 +1,42 @@
-from typing import NamedTuple
+from functools import lru_cache
+from typing import NamedTuple, get_args, get_type_hints
 
 from microscopemetrics.analyses import field_illumination, psf_beads
+from microscopemetrics_schema.datamodel.microscopemetrics_schema import Image
 
-DATASET_IMAGES = {
-    "FieldIlluminationDataset": {
-        "input_data": ["field_illumination_images"],
-        "output": [],
-    },
-    "PSFBeadsDataset": {
-        "input_data": ["psf_beads_images"],
-        "output": ["average_bead"],
-    },
-}
+
+@lru_cache(maxsize=None)
+def get_image_fields(dataset_class) -> dict[str, list[str]]:
+    """Introspect a dataset class to find Image-typed fields per location.
+
+    Returns a dict mapping location names ('input_data', 'output') to lists
+    of field names that are typed as Image or list[Image].
+    """
+    result = {}
+    hints = get_type_hints(dataset_class)
+    for location in ("input_data", "output"):
+        location_hint = hints.get(location)
+        if location_hint is None:
+            result[location] = []
+            continue
+        # Resolve Union/Optional to find the actual sub-class (not dict/NoneType)
+        sub_cls = None
+        for arg in get_args(location_hint):
+            if arg is not dict and arg is not type(None):
+                sub_cls = arg
+                break
+        if sub_cls is None:
+            result[location] = []
+            continue
+        # Find fields whose type includes Image
+        image_fields = []
+        for field_name, field_type in get_type_hints(sub_cls).items():
+            all_args = get_args(field_type) or (field_type,)
+            if any(a is Image or Image in get_args(a) for a in all_args):
+                image_fields.append(field_name)
+        result[location] = image_fields
+    return result
+
 
 DATA_TYPE = {
     "FieldIlluminationInputParameters": [
