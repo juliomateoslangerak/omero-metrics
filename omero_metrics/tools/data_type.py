@@ -65,8 +65,6 @@ class KKMConfig(NamedTuple):
 class AssayConfiguration(NamedTuple):
     display_name: str
     description: str
-    input_images: list[str]
-    output_images: list[str]
     assay_app_name: str
     image_app_name: dict
     kkm_configuration: list[KKMConfig]
@@ -76,8 +74,6 @@ ASSAY_CONFIGURATIONS = {
     "FieldIlluminationDataset": AssayConfiguration(
         display_name="Field illumination",
         description="Field illumination assay",
-        input_images=["field_illumination_images"],
-        output_images=[],
         assay_app_name="omero_dataset_foi",
         image_app_name={
             "input_data": "omero_image_foi",
@@ -109,8 +105,6 @@ ASSAY_CONFIGURATIONS = {
     "PSFBeadsDataset": AssayConfiguration(
         display_name="PSF beads",
         description="PSF beads assay",
-        input_images=["psf_beads_images"],
-        output_images=["average_bead"],
         assay_app_name="omero_dataset_psf_beads",
         image_app_name={
             "input_data": "omero_image_psf_beads",

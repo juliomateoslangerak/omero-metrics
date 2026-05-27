@@ -202,11 +202,9 @@ def load_dataset(
     if load_images:
         # First time loading the images the
         # dataset does not know which images to load
+        input_images_field = get_image_fields(mm_dataset.__class__)["input_data"][0]
         if mm_dataset.processed:
-            input_images = getattr(
-                mm_dataset.input_data,
-                ASSAY_CONFIGURATIONS[mm_dataset.__class__.__name__].input_images[0],
-            )
+            input_images = getattr(mm_dataset.input_data, input_images_field)
             for input_image in input_images:
                 image_wrapper = omero_tools.get_omero_obj_from_mm_obj(
                     dataset._conn, input_image
@@ -214,15 +212,11 @@ def load_dataset(
                 input_image.array_data = _load_image_intensities(image_wrapper)
         else:
             input_images = [load_image(image) for image in dataset.listChildren()]
-            setattr(
-                mm_dataset,
-                ASSAY_CONFIGURATIONS[mm_dataset.__class__.__name__].input_images[0],
-                input_images,
-            )
+            setattr(mm_dataset, input_images_field, input_images)
     else:
         setattr(
             mm_dataset,
-            ASSAY_CONFIGURATIONS[mm_dataset.__class__.__name__].input_images[0],
+            get_image_fields(mm_dataset.__class__)["input_data"][0],
             [],
         )
 
@@ -342,8 +336,8 @@ def roi_finder(roi: mm_schema.Roi):
 # FIXME: We support here only one type of input images
 def get_image_info_mm_dataset(mm_dataset: mm_schema.MetricsDataset):
     mm_images = getattr(
-        mm_dataset["input_data"],
-        ASSAY_CONFIGURATIONS[mm_dataset.class_name].input_images[0],
+        mm_dataset.input_data,
+        get_image_fields(mm_dataset.__class__)["input_data"][0],
     )
     image_info = {
         i.data_reference.omero_object_id: {
