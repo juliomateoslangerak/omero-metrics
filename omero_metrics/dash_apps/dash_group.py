@@ -11,7 +11,6 @@ from omero_metrics import views
 from omero_metrics.styles import (
     CONTAINER_STYLE,
     DATEPICKER_STYLES,
-    HEADER_PAPER_STYLE,
     MANTINE_THEME,
     PAPER_STYLE,
     STYLE_DATA_CONDITIONAL,
@@ -35,47 +34,11 @@ dash_app_group.layout = dmc.MantineProvider(
     children=[
         dmc.NotificationProvider(position="top-center"),
         html.Div(id="notifications-container"),
-        dmc.Paper(
-            children=[
-                dmc.Group(
-                    [
-                        dmc.Group(
-                            [
-                                html.Img(
-                                    src="/static/omero_metrics/images/metrics_logo.png",
-                                    style={
-                                        "width": "120px",
-                                        "height": "auto",
-                                    },
-                                ),
-                                dmc.Stack(
-                                    [
-                                        dmc.Title(
-                                            "Group Dashboard",
-                                            c=THEME["primary"],
-                                            size="h2",
-                                        ),
-                                        dmc.Text(
-                                            "Group Analysis Dashboard",
-                                            c=THEME["text"]["secondary"],
-                                            size="sm",
-                                        ),
-                                    ],
-                                    gap="xs",
-                                ),
-                            ],
-                        ),
-                        dmc.Badge(
-                            "Group Analysis",
-                            color=THEME["primary"],
-                            variant="dot",
-                            size="lg",
-                        ),
-                    ],
-                    justify="space-between",
-                ),
-            ],
-            **HEADER_PAPER_STYLE,
+        my_components.header_component(
+            "Group Dashboard",
+            "Group Analysis Dashboard",
+            "Group Analysis",
+            load_buttons=False,
         ),
         dmc.Tabs(
             styles=TAB_STYLES,
