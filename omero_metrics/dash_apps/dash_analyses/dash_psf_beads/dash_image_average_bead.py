@@ -221,8 +221,7 @@ def update_image(channel_index, color, invert, **kwargs):
             "z": mm_image.voxel_size_z_micron,
         }
 
-        kkm = context["kkm"]
-        kkm_values = [k["value"] for k in kkm]
+        kkm_values = [k.value for k in context["assay_config"].kkm_configuration]
 
         table_km = load.get_km_mm_metrics_dataset(
             mm_dataset=deserialize(context["mm_dataset"])

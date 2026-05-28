@@ -28,6 +28,7 @@ def FieldIlluminationDataset_input_data_Image(im):
         "image_index": im.image_index,
         "mm_image": im.mm_image,
         "mm_dataset": im.dataset_manager.mm_dataset,
+        "assay_config": im.dataset_manager.assay_configuration,
     }
     im.context = serialize(context)
 
@@ -104,6 +105,7 @@ def PSFBeadsDataset_input_data_Image(im):
         "mip_z": mip_z,
         "beads_properties": image_bead_properties,
         "beads_array": beads_array,
+        "assay_config": im.dataset_manager.assay_configuration,
     }
     im.context = serialize(context)
 
@@ -125,7 +127,7 @@ def PSFBeadsDataset_output_AveragePSF(im):
         "mm_image": im.mm_image,
         "mm_dataset": im.dataset_manager.mm_dataset,
         "mips": mips,
-        "kkm": [k._asdict() for k in im.dataset_manager.kkm],
+        "assay_config": im.dataset_manager.assay_configuration,
     }
     im.context = serialize(context)
 
@@ -140,7 +142,7 @@ def FieldIlluminationDataset(dm):
         "mm_dataset": dm.mm_dataset,
         "image_data": list_images,
         "channel_names": list_channels,
-        "kkm": [k._asdict() for k in dm.kkm_configuration],
+        "assay_config": dm.assay_configuration,
     }
     dm.context = serialize(context)
 
@@ -149,7 +151,7 @@ def PSFBeadsDataset(dm):
     dm.load_data(load_images=False, force_reload=True)
     context = {
         "mm_dataset": dm.mm_dataset,
-        "kkm": [k._asdict() for k in dm.kkm_configuration],
+        "assay_config": dm.assay_configuration,
     }
     dm.context = serialize(context)
 
@@ -180,7 +182,8 @@ def HarmonizedMetricsDatasetCollection(pm):
     dates = []
     min_date = None
     max_date = None
-    collection_key_measurements_by_kkm = {x.value: [] for x in pm.kkm_configuration}
+    kkm_list = pm.assay_configuration.kkm_configuration
+    collection_key_measurements_by_kkm = {x.value: [] for x in kkm_list}
     collection_key_measurements_by_dataset_id = {}
     for dataset in pm.mm_dataset_collection.dataset_collection:
         if not dataset.processed:
@@ -199,21 +202,21 @@ def HarmonizedMetricsDatasetCollection(pm):
                     },
                 }
             ]
-            for x in pm.kkm_configuration
+            for x in kkm_list
         }
         [
             collection_key_measurements_by_kkm[x.value].extend(
                 key_measurements_by_kkm[x.value]
             )
-            for x in pm.kkm_configuration
+            for x in kkm_list
         ]
         collection_key_measurements_by_dataset_id[
             int(dataset.data_reference.omero_object_id)
         ] = {
             "caption": f"{dataset.name} acquired on {dataset.acquisition_datetime}",
-            "head": [x.display_name for x in pm.kkm_configuration],
+            "head": [x.display_name for x in kkm_list],
             "body": [
-                [km[x.value] for x in pm.kkm_configuration]
+                [km[x.value] for x in kkm_list]
                 for km in dataset.output.key_measurements
             ],
         }
@@ -243,7 +246,7 @@ def HarmonizedMetricsDatasetCollection(pm):
         "input_parameters": pm.input_parameters,
         "sample": pm.sample,
         "thresholds": pm.thresholds,
-        "kkm_config": [k._asdict() for k in pm.kkm_configuration],
+        "assay_config": pm.assay_configuration,
     }
     pm.context = serialize(context)
 

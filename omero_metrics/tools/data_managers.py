@@ -131,7 +131,7 @@ class DatasetManager:
         self.app_name = None
         self.context = {}
         self.microscope = mm_schema.Microscope()
-        self.kkm_configuration = None
+        self.assay_configuration = None
         self.attached_images = [
             {"value": f"{i.getId()}", "label": f"{i.getName()}"}
             for i in omero_dataset.listChildren()
@@ -190,9 +190,9 @@ class DatasetManager:
         if force_reload or self.mm_dataset is None:
             self.mm_dataset = load.load_dataset(self.omero_dataset, load_images)
             if self.mm_dataset is not None:
-                self.kkm_configuration = ASSAY_CONFIGURATIONS[
+                self.assay_configuration = ASSAY_CONFIGURATIONS[
                     self.mm_dataset.__class__.__name__
-                ].kkm_configuration
+                ]
         else:
             raise NotImplementedError(
                 "partial loading of data from OMERO is not yet implemented"
@@ -309,7 +309,7 @@ class ProjectManager:
         else:
             raise ValueError("omero_project must be a ProjectWrapper")
         self.mm_dataset_collection = None
-        self.kkm_configuration = None
+        self.assay_configuration = None
         self.unprocessed_datasets = set()
         self.input_parameters = None
         self.sample = None
@@ -339,9 +339,9 @@ class ProjectManager:
                     dataset_collection=datasets,
                 )
             )
-            self.kkm_configuration = ASSAY_CONFIGURATIONS[
+            self.assay_configuration = ASSAY_CONFIGURATIONS[
                 self.mm_dataset_collection.dataset_class
-            ].kkm_configuration
+            ]
 
         elif len(datasets_types) > 1:
             self.mm_dataset_collection = mm_schema.MetricsDatasetCollection(

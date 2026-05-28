@@ -334,8 +334,11 @@ def register_update_kkm_table_callback(app):
         try:
             page = int(pagination_value)
             context = deserialize(kwargs["session_state"]["context"])
-            kkm = context["kkm"]
-            kkm_values = [k["value"] for k in kkm]
+            kkm = context["assay_config"].kkm_configuration
+            kkm_values = [k.value for k in kkm]
+            col_rename = {"channel_name": "Channel Name"} | {
+                k.value: k.display_name for k in kkm
+            }
             # TODO: review how we process the tables here.
             table_km = load.get_km_mm_metrics_dataset(
                 mm_dataset=context["mm_dataset"]
@@ -344,9 +347,7 @@ def register_update_kkm_table_callback(app):
             end_idx = start_idx + 4
             metrics_df = table_km.filter(["channel_name", *kkm_values])
             metrics_df = metrics_df.round(3)
-            metrics_df.columns = metrics_df.columns.str.replace(
-                "_", " ", regex=True
-            ).str.title()
+            metrics_df = metrics_df.rename(columns=col_rename)
             page_data = metrics_df.iloc[start_idx:end_idx]
             return {
                 "head": page_data.columns.tolist(),
@@ -381,12 +382,15 @@ def register_download_table_callback(app):
             kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
         )
         context = deserialize(kwargs["session_state"]["context"])
+        kkm = context["assay_config"].kkm_configuration
+        kkm_values = [k.value for k in kkm]
+        col_rename = {"channel_name": "Channel Name"} | {
+            k.value: k.display_name for k in kkm
+        }
         table_km = load.get_km_mm_metrics_dataset(mm_dataset=context["mm_dataset"])
-        kkm = context["kkm"]
-        kkm_values = [k["value"] for k in kkm]
         table_kkm = table_km.filter(["channel_name", *kkm_values])
         table_kkm = table_kkm.round(3)
-        table_kkm.columns = table_kkm.columns.str.replace("_", " ").str.title()
+        table_kkm = table_kkm.rename(columns=col_rename)
         if triggered_id == "table-download-csv":
             return dcc.send_data_frame(table_kkm.to_csv, "km_table.csv")
         elif triggered_id == "table-download-xlsx":

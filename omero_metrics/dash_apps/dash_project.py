@@ -343,9 +343,9 @@ omero_project_dash.layout = dmc.MantineProvider(
 def update_dropdown(*args, **kwargs):
     try:
         context = deserialize(kwargs["session_state"]["context"])
-        kkm_config = context["kkm_config"]
+        kkm_config = context["assay_config"].kkm_configuration
         kkm_options = [
-            {"value": str(i), "label": k["display_name"]}
+            {"value": str(i), "label": k.display_name}
             for i, k in enumerate(kkm_config)
         ]
 
@@ -427,14 +427,15 @@ def update_table(measurement, dates_range, **kwargs):
         context = deserialize(kwargs["session_state"]["context"])
         key_measurements_by_kkm = context["key_measurements_by_kkm"]
         threshold = context["thresholds"]
-        kkm_config = context["kkm_config"]
+        kkm_config = context["assay_config"].kkm_configuration
         measurement = int(measurement)
 
         # Check if we have any data
         if not key_measurements_by_kkm:
             return dash.no_update
+        selected_kkm = kkm_config[measurement]
         if threshold:
-            threshold_kkm = threshold[kkm_config[measurement]]
+            threshold_kkm = threshold[selected_kkm.value]
             ref = [
                 {
                     "y": v,
@@ -450,7 +451,7 @@ def update_table(measurement, dates_range, **kwargs):
         start_date = datetime.fromisoformat(dates_range[0].split("T")[0]).date()
         end_date = datetime.fromisoformat(dates_range[1].split("T")[0]).date()
 
-        data = key_measurements_by_kkm[kkm_config[measurement]["value"]]
+        data = key_measurements_by_kkm[selected_kkm.value]
         keys = {k for d in data for k in d if k not in ["date", "dataset_id"]}
         series = [
             {
@@ -625,15 +626,19 @@ def update_config_project(submit_click, sample_form, input_form, **kwargs):
 )
 def update_thresholds(*args, **kwargs):
     try:
-        kkm = deserialize(kwargs["session_state"]["context"])["kkm"]
-        # TODO: Move to kkm titles if and once implemented
-        kkm = [k.replace("_", " ").title() for k in kkm]
-        data = [{"value": f"{i}", "label": f"{k}"} for i, k in enumerate(kkm)]
+        kkm_config = deserialize(kwargs["session_state"]["context"])[
+            "assay_config"
+        ].kkm_configuration
+        data = [
+            {"value": str(i), "label": k.display_name}
+            for i, k in enumerate(kkm_config)
+        ]
         return data
     except Exception as e:
         return dash.no_update
 
 
+# TODO: What is this?
 @omero_project_dash.expanded_callback(
     dash.dependencies.Output({"index": dash.dependencies.MATCH}, "variant"),
     dash.dependencies.Input({"index": dash.dependencies.MATCH}, "n_clicks"),
@@ -652,18 +657,21 @@ def update_heart(n, **kwargs):
 def update_thresholds_controls(*args, **kwargs):
     try:
         context = deserialize(kwargs["session_state"]["context"])
-        kkm = context["kkm"]
+        kkm = context["assay_config"].kkm_configuration
+        kkm_display = {k.value: k.display_name for k in kkm}
         threshold = context["thresholds"]
         if threshold:
             new_kkm = threshold
         else:
-            new_kkm = {k: {"upper_limit": "", "lower_limit": ""} for k in kkm}
+            new_kkm = {
+                k: {"upper_limit": "", "lower_limit": ""} for k in kkm_display
+            }
 
         threshold_control = [
             dmc.AccordionItem(
                 [
                     my_components.make_control(
-                        key.replace("_", " ").title(),
+                        kkm_display.get(key, key.replace("_", " ").title()),
                         f"action-{i}",
                     ),
                     dmc.AccordionPanel(
@@ -724,13 +732,12 @@ def update_thresholds_controls(*args, **kwargs):
 def threshold_callback1(*args, **kwargs):
     try:
         context = deserialize(kwargs["session_state"]["context"])
-        kkm = context["kkm"]
-        output = get_accordion_data(args[1], kkm)
-        request = kwargs["request"]
+        kkm_values = [k.value for k in context["assay_config"].kkm_configuration]
+        output = _get_accordion_data(args[1], kkm_values)
         project_id = int(context["project_id"])
         if output and args[0]:
             response_type, response_msg = views.save_threshold(
-                request=request,
+                request=kwargs["request"],
                 project_id=project_id,
                 threshold=output,
             )
@@ -744,7 +751,7 @@ def threshold_callback1(*args, **kwargs):
         return dash.no_update
 
 
-def get_accordion_data(accordion_state, kkm):
+def _get_accordion_data(accordion_state, kkm):
     dict_data = {}
     try:
         for i in accordion_state:

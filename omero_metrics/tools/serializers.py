@@ -11,10 +11,13 @@ import numpy as np
 import pandas as pd
 from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
 
+from omero_metrics.tools import data_type as dt
+
 # Marker keys for custom types
 NUMPY_MARKER = "__numpy_array__"
 MM_SCHEMA_MARKER = "__mm_schema_obj__"
 DATAFRAME_MARKER = "__dataframe__"
+NAMEDTUPLE_MARKER = "__namedtuple__"
 
 
 def serialize_numpy(arr: np.ndarray) -> Dict[str, Any]:
@@ -80,6 +83,12 @@ def serialize(obj: Any) -> Any:
             value = getattr(obj, field.name)
             result["data"][field.name] = serialize(value)
         return result
+    elif hasattr(obj, "_fields") and isinstance(obj, tuple):
+        # NamedTuple — must come before the generic (list, tuple) branch
+        return {
+            NAMEDTUPLE_MARKER: type(obj).__name__,
+            "data": {k: serialize(v) for k, v in obj._asdict().items()},
+        }
     elif isinstance(obj, dict):
         return {k: serialize(v) for k, v in obj.items()}
     elif isinstance(obj, (list, tuple)):
@@ -105,6 +114,10 @@ def deserialize(obj: Any) -> Any:
             data = {k: deserialize(v) for k, v in obj["data"].items()}
 
             return getattr(mm_schema, class_name)(**data)
+
+        elif NAMEDTUPLE_MARKER in obj:
+            cls = getattr(dt, obj[NAMEDTUPLE_MARKER])
+            return cls(**{k: deserialize(v) for k, v in obj["data"].items()})
 
         else:
             return {k: deserialize(v) for k, v in obj.items()}

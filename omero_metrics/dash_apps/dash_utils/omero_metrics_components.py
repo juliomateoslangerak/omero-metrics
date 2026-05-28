@@ -16,6 +16,7 @@ from omero_metrics.styles import (
     HEADER_PAPER_STYLE,
     THEME,
 )
+from omero_metrics.tools.serializers import deserialize
 
 
 def alert_handler(
@@ -290,11 +291,12 @@ def thresholds_paper(accordion_children):
 
 def get_title_line_chart(project_id, value):
     title = dmc.Text(f"Project ID: {project_id}")
-    dates = value["dates"]
-    kkm = value["kkm"]
-    dfs = value["key_measurements_list"]
+    context = deserialize(value)
+    dates = context["dates"]
+    kkm_config = context["assay_config"].kkm_configuration
+    dfs = context["key_measurements_list"]
     measurement = 0
-    df = get_data_trends(kkm, measurement, dates, dfs)
+    df = get_data_trends(kkm_config, measurement, dates, dfs)
     channels = [c for c in df.columns if c not in ["dataset_index", "date"]]
     series = [
         {
@@ -322,16 +324,17 @@ def get_title_line_chart(project_id, value):
     return title, line_chart
 
 
-def get_data_trends(kkm, measurement, dates, dfs):
+def get_data_trends(kkm_config, measurement, dates, dfs):
+    kkm_values = [k.value for k in kkm_config]
     complete_df = pd.DataFrame()
     for i, df in enumerate(dfs):
-        dfi = df.pivot_table(columns="channel_name", values=kkm).reset_index(
+        dfi = df.pivot_table(columns="channel_name", values=kkm_values).reset_index(
             names="Measurement"
         )
         dfi["dataset_index"] = i
         dfi["date"] = dates[i]
         complete_df = pd.concat([complete_df, dfi])
     complete_df = complete_df.reset_index(drop=True)
-    complete_df = complete_df[complete_df["Measurement"] == kkm[measurement]]
+    complete_df = complete_df[complete_df["Measurement"] == kkm_values[measurement]]
     complete_df = complete_df.drop(columns="Measurement")
     return complete_df
