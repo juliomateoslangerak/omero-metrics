@@ -13,6 +13,7 @@ from microscopemetrics_schema import datamodel as mm_schema
 
 import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
 from omero_metrics import views
+from omero_metrics.dash_apps.dash_utils import dash_forms_tools as dft
 from omero_metrics.styles import (
     BUTTON_STYLE,
     CARD_STYLE1,
@@ -26,7 +27,6 @@ from omero_metrics.styles import (
     TABLE_MANTINE_STYLE,
     THEME,
 )
-from omero_metrics.tools import dash_forms_tools as dft
 from omero_metrics.tools.serializers import deserialize
 
 # Initialize the Dash app
