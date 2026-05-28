@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from omero_metrics.tools import load
-from omero_metrics.tools.data_type import ASSAY_CONFIGURATIONS
+from omero_metrics.tools.configurations import ASSAY_CONFIGURATIONS
 from omero_metrics.tools.serializers import serialize
 
 

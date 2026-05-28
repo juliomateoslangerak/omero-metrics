@@ -19,10 +19,8 @@ from omero.gateway import (
 )
 
 from omero_metrics.tools import omero_tools
-from omero_metrics.tools.data_type import (
-    ASSAY_CONFIGURATIONS,
-    get_image_fields,
-)
+from omero_metrics.tools.configurations import ASSAY_CONFIGURATIONS
+from omero_metrics.tools.schema_utils import get_image_fields
 
 logger = logging.getLogger(__name__)
 

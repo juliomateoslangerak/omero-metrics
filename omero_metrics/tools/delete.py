@@ -5,7 +5,7 @@ import omero
 from omero.gateway import BlitzGateway, DatasetWrapper, FileAnnotationWrapper
 
 from omero_metrics.tools import omero_tools
-from omero_metrics.tools.data_type import ASSAY_CONFIGURATIONS
+from omero_metrics.tools.configurations import ASSAY_CONFIGURATIONS
 
 logger = logging.getLogger(__name__)
 

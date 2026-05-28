@@ -11,11 +11,11 @@ from omeroweb.webclient.decorators import login_required
 
 from omero_metrics.tools import (
     data_managers,
-    data_type,
     delete,
     dump,
     load,
     omero_tools,
+    schema_utils,
 )
 from omero_metrics.tools.serializers import serialize
 
@@ -315,9 +315,9 @@ def run_analysis_view(request, conn=None, **kwargs):
         ]
         mm_sample = kwargs["mm_sample"]
         mm_input_parameters = kwargs["mm_input_parameters"]
-        dataset_class = data_type.get_dataset_class(mm_input_parameters.__class__)
-        input_data_class = data_type.get_input_data_class(dataset_class)
-        images_field = data_type.get_image_fields(dataset_class)["input_data"][0]
+        dataset_class = schema_utils.get_dataset_class(mm_input_parameters.__class__)
+        input_data_class = schema_utils.get_input_data_class(dataset_class)
+        images_field = schema_utils.get_image_fields(dataset_class)["input_data"][0]
         input_data = input_data_class(**{images_field: list_mm_images})
         mm_microscope = mm_schema.Microscope(
             name=project_wrapper.getDetails().getGroup().getName()
@@ -342,7 +342,7 @@ def run_analysis_view(request, conn=None, **kwargs):
         )
         try:
             # Run the analysis
-            data_type.get_analysis_function(dataset_class)(mm_dataset)
+            schema_utils.get_analysis_function(dataset_class)(mm_dataset)
         except AnalysisError or SaturationError as e:
             logger.error(f"{e}")
             return "analysis_error", str(e), e.suggestion

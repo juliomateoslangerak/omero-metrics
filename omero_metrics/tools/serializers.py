@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
 
-from omero_metrics.tools import data_type as dt
+from omero_metrics.tools import configurations as dt
 
 # Marker keys for custom types
 NUMPY_MARKER = "__numpy_array__"

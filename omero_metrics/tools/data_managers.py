@@ -11,7 +11,7 @@ from omero.gateway import (
 )
 
 from omero_metrics.tools import context_loaders, delete, dump, load, update
-from omero_metrics.tools.data_type import ASSAY_CONFIGURATIONS
+from omero_metrics.tools.configurations import ASSAY_CONFIGURATIONS
 
 logger = logging.getLogger(__name__)
 
