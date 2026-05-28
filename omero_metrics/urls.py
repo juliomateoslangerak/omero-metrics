@@ -3,7 +3,7 @@ from django.urls import re_path
 from omero_metrics.dash_apps import (
     dash_feedback,
     dash_group,
-    dash_microscope,
+    dash_group_collection,
     dash_project,
 )
 from omero_metrics.dash_apps.dash_analyses.dash_foi import (
