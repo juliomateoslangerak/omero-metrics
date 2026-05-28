@@ -112,7 +112,7 @@ download_group = dmc.Group(
             [
                 dmc.MenuTarget(
                     dmc.Button(
-                        id="activate_download",
+                        id="activate-download",
                         children="Download",
                         leftSection=DashIconify(
                             icon="material-symbols:download", width=20
@@ -199,7 +199,7 @@ download_table = dmc.Group(
 
 
 delete_button = dmc.Button(
-    id="delete_data",
+    id="delete-data",
     children="Delete",
     color="red",
     variant="filled",

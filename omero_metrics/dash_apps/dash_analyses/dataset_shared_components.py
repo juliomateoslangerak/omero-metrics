@@ -25,7 +25,7 @@ def notification_provider():
 
 
 def notifications_container():
-    return html.Div(id="notifications_container")
+    return html.Div(id="notifications-container")
 
 
 def confirm_delete_modal():
@@ -146,7 +146,7 @@ def dataset_table_paper():
                         offsetScrollbars=True,
                         children=[
                             dmc.Table(
-                                id="kkm_table",
+                                id="kkm-table",
                                 striped=True,
                                 highlightOnHover=True,
                                 withTableBorder=False,
@@ -158,7 +158,7 @@ def dataset_table_paper():
                                 mt="md",
                                 children=[
                                     dmc.Pagination(
-                                        id="kkm_table_pagination",
+                                        id="kkm-table-pagination",
                                         total=0,
                                         value=1,
                                         withEdges=True,
@@ -184,7 +184,7 @@ download_group = dmc.Group(
             [
                 dmc.MenuTarget(
                     dmc.Button(
-                        id="activate_download",
+                        id="activate-download",
                         children="Download",
                         leftSection=DashIconify(
                             icon="material-symbols:download", width=20
@@ -230,7 +230,7 @@ download_group = dmc.Group(
 
 
 delete_button = dmc.Button(
-    id="delete_data",
+    id="delete-data",
     children="Delete",
     color="red",
     variant="filled",
@@ -242,10 +242,10 @@ delete_button = dmc.Button(
 def register_delete_dataset_callback(app):
     @app.expanded_callback(
         dependencies.Output("confirm-delete-modal", "opened"),
-        dependencies.Output("notifications_container", "children"),
+        dependencies.Output("notifications-container", "children"),
         dependencies.Output("confirm-delete-button", "loading"),
         [
-            dependencies.Input("delete_data", "n_clicks"),
+            dependencies.Input("delete-data", "n_clicks"),
             dependencies.Input("confirm-delete-button", "n_clicks"),
             dependencies.Input("cancel-delete-button", "n_clicks"),
             dependencies.State("confirm-delete-modal", "opened"),
@@ -324,10 +324,10 @@ def register_download_datasets_callback(app):
 
 def register_update_kkm_table_callback(app):
     @app.expanded_callback(
-        dependencies.Output("kkm_table", "data"),
-        dependencies.Output("kkm_table_pagination", "total"),
+        dependencies.Output("kkm-table", "data"),
+        dependencies.Output("kkm-table-pagination", "total"),
         [
-            dependencies.Input("kkm_table_pagination", "value"),
+            dependencies.Input("kkm-table-pagination", "value"),
         ],
     )
     def update_kkm_table_callback(pagination_value, **kwargs):

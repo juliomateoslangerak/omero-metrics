@@ -45,7 +45,7 @@ omero_project_dash.layout = dmc.MantineProvider(
         html.Div(id="delete-notifications-container"),
         dmc.Modal(
             title="Confirm Delete",
-            id="delete-confirm_delete",
+            id="delete-confirm-delete",
             children=[
                 dmc.Text("Are you sure you want to delete this project outputs?"),
                 dmc.Space(h=20),
@@ -68,7 +68,7 @@ omero_project_dash.layout = dmc.MantineProvider(
             ],
         ),
         html.Div(id="blank-input"),
-        html.Div(id="save_config_result"),
+        html.Div(id="save-config-result"),
         my_components.header_component(
             "Project Dashboard",
             "Microscopy Image Analysis Dashboard",
@@ -202,7 +202,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                                 style={**CARD_STYLE1, "marginTop": "12px"},
                                 children=[
                                     dmc.Text(
-                                        id="text_km",
+                                        id="text-km",
                                         c="#189A35",
                                         mt=10,
                                         ml=10,
@@ -212,7 +212,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                                     dmc.ScrollArea(
                                         [
                                             dmc.Table(
-                                                id="kkm_table",
+                                                id="kkm-table",
                                                 striped=True,
                                                 data={},  # data will be updated by the callback
                                                 highlightOnHover=True,
@@ -257,11 +257,11 @@ omero_project_dash.layout = dmc.MantineProvider(
                                     dmc.Grid(
                                         children=[
                                             dmc.GridCol(
-                                                id="input_parameters_container",
+                                                id="input-parameters-container",
                                                 span="6",
                                             ),
                                             dmc.GridCol(
-                                                id="sample_container",
+                                                id="sample-container",
                                                 span="6",
                                             ),
                                         ],
@@ -273,7 +273,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                                         children=[
                                             dmc.Button(
                                                 "Update",
-                                                id="submit_config",
+                                                id="submit-config",
                                                 style=BUTTON_STYLE,
                                             ),
                                         ],
@@ -336,8 +336,8 @@ omero_project_dash.layout = dmc.MantineProvider(
     dash.dependencies.Output("date-picker", "value"),
     dash.dependencies.Output("date-picker", "disabled"),
     dash.dependencies.Output("key-measurement-dropdown", "disabled"),
-    dash.dependencies.Output("activate_download", "disabled"),
-    dash.dependencies.Output("delete_data", "disabled"),
+    dash.dependencies.Output("activate-download", "disabled"),
+    dash.dependencies.Output("delete-data", "disabled"),
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_dropdown(*args, **kwargs):
@@ -466,8 +466,8 @@ def update_table(measurement, dates_range, **kwargs):
 
 
 @omero_project_dash.expanded_callback(
-    dash.dependencies.Output("text_km", "children"),
-    dash.dependencies.Output("kkm_table", "data"),
+    dash.dependencies.Output("text-km", "children"),
+    dash.dependencies.Output("kkm-table", "data"),
     dash.dependencies.Output("pagination", "total"),
     dash.dependencies.Output("clicked_data_paper", "hiddenFrom"),
     [
@@ -505,8 +505,8 @@ def update_project_view(clicked_data, page, **kwargs):
 
 
 @omero_project_dash.expanded_callback(
-    dash.dependencies.Output("input_parameters_container", "children"),
-    dash.dependencies.Output("sample_container", "children"),
+    dash.dependencies.Output("input-parameters-container", "children"),
+    dash.dependencies.Output("sample-container", "children"),
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_modal(*args, **kwargs):
@@ -540,7 +540,7 @@ omero_project_dash.clientside_callback(
 
     """,
     dash.dependencies.Output("loading-overlay", "visible", allow_duplicate=True),
-    dash.dependencies.Input("submit_config", "n_clicks"),
+    dash.dependencies.Input("submit-config", "n_clicks"),
     prevent_initial_call=True,
 )
 omero_project_dash.clientside_callback(
@@ -563,10 +563,10 @@ omero_project_dash.clientside_callback(
 
 
 @omero_project_dash.expanded_callback(
-    dash.dependencies.Output("save_config_result", "children"),
+    dash.dependencies.Output("save-config-result", "children"),
     dash.dependencies.Output("loading-overlay", "visible"),
     [
-        dash.dependencies.Input("submit_config", "n_clicks"),
+        dash.dependencies.Input("submit-config", "n_clicks"),
         dash.dependencies.State("sample_form", "children"),
         dash.dependencies.State("input_parameters_form", "children"),
     ],
@@ -777,14 +777,14 @@ def get_accordion_data(accordion_state, kkm):
 
 
 @omero_project_dash.expanded_callback(
-    dash.dependencies.Output("delete-confirm_delete", "opened"),
+    dash.dependencies.Output("delete-confirm-delete", "opened"),
     dash.dependencies.Output("delete-notifications-container", "children"),
     dash.dependencies.Output("delete-modal-submit-button", "loading"),
     [
-        dash.dependencies.Input("delete_data", "n_clicks"),
+        dash.dependencies.Input("delete-data", "n_clicks"),
         dash.dependencies.Input("delete-modal-submit-button", "n_clicks"),
         dash.dependencies.Input("delete-modal-close-button", "n_clicks"),
-        dash.dependencies.State("delete-confirm_delete", "opened"),
+        dash.dependencies.State("delete-confirm-delete", "opened"),
     ],
     prevent_initial_call=True,
 )
