@@ -657,46 +657,56 @@ def update_heart(n, **kwargs):
 def update_thresholds_controls(*args, **kwargs):
     try:
         context = deserialize(kwargs["session_state"]["context"])
-        kkm = context["assay_config"].kkm_configuration
-        kkm_display = {k.value: k.display_name for k in kkm}
-        threshold = context["thresholds"]
-        if threshold:
-            new_kkm = threshold
-        else:
-            new_kkm = {
-                k: {"upper_limit": "", "lower_limit": ""} for k in kkm_display
-            }
+        kkm_config = context["assay_config"].kkm_configuration
+        threshold = context["thresholds"] or {
+            k.value: {"upper_limit": "", "lower_limit": ""} for k in kkm_config
+        }
 
-        threshold_control = [
+        thresholds_component = [
             dmc.AccordionItem(
                 [
                     my_components.make_control(
-                        kkm_display.get(key, key.replace("_", " ").title()),
+                        kkm.display_name,
                         f"action-{i}",
                     ),
                     dmc.AccordionPanel(
-                        id=key + "_panel",
+                        id=kkm.value + "_panel",
                         children=[
                             dmc.Fieldset(
-                                id=key + "_fieldset",
+                                id={
+                                    "type": "threshold-fieldset",
+                                    "index": kkm.value,
+                                },
                                 children=[
                                     dmc.NumberInput(
+                                        id={
+                                            "type": "threshold-upper",
+                                            "index": kkm.value,
+                                        },
                                         label="Upper Limit",
                                         placeholder="Enter upper limit",
                                         leftSection=my_components.get_icon(
                                             icon="hugeicons:chart-maximum",
                                             color=THEME["primary"],
                                         ),
-                                        value=value.get("upper_limit", ""),
+                                        value=threshold[kkm.value].get(
+                                            "upper_limit", ""
+                                        ),
                                     ),
                                     dmc.NumberInput(
+                                        id={
+                                            "type": "threshold-lower",
+                                            "index": kkm.value,
+                                        },
                                         label="Lower Limit",
                                         placeholder="Enter lower limit",
                                         leftSection=my_components.get_icon(
                                             icon="hugeicons:chart-minimum",
                                             color=THEME["primary"],
                                         ),
-                                        value=value.get("lower_limit", ""),
+                                        value=threshold[kkm.value].get(
+                                            "lower_limit", ""
+                                        ),
                                     ),
                                 ],
                                 variant="filled",
@@ -708,14 +718,14 @@ def update_thresholds_controls(*args, **kwargs):
                 ],
                 value=f"item-{i}",
             )
-            for i, (key, value) in enumerate(new_kkm.items())
+            for i, kkm in enumerate(kkm_config)
         ]
         button = dmc.Button(
             "Update",
             id="modal-submit-button",
             style=BUTTON_STYLE,
         )
-        return threshold_control, button
+        return thresholds_component, button
     except Exception as e:
         return dash.no_update
 
@@ -725,16 +735,27 @@ def update_thresholds_controls(*args, **kwargs):
     dash.dependencies.Output("loading-overlay-threshold", "visible"),
     [
         dash.dependencies.Input("modal-submit-button", "n_clicks"),
-        dash.dependencies.State("accordion-compose-controls", "children"),
+        dash.dependencies.State(
+            {"type": "threshold-fieldset", "index": dash.dependencies.ALL}, "id"
+        ),
+        dash.dependencies.State(
+            {"type": "threshold-upper", "index": dash.dependencies.ALL}, "value"
+        ),
+        dash.dependencies.State(
+            {"type": "threshold-lower", "index": dash.dependencies.ALL}, "value"
+        ),
     ],
     prevent_initial_call=True,
 )
-def threshold_callback1(*args, **kwargs):
+def save_thresholds(*args, **kwargs):
     try:
         context = deserialize(kwargs["session_state"]["context"])
-        kkm_values = [k.value for k in context["assay_config"].kkm_configuration]
-        output = _get_accordion_data(args[1], kkm_values)
         project_id = int(context["project_id"])
+        fieldset_ids, upper_values, lower_values = args[1], args[2], args[3]
+        output = {
+            fieldset_id["index"]: {"upper_limit": uv, "lower_limit": lv}
+            for fieldset_id, uv, lv in zip(fieldset_ids, upper_values, lower_values)
+        }
         if output and args[0]:
             response_type, response_msg = views.save_threshold(
                 request=kwargs["request"],
@@ -749,38 +770,6 @@ def threshold_callback1(*args, **kwargs):
             return dash.no_update, False
     except Exception as e:
         return dash.no_update
-
-
-def _get_accordion_data(accordion_state, kkm):
-    dict_data = {}
-    try:
-        for i in accordion_state:
-            index = i["props"]["children"][1]["props"]["children"][0]["props"][
-                "children"
-            ]
-            key = (
-                i["props"]["children"][0]["props"]["children"][0]["props"][
-                    "children"
-                ]
-                .replace(" ", "_")
-                .lower()
-            )
-            dict_data[key] = {
-                "upper_limit": (
-                    index[0]["props"]["value"]
-                    if "value" in index[0]["props"]
-                    else ""
-                ),
-                "lower_limit": (
-                    index[1]["props"]["value"]
-                    if "value" in index[1]["props"]
-                    else ""
-                ),
-            }
-    except Exception as e:
-        dict_data = {key: {"upper_limit": "", "lower_limit": ""} for key in kkm}
-        print(f"Error: {e}")
-    return dict_data
 
 
 @omero_project_dash.expanded_callback(
