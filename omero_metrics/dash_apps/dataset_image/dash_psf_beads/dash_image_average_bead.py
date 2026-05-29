@@ -9,7 +9,7 @@ from dash import dcc, html
 from django_plotly_dash import DjangoDash
 from plotly.subplots import make_subplots
 
-import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
+import omero_metrics.dash_apps.utils.omero_metrics_components as my_components
 from omero_metrics.styles import MANTINE_THEME, THEME
 from omero_metrics.tools import load
 from omero_metrics.tools.serializers import deserialize

@@ -1,26 +1,5 @@
 from django.urls import re_path
 
-from omero_metrics.dash_apps import (
-    dash_feedback,
-    dash_group,
-    dash_group_collection,
-    dash_project,
-)
-from omero_metrics.dash_apps.dash_analyses.dash_foi import (
-    dash_dataset_foi,
-    dash_image_foi,
-)
-from omero_metrics.dash_apps.dash_analyses.dash_psf_beads import (
-    dash_dataset_psf_beads,
-    dash_image_average_bead,
-    dash_image_psf_beads,
-)
-from omero_metrics.dash_apps.dash_forms import (
-    dash_dataset_form,
-    dash_group_form,
-    dash_project_form,
-)
-from omero_metrics.dash_apps.dash_multiple_projects import dash_projects
 from omero_metrics.views import (
     center_view_projects,
     center_viewer_dataset,

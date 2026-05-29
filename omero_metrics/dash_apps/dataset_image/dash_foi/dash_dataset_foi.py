@@ -6,8 +6,8 @@ from dash import dcc, html
 from django_plotly_dash import DjangoDash
 from skimage.exposure import rescale_intensity
 
-import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
-from omero_metrics.dash_apps.dash_analyses import dataset_shared_components as dsc
+import omero_metrics.dash_apps.utils.omero_metrics_components as my_components
+from omero_metrics.dash_apps.dataset_image import dataset_shared_components as dsc
 from omero_metrics.styles import (
     CONTAINER_STYLE,
     CONTENT_PAPER_STYLE,

@@ -4,7 +4,7 @@ import pandas as pd
 from dash import html
 from django_plotly_dash import DjangoDash
 
-import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
+import omero_metrics.dash_apps.utils.omero_metrics_components as my_components
 from omero_metrics.styles import CARD_STYLE1, COLORS_CHANNELS
 from omero_metrics.tools.serializers import deserialize
 

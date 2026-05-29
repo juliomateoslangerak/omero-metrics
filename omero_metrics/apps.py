@@ -15,6 +15,7 @@ class OMEROMetricsConfig(AppConfig):
         self.add_plotly_components()
         self.add_plotly_dash_settings()
         self.add_context_processor()
+        self.import_dash_apps()
 
     def add_staticfiles_finders(self):
         """Add custom static files finders for django-plotly-dash."""
@@ -88,3 +89,15 @@ class OMEROMetricsConfig(AppConfig):
             logger.error(
                 "TEMPLATES setting is not properly configured. Unable to add context processor."
             )
+
+    def import_dash_apps(self):
+        """Dynamically import all Dash apps to ensure they are registered."""
+        import importlib
+        import pkgutil
+
+        from . import dash_apps
+
+        for loader, module_name, is_pkg in pkgutil.walk_packages(
+            dash_apps.__path__, dash_apps.__name__ + "."
+        ):
+            importlib.import_module(module_name)

@@ -6,7 +6,7 @@ from dash import dcc, dependencies, html, no_update
 from linkml_runtime.dumpers import JSONDumper, YAMLDumper
 
 from omero_metrics import views
-from omero_metrics.dash_apps.dash_utils import omero_metrics_components
+from omero_metrics.dash_apps.utils import omero_metrics_components
 from omero_metrics.styles import (
     CONTENT_PAPER_STYLE,
     TABLE_MANTINE_STYLE,

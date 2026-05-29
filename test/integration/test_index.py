@@ -38,7 +38,7 @@ class TestLoadIndexPage(IWebTest):
         """Test looking up an existing application for dataset foi"""
         from django_plotly_dash.models import get_stateless_by_name
 
-        from omero_metrics.dash_apps.dash_analyses.dash_foi.dash_dataset_foi import (
+        from omero_metrics.dash_apps.dataset_image.dash_foi.dash_dataset_foi import (
             omero_dataset_foi,
         )
 
@@ -51,7 +51,7 @@ class TestLoadIndexPage(IWebTest):
         """Test looking up an existing application for dataset psf"""
         from django_plotly_dash.models import get_stateless_by_name
 
-        from omero_metrics.dash_apps.dash_analyses.dash_psf_beads.dash_dataset_psf_beads import (
+        from omero_metrics.dash_apps.dataset_image.dash_psf_beads.dash_dataset_psf_beads import (
             omero_dataset_psf_beads,
         )
 
@@ -64,7 +64,7 @@ class TestLoadIndexPage(IWebTest):
         """Test looking up an existing application for project"""
         from django_plotly_dash.models import get_stateless_by_name
 
-        from omero_metrics.dash_apps.dash_project import omero_project_dash
+        from omero_metrics.dash_apps.project.project import omero_project_dash
 
         app = get_stateless_by_name(omero_project_dash._uid)
         assert app
@@ -75,7 +75,7 @@ class TestLoadIndexPage(IWebTest):
         """Test looking up an existing application for image foi"""
         from django_plotly_dash.models import get_stateless_by_name
 
-        from omero_metrics.dash_apps.dash_analyses.dash_foi.dash_image_foi import (
+        from omero_metrics.dash_apps.dataset_image.dash_foi.dash_image_foi import (
             omero_image_foi,
         )
 
@@ -88,7 +88,7 @@ class TestLoadIndexPage(IWebTest):
         """Test looking up an existing application for image psf"""
         from django_plotly_dash.models import get_stateless_by_name
 
-        from omero_metrics.dash_apps.dash_analyses.dash_psf_beads.dash_image_psf_beads import (
+        from omero_metrics.dash_apps.dataset_image.dash_psf_beads.dash_image_psf_beads import (
             omero_image_psf_beads,
         )
 
@@ -101,7 +101,7 @@ class TestLoadIndexPage(IWebTest):
         """Test looking up an existing application for dataset form"""
         from django_plotly_dash.models import get_stateless_by_name
 
-        from omero_metrics.dash_apps.dash_forms.dash_dataset_form import (
+        from omero_metrics.dash_apps.dataset_image.dataset_form import (
             dash_form_dataset,
         )
 
@@ -114,7 +114,7 @@ class TestLoadIndexPage(IWebTest):
         """Test looking up an existing application for project form"""
         from django_plotly_dash.models import get_stateless_by_name
 
-        from omero_metrics.dash_apps.dash_forms.dash_project_form import (
+        from omero_metrics.dash_apps.project.project_form import (
             dash_form_project,
         )
 

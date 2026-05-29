@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 from dash import dcc, html
 from django_plotly_dash import DjangoDash
 
-import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
+import omero_metrics.dash_apps.utils.omero_metrics_components as my_components
 from omero_metrics.styles import (
     LINE_CHART_SERIES,
     MANTINE_THEME,
