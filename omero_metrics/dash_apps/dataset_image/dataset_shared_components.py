@@ -13,6 +13,7 @@ from omero_metrics.styles import (
     THEME,
 )
 from omero_metrics.tools import load
+from omero_metrics.tools.schema_utils import remove_unsupported_types
 from omero_metrics.tools.serializers import deserialize
 
 
@@ -180,6 +181,9 @@ def register_download_datasets_callback(app):
         )
         context = deserialize(kwargs["session_state"]["context"])
         mm_dataset = context["mm_dataset"]
+        remove_unsupported_types(mm_dataset.input_data)
+        remove_unsupported_types(mm_dataset.output)
+        remove_unsupported_types(mm_dataset.input_parameters)
         file_name = mm_dataset.name
         yaml_dumper = YAMLDumper()
         json_dumper = JSONDumper()
