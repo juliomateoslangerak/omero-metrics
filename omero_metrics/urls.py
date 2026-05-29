@@ -34,6 +34,7 @@ from omero_metrics.views import (
 
 urlpatterns = [
     re_path(r"^$", index, name="omero_metrics_index"),
+    re_path(r"^group/", center_viewer_group, name="group"),
     re_path(
         r"^project/(?P<project_id>[0-9]+)/",
         center_viewer_project,
@@ -44,7 +45,6 @@ urlpatterns = [
         center_viewer_dataset,
         name="dataset",
     ),
-    re_path(r"^group/", center_viewer_group, name="group"),
     re_path(r"^image/(?P<image_id>[0-9]+)/", center_viewer_image, name="image"),
     re_path(
         r"^omero_metrics_projects/",
