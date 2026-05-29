@@ -358,10 +358,11 @@ class ProjectManager:
         )
 
     def sort_by_acquisition_datetime(self):
-        self.mm_dataset_collection.dataset_collection = sorted(
-            self.mm_dataset_collection.dataset_collection,
-            key=lambda x: x.acquisition_datetime,
-        )
+        if self.mm_dataset_collection is not None:
+            self.mm_dataset_collection.dataset_collection = sorted(
+                self.mm_dataset_collection.dataset_collection,
+                key=lambda x: x.acquisition_datetime,
+            )
 
     def load_context(self):
         self.load_data()
