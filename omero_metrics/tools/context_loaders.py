@@ -200,6 +200,14 @@ def HarmonizedMetricsDatasetCollection(pm):
                         km[x.key]: km[x.value]
                         for km in dataset.output.key_measurements
                     },
+                    **(
+                        {
+                            f"{km[x.key]}_err": km[x.error_bar]
+                            for km in dataset.output.key_measurements
+                        }
+                        if x.error_bar
+                        else {}
+                    ),
                 }
             ]
             for x in kkm_list

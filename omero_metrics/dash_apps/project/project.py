@@ -414,6 +414,7 @@ def check_data(*args, **kwargs):
 
 @omero_project_dash.expanded_callback(
     dash.dependencies.Output("line-chart", "data"),
+    dash.dependencies.Output("line-chart", "lineChartProps"),
     dash.dependencies.Output("line-chart", "series"),
     dash.dependencies.Output("line-chart", "referenceLines"),
     [
@@ -452,7 +453,14 @@ def update_table(measurement, dates_range, **kwargs):
         end_date = datetime.fromisoformat(dates_range[1].split("T")[0]).date()
 
         data = key_measurements_by_kkm[selected_kkm.value]
-        keys = {k for d in data for k in d if k not in ["date", "dataset_id"]}
+        keys = sorted(
+            {
+                k
+                for d in data
+                for k in d
+                if k not in ["date", "dataset_id"] and not k.endswith("_err")
+            }
+        )
         series = [
             {
                 "name": k,
@@ -460,7 +468,35 @@ def update_table(measurement, dates_range, **kwargs):
             }
             for i, k in enumerate(keys)
         ]
-        return data, series, ref
+
+        if selected_kkm.error_bar:
+            for d in data:
+                for k in keys:
+                    err_key = f"{k}_err"
+                    if d.get(k) is not None and d.get(err_key) is not None:
+                        d[f"{k}_upper"] = d[k] + d[err_key]
+                        d[f"{k}_lower"] = d[k] - d[err_key]
+            for i, k in enumerate(keys):
+                color = COLORS_CHANNELS[i % len(COLORS_CHANNELS)]
+                series += [
+                    {
+                        "name": f"{k}_upper",
+                        "color": color,
+                        "strokeDasharray": "4 4",
+                        "strokeWidth": 1,
+                        "label": f"{k} +σ",
+                    },
+                    {
+                        "name": f"{k}_lower",
+                        "color": color,
+                        "strokeDasharray": "4 4",
+                        "strokeWidth": 1,
+                        "label": f"{k} -σ",
+                    },
+                ]
+
+        props = {"syncId": "project-line-chart"}
+        return data, props, series, ref
 
     except Exception as e:
         return dash.no_update
