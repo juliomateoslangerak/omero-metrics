@@ -834,25 +834,25 @@ def download_project_data(*args, **kwargs):
             kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
         )
         context = deserialize(kwargs["session_state"]["context"])
-        mm_datasets = context["mm_datasets"]
+        mm_dataset_collection = context["mm_dataset_collection"]
         file_name = context["project_name"]
         yaml_dumper = YAMLDumper()
         json_dumper = JSONDumper()
         if triggered_id == "download-yaml":
             return dict(
-                content=yaml_dumper.dumps(mm_datasets),
+                content=yaml_dumper.dumps(mm_dataset_collection),
                 filename=f"{file_name}.yaml",
             )
 
         elif triggered_id == "download-json":
             return dict(
-                content=json_dumper.dumps(mm_datasets),
+                content=json_dumper.dumps(mm_dataset_collection),
                 filename=f"{file_name}.json",
             )
 
         elif triggered_id == "download-text":
             return dict(
-                content=yaml_dumper.dumps(mm_datasets),
+                content=yaml_dumper.dumps(mm_dataset_collection),
                 filename=f"{file_name}.txt",
             )
 
