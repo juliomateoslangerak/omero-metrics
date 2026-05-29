@@ -1,0 +1,148 @@
+from typing import NamedTuple
+
+
+class KKMConfig(NamedTuple):
+    display_name: str
+    description: str
+    key: str
+    value: str
+    error_bar: str | None
+    display_in_group_level: bool
+
+
+class AssayConfiguration(NamedTuple):
+    display_name: str
+    description: str
+    assay_app_name: str
+    image_app_name: dict
+    kkm_configuration: list[KKMConfig]
+
+
+ASSAY_CONFIGURATIONS = {
+    "FieldIlluminationDataset": AssayConfiguration(
+        display_name="Field illumination",
+        description="Field illumination assay",
+        assay_app_name="omero_dataset_foi",
+        image_app_name={
+            "input_data": "omero_image_foi",
+        },
+        kkm_configuration=[
+            KKMConfig(
+                display_name="Center relative position",
+                description="Relative position of the center of intensity",
+                key="channel_name",
+                value="center_fitted_distance_relative",
+                error_bar=None,
+                display_in_group_level=True,
+            ),
+            KKMConfig(
+                display_name="Center relative intensity",
+                description="Intensity of the image center relative to the corners",
+                key="channel_name",
+                value="center_region_intensity_fraction",
+                error_bar=None,
+                display_in_group_level=False,
+            ),
+            KKMConfig(
+                display_name="Max intensity",
+                description="Max intensity of the image",
+                key="channel_name",
+                value="max_intensity",
+                error_bar=None,
+                display_in_group_level=False,
+            ),
+        ],
+    ),
+    "PSFBeadsDataset": AssayConfiguration(
+        display_name="PSF beads",
+        description="PSF beads assay",
+        assay_app_name="omero_dataset_psf_beads",
+        image_app_name={
+            "input_data": "omero_image_psf_beads",
+            "output": "omero_image_average_bead",
+        },
+        kkm_configuration=[
+            KKMConfig(
+                display_name="Mean X fwhm",
+                description="Mean x resolution (FWHM) among the valid beads",
+                key="channel_name",
+                value="fwhm_micron_x_mean",
+                error_bar="fwhm_micron_x_std",
+                display_in_group_level=True,
+            ),
+            KKMConfig(
+                display_name="Mean Y fwhm",
+                description="Mean y resolution (FWHM) among the valid beads",
+                key="channel_name",
+                value="fwhm_micron_y_mean",
+                error_bar="fwhm_micron_y_std",
+                display_in_group_level=True,
+            ),
+            KKMConfig(
+                display_name="Mean Z fwhm",
+                description="Mean z resolution (FWHM) among the valid beads",
+                key="channel_name",
+                value="fwhm_micron_z_mean",
+                error_bar="fwhm_micron_z_std",
+                display_in_group_level=True,
+            ),
+            KKMConfig(
+                display_name="Lateral asymmetry",
+                description="Lateral FWHM asymmetry ratio",
+                key="channel_name",
+                value="fwhm_lateral_asymmetry_ratio_mean",
+                error_bar="fwhm_lateral_asymmetry_ratio_std",
+                display_in_group_level=False,
+            ),
+            # TODO: need to implement this in microscopemetrics
+            # KKMConfig(
+            #     display_name="Axial asymmetry",
+            #     description="Axial FWHM asymmetry ratio",
+            #     key="channel_name",
+            #     value="fwhm_axial_asymmetry_ratio_mean",
+            #     error_bar="fwhm_axial_asymmetry_ratio_std",
+            #     display_in_group_level=False,
+            # ),
+            KKMConfig(
+                display_name="X gaussian fit",
+                description="Gaussian fit R&#178; in the X axis",
+                key="channel_name",
+                value="fit_gaussian_r2_x_mean",
+                error_bar="fit_gaussian_r2_x_std",
+                display_in_group_level=False,
+            ),
+            KKMConfig(
+                display_name="Y gaussian fit",
+                description="Gaussian fit R&#178; in the Y axis",
+                key="channel_name",
+                value="fit_gaussian_r2_y_mean",
+                error_bar="fit_gaussian_r2_y_std",
+                display_in_group_level=False,
+            ),
+            KKMConfig(
+                display_name="Z gaussian fit",
+                description="Gaussian fit R&#178; in the Z axis",
+                key="channel_name",
+                value="fit_gaussian_r2_z_mean",
+                error_bar="fit_gaussian_r2_z_std",
+                display_in_group_level=False,
+            ),
+            KKMConfig(
+                display_name="Total beads nb",
+                description="Total number of beads found",
+                key="channel_name",
+                value="total_bead_count",
+                error_bar=None,
+                display_in_group_level=False,
+            ),
+            KKMConfig(
+                display_name="Valid beads nb",
+                description="Number of beads considered valid",
+                key="channel_name",
+                value="considered_valid_count",
+                error_bar=None,
+                display_in_group_level=False,
+            ),
+        ],
+    ),
+}
