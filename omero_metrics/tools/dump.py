@@ -15,6 +15,7 @@ from omero.gateway import (
     ImageWrapper,
     ProjectWrapper,
 )
+from tools.schema_utils import remove_unsupported_types
 
 from omero_metrics.tools import omero_tools
 
@@ -126,35 +127,6 @@ def dump_project(
     return omero_project
 
 
-def _remove_unsupported_types(
-    data_obj: Union[
-        mm_schema.MetricsInputData,
-        mm_schema.MetricsInputParameters,
-        mm_schema.MetricsOutput,
-    ],
-):
-    def _remove(_attr):
-        if isinstance(_attr, mm_schema.Image):
-            _attr.array_data = None
-        elif isinstance(_attr, mm_schema.Table):
-            _attr.table_data = None
-        elif isinstance(_attr, mm_schema.Roi):
-            if _attr.masks:
-                for m in _attr.masks:
-                    _remove(m.mask)
-
-    with contextlib.suppress(TypeError):
-        for field in fields(data_obj):
-            try:
-                _attr = getattr(data_obj, field.name)
-                if isinstance(_attr, list):
-                    [_remove(i) for i in _attr]
-                else:
-                    _remove(_attr)
-            except AttributeError:
-                continue
-
-
 def _dump_last_key_measurement_as_project_mapping_annotation(
     conn: BlitzGateway,
     mm_dataset: mm_schema.MetricsDataset,
@@ -205,10 +177,10 @@ def _dump_mm_dataset_as_file_annotation(
     ],
 ):
     # We need to remove the data on the numpy and pandas data objects as they cannot be serialized by linkml
-    _remove_unsupported_types(mm_dataset.input_data)
-    _remove_unsupported_types(mm_dataset.input_parameters)
+    remove_unsupported_types(mm_dataset.input_data)
+    remove_unsupported_types(mm_dataset.input_parameters)
     if mm_dataset.output:
-        _remove_unsupported_types(mm_dataset.output)
+        remove_unsupported_types(mm_dataset.output)
 
     dumper = YAMLDumper()
 

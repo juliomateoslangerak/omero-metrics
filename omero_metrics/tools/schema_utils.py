@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import get_args, get_type_hints
+from typing import Union, get_args, get_type_hints
 
 from microscopemetrics.analyses.mappings import MAPPINGS
 from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
@@ -68,3 +68,32 @@ def get_analysis_function(dataset_class):
         return MAPPINGS[dataset_class].analysis_function
     except KeyError as e:
         raise ValueError(f"No analysis function found for {dataset_class}") from e
+
+
+def remove_unsupported_types(
+    data_obj: Union[
+        mm_schema.MetricsInputData,
+        mm_schema.MetricsInputParameters,
+        mm_schema.MetricsOutput,
+    ],
+):
+    def _remove(_attr):
+        if isinstance(_attr, mm_schema.Image):
+            _attr.array_data = None
+        elif isinstance(_attr, mm_schema.Table):
+            _attr.table_data = None
+        elif isinstance(_attr, mm_schema.Roi):
+            if _attr.masks:
+                for m in _attr.masks:
+                    _remove(m.mask)
+
+    with contextlib.suppress(TypeError):
+        for field in fields(data_obj):
+            try:
+                _attr = getattr(data_obj, field.name)
+                if isinstance(_attr, list):
+                    [_remove(i) for i in _attr]
+                else:
+                    _remove(_attr)
+            except AttributeError:
+                continue
