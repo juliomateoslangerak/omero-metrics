@@ -10,7 +10,14 @@ from omero.gateway import (
     ProjectWrapper,
 )
 
-from omero_metrics.tools import context_loaders, delete, dump, load, update
+from omero_metrics.tools import (
+    context_loaders,
+    delete,
+    dump,
+    load,
+    schema_utils,
+    update,
+)
 from omero_metrics.tools.configurations import ASSAY_CONFIGURATIONS
 
 logger = logging.getLogger(__name__)
@@ -145,9 +152,9 @@ class DatasetManager:
         return self.mm_dataset.validated if self.mm_dataset else False
 
     def remove_unsupported_data(self):
-        dump._remove_unsupported_types(self.mm_dataset.input_data)
-        dump._remove_unsupported_types(self.mm_dataset.input_parameters)
-        dump._remove_unsupported_types(self.mm_dataset.output)
+        schema_utils.remove_unsupported_types(self.mm_dataset.input_data)
+        schema_utils.remove_unsupported_types(self.mm_dataset.input_parameters)
+        schema_utils.remove_unsupported_types(self.mm_dataset.output)
 
     def load_context(self):
         self.load_data(load_images=False)
