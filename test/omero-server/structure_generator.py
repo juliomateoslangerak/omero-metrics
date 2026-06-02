@@ -81,13 +81,13 @@ def field_illumination_generator(args, microscope_name):
         args["start_date"], args["nr_datasets"], args["month_frequency"]
     )
 
-    for dataset_id in range(args["nr_datasets"]):
-        print(f"Generating dataset {dataset_id} for {args['name_dataset']}")
+    for date in dates:
+        print(f"Generating dataset {date} for {args['name_dataset']}")
         datasets.append(
             mm_schema.FieldIlluminationDataset(
-                name=f"{args['name_dataset']}_{dates[dataset_id]}",
+                name=f"{args['name_dataset']}_{date}",
                 description=args["description_dataset"],
-                acquisition_datetime=dates[dataset_id],
+                acquisition_datetime=date,
                 microscope=mm_schema.Microscope(name=microscope_name),
                 input_parameters=mm_schema.FieldIlluminationInputParameters(),
                 input_data=mm_schema.FieldIlluminationInputData(
@@ -148,12 +148,10 @@ def field_illumination_generator(args, microscope_name):
                                 ],
                                 dtype=BIT_DEPTH_TO_DTYPE[args["bit_depth"]],
                             ),
-                            name=f"{args['name_dataset']}_{'_'.join(channel_names)}_{dates[dataset_id]}",
-                            description=f"An image taken on the {microscope_name} microscope on the {dates[dataset_id]} for QC",
+                            name=f"{args['name_dataset']}_{'_'.join(channel_names)}_{date}",
+                            description=f"An image taken on the {microscope_name} microscope on the {date} for QC",
                             channel_names=args["channel_names"][image_id],
-                            acquisition_datetime=datetime.strptime(
-                                dates[dataset_id], "%Y-%m-%d"
-                            ),
+                            acquisition_datetime=datetime.strptime(date, "%Y-%m-%d"),
                         )
                         for image_id, channel_names in enumerate(
                             args["channel_names"]
@@ -172,13 +170,13 @@ def psf_beads_generator(args, microscope_name):
         args["start_date"], args["nr_datasets"], args["month_frequency"]
     )
 
-    for dataset_id in range(args["nr_datasets"]):
-        print(f"Generating dataset {dataset_id} for {args['name_dataset']}")
+    for date in dates:
+        print(f"Generating dataset {date} for {args['name_dataset']}")
         datasets.append(
             mm_schema.PSFBeadsDataset(
-                name=f"{args['name_dataset']}_{dates[dataset_id]}",
+                name=f"{args['name_dataset']}_{date}",
                 description=args["description_dataset"],
-                acquisition_datetime=dates[dataset_id],
+                acquisition_datetime=date,
                 microscope=mm_schema.Microscope(name=microscope_name),
                 input_parameters=mm_schema.PSFBeadsInputParameters(),
                 input_data=mm_schema.PSFBeadsInputData(
@@ -240,12 +238,10 @@ def psf_beads_generator(args, microscope_name):
                                 do_noise=True,
                                 dtype=BIT_DEPTH_TO_DTYPE[args["bit_depth"]],
                             )[0],
-                            name=f"{args['name_dataset']}_{dates[dataset_id]}",
-                            description=f"An image taken on the {microscope_name} microscope on the {dates[dataset_id]} for QC",
+                            name=f"{args['name_dataset']}_{date}",
+                            description=f"An image taken on the {microscope_name} microscope on the {date} for QC",
                             channel_names=args["channel_names"][image_id],
-                            acquisition_datetime=datetime.strptime(
-                                dates[dataset_id], "%Y-%m-%d"
-                            ),
+                            acquisition_datetime=datetime.strptime(date, "%Y-%m-%d"),
                         )
                         for image_id, channel_names in enumerate(
                             args["channel_names"]
