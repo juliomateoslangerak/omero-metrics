@@ -45,13 +45,12 @@ DATASET_TO_ANALYSIS = {
 
 def generate_monthly_dates(start_date, nr_dates, month_frequency=1):
     dates = []
-    current_date = start_date
+    month = start_date.month
+    year = start_date.year
     for _ in range(nr_dates):
-        month = current_date.month - 1 + 1
-        year = current_date.year + month // 12
-        month = month % 12 + month_frequency
+        month = month + month_frequency
         day = min(
-            current_date.day,
+            start_date.day,
             [
                 31,
                 (
@@ -69,11 +68,10 @@ def generate_monthly_dates(start_date, nr_dates, month_frequency=1):
                 31,
                 30,
                 31,
-            ][month - 1],
+            ][month % 12],
         )
-        date1 = datetime(year, month, day)
-        dates.append(date1.strftime("%Y-%m-%d"))
-        current_date = date1
+        new_date = datetime(year + month // 12, month % 12 + 1, day)
+        dates.append(new_date.strftime("%Y-%m-%d"))
     return dates
 
 
