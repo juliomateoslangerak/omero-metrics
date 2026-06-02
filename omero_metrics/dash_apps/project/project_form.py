@@ -25,20 +25,19 @@ DATASET_TO_INPUT = {
     "PSFBeadsDataset": mm_schema.PSFBeadsInputParameters,
 }
 
-sample_types = list(
-    dict.fromkeys(
-        sample_cls
-        for mapping in MAPPINGS.values()
-        for sample_cls in mapping.sample_classes
-    )
-)
+SAMPLE_TYPE_LOOKUP = {
+    f"{dataset_cls.__name__}:{sample_cls.__name__}": (sample_cls, dataset_cls)
+    for dataset_cls, mapping in MAPPINGS.items()
+    for sample_cls in mapping.sample_classes
+}
+
 sample_types_dp = [
     {
-        "label": dft.add_space_between_capitals(x.__name__),
-        "value": f"{i}",
-        "description": f"Configure analysis for {x.__name__}",  # Added descriptions
+        "label": dft.add_space_between_capitals(sample_cls.__name__),
+        "value": key,
+        "description": f"Configure analysis for {sample_cls.__name__}",
     }
-    for i, x in enumerate(sample_types)
+    for key, (sample_cls, _) in SAMPLE_TYPE_LOOKUP.items()
 ]
 
 
@@ -320,7 +319,7 @@ def stepper_callback(*args, **kwargs):
     prevent_initial_call=True,
 )
 def update_sample_container(sample_type_selector, **kwargs):
-    mm_sample = MAPPINGS[int(sample_type_selector)][0]
+    mm_sample = SAMPLE_TYPE_LOOKUP[sample_type_selector][0]
     sample_form = dft.get_form(mm_sample, disabled=False, form_id="sample_content")
     return [sample_form]
 
@@ -333,7 +332,7 @@ def update_sample_container(sample_type_selector, **kwargs):
     prevent_initial_call=True,
 )
 def update_input_parameters(sample_type_selector, **kwargs):
-    analysis_type = MAPPINGS[int(sample_type_selector)][2].__name__
+    analysis_type = SAMPLE_TYPE_LOOKUP[sample_type_selector][1].__name__
     mm_input_parameters = DATASET_TO_INPUT[analysis_type]
     mm_input_parameters = dft.get_form(
         mm_input_parameters, disabled=False, form_id="input_content"
@@ -400,8 +399,8 @@ def save_config_dash(
     if not sample_type_selector:  # No sample type selected
         return dash.no_update, False
 
-    analysis_type = MAPPINGS[int(sample_type_selector)][2].__name__
-    mm_sample = MAPPINGS[int(sample_type_selector)][0]
+    analysis_type = SAMPLE_TYPE_LOOKUP[sample_type_selector][1].__name__
+    mm_sample = SAMPLE_TYPE_LOOKUP[sample_type_selector][0]
     mm_input_parameters = DATASET_TO_INPUT[analysis_type]
     project_id = int(kwargs["session_state"]["context"]["project_id"])
     request = kwargs["request"]
