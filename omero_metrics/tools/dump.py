@@ -278,6 +278,14 @@ def dump_dataset(
                     _dump_analysis_metadata(dataset, omero_dataset)
 
                     _dump_dataset_output(dataset.output, omero_dataset)
+
+                    if replace_project_last_key_measurement:
+                        _dump_last_key_measurement_as_project_mapping_annotation(
+                            conn=conn,
+                            mm_dataset=dataset,
+                            target_project=target_project,
+                        )
+
                 else:
                     logger.error(
                         f"Dataset {dataset.name} is processed but has no output. Skipping dump."
@@ -302,11 +310,6 @@ def dump_dataset(
     except Exception as e:
         logger.error(f"Dataset {dataset.name} could not be dumped to OMERO: {e}")
         raise e
-
-    if replace_project_last_key_measurement:
-        _dump_last_key_measurement_as_project_mapping_annotation(
-            conn=conn, mm_dataset=dataset, target_project=target_project
-        )
 
     return omero_dataset
 
