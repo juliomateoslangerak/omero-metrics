@@ -216,24 +216,25 @@ def load_dataset(
     return mm_dataset
 
 
-def load_analysis_config(project_wrapper=ProjectWrapper):
-    configs = [
-        ann
-        for ann in project_wrapper.listAnnotations(
-            ns="omero-metrics/analysis_config"
-        )
-        if isinstance(ann, MapAnnotationWrapper)
-    ]
-    if not configs:
-        return None, None
-    if len(configs) > 1:
-        logger.error(
-            f"More than one configuration"
-            f" in project {project_wrapper.getId()}."
-            f"Using the last one saved"
-        )
-
-    return configs[-1].getId(), dict(configs[-1].getValue())
+# def load_analysis_config(project_wrapper=ProjectWrapper):
+#     configs = [
+#         ann
+#         for ann in project_wrapper.listAnnotations(
+#             ns="omero-metrics/analysis_config"
+#         )
+#         if isinstance(ann, MapAnnotationWrapper)
+#     ]
+#     if not configs:
+#         return None, None
+#     if len(configs) > 1:
+#         logger.error(
+#             f"More than one configuration"
+#             f" in project {project_wrapper.getId()}."
+#             f"Using the last one saved"
+#         )
+#
+#     return configs[-1].getId(), dict(configs[-1].getValue())
+#
 
 
 def load_image(image: ImageWrapper, load_array: bool = True) -> mm_schema.Image:
