@@ -333,6 +333,7 @@ def _dump_analysis_metadata(
     output_metadata = _get_output_metadata(dataset.output)
 
     metadata = {
+        "assay_class": dataset.class_class_curie,
         **input_metadata_data,
         **input_metadata_parameters,
         **output_metadata,
