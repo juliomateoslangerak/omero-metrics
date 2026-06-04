@@ -554,37 +554,36 @@ def dump_roi(
     return omero_roi
 
 
-def dump_key_values(
-    conn: BlitzGateway,
-    key_values: Dict,
-    name: str,
-    description: str,
-    curie: str,
-    target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
-):
-    return omero_tools.create_key_value(
-        conn=conn,
-        annotation=key_values,
-        omero_object=target_object,
-        annotation_name=name,
-        annotation_description=description,
-        namespace=curie,
-    )
+# def dump_key_values(
+#     conn: BlitzGateway,
+#     key_values: Dict,
+#     name: str,
+#     description: str,
+#     curie: str,
+#     target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
+# ):
+#     return omero_tools.create_key_value(
+#         conn=conn,
+#         annotation=key_values,
+#         omero_object=target_object,
+#         annotation_name=name,
+#         annotation_description=description,
+#         namespace=curie,
+#     )
+#
 
-
-def _eval(s):
-    try:
-        return ast.literal_eval(s)
-    except ValueError:
-        corrected = f"'{s}'"
-        return ast.literal_eval(corrected)
-
-
-def _eval_types(table: mm_schema.Table):
-    for column in table.columns.values():
-        breakpoint()
-        column.values = [_eval(v) for v in column.values]
-    return table
+# def _eval(s):
+#     try:
+#         return ast.literal_eval(s)
+#     except ValueError:
+#         corrected = f"'{s}'"
+#         return ast.literal_eval(corrected)
+#
+# def _eval_types(table: mm_schema.Table):
+#     for column in table.columns.values():
+#         breakpoint()
+#         column.values = [_eval(v) for v in column.values]
+#     return table
 
 
 def dump_table(

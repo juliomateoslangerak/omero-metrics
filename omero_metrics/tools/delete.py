@@ -10,25 +10,26 @@ from omero_metrics.tools.configurations import ASSAY_CONFIGURATIONS
 logger = logging.getLogger(__name__)
 
 
-def _empty_data_reference(reference: mm_schema.DataReference) -> None:
-    reference.data_uri = None
-    reference.omero_host = None
-    reference.omero_port = None
-    reference.omero_object_type = None
-    reference.omero_object_id = None
-
-
-def delete_data_references(mm_obj: mm_schema.MetricsObject) -> list:
-    if isinstance(mm_obj, mm_schema.DataReference):
-        _empty_data_reference(mm_obj)
-    elif isinstance(mm_obj, mm_schema.MetricsObject):
-        _empty_data_reference(mm_obj.data_reference)
-    elif isinstance(mm_obj, list):
-        return [delete_data_references(obj) for obj in mm_obj]
-    else:
-        raise ValueError(
-            f"Input ({mm_obj}) should be a metrics object or a list of metrics objects"
-        )
+# def _empty_data_reference(reference: mm_schema.DataReference) -> None:
+#     reference.data_uri = None
+#     reference.omero_host = None
+#     reference.omero_port = None
+#     reference.omero_object_type = None
+#     reference.omero_object_id = None
+#
+#
+# def delete_data_references(mm_obj: mm_schema.MetricsObject) -> list:
+#     if isinstance(mm_obj, mm_schema.DataReference):
+#         _empty_data_reference(mm_obj)
+#     elif isinstance(mm_obj, mm_schema.MetricsObject):
+#         _empty_data_reference(mm_obj.data_reference)
+#     elif isinstance(mm_obj, list):
+#         return [delete_data_references(obj) for obj in mm_obj]
+#     else:
+#         raise ValueError(
+#             f"Input ({mm_obj}) should be a metrics object or a list of metrics objects"
+#         )
+#
 
 
 def delete_mm_obj_omero_refs(conn: BlitzGateway, mm_obj: mm_schema.MetricsObject):
