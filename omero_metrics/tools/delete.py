@@ -1,11 +1,11 @@
 import logging
 
-import microscopemetrics_schema.datamodel as mm_schema
 import omero
+from microscopemetrics_schema import datamodel as mm_schema
 from omero.gateway import BlitzGateway, DatasetWrapper, FileAnnotationWrapper
+from tools import namespaces
 
 from omero_metrics.tools import omero_tools
-from omero_metrics.tools.configurations import ASSAY_CONFIGURATIONS
 
 logger = logging.getLogger(__name__)
 
@@ -65,24 +65,26 @@ def delete_dataset_file_ann(conn: BlitzGateway, dataset: DatasetWrapper):
     for ann in dataset.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
             ns = ann.getNs()
-            if ns.startswith("microscopemetrics_schema:analyses"):
-                ds_type = ns.split("/")[-1]
-                logger.info(f"Deleting {ds_type} file annotation {ann.getId()}")
-                if ds_type in ASSAY_CONFIGURATIONS:
-                    omero_tools.del_object(
-                        conn=conn,
-                        object_ref=("Annotation", ann.getId()),
-                        delete_anns=True,
-                        delete_children=True,
-                        dry_run_first=True,
-                    )
+            if ns in namespaces.LIST_NS_MICROSCOPEMETRICS_SCHEMA_ASSAYS:
+                logger.info(
+                    f"Deleting {ns.split('/')[-1]} file annotation with id {ann.getId()}"
+                )
+                omero_tools.del_object(
+                    conn=conn,
+                    object_ref=("Annotation", ann.getId()),
+                    delete_anns=True,
+                    delete_children=True,
+                    dry_run_first=True,
+                )
 
 
 def delete_all_annotations(conn, group_id):
     all_annotations = conn.getObjects("Annotation", opts={"group": group_id})
     obj_ids = []
     for ann in all_annotations:
-        if ann.getNs() and ann.getNs().startswith("microscopemetrics"):
+        if ann.getNs() and ann.getNs().startswith(
+            namespaces.NS_OMERO_METRICS_PREFIX
+        ):
             obj_ids.append(ann.getId())
     try:
         if len(obj_ids) > 0:

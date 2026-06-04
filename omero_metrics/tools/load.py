@@ -18,7 +18,7 @@ from omero.gateway import (
     ProjectWrapper,
 )
 
-from omero_metrics.tools import omero_tools
+from omero_metrics.tools import namespaces, omero_tools
 from omero_metrics.tools.configurations import ASSAY_CONFIGURATIONS
 from omero_metrics.tools.schema_utils import get_image_fields
 
@@ -116,10 +116,7 @@ def load_input_config_file(project):
     for ann in project.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
             ns = ann.getNs()
-            if ns in [
-                cls.class_class_curie
-                for cls in mm_schema.MetricsInputParameters.__subclasses__()
-            ]:
+            if ns in namespaces.LIST_NS_MICROSCOPEMETRICS_SCHEMA_INPUT_PARAMETERS:
                 return yaml.load(
                     ann.getFileInChunks().__next__().decode(),
                     Loader=yaml.SafeLoader,
@@ -128,14 +125,12 @@ def load_input_config_file(project):
 
 
 def load_thresholds_file(project):
-    for ann in project.listAnnotations():
+    for ann in project.listAnnotations(ns=namespaces.NS_THRESHOLDS):
         if isinstance(ann, FileAnnotationWrapper):
-            name = ann.getFile().getName()
-            if name.startswith("threshold"):
-                return yaml.load(
-                    ann.getFileInChunks().__next__().decode(),
-                    Loader=yaml.SafeLoader,
-                )
+            return yaml.load(
+                ann.getFileInChunks().__next__().decode(),
+                Loader=yaml.SafeLoader,
+            )
     return None
 
 
@@ -174,7 +169,7 @@ def load_dataset(
     for ann in dataset.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
             ns = ann.getNs()
-            if ns.startswith("microscopemetrics_schema:analyses"):
+            if ns in namespaces.LIST_NS_MICROSCOPEMETRICS_SCHEMA_ASSAYS:
                 ds_type = ns.split("/")[-1]
                 if ds_type in ASSAY_CONFIGURATIONS:
                     mm_datasets.append(

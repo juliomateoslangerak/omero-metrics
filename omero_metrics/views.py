@@ -8,6 +8,7 @@ from microscopemetrics import AnalysisError, SaturationError
 from microscopemetrics_schema import datamodel as mm_schema
 from omero.gateway import FileAnnotationWrapper
 from omeroweb.webclient.decorators import login_required
+from tools import namespaces
 
 from omero_metrics.tools import (
     data_managers,
@@ -263,6 +264,7 @@ def center_view_projects(request, conn=None, **kwargs):
 @login_required(setGroupContext=True)
 def save_config(request, conn=None, **kwargs):
     """Save the configuration file"""
+    # TODO: We must split study_config into the different components
     try:
         project_id = kwargs["project_id"]
         mm_input_parameters = kwargs["input_parameters"]
@@ -275,7 +277,10 @@ def save_config(request, conn=None, **kwargs):
                 for ann in project_wrapper.listAnnotations():
                     if isinstance(ann, FileAnnotationWrapper):
                         ns = ann.getFile().getName()
-                        if ns.startswith("study_config"):
+                        if (
+                            ns
+                            in namespaces.LIST_NS_MICROSCOPEMETRICS_SCHEMA_INPUT_PARAMETERS
+                        ):
                             to_delete.append(ann.getId())
                 conn.deleteObjects(
                     graph_spec="Annotation",
@@ -465,11 +470,11 @@ def save_threshold(request, conn=None, **kwargs):
         if threshold:
             if threshold_exist:
                 to_delete = []
-                for ann in project_wrapper.listAnnotations():
+                for ann in project_wrapper.listAnnotations(
+                    ns=namespaces.NS_THRESHOLDS
+                ):
                     if isinstance(ann, FileAnnotationWrapper):
-                        ns = ann.getFile().getName()
-                        if ns.startswith("threshold"):
-                            to_delete.append(ann.getId())
+                        to_delete.append(ann.getId())
                 conn.deleteObjects(
                     graph_spec="Annotation",
                     obj_ids=to_delete,

@@ -15,6 +15,7 @@ from omero.gateway import (
     ImageWrapper,
     ProjectWrapper,
 )
+from tools import namespaces
 from tools.schema_utils import remove_unsupported_types
 
 from omero_metrics.tools import omero_tools
@@ -75,7 +76,7 @@ def dump_microscope(
         omero_object=omero_group,
         annotation_name=microscope.name,
         annotation_description=microscope.description,
-        namespace=microscope.class_class_curie,
+        namespace=f"{namespaces.NS_OMERO_METRICS_PREFIX}{microscope.class_class_curie}",
     )
 
     return omero_group
@@ -132,10 +133,9 @@ def _dump_last_key_measurement_as_project_mapping_annotation(
     mm_dataset: mm_schema.MetricsDataset,
     target_project: ProjectWrapper,
 ):
-    # TODO: add namespaces to omero-metrics
     # TODO: delete the last measurements upon project deletion
     last_key_measurement = target_project.getAnnotation(
-        ns="omero-metrics:last-key-key-measurement"
+        ns=namespaces.NS_LAST_KEY_KEY_MEASUREMENT
     )
     if last_key_measurement is None:
         omero_tools.create_key_value(
@@ -150,7 +150,7 @@ def _dump_last_key_measurement_as_project_mapping_annotation(
             omero_object=target_project,
             annotation_name="last Key Measurements",
             annotation_description="Last Key Key Measurements acquired for this Study",
-            namespace="omero-metrics:last-key-key-measurement",
+            namespace=namespaces.NS_LAST_KEY_KEY_MEASUREMENT,
         )
     else:
         existing_kv = {v[0]: v[1] for v in last_key_measurement.getValue()}
@@ -192,12 +192,13 @@ def _dump_mm_dataset_as_file_annotation(
     ) as f:
         f.write(dumper.dumps(mm_dataset))
         f.close()
+        ns = f"{namespaces.NS_OMERO_METRICS_PREFIX}{mm_dataset.class_class_curie}"
         file_ann = omero_tools.create_file(
             conn=conn,
             file_path=f.name,
             omero_object=target_omero_obj,
             file_description=mm_dataset.description,
-            namespace=mm_dataset.class_class_curie,
+            namespace=ns,
             mimetype="application/yaml",
         )
 
@@ -343,7 +344,7 @@ def _dump_analysis_metadata(
         omero_object=target_dataset,
         annotation_name=dataset.class_name,
         annotation_description=dataset.description,
-        namespace=dataset.class_class_curie,
+        namespace=namespaces.NS_ANALYSIS_RUN_METADATA,
     )
 
 
@@ -612,7 +613,7 @@ def dump_table(
         table_name=table.name,
         omero_object=target_object,
         table_description=table.description,
-        namespace=table.class_class_curie,
+        namespace=f"{namespaces.NS_OMERO_METRICS_PREFIX}{table.class_class_curie}",
     )
     table.data_reference = omero_tools.get_ref_from_object(omero_table)
 
@@ -639,7 +640,7 @@ def dump_comment(
         conn=conn,
         comment_text=comment.text,
         omero_object=target_object,
-        namespace=comment.class_class_curie,
+        namespace=namespaces.NS_COMMENT,
     )
 
 
@@ -673,7 +674,7 @@ def dump_config_input_parameters(
             file_path=f.name,
             omero_object=target_omero_obj,
             file_description="Configuration file",
-            namespace=input_parameters.class_class_curie,
+            namespace=f"{namespaces.NS_OMERO_METRICS_PREFIX}{input_parameters.class_class_curie}",
             mimetype="application/yaml",
         )
 
@@ -699,7 +700,7 @@ def dump_threshold(
             file_path=f.name,
             omero_object=target_omero_obj,
             file_description="Threshold file",
-            namespace="threshold",
+            namespace=namespaces.NS_THRESHOLDS,
             mimetype="application/yaml",
         )
     return file_ann
