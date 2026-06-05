@@ -169,7 +169,7 @@ SELECT_STYLES = {
     },
 }
 
-COLORS_CHANNELS = ["#FF0000", "#00FF00", "#0000FF", "#FFFF00"]
+COLORS_CHANNELS = ["blue.7", "green.7", "red.7", "purple.7"]
 
 
 DATEPICKER_STYLES = {

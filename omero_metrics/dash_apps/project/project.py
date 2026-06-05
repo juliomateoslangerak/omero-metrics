@@ -465,6 +465,7 @@ def update_table(measurement, dates_range, **kwargs):
             {
                 "name": k,
                 "color": COLORS_CHANNELS[i % len(COLORS_CHANNELS)],
+                "strokeWidth": 2,
             }
             for i, k in enumerate(keys)
         ]
@@ -478,20 +479,23 @@ def update_table(measurement, dates_range, **kwargs):
                         d[f"{k}_lower"] = d[k] - d[err_key]
             for i, k in enumerate(keys):
                 color = COLORS_CHANNELS[i % len(COLORS_CHANNELS)]
+                color = color[:-2] + ".3"
                 series += [
                     {
                         "name": f"{k}_upper",
                         "color": color,
                         "strokeDasharray": "4 4",
                         "strokeWidth": 1,
-                        "label": f"{k} +σ",
+                        "label": "",
+                        # "label": f"{k} +σ",
                     },
                     {
                         "name": f"{k}_lower",
                         "color": color,
                         "strokeDasharray": "4 4",
                         "strokeWidth": 1,
-                        "label": f"{k} -σ",
+                        "label": "",
+                        # "label": f"{k} -σ",
                     },
                 ]
 
