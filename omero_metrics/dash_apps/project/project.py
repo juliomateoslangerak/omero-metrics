@@ -410,6 +410,7 @@ def update_table(measurement, dates_range, **kwargs):
     try:
         context = deserialize(kwargs["session_state"]["context"])
         key_measurements_by_kkm = context["key_measurements_by_kkm"]
+        comments_by_dataset_id = context["comments_by_dataset_id"]
         threshold = context["thresholds"]
         kkm_config = context["assay_config"].kkm_configuration
         measurement = int(measurement)
@@ -459,6 +460,28 @@ def update_table(measurement, dates_range, **kwargs):
                     name=k,
                 )
             )
+
+        for id, comment in comments_by_dataset_id.items():
+            if comment:
+                # fig.add_trace(
+                #     go.Scatter(
+                #         x=[comment["datetime"], comment["datetime"]],
+                #         # y=[ymin, ymax],
+                #         mode="lines",
+                #         customdata=comment["text"],
+                #         hovertemplate="%{customdata}<extra></extra>",
+                #         showlegend=False,
+                #     )
+                # )
+                fig.add_shape(
+                    type="line",
+                    x0=comment["datetime"],
+                    x1=comment["datetime"],
+                    y0=0,
+                    y1=1,
+                    yref="paper",
+                    line=dict(color="blue", dash="dash"),
+                )
 
         if threshold:
             threshold_kkm = threshold[selected_kkm.value]

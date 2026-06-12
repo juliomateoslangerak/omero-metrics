@@ -185,6 +185,8 @@ def HarmonizedMetricsDatasetCollection(pm):
     kkm_list = pm.assay_configuration.kkm_configuration
     collection_key_measurements_by_kkm = {x.value: [] for x in kkm_list}
     collection_key_measurements_by_dataset_id = {}
+    collection_comments_by_dataset_id = {}
+
     for dataset in pm.mm_dataset_collection.dataset_collection:
         if not dataset.processed:
             # In principle, omero-metrics is generating and processing datasets in one go, so this should never happen
@@ -229,6 +231,15 @@ def HarmonizedMetricsDatasetCollection(pm):
             ],
         }
 
+        if dataset.output.comment:
+            collection_comments_by_dataset_id[
+                int(dataset.data_reference.omero_object_id)
+            ] = {
+                "author": dataset.output.comment.author,
+                "datetime": dataset.output.comment.comment_datetime,
+                "text": dataset.output.comment.text,
+            }
+
         dates.append(dataset.acquisition_datetime)
         min_date = (
             min(min_date, dataset.acquisition_datetime)
@@ -248,6 +259,7 @@ def HarmonizedMetricsDatasetCollection(pm):
         "mm_dataset_collection": pm.mm_dataset_collection,
         "key_measurements_by_kkm": collection_key_measurements_by_kkm,
         "key_measurements_by_dataset_id": collection_key_measurements_by_dataset_id,
+        "comments_by_dataset_id": collection_comments_by_dataset_id,
         "dates": dates,
         "min_date": min_date,
         "max_date": max_date,
