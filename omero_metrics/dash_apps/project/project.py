@@ -5,6 +5,7 @@ from time import sleep
 
 import dash
 import dash_mantine_components as dmc
+import plotly.graph_objects as go
 from django_plotly_dash import DjangoDash
 from linkml_runtime.dumpers import JSONDumper, YAMLDumper
 from microscopemetrics_schema import datamodel as mm_schema
@@ -172,21 +173,8 @@ omero_project_dash.layout = dmc.MantineProvider(
                                         id="graph-project",
                                         style={"height": "350px"},
                                         children=[
-                                            dmc.LineChart(
-                                                id="line-chart",
-                                                h=300,
-                                                data=[],
-                                                dataKey="date",
-                                                withLegend=True,
-                                                legendProps={
-                                                    "horizontalAlign": "top",
-                                                    "left": 50,
-                                                },
-                                                series=[],
-                                                curveType="linear",
-                                                style={"padding": 20},
-                                                xAxisLabel="Acquisition Date",
-                                                connectNulls=True,
+                                            dash.dcc.Graph(
+                                                id="line-chart", figure={}
                                             ),
                                             dash.html.Div(id="feedback_message"),
                                         ],
@@ -411,10 +399,7 @@ def check_data(*args, **kwargs):
 
 
 @omero_project_dash.expanded_callback(
-    dash.dependencies.Output("line-chart", "data"),
-    dash.dependencies.Output("line-chart", "lineChartProps"),
-    dash.dependencies.Output("line-chart", "series"),
-    dash.dependencies.Output("line-chart", "referenceLines"),
+    dash.dependencies.Output("line-chart", "figure"),
     [
         dash.dependencies.Input("key-measurement-dropdown", "value"),
         dash.dependencies.Input("date-picker", "value"),
@@ -433,72 +418,62 @@ def update_table(measurement, dates_range, **kwargs):
         if not key_measurements_by_kkm:
             return dash.no_update
         selected_kkm = kkm_config[measurement]
-        if threshold:
-            threshold_kkm = threshold[selected_kkm.value]
-            ref = [
-                {
-                    "y": v,
-                    "label": k.replace("_", " ").title(),
-                    "color": "red.6" if k == "upper_limit" else "yellow.6",
-                }
-                for k, v in threshold_kkm.items()
-                if v
-            ]
-        else:
-            ref = []
 
-        start_date = datetime.fromisoformat(dates_range[0].split("T")[0]).date()
-        end_date = datetime.fromisoformat(dates_range[1].split("T")[0]).date()
+        fig = go.Figure()
 
         data = key_measurements_by_kkm[selected_kkm.value]
         keys = sorted(
             {
                 k
-                for d in data
-                for k in d
+                for m in data
+                for k in m
                 if k not in ["date", "dataset_id"] and not k.endswith("_err")
             }
         )
-        series = [
-            {
-                "name": k,
-                "color": COLORS_CHANNELS[i % len(COLORS_CHANNELS)],
-                "strokeWidth": 2,
-            }
-            for i, k in enumerate(keys)
-        ]
-
-        if selected_kkm.error_bar:
-            for d in data:
-                for k in keys:
-                    err_key = f"{k}_err"
-                    if d.get(k) is not None and d.get(err_key) is not None:
-                        d[f"{k}_upper"] = d[k] + d[err_key]
-                        d[f"{k}_lower"] = d[k] - d[err_key]
-            for i, k in enumerate(keys):
-                color = COLORS_CHANNELS[i % len(COLORS_CHANNELS)]
-                color = color[:-2] + ".3"
-                series += [
-                    {
-                        "name": f"{k}_upper",
-                        "color": color,
-                        "strokeDasharray": "4 4",
-                        "strokeWidth": 1,
-                        "label": "",
-                        # "label": f"{k} +σ",
+        for i, k in enumerate(keys):
+            fig.add_trace(
+                go.Scatter(
+                    x=[
+                        m["date"]
+                        for m in data
+                        if dates_range[0] < m["date"] < dates_range[1]
+                    ],
+                    y=[
+                        m[k]
+                        for m in data
+                        if dates_range[0] < m["date"] < dates_range[1]
+                    ],
+                    error_y={
+                        "array": [
+                            m.get(f"{k}_err")
+                            for m in data
+                            if dates_range[0] < m["date"] < dates_range[1]
+                        ]
                     },
-                    {
-                        "name": f"{k}_lower",
-                        "color": color,
-                        "strokeDasharray": "4 4",
-                        "strokeWidth": 1,
-                        "label": "",
-                        # "label": f"{k} -σ",
-                    },
-                ]
+                    customdata=[
+                        m["dataset_id"]
+                        for m in data
+                        if dates_range[0] < m["date"] < dates_range[1]
+                    ],
+                    mode="lines+markers",
+                    name=k,
+                )
+            )
 
-        props = {"syncId": "project-line-chart"}
-        return data, props, series, ref
+        if threshold:
+            threshold_kkm = threshold[selected_kkm.value]
+            fig.add_hline(
+                y=threshold_kkm["upper_limit"],
+                line={"color": "red", "dash": "dash"},
+                name="Upper threshold",
+            )
+            fig.add_hline(
+                y=threshold_kkm["lower_limit"],
+                line={"color": "orangered", "dash": "dot"},
+                name="Lower threshold",
+            )
+
+        return fig
 
     except Exception as e:
         return dash.no_update
@@ -521,7 +496,9 @@ def update_project_view(clicked_data, page, **kwargs):
             key_measurements_by_dataset_id = context[
                 "key_measurements_by_dataset_id"
             ]
-            data = key_measurements_by_dataset_id[str(clicked_data["dataset_id"])]
+            data = key_measurements_by_dataset_id[
+                str(clicked_data["points"][0]["customdata"])
+            ]
             total = math.ceil(len(data["head"]) / 4)
             start_idx = (page - 1) * 4
             end_idx = start_idx + 4
