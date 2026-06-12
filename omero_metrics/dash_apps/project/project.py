@@ -5,8 +5,6 @@ from time import sleep
 
 import dash
 import dash_mantine_components as dmc
-import pandas as pd
-from dash import html
 from django_plotly_dash import DjangoDash
 from linkml_runtime.dumpers import JSONDumper, YAMLDumper
 from microscopemetrics_schema import datamodel as mm_schema
@@ -42,7 +40,7 @@ omero_project_dash.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
         dmc.NotificationProvider(position="top-center"),
-        html.Div(id="delete-notifications-container"),
+        dash.html.Div(id="delete-notifications-container"),
         dmc.Modal(
             title="Confirm Delete",
             id="delete-confirm-delete",
@@ -67,8 +65,8 @@ omero_project_dash.layout = dmc.MantineProvider(
                 ),
             ],
         ),
-        html.Div(id="blank-input"),
-        html.Div(id="save-config-result"),
+        dash.html.Div(id="blank-input"),
+        dash.html.Div(id="save-config-result"),
         my_components.header_component(
             "Project Dashboard",
             "Microscopy Image Analysis Dashboard",
@@ -170,7 +168,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                                             "marginBottom": "12px",
                                         },
                                     ),
-                                    html.Div(
+                                    dash.html.Div(
                                         id="graph-project",
                                         style={"height": "350px"},
                                         children=[
@@ -190,7 +188,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                                                 xAxisLabel="Acquisition Date",
                                                 connectNulls=True,
                                             ),
-                                            html.Div(id="feedback_message"),
+                                            dash.html.Div(id="feedback_message"),
                                         ],
                                     ),
                                 ],
@@ -314,7 +312,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                                         id="thresholds-button-container",
                                         children=[],
                                     ),
-                                    html.Div(id="notifications-container"),
+                                    dash.html.Div(id="notifications-container"),
                                 ],
                             ),
                         ],
