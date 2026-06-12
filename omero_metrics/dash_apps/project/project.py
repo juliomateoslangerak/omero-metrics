@@ -1,6 +1,5 @@
 import math
 import traceback
-from datetime import datetime
 from time import sleep
 
 import dash
@@ -420,6 +419,8 @@ def update_table(measurement, dates_range, **kwargs):
             return dash.no_update
         selected_kkm = kkm_config[measurement]
 
+        dates_range = [d.split("T")[0] for d in dates_range]
+
         fig = go.Figure()
 
         data = key_measurements_by_kkm[selected_kkm.value]
@@ -437,24 +438,24 @@ def update_table(measurement, dates_range, **kwargs):
                     x=[
                         m["date"]
                         for m in data
-                        if dates_range[0] < m["date"] < dates_range[1]
+                        if dates_range[0] <= m["date"] <= dates_range[1]
                     ],
                     y=[
                         m[k]
                         for m in data
-                        if dates_range[0] < m["date"] < dates_range[1]
+                        if dates_range[0] <= m["date"] <= dates_range[1]
                     ],
                     error_y={
                         "array": [
                             m.get(f"{k}_err")
                             for m in data
-                            if dates_range[0] < m["date"] < dates_range[1]
+                            if dates_range[0] <= m["date"] <= dates_range[1]
                         ]
                     },
                     customdata=[
                         m["dataset_id"]
                         for m in data
-                        if dates_range[0] < m["date"] < dates_range[1]
+                        if dates_range[0] <= m["date"] < dates_range[1]
                     ],
                     mode="lines+markers",
                     name=k,
