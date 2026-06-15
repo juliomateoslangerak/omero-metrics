@@ -15,9 +15,8 @@ from omero.gateway import (
     ImageWrapper,
     ProjectWrapper,
 )
-from tools.schema_utils import remove_unsupported_types
 
-from omero_metrics.tools import namespaces, omero_tools
+from omero_metrics.tools import namespaces, omero_tools, schema_utils
 
 logger = logging.getLogger(__name__)
 
@@ -176,10 +175,10 @@ def _dump_mm_dataset_as_file_annotation(
     ],
 ):
     # We need to remove the data on the numpy and pandas data objects as they cannot be serialized by linkml
-    remove_unsupported_types(mm_dataset.input_data)
-    remove_unsupported_types(mm_dataset.input_parameters)
+    schema_utils.remove_unsupported_types(mm_dataset.input_data)
+    schema_utils.remove_unsupported_types(mm_dataset.input_parameters)
     if mm_dataset.output:
-        remove_unsupported_types(mm_dataset.output)
+        schema_utils.remove_unsupported_types(mm_dataset.output)
 
     dumper = YAMLDumper()
 
