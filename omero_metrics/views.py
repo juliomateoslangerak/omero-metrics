@@ -8,13 +8,13 @@ from microscopemetrics import AnalysisError, SaturationError
 from microscopemetrics_schema import datamodel as mm_schema
 from omero.gateway import FileAnnotationWrapper
 from omeroweb.webclient.decorators import login_required
-from tools import namespaces
 
 from omero_metrics.tools import (
     data_managers,
     delete,
     dump,
     load,
+    namespaces,
     omero_tools,
     schema_utils,
 )

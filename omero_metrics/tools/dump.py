@@ -15,10 +15,9 @@ from omero.gateway import (
     ImageWrapper,
     ProjectWrapper,
 )
-from tools import namespaces
 from tools.schema_utils import remove_unsupported_types
 
-from omero_metrics.tools import omero_tools
+from omero_metrics.tools import namespaces, omero_tools
 
 logger = logging.getLogger(__name__)
 
