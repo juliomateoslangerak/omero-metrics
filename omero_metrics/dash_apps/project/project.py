@@ -464,24 +464,24 @@ def update_table(measurement, dates_range, **kwargs):
 
         for id, comment in comments_by_dataset_id.items():
             if comment:
-                # fig.add_trace(
-                #     go.Scatter(
-                #         x=[comment["datetime"], comment["datetime"]],
-                #         # y=[ymin, ymax],
-                #         mode="lines",
-                #         customdata=comment["text"],
-                #         hovertemplate="%{customdata}<extra></extra>",
-                #         showlegend=False,
-                #     )
-                # )
-                fig.add_shape(
-                    type="line",
-                    x0=comment["datetime"],
-                    x1=comment["datetime"],
-                    y0=0,
-                    y1=1,
+                fig.add_annotation(
+                    text="<span>&#x1F589;</span>",
+                    font={
+                        "size": 18,
+                        "color": "red",
+                    },
+                    hovertext=comment["text"],
+                    x=comment["datetime"],
+                    ax=0,
+                    y=0,
+                    ay=40,
                     yref="paper",
-                    line=dict(color="blue", dash="dash"),
+                    ayref="pixel",
+                    showarrow=True,
+                    arrowwidth=2,
+                    arrowhead=2,
+                    arrowcolor="red",
+                    arrowsize=1.2,
                 )
 
         if threshold:
