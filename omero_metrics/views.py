@@ -317,6 +317,9 @@ def run_analysis_view(request, conn=None, **kwargs):
         list_mm_images = [
             load.load_image(conn.getObject("Image", int(i))) for i in list_images
         ]
+        acquisition_datetime = sorted(
+            [i.acquisition_datetime for i in list_mm_images]
+        )[-1]
         mm_sample = kwargs["mm_sample"]
         mm_input_parameters = kwargs["mm_input_parameters"]
         dataset_class = schema_utils.get_dataset_class(mm_input_parameters.__class__)
@@ -339,9 +342,7 @@ def run_analysis_view(request, conn=None, **kwargs):
             microscope=mm_microscope,
             sample=mm_sample,
             input_data=input_data,
-            acquisition_datetime=dataset_wrapper.getDate().strftime(
-                "%Y-%m-%d %H:%M:%S"
-            ),
+            acquisition_datetime=acquisition_datetime,
             experimenter=mm_experimenter,
         )
         try:
@@ -363,9 +364,7 @@ def run_analysis_view(request, conn=None, **kwargs):
             try:
                 if comment:
                     mm_comment = mm_schema.Comment(
-                        comment_datetime=datetime.now().strftime(
-                            "%Y-%m-%d %H:%M:%S"
-                        ),
+                        comment_datetime=acquisition_datetime,
                         text=comment,
                         comment_type="PROCESSING",
                     )
