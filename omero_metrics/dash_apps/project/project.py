@@ -1,5 +1,6 @@
 import math
 import traceback
+from textwrap import wrap
 from time import sleep
 
 import dash
@@ -470,7 +471,7 @@ def update_table(measurement, dates_range, **kwargs):
                         "size": 18,
                         "color": "red",
                     },
-                    hovertext=comment["text"],
+                    hovertext="<br>".join(wrap(comment["text"], 30)),
                     x=comment["datetime"],
                     ax=0,
                     y=0,
