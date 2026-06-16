@@ -397,8 +397,8 @@ def load_table_mm_metrics(table):
                 df[col] = pd.to_numeric(df[col])
             except (ValueError, TypeError):
                 pass
-
         return df
+
     elif table and isinstance(table, list) and isinstance(table[0], mm_schema.Table):
         df_list = []
         start = 0
