@@ -271,8 +271,7 @@ def callback_image(channel, color, checked_contour, inverted_color, roi, **kwarg
     image_id = mm_image.data_reference.omero_object_id
     if inverted_color:
         color = color + "_r"
-    image_data = mm_image.array_data[0, 0, :, :, int(channel)]
-    image_data = np.float32(image_data / image_data.max())
+    channel_data = mm_image.array_data[0, 0, :, :, int(channel)]
     rois = load.get_rois_mm_dataset(mm_dataset)
     df_lines = pd.DataFrame(rois[image_id]["roi"]["Line"])
     df_rects = pd.DataFrame(rois[image_id]["roi"]["Rectangle"])
@@ -284,9 +283,8 @@ def callback_image(channel, color, checked_contour, inverted_color, roi, **kwarg
     df_point_channel = df_points[df_points["C"] == int(channel)].copy()
 
     fig = px.imshow(
-        image_data,
-        zmin=image_data.min(),
-        zmax=image_data.max(),
+        channel_data,
+        zmin=0.0,
         color_continuous_scale=color,
     )
     fig.add_trace(

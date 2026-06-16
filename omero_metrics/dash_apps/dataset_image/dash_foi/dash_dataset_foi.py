@@ -212,6 +212,8 @@ def update_intensity_map(channel, **kwargs):
         # Create intensity map
         fig = px.imshow(
             image_channel,
+            zmin=0.0,
+            zmax=1.0,
             color_continuous_scale="hot",
             labels={"color": "Intensity"},
         )
