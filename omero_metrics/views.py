@@ -18,7 +18,6 @@ from omero_metrics.tools import (
     omero_tools,
     schema_utils,
 )
-from omero_metrics.tools.serializers import serialize
 
 logger = logging.getLogger(__name__)
 
