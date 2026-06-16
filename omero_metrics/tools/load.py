@@ -410,7 +410,7 @@ def load_table_mm_metrics(table):
                     df[col] = pd.to_numeric(df[col])
                 except (ValueError, TypeError):
                     pass
-            df.columns = [modify_column_name(col, start) for col in df.columns]
+            df.columns = [_modify_column_name(col, start) for col in df.columns]
             df = df.replace("nan", np.nan)
             start = df.columns.str.extract(r"ch(\d+)").astype(int)[0].max() + 1
             df_list.append(df)
@@ -419,7 +419,7 @@ def load_table_mm_metrics(table):
         return None
 
 
-def modify_column_name(col, i):
+def _modify_column_name(col, i):
     # TODO: On the longer run we need to implement title in the schema
     match = re.search(r"ch(\d+)", col)
     if match:
