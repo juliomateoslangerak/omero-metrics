@@ -227,24 +227,49 @@ def update_image(channel_index, color, invert, **kwargs):
             mm_dataset=deserialize(context["mm_dataset"])
         )
 
-        metrics_df = table_km.filter(["channel_name", *kkm_values])
-
         if all(list(voxel_size.values())):
             fwhms = {
-                "x": metrics_df.iloc[0]["average_bead_fwhm_micron_x"],
-                "y": metrics_df.iloc[0]["average_bead_fwhm_micron_y"],
-                "z": metrics_df.iloc[0]["average_bead_fwhm_micron_z"],
+                "x": table_km.loc[
+                    table_km["channel_nr"] == channel_index,
+                    "average_bead_fwhm_micron_x",
+                ].iloc[0],
+                "y": table_km.loc[
+                    table_km["channel_nr"] == channel_index,
+                    "average_bead_fwhm_micron_y",
+                ].iloc[0],
+                "z": table_km.loc[
+                    table_km["channel_nr"] == channel_index,
+                    "average_bead_fwhm_micron_z",
+                ].iloc[0],
             }
         else:
             fwhms = {
-                "x": metrics_df.iloc[0]["average_bead_fwhm_pixel_x"],
-                "y": metrics_df.iloc[0]["average_bead_fwhm_pixel_y"],
-                "z": metrics_df.iloc[0]["average_bead_fwhm_pixel_z"],
+                "x": table_km.loc[
+                    table_km["channel_nr"] == channel_index,
+                    "average_bead_fwhm_pixel_x",
+                ].iloc[0],
+                "y": table_km.loc[
+                    table_km["channel_nr"] == channel_index,
+                    "average_bead_fwhm_pixel_y",
+                ].iloc[0],
+                "z": table_km.loc[
+                    table_km["channel_nr"] == channel_index,
+                    "average_bead_fwhm_pixel_z",
+                ].iloc[0],
             }
         r_sq = {
-            "x": metrics_df.iloc[0]["average_bead_fit_gaussian_r2_x"],
-            "y": metrics_df.iloc[0]["average_bead_fit_gaussian_r2_y"],
-            "z": metrics_df.iloc[0]["average_bead_fit_gaussian_r2_z"],
+            "x": table_km.loc[
+                table_km["channel_nr"] == channel_index,
+                "average_bead_fit_gaussian_r2_x",
+            ].iloc[0],
+            "y": table_km.loc[
+                table_km["channel_nr"] == channel_index,
+                "average_bead_fit_gaussian_r2_y",
+            ].iloc[0],
+            "z": table_km.loc[
+                table_km["channel_nr"] == channel_index,
+                "average_bead_fit_gaussian_r2_z",
+            ].iloc[0],
         }
 
         axis_lengths = {
