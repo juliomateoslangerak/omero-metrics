@@ -463,8 +463,8 @@ def update_table(measurement, dates_range, **kwargs):
                 )
             )
 
-        for id, comment in comments_by_dataset_id.items():
-            if comment:
+        for comment in comments_by_dataset_id.values():
+            if comment and dates_range[0] <= comment["datetime"] < dates_range[1]:
                 fig.add_annotation(
                     text="<span>&#x1F589;</span>",
                     font={
