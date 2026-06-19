@@ -59,7 +59,7 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                                             size="lg",
                                                         ),
                                                         dmc.Select(
-                                                            id="channel_dropdown_foi",
+                                                            id="channel-dropdown-foi",
                                                             clearable=False,
                                                             allowDeselect=False,
                                                             w="200",
@@ -75,7 +75,7 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                                     justify="space-between",
                                                 ),
                                                 dcc.Graph(
-                                                    id="intensity_map",
+                                                    id="intensity-map",
                                                     config={
                                                         "displayModeBar": True,
                                                         "scrollZoom": True,
@@ -138,7 +138,7 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                     justify="space-between",
                                 ),
                                 dmc.LineChart(
-                                    id="intensity_profile",
+                                    id="intensity-profile",
                                     h=300,
                                     dataKey="Pixel",
                                     data={},
@@ -177,8 +177,8 @@ dsc.register_download_table_callback(omero_dataset_foi)
 
 
 @omero_dataset_foi.expanded_callback(
-    dash.dependencies.Output("channel_dropdown_foi", "data"),
-    dash.dependencies.Output("channel_dropdown_foi", "value"),
+    dash.dependencies.Output("channel-dropdown-foi", "data"),
+    dash.dependencies.Output("channel-dropdown-foi", "value"),
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_dropdown_menu(*args, **kwargs):
@@ -193,9 +193,9 @@ def update_dropdown_menu(*args, **kwargs):
 
 
 @omero_dataset_foi.expanded_callback(
-    dash.dependencies.Output("intensity_map", "figure"),
+    dash.dependencies.Output("intensity-map", "figure"),
     [
-        dash.dependencies.Input("channel_dropdown_foi", "value"),
+        dash.dependencies.Input("channel-dropdown-foi", "value"),
     ],
 )
 def update_intensity_map(channel, **kwargs):
@@ -245,10 +245,10 @@ def update_intensity_map(channel, **kwargs):
 
 
 @omero_dataset_foi.expanded_callback(
-    dash.dependencies.Output("intensity_profile", "data"),
-    dash.dependencies.Output("intensity_profile", "curveType"),
+    dash.dependencies.Output("intensity-profile", "data"),
+    dash.dependencies.Output("intensity-profile", "curveType"),
     [
-        dash.dependencies.Input("channel_dropdown_foi", "value"),
+        dash.dependencies.Input("channel-dropdown-foi", "value"),
         dash.dependencies.Input("profile-type", "value"),
     ],
 )
