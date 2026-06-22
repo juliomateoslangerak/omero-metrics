@@ -88,7 +88,7 @@ dash_form_project.layout = dmc.MantineProvider(
                             iconSize=32,
                             children=[
                                 dmc.StepperStep(
-                                    id="step_sample",
+                                    id="step-sample",
                                     label="Sample Configuration",
                                     description="Define your sample parameters",
                                     icon=my_components.get_icon(
@@ -107,7 +107,7 @@ dash_form_project.layout = dmc.MantineProvider(
                                                     size="sm",
                                                 ),
                                                 dmc.Select(
-                                                    id="sample_type_selector",
+                                                    id="sample-type-selector",
                                                     data=sample_types_dp,
                                                     searchable=True,
                                                     placeholder="Select Sample Type",
@@ -123,7 +123,7 @@ dash_form_project.layout = dmc.MantineProvider(
                                                         }
                                                     },
                                                 ),
-                                                html.Div(id="sample_container"),
+                                                html.Div(id="sample-container"),
                                             ],
                                             p="md",
                                             radius="md",
@@ -132,7 +132,7 @@ dash_form_project.layout = dmc.MantineProvider(
                                     ],
                                 ),
                                 dmc.StepperStep(
-                                    id="step_input_data",
+                                    id="step-input-data",
                                     label="Analysis Parameters",
                                     description="Set analysis configuration",
                                     icon=my_components.get_icon(
@@ -152,7 +152,7 @@ dash_form_project.layout = dmc.MantineProvider(
                                                     mb=10,
                                                 ),
                                                 html.Div(
-                                                    id="input_parameters_container"
+                                                    id="input-parameters-container"
                                                 ),
                                             ],
                                             p="md",
@@ -184,7 +184,7 @@ dash_form_project.layout = dmc.MantineProvider(
                                                                         order=4,
                                                                     ),
                                                                     html.Div(
-                                                                        id="sample_col"
+                                                                        id="sample-col"
                                                                     ),
                                                                 ],
                                                                 p="md",
@@ -201,7 +201,7 @@ dash_form_project.layout = dmc.MantineProvider(
                                                                         order=4,
                                                                     ),
                                                                     html.Div(
-                                                                        id="input_col"
+                                                                        id="input-col"
                                                                     ),
                                                                 ],
                                                                 p="md",
@@ -270,8 +270,8 @@ dash_form_project.layout = dmc.MantineProvider(
         dash.dependencies.Input("back-basic-usage", "n_clicks"),
         dash.dependencies.Input("next-basic-usage", "n_clicks"),
         dash.dependencies.State("stepper-basic-usage", "active"),
-        dash.dependencies.State("sample_content", "children"),
-        dash.dependencies.State("input_content", "children"),
+        dash.dependencies.State("sample-content", "children"),
+        dash.dependencies.State("input-content", "children"),
     ],
     prevent_initial_call=True,
 )
@@ -312,22 +312,22 @@ def stepper_callback(*args, **kwargs):
 
 
 @dash_form_project.expanded_callback(
-    dash.dependencies.Output("sample_container", "children"),
+    dash.dependencies.Output("sample-container", "children"),
     [
-        dash.dependencies.Input("sample_type_selector", "value"),
+        dash.dependencies.Input("sample-type-selector", "value"),
     ],
     prevent_initial_call=True,
 )
 def update_sample_container(sample_type_selector, **kwargs):
     mm_sample = SAMPLE_TYPE_LOOKUP[sample_type_selector][0]
-    sample_form = dft.get_form(mm_sample, disabled=False, form_id="sample_content")
+    sample_form = dft.get_form(mm_sample, disabled=False, form_id="sample-content")
     return [sample_form]
 
 
 @dash_form_project.expanded_callback(
-    dash.dependencies.Output("input_parameters_container", "children"),
+    dash.dependencies.Output("input-parameters-container", "children"),
     [
-        dash.dependencies.Input("sample_type_selector", "value"),
+        dash.dependencies.Input("sample-type-selector", "value"),
     ],
     prevent_initial_call=True,
 )
@@ -335,18 +335,18 @@ def update_input_parameters(sample_type_selector, **kwargs):
     analysis_type = SAMPLE_TYPE_LOOKUP[sample_type_selector][1].__name__
     mm_input_parameters = DATASET_TO_INPUT[analysis_type]
     mm_input_parameters = dft.get_form(
-        mm_input_parameters, disabled=False, form_id="input_content"
+        mm_input_parameters, disabled=False, form_id="input-content"
     )
     return [mm_input_parameters]
 
 
 @dash_form_project.expanded_callback(
-    dash.dependencies.Output("sample_col", "children"),
-    dash.dependencies.Output("input_col", "children"),
+    dash.dependencies.Output("sample-col", "children"),
+    dash.dependencies.Output("input-col", "children"),
     [
         dash.dependencies.Input("next-basic-usage", "n_clicks"),
-        dash.dependencies.State("sample_content", "children"),
-        dash.dependencies.State("input_content", "children"),
+        dash.dependencies.State("sample-content", "children"),
+        dash.dependencies.State("input-content", "children"),
         dash.dependencies.State("stepper-basic-usage", "active"),
     ],
     prevent_initial_call=True,
@@ -381,10 +381,10 @@ dash_form_project.clientside_callback(
     dash.dependencies.Output("loading-overlay", "visible"),
     [
         dash.dependencies.Input("next-basic-usage", "n_clicks"),
-        dash.dependencies.State("sample_content", "children"),
-        dash.dependencies.State("input_content", "children"),
+        dash.dependencies.State("sample-content", "children"),
+        dash.dependencies.State("input-content", "children"),
         dash.dependencies.State("stepper-basic-usage", "active"),
-        dash.dependencies.State("sample_type_selector", "value"),
+        dash.dependencies.State("sample-type-selector", "value"),
     ],
     prevent_initial_call=True,
 )
