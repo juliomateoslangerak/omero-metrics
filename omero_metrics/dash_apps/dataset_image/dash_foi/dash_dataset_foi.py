@@ -2,7 +2,6 @@ import dash
 import dash_mantine_components as dmc
 import pandas as pd
 import plotly.express as px
-from dash import dcc, html
 from django_plotly_dash import DjangoDash
 from skimage.exposure import rescale_intensity
 
@@ -74,7 +73,7 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                                                     ],
                                                     justify="space-between",
                                                 ),
-                                                dcc.Graph(
+                                                dash.dcc.Graph(
                                                     id="intensity-map",
                                                     config={
                                                         "displayModeBar": True,
@@ -106,7 +105,7 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                     ],
                 ),
                 # Hidden element for callbacks
-                html.Div(id="blank-input"),
+                dash.html.Div(id="blank-input"),
                 # Intensity Profiles Section
                 dmc.Paper(
                     children=[
