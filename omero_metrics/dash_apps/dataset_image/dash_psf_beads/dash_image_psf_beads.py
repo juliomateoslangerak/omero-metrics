@@ -67,7 +67,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                 dcc.Graph(
                                                     figure={},
                                                     style={"height": "400px"},
-                                                    id="psf_image_graph",
+                                                    id="psf-image-graph",
                                                 ),
                                             ],
                                             p="md",
@@ -100,7 +100,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                             labelPosition="center",
                                                         ),
                                                         dmc.Select(
-                                                            id="channel_selector_psf_image",
+                                                            id="channel-selector-psf-image",
                                                             label="Channel",
                                                             w="100%",
                                                             allowDeselect=False,
@@ -117,7 +117,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                             mt="md",
                                                         ),
                                                         dmc.SegmentedControl(
-                                                            id="beads_info_segmented",
+                                                            id="beads-info-segmented",
                                                             value="beads_info",
                                                             data=[
                                                                 {
@@ -136,7 +136,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                         dmc.Stack(
                                                             [
                                                                 dmc.Checkbox(
-                                                                    id="contour_checkbox_psf_image",
+                                                                    id="contour-checkbox-psf-image",
                                                                     label="Enable Contour View",
                                                                     checked=False,
                                                                     color=THEME[
@@ -144,7 +144,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                                     ],
                                                                 ),
                                                                 dmc.Checkbox(
-                                                                    id="roi_checkbox_psf_image",
+                                                                    id="roi-checkbox-psf-image",
                                                                     label="Show ROI Boundaries",
                                                                     checked=True,
                                                                     color=THEME[
@@ -160,7 +160,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                             mt="md",
                                                         ),
                                                         dmc.Select(
-                                                            id="color_selector_psf_image",
+                                                            id="color-selector-psf-image",
                                                             label="Color Scheme",
                                                             allowDeselect=False,
                                                             data=[
@@ -190,7 +190,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                             ),
                                                         ),
                                                         dmc.Switch(
-                                                            id="color_switch_psf_image",
+                                                            id="color-switch-psf-image",
                                                             label="Invert Colors",
                                                             checked=False,
                                                             size="md",
@@ -207,7 +207,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                             ],
                         ),
                         dmc.Paper(
-                            id="paper_mip",
+                            id="paper-mip",
                             shadow="sm",
                             p="md",
                             radius="md",
@@ -215,7 +215,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                 dmc.Group(
                                     [
                                         dmc.Text(
-                                            id="title_mip",
+                                            id="title-mip",
                                             children="Maximum Intensity Projection",
                                             size="lg",
                                             fw=500,
@@ -226,7 +226,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                 ),
                                 # TODO: change here the beads MIP
                                 dcc.Graph(
-                                    id="mip_image",
+                                    id="mip-image",
                                     figure={},
                                     style={"height": "800px"},
                                 ),
@@ -245,14 +245,14 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
 
 
 @omero_image_psf_beads.expanded_callback(
-    dash.dependencies.Output("psf_image_graph", "figure"),
+    dash.dependencies.Output("psf-image-graph", "figure"),
     [
-        dash.dependencies.Input("channel_selector_psf_image", "value"),
-        dash.dependencies.Input("color_selector_psf_image", "value"),
-        dash.dependencies.Input("color_switch_psf_image", "checked"),
-        dash.dependencies.Input("contour_checkbox_psf_image", "checked"),
-        dash.dependencies.Input("roi_checkbox_psf_image", "checked"),
-        dash.dependencies.Input("beads_info_segmented", "value"),
+        dash.dependencies.Input("channel-selector-psf-image", "value"),
+        dash.dependencies.Input("color-selector-psf-image", "value"),
+        dash.dependencies.Input("color-switch-psf-image", "checked"),
+        dash.dependencies.Input("contour-checkbox-psf-image", "checked"),
+        dash.dependencies.Input("roi-checkbox-psf-image", "checked"),
+        dash.dependencies.Input("beads-info-segmented", "value"),
     ],
 )
 def update_image(channel_index, color, invert, contour, roi, beads_info, **kwargs):
@@ -331,8 +331,8 @@ def update_image(channel_index, color, invert, contour, roi, beads_info, **kwarg
 
 
 @omero_image_psf_beads.expanded_callback(
-    dash.dependencies.Output("channel_selector_psf_image", "data"),
-    dash.dependencies.Output("channel_selector_psf_image", "value"),
+    dash.dependencies.Output("channel-selector-psf-image", "data"),
+    dash.dependencies.Output("channel-selector-psf-image", "value"),
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_channels_psf_image(_, **kwargs):
@@ -345,13 +345,13 @@ def update_channels_psf_image(_, **kwargs):
 
 
 @omero_image_psf_beads.expanded_callback(
-    dash.dependencies.Output("mip_image", "figure"),
-    dash.dependencies.Output("title_mip", "children"),
+    dash.dependencies.Output("mip-image", "figure"),
+    dash.dependencies.Output("title-mip", "children"),
     [
-        dash.dependencies.Input("psf_image_graph", "clickData"),
-        dash.dependencies.Input("channel_selector_psf_image", "value"),
-        dash.dependencies.Input("color_selector_psf_image", "value"),
-        dash.dependencies.Input("color_switch_psf_image", "checked"),
+        dash.dependencies.Input("psf-image-graph", "clickData"),
+        dash.dependencies.Input("channel-selector-psf-image", "value"),
+        dash.dependencies.Input("color-selector-psf-image", "value"),
+        dash.dependencies.Input("color-switch-psf-image", "checked"),
     ],
     prevent_initial_call=True,
 )
