@@ -149,8 +149,23 @@ def FieldIlluminationDataset(dm):
 
 def PSFBeadsDataset(dm):
     dm.load_data(load_images=False, force_reload=True)
+    channel_names = list(
+        dict.fromkeys(
+            [
+                c.name
+                for mm_image in dm.mm_dataset.input_data.psf_beads_images
+                for c in mm_image.channel_series.channels
+            ]
+        )
+    )
+    bead_properties = {
+        col.name: col.values for col in dm.mm_dataset.output.bead_properties.columns
+    }
+
     context = {
         "mm_dataset": dm.mm_dataset,
+        "channel_names": channel_names,
+        "bead_properties": bead_properties,
         "assay_config": dm.assay_configuration,
     }
     dm.context = serialize(context)
