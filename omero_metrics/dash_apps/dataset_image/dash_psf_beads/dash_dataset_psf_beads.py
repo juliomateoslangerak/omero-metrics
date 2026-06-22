@@ -5,11 +5,11 @@ import plotly.graph_objects as go
 from django_plotly_dash import DjangoDash
 from scipy.interpolate import griddata
 from scipy.spatial import QhullError
-from tools.serializers import deserialize
 
 import omero_metrics.dash_apps.utils.omero_metrics_components as my_components
 from omero_metrics.dash_apps.dataset_image import dataset_shared_components as dsc
 from omero_metrics.styles import CONTAINER_STYLE, INPUT_BASE_STYLES, MANTINE_THEME
+from omero_metrics.tools.serializers import deserialize
 
 dashboard_name = "omero_dataset_psf_beads"
 
