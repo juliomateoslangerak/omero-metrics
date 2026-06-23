@@ -32,9 +32,10 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
             children=[
                 # Hidden element for callbacks
                 dash.html.Div(id="blank-input"),
-                dmc.Stack(
+                dmc.Group(
                     children=[
-                        dmc.Group(
+                        dash.dcc.Graph(id="contour-chart", figure={}),
+                        dmc.Stack(
                             children=[
                                 dmc.Select(
                                     id="channel-select",
@@ -62,9 +63,21 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
                                     ),
                                     styles=INPUT_BASE_STYLES,
                                 ),
+                                dmc.Text("Select precision"),
+                                dmc.Slider(
+                                    id="precision-slider",
+                                    min=0,
+                                    max=10,
+                                    step=1,
+                                    value=2,
+                                    marks=[
+                                        {"value": 0, "label": "0"},
+                                        {"value": 5, "label": "5"},
+                                        {"value": 10, "label": "10"},
+                                    ],
+                                ),
                             ]
                         ),
-                        dash.dcc.Graph(id="contour-chart", figure={}),
                     ]
                 ),
                 dsc.dataset_table_paper(),
@@ -110,17 +123,20 @@ def update_dropdown_menus(*args, **kwargs):
     [
         dash.dependencies.Input("channel-select", "value"),
         dash.dependencies.Input("measurement-select", "value"),
+        dash.dependencies.Input("precision-slider", "value"),
     ],
 )
-def update_contour_chart(channel_value, measurement_value, **kwargs):
+def update_contour_chart(
+    channel_value, measurement_value, precision_value, **kwargs
+):
     if measurement_value is None:
         return dash.no_update
     try:
         context = deserialize(kwargs["session_state"]["context"])
         x_max = context["mm_dataset"].input_data.psf_beads_images[0].shape_x
         y_max = context["mm_dataset"].input_data.psf_beads_images[0].shape_y
-        xi = np.linspace(0, x_max, 100)
-        yi = np.linspace(0, y_max, 100)
+        xi = np.linspace(0, x_max, 128)
+        yi = np.linspace(0, y_max, 128)
         XI, YI = np.meshgrid(xi, yi)
         channel_name = context["channel_names"][int(channel_value)]
         x = [
@@ -135,16 +151,34 @@ def update_contour_chart(channel_value, measurement_value, **kwargs):
             if context["bead_properties"]["considered_valid"][i] == "True"
             and context["bead_properties"]["channel_name"][i] == channel_name
         ]
+        values = [
+            round(
+                float(context["bead_properties"][measurement_value][i]),
+                precision_value,
+            )
+            for i in range(len(context["bead_properties"]["center_y"]))
+            if context["bead_properties"]["considered_valid"][i] == "True"
+            and context["bead_properties"]["channel_name"][i] == channel_name
+        ]
 
         ZI = griddata(
             points=(x, y),
-            values=[float(z) for z in context["bead_properties"][measurement_value]],
+            values=values,
             xi=(XI, YI),
-            method="linear",
+            method="cubic",
         )
 
         fig = go.Figure()
-        fig.add_trace(go.Contour(x=xi, y=yi, z=ZI, connectgaps=True))
+        fig.add_trace(
+            go.Contour(
+                x=xi,
+                y=yi,
+                z=ZI,
+                connectgaps=True,
+                contours=dict(showlabels=True, labelformat=f".{precision_value}f"),
+                colorbar=dict(tickformat=f".{precision_value}f"),
+            )
+        )
         fig.add_trace(
             go.Scatter(
                 x=x,
@@ -177,8 +211,48 @@ def update_contour_chart(channel_value, measurement_value, **kwargs):
 
         return fig
 
+    except ValueError as e:
+        fig = go.Figure()
+        fig.update_layout(
+            width=600, height=600 * y_max / x_max, yaxis=dict(autorange="reversed")
+        )
+        fig.add_annotation(
+            x=0.5,
+            y=0.6,
+            xref="paper",
+            yref="paper",
+            text="Probably not a numeric measurement.",
+            showarrow=False,
+            font=dict(size=14),
+        )
+        fig.add_annotation(
+            x=0.5,
+            y=0.4,
+            xref="paper",
+            yref="paper",
+            text=str(e),
+            showarrow=False,
+            font=dict(size=14),
+        )
+
+        return fig
+
     except Exception as e:
-        pass
+        fig = go.Figure()
+        fig.update_layout(
+            width=600, height=600 * y_max / x_max, yaxis=dict(autorange="reversed")
+        )
+        fig.add_annotation(
+            x=0.5,
+            y=0.5,
+            xref="paper",
+            yref="paper",
+            text=str(e),
+            showarrow=False,
+            font=dict(size=20),
+        )
+
+        return fig
 
 
 omero_dataset_psf_beads.clientside_callback(
