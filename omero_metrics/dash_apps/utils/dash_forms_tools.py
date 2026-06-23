@@ -84,13 +84,15 @@ def get_field_types(field):
     return data_type
 
 
-def get_dmc_field_input(field, mm_object, disabled=False):
+def get_dmc_field_input(
+    field, mm_object, placeholder: str = "", disabled: bool = False
+):
     field_info = get_field_types(field)
     input_field_name = FIELD_TYPE_MAPPING[field_info["type"]][0]
     input_field = input_field_name()
     input_field.id = f"{mm_object.class_name}:{field_info['field_name']}"
     input_field.label = clean_field_name(field_info["field_name"])
-    input_field.placeholder = f"Enter {clean_field_name(field_info['field_name'])}"
+    input_field.placeholder = placeholder
     input_field.value = (
         field_info["default"]
         if getattr(mm_object, field.name) is None
@@ -123,7 +125,13 @@ def add_space_between_capitals(s: str) -> str:
     return label
 
 
-def get_form(mm_dataclass, disabled=False, form_id="form_content"):
+def get_form(
+    mm_dataclass,
+    disabled: bool = False,
+    form_id: str = "form_content",
+    add_border: bool = False,
+    background_level: int = 2,
+):
     form_content = dmc.Fieldset(
         id=form_id,
         children=[],
@@ -131,10 +139,22 @@ def get_form(mm_dataclass, disabled=False, form_id="form_content"):
         legend=dmc.Text(
             add_space_between_capitals(mm_dataclass.class_name),
             fw=700,
-            fz="md",  # or fz="lg" for larger
+            fz="md",
+        ),
+        mt="lg",
+        ml="xl",
+        style=(
+            {
+                "backgroundColor": f"var(--mantine-color-gray-{background_level})",
+                "borderTop": f"3px solid var(--mantine-color-gray-{background_level + 2})",
+                "borderLeft": f"6px solid var(--mantine-color-gray-{background_level + 2})",
+                "paddingLeft": "16px",
+            }
+            if add_border
+            else {}
         ),
         variant="filled",
-        radius="md",
+        radius="lg",
     )
     for field in fields(mm_dataclass):
         field_info = get_field_types(field)
@@ -145,10 +165,17 @@ def get_form(mm_dataclass, disabled=False, form_id="form_content"):
                     or field_info["type"],
                     disabled=disabled,
                     form_id=f"{form_id}:{field.name}",
+                    add_border=True,
+                    background_level=min(background_level + 1, 10),
                 )
             )
         elif field_info["type"] is not None:
             form_content.children.append(
-                get_dmc_field_input(field, mm_dataclass, disabled=disabled)
+                get_dmc_field_input(
+                    field=field,
+                    mm_object=mm_dataclass,
+                    placeholder=f"Enter {form_id} {field_info['field_name']}",
+                    disabled=disabled,
+                )
             )
     return form_content
