@@ -162,15 +162,6 @@ def update_contour_chart(channel_value, measurement_value, **kwargs):
 
     except QhullError as e:
         fig = go.Figure()
-        fig.add_trace(
-            go.Scatter(
-                x=x,
-                y=y,
-                mode="markers",
-                marker=dict(size=6, color="black", symbol="circle"),
-                name="Measurements",
-            )
-        )
         fig.update_layout(
             width=600, height=600 * y_max / x_max, yaxis=dict(autorange="reversed")
         )
