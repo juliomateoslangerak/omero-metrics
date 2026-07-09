@@ -26,7 +26,7 @@ DATASET_TO_INPUT = {
 }
 
 SAMPLE_TYPE_LOOKUP = {
-    f"{dataset_cls.__name__}:{sample_cls.__name__}": (sample_cls, dataset_cls)
+    f"{dataset_cls}:{sample_cls}": (sample_cls, dataset_cls)
     for dataset_cls, mapping in MAPPINGS.items()
     for sample_cls in mapping.sample_classes
 }
