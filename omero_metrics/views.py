@@ -275,19 +275,22 @@ def save_config(request, conn=None, **kwargs):
                 to_delete = []
                 for ann in project_wrapper.listAnnotations():
                     if isinstance(ann, FileAnnotationWrapper):
-                        ns = ann.getFile().getName()
+                        ns = ann.getNs()
                         if (
                             ns
                             in namespaces.LIST_NS_MICROSCOPEMETRICS_SCHEMA_INPUT_PARAMETERS
                         ):
                             to_delete.append(ann.getId())
-                conn.deleteObjects(
-                    graph_spec="Annotation",
-                    obj_ids=to_delete,
-                    deleteAnns=True,
-                    deleteChildren=True,
-                    wait=True,
-                )
+                if to_delete:
+                    # TODO: call omero_tools
+                    # TODO: make deletions more specific
+                    conn.deleteObjects(
+                        graph_spec="Annotation",
+                        obj_ids=to_delete,
+                        deleteAnns=True,
+                        deleteChildren=True,
+                        wait=True,
+                    )
             dump.dump_config_input_parameters(
                 conn, mm_input_parameters, mm_sample, project_wrapper
             )
