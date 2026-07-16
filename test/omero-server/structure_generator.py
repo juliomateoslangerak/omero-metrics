@@ -15,10 +15,10 @@ from microscopemetrics.analyses import (
     numpy_to_mm_image,
     psf_beads,
 )
+from microscopemetrics.strategies import gen_beads_image
 from microscopemetrics.strategies.field_illumination import (
     _gen_field_illumination_image,
 )
-from microscopemetrics.strategies.psf_beads import _gen_psf_beads_image
 from microscopemetrics_schema import datamodel as mm_schema
 from omero.cli import CLI
 from omero.gateway import BlitzGateway
@@ -182,7 +182,7 @@ def psf_beads_generator(args, microscope_name):
                 input_data=mm_schema.PSFBeadsInputData(
                     psf_beads_images=[
                         numpy_to_mm_image(
-                            array=_gen_psf_beads_image(
+                            array=gen_beads_image(
                                 z_image_shape=random.randint(
                                     args["z_image_shape"]["min"],
                                     args["z_image_shape"]["max"],
