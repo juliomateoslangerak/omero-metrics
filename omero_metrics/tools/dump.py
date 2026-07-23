@@ -368,7 +368,7 @@ def _get_input_metadata(
                 i_e.name for i_e in input_element
             ]
         else:
-            metadata[input_field.name] = str(input_element)
+            metadata[input_field.name] = input_field.name
 
     return metadata
 
