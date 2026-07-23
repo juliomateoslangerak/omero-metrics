@@ -292,7 +292,10 @@ def save_config(request, conn=None, **kwargs):
                         wait=True,
                     )
             dump.dump_config_input_parameters(
-                conn, mm_input_parameters, mm_sample, project_wrapper
+                conn,
+                project_wrapper,
+                mm_input_parameters,
+                mm_sample,
             )
             return (
                 "success",

@@ -645,28 +645,27 @@ def dump_comment(
 
 def dump_config_input_parameters(
     conn: BlitzGateway,
-    input_parameters: mm_schema.MetricsInputParameters,
-    sample: mm_schema.Sample,
     target_omero_obj: ProjectWrapper,
+    input_parameters: mm_schema.MetricsInputParameters = None,
+    sample: mm_schema.Sample = None,
 ):
     dumper = YAMLDumper()
+    config = {}
+    if input_parameters:
+        config["input_parameters"] = {
+            "type": input_parameters.class_name,
+            "fields": input_parameters,
+        }
+    if sample:
+        config["sample"] = {"type": sample.class_name, "fields": sample}
+
     with tempfile.NamedTemporaryFile(
         prefix=f"study_config_{input_parameters.class_name}_",
         suffix=".yaml",
         mode="w",
         delete=False,
     ) as f:
-        f.write(
-            dumper.dumps(
-                {
-                    "input_parameters": {
-                        "type": input_parameters.class_name,
-                        "fields": input_parameters,
-                    },
-                    "sample": {"type": sample.class_name, "fields": sample},
-                }
-            )
-        )
+        f.write(dumper.dumps(config))
         f.close()
         file_ann = omero_tools.create_file(
             conn=conn,
