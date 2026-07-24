@@ -291,26 +291,31 @@ FIELD_TYPE_MAPPING = {
 class ResolvedField:
     name: str
     optional: bool
-    default: Any  # class-level field default
+    value: Any  # instance value when resolved from an instance, else class default
     hint: str
     primitive_type: type | None  # key into FIELD_TYPE_MAPPING; None when nested
     nested_type: type | None  # dataclass class when nested; None when primitive
-    value: Any = dataclasses.MISSING
 
     @property
     def render_value(self):
-        """The value to render: instance value if provided, else class default."""
-        return self.default if self.value is dataclasses.MISSING else self.value
+        """The value to render."""
+        return self.value
 
 
-def resolve_field_type(field, parent_name: str = "") -> ResolvedField | None:
+def resolve_field_type(
+    field, parent_name: str = "", instance=None
+) -> ResolvedField | None:
     """Resolve a dataclass field's type to a ResolvedField descriptor.
+
+    When ``instance`` is given, the field's actual value is read from it via
+    ``getattr``; otherwise the class-level default is used.
 
     Exactly one of primitive_type / nested_type will be set.
     """
     optional = False
     raw_type = field.type
     name = f"{parent_name}:{field.name}"
+    value = getattr(instance, field.name) if instance is not None else field.default
 
     if get_origin(raw_type) is Union:
         args = get_args(raw_type)
@@ -323,7 +328,7 @@ def resolve_field_type(field, parent_name: str = "") -> ResolvedField | None:
             return ResolvedField(
                 name=name,
                 optional=optional,
-                default=field.default,
+                value=value,
                 hint=dc_args[0].__doc__,
                 primitive_type=None,
                 nested_type=dc_args[0],
@@ -334,7 +339,7 @@ def resolve_field_type(field, parent_name: str = "") -> ResolvedField | None:
                 return ResolvedField(
                     name=name,
                     optional=optional,
-                    default=field.default,
+                    value=value,
                     hint="",
                     primitive_type=priority_type,
                     nested_type=None,
@@ -346,7 +351,7 @@ def resolve_field_type(field, parent_name: str = "") -> ResolvedField | None:
         return ResolvedField(
             name=name,
             optional=optional,
-            default=field.default,
+            value=value,
             hint=raw_type.__doc__,
             primitive_type=None,
             nested_type=raw_type,
@@ -356,7 +361,7 @@ def resolve_field_type(field, parent_name: str = "") -> ResolvedField | None:
         return ResolvedField(
             name=name,
             optional=optional,
-            default=field.default,
+            value=value,
             hint="",
             primitive_type=raw_type,
             nested_type=None,
@@ -438,11 +443,11 @@ def render_fieldset(
     is_instance = not isinstance(mm_dataclass, type)
     children = []
     for field in fields(mm_dataclass):
-        resolved = resolve_field_type(field)
+        resolved = resolve_field_type(
+            field, instance=mm_dataclass if is_instance else None
+        )
         if resolved is None:
             continue
-        if is_instance:
-            resolved.value = getattr(mm_dataclass, field.name)
         if resolved.nested_type is not None:
             nested = (
                 resolved.value
