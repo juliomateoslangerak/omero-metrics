@@ -50,7 +50,7 @@ omero config set omero.web.secure True
 # Set server list
 # Modify if necessary to connect to your omero server. This configuration is to connect to the
 # docker server created by the "docker compose up -d" command
-omero config set omero.web.server_list '[["localhost", 6064, "omero"]]'
+omero config set omero.web.server_list '[["localhost", 6064, "omero"],["wss://sud.bioimage.cloud/omero-wss", 443, "cloud-sud"]]'
 
 # Add middleware for CORS
 omero config append omero.web.middleware '{"index": 0.5, "class": "corsheaders.middleware.CorsMiddleware"}'
