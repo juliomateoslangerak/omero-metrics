@@ -44,4 +44,17 @@ def wavelength_to_rgb(wavelength, gamma=0.8):
     r *= int(r * 255)
     g *= int(g * 255)
     g *= int(g * 255)
-    return r, g, b
+    return f"rgb({r},{g},{b})"
+
+
+def idx_to_rgb(idx):
+    colors = [
+        "rgb(128,0,128)",
+        "rgb(255, 0, 0)",
+        "rgb(128, 128, 0)",
+        "rgb(0, 255, 0)",
+        "rgb(0, 128, 128)",
+        "rgb(0, 0, 255)",
+    ]
+
+    return colors[idx % len(colors)]

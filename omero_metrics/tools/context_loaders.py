@@ -4,8 +4,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 
-from omero_metrics.tools import load
-from omero_metrics.tools.configurations import ASSAY_CONFIGURATIONS
+from omero_metrics.tools import idx_to_rgb, load, wavelength_to_rgb
 from omero_metrics.tools.serializers import serialize
 
 
@@ -224,6 +223,25 @@ def HarmonizedMetricsDatasetCollection(pm):
                         }
                         if x.error_bar
                         else {}
+                    ),
+                    **(
+                        {
+                            f"{km[x.key]}_rgb": wavelength_to_rgb(
+                                km[x.wavelength_nm]
+                            )
+                            for km in dataset.output.key_measurements
+                        }
+                        if x.wavelength_nm
+                        and not any(
+                            [
+                                np.isnan(km[x.wavelength_nm])
+                                for km in dataset.output.key_measurements
+                            ]
+                        )
+                        else {
+                            f"{km[x.key]}_rgb": idx_to_rgb(i)
+                            for i, km in enumerate(dataset.output.key_measurements)
+                        }
                     ),
                 }
             ]

@@ -432,7 +432,8 @@ def update_table(measurement, dates_range, **kwargs):
                 k
                 for m in data
                 for k in m
-                if k not in ["date", "dataset_id"] and not k.endswith("_err")
+                if k not in ["date", "dataset_id"]
+                and k.split("_")[-1] not in ["err", "rgb"]
             }
         )
         for i, k in enumerate(keys):
@@ -448,6 +449,7 @@ def update_table(measurement, dates_range, **kwargs):
                         for m in data
                         if dates_range[0] <= m["date"] <= dates_range[1]
                     ],
+                    line={"color": data[0].get(f"{k}_rgb")},
                     error_y={
                         "array": [
                             m.get(f"{k}_err")
