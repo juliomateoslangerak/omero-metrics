@@ -45,6 +45,7 @@ dashboard_name = "omero_project_config_form"
 dash_form_project = DjangoDash(
     name=dashboard_name,
     serve_locally=True,
+    suppress_callback_exceptions=True,
     external_stylesheets=[
         "/static/omero_metrics/css/style_app.css",
     ],
@@ -257,6 +258,8 @@ dash_form_project.layout = dmc.MantineProvider(
     ],
 )
 
+dft.register_growing_list_callbacks(dash_form_project)
+
 
 @dash_form_project.expanded_callback(
     [
@@ -292,9 +295,21 @@ def stepper_callback(*args, **kwargs):
         input_parameters = args[4]
 
         if step == 0 and not dft.validate_form(sample):
-            return dash.no_update, dash.no_update, dash.no_update, progress
+            return (
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                progress,
+                dash.no_update,
+            )
         elif step == 1 and not dft.validate_form(input_parameters):
-            return dash.no_update, dash.no_update, dash.no_update, progress
+            return (
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                progress,
+                dash.no_update,
+            )
 
         step = min(2, step + 1)
 
@@ -320,7 +335,9 @@ def stepper_callback(*args, **kwargs):
 )
 def update_sample_container(sample_type_selector, **kwargs):
     mm_sample = SAMPLE_TYPE_LOOKUP[sample_type_selector][0]
-    sample_form = dft.get_form(mm_sample, disabled=False, form_id="sample-content")
+    sample_form = dft.render_fieldset(
+        mm_sample, disabled=False, form_id="sample-content"
+    )
     return [sample_form]
 
 
@@ -332,9 +349,9 @@ def update_sample_container(sample_type_selector, **kwargs):
     prevent_initial_call=True,
 )
 def update_input_parameters(sample_type_selector, **kwargs):
-    analysis_type = SAMPLE_TYPE_LOOKUP[sample_type_selector][1].__name__
+    analysis_type = SAMPLE_TYPE_LOOKUP[sample_type_selector][1]
     mm_input_parameters = DATASET_TO_INPUT[analysis_type]
-    mm_input_parameters = dft.get_form(
+    mm_input_parameters = dft.render_fieldset(
         mm_input_parameters, disabled=False, form_id="input-content"
     )
     return [mm_input_parameters]
@@ -399,7 +416,7 @@ def save_config_dash(
     if not sample_type_selector:  # No sample type selected
         return dash.no_update, False
 
-    analysis_type = SAMPLE_TYPE_LOOKUP[sample_type_selector][1].__name__
+    analysis_type = SAMPLE_TYPE_LOOKUP[sample_type_selector][1]
     mm_sample = SAMPLE_TYPE_LOOKUP[sample_type_selector][0]
     mm_input_parameters = DATASET_TO_INPUT[analysis_type]
     project_id = int(kwargs["session_state"]["context"]["project_id"])

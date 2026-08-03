@@ -1,32 +1,394 @@
 import dataclasses
+import json
 import re
+from abc import ABC, abstractmethod
 from dataclasses import fields
-from typing import Union, get_args, get_origin
+from typing import Any, Union, get_args, get_origin
 
+import dash
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 
 # TODO: Modify the schema to make this a mm_schema class
 from linkml_runtime.utils.metamodelcore import XSDDateTime
 
-# These mappings must be ordered by priority
+
+class GrowingListBase(ABC):
+    subtype: str  # overridden in each concrete subclass
+
+    def __init__(
+        self,
+        id: str,
+        label: str = "",
+        value=None,
+        disabled: bool = False,
+        input_kwargs=None,
+    ):
+        self.id = id
+        self.label = label
+        self.initial = value or []
+        self.disabled = disabled
+        self.input_kwargs = input_kwargs or {}
+
+    @property
+    def wrapper_id(self):
+        return {
+            "type": "growing-list-fieldset",
+            "subtype": self.subtype,
+            "owner": self.id,
+        }
+
+    @property
+    def stack_id(self):
+        return {
+            "type": "growing-list-stack",
+            "subtype": self.subtype,
+            "owner": self.id,
+        }
+
+    @property
+    def add_btn_id(self):
+        return {
+            "type": "growing-list-add",
+            "subtype": self.subtype,
+            "owner": self.id,
+        }
+
+    @property
+    def remove_btn_id(self):
+        return {
+            "type": "growing-list-remove",
+            "subtype": self.subtype,
+            "owner": self.id,
+        }
+
+    def input_id(self, index):
+        return {
+            "type": "growing-list-input",
+            "subtype": self.subtype,
+            "owner": self.id,
+            "index": index,
+        }
+
+    def _button_group(self):
+        return dmc.Group(
+            [
+                dmc.ActionIcon(
+                    DashIconify(icon="carbon:add"),
+                    id=self.add_btn_id,
+                    variant="subtle",
+                    color="green",
+                    size="sm",
+                ),
+                dmc.ActionIcon(
+                    DashIconify(icon="carbon:subtract"),
+                    id=self.remove_btn_id,
+                    variant="subtle",
+                    color="red",
+                    size="sm",
+                ),
+            ],
+            mt="xs",
+            gap="xs",
+        )
+
+    def layout(self):
+        initial = self.initial if self.initial else [None]
+        return dmc.InputWrapper(
+            id=self.wrapper_id,
+            label=self.label,
+            required=not self.disabled,
+            children=dmc.Stack(
+                id=self.stack_id,
+                children=self._build_children(initial),
+                gap="xs",
+            ),
+        )
+
+    def _build_children(self, values):
+        children = [self.make_input(i, v) for i, v in enumerate(values)]
+        if not self.disabled:
+            children.append(self._button_group())
+        return children
+
+    @abstractmethod
+    def make_input(self, index, value):
+        """Return the appropriate Dash component."""
+
+    def clean(self, values):
+        return [value for value in values if value not in ("", None)]
+
+
+class GrowingFloatList(GrowingListBase):
+    subtype = "float"
+
+    def make_input(self, index, value):
+        return dmc.NumberInput(
+            id=self.input_id(index),
+            value=value,
+            disabled=self.disabled,
+            allowDecimal=True,
+            **self.input_kwargs,
+        )
+
+
+class GrowingIntList(GrowingListBase):
+    subtype = "int"
+
+    def make_input(self, index, value):
+        return dmc.NumberInput(
+            id=self.input_id(index),
+            value=value,
+            disabled=self.disabled,
+            allowDecimal=False,
+            **self.input_kwargs,
+        )
+
+
+class GrowingStringList(GrowingListBase):
+    subtype = "str"
+
+    def make_input(self, index, value):
+        return dmc.TextInput(
+            id=self.input_id(index),
+            value=value,
+            disabled=self.disabled,
+            **self.input_kwargs,
+        )
+
+
+def _make_growing_list_callback(app, cls):
+    @app.expanded_callback(
+        dash.Output(
+            {
+                "type": "growing-list-stack",
+                "subtype": cls.subtype,
+                "owner": dash.MATCH,
+            },
+            "children",
+        ),
+        [
+            dash.Input(
+                {
+                    "type": "growing-list-add",
+                    "subtype": cls.subtype,
+                    "owner": dash.MATCH,
+                },
+                "n_clicks",
+            ),
+            dash.Input(
+                {
+                    "type": "growing-list-remove",
+                    "subtype": cls.subtype,
+                    "owner": dash.MATCH,
+                },
+                "n_clicks",
+            ),
+            dash.State(
+                {
+                    "type": "growing-list-input",
+                    "subtype": cls.subtype,
+                    "owner": dash.MATCH,
+                    "index": dash.ALL,
+                },
+                "value",
+            ),
+        ],
+        prevent_initial_call=True,
+    )
+    def update(_add, _remove, current_values, **kwargs):
+        ctx = kwargs["callback_context"]
+        prop_id = ctx.triggered[0]["prop_id"]
+        # prop_id looks like: '{"owner":"...","subtype":"float","type":"growing-list-add"}.n_clicks'
+        triggered_id = json.loads(prop_id.rsplit(".", 1)[0])
+        triggered_type = triggered_id["type"]
+        owner = triggered_id["owner"]
+
+        instance = cls(id=owner)
+        values = list(current_values) if current_values else [None]
+
+        if triggered_type == "growing-list-add":
+            values = values + [None]
+        elif triggered_type == "growing-list-remove" and len(values) > 1:
+            values = values[:-1]
+
+        return instance._build_children(values)
+
+
+def register_growing_list_callbacks(app):
+    """Register GrowingList +/- callbacks on a DjangoDash app instance.
+
+    Call this once per app that uses render_fieldset with list fields.
+    """
+    for cls in (GrowingFloatList, GrowingIntList, GrowingStringList):
+        _make_growing_list_callback(app, cls)
+
+
+def _dmc_builder(cls, *, placeholder: bool = True):
+    """Return a builder for a standard DMC input component."""
+
+    def build(resolved: "ResolvedField", icon: str, disabled: bool):
+        field_name = resolved.name.split(":")[-1]
+        kwargs = dict(
+            id=f"field-{resolved.name}",
+            label=clean_field_name(field_name),
+            value=resolved.render_value,
+            w="auto",
+            disabled=disabled,
+            required=not resolved.optional,
+            leftSection=DashIconify(icon=icon),
+        )
+        if placeholder:
+            kwargs["placeholder"] = f"Enter {field_name.replace('_', ' ')}"
+        return cls(**kwargs)
+
+    return build
+
+
+def _growing_list_builder(cls):
+    """Return a builder for a GrowingListBase subclass."""
+
+    def build(resolved: "ResolvedField", icon: str, disabled: bool):
+        field_name = resolved.name.split(":")[-1]
+        instance = cls(
+            id=f"field-{resolved.name}",
+            label=clean_field_name(field_name),
+            value=resolved.render_value or [],
+            disabled=disabled,
+        )
+        return instance.layout()
+
+    return build
+
+
+# These mappings must be ordered by priority.
+# Each value is (builder_callable, icon_string).
 FIELD_TYPE_MAPPING = {
-    XSDDateTime: [dmc.DateTimePicker, "carbon:calendar"],
-    float: [dmc.NumberInput, "carbon:character-decimal"],
-    int: [dmc.NumberInput, "carbon:character-whole-number"],
-    bool: [dmc.Switch, "carbon:switch-disabled"],
-    str: [dmc.TextInput, "carbon:string-text"],
+    XSDDateTime: (
+        _dmc_builder(dmc.DateTimePicker, placeholder=False),
+        "carbon:calendar",
+    ),
+    list[float]: (
+        _growing_list_builder(GrowingFloatList),
+        "carbon:character-decimal",
+    ),
+    list[int]: (
+        _growing_list_builder(GrowingIntList),
+        "carbon:character-whole-number",
+    ),
+    list[str]: (
+        _growing_list_builder(GrowingStringList),
+        "carbon:character-whole-number",
+    ),
+    float: (_dmc_builder(dmc.NumberInput), "carbon:character-decimal"),
+    int: (_dmc_builder(dmc.NumberInput), "carbon:character-whole-number"),
+    bool: (_dmc_builder(dmc.Switch, placeholder=False), "carbon:switch-disabled"),
+    str: (_dmc_builder(dmc.TextInput), "carbon:string-text"),
 }
+
+
+@dataclasses.dataclass
+class ResolvedField:
+    name: str
+    optional: bool
+    default: Any  # class-level field default
+    hint: str
+    primitive_type: type | None  # key into FIELD_TYPE_MAPPING; None when nested
+    nested_type: type | None  # dataclass class when nested; None when primitive
+    value: Any = dataclasses.MISSING
+
+    @property
+    def render_value(self):
+        """The value to render: instance value if provided, else class default."""
+        return self.default if self.value is dataclasses.MISSING else self.value
+
+
+def resolve_field_type(field, parent_name: str = "") -> ResolvedField | None:
+    """Resolve a dataclass field's type to a ResolvedField descriptor.
+
+    Exactly one of primitive_type / nested_type will be set.
+    """
+    optional = False
+    raw_type = field.type
+    name = f"{parent_name}:{field.name}"
+
+    if get_origin(raw_type) is Union:
+        args = get_args(raw_type)
+        if type(None) in args:
+            optional = True
+            args = [a for a in args if a is not type(None)]
+
+        dc_args = [a for a in args if dataclasses.is_dataclass(a)]
+        if dc_args:
+            return ResolvedField(
+                name=name,
+                optional=optional,
+                default=field.default,
+                hint=dc_args[0].__doc__,
+                primitive_type=None,
+                nested_type=dc_args[0],
+            )
+
+        for priority_type in FIELD_TYPE_MAPPING:
+            if priority_type in args:
+                return ResolvedField(
+                    name=name,
+                    optional=optional,
+                    default=field.default,
+                    hint="",
+                    primitive_type=priority_type,
+                    nested_type=None,
+                )
+
+        return None
+
+    elif dataclasses.is_dataclass(raw_type):
+        return ResolvedField(
+            name=name,
+            optional=optional,
+            default=field.default,
+            hint=raw_type.__doc__,
+            primitive_type=None,
+            nested_type=raw_type,
+        )
+
+    elif raw_type in FIELD_TYPE_MAPPING:
+        return ResolvedField(
+            name=name,
+            optional=optional,
+            default=field.default,
+            hint="",
+            primitive_type=raw_type,
+            nested_type=None,
+        )
+
+    raise TypeError(
+        f"No matching type found in FIELD_TYPE_MAPPING for field '{field.name}' "
+        f"with type {field.type!r}"
+    )
 
 
 def extract_form_data(form_content):
     result = {}
     for item in form_content:
-        if item.get("type") == "Fieldset":
-            field_name = item["props"]["id"].split(":")[-1]
+        item_id = item["props"]["id"]
+        if (
+            isinstance(item_id, dict)
+            and item_id.get("type") == "growing-list-fieldset"
+        ):
+            # Growing list: InputWrapper(id=wrapper_id) > Stack(id=stack_id) > [inputs..., button_group]
+            field_name = item_id["owner"].split(":")[-1]
+            stack_children = item["props"]["children"]["props"]["children"]
+            result[field_name] = [
+                c["props"]["value"]
+                for c in stack_children
+                if "value" in c["props"] and c["props"]["value"] not in ("", None)
+            ]
+        elif item.get("type") == "Fieldset":
+            field_name = item_id.split(":")[-1]
             result[field_name] = extract_form_data(item["props"]["children"])
         else:
-            field_name = item["props"]["id"].split(":")[1]
+            field_name = item_id.split(":")[1]
             result[field_name] = item["props"]["value"]
     return result
 
@@ -41,79 +403,20 @@ def clean_field_name(field: str):
     return field.replace("_", " ").title()
 
 
-def get_field_types(field):
-    data_type = {
-        "field_name": field.name,
-        "type": None,
-        "optional": False,
-        "default": field.default,
-        "is_dataclass": False,
-    }
-    if get_origin(field.type) is Union:
-        args = get_args(field.type)
-        # Check if it's Optional (Union with None)
-        if type(None) in args:
-            data_type["optional"] = True
-            args = [arg for arg in args if arg is not type(None)]
-
-        # Check for a nested dataclass before scalar type matching
-        dc_args = [a for a in args if dataclasses.is_dataclass(a)]
-        if dc_args:
-            data_type["type"] = dc_args[0]
-            data_type["is_dataclass"] = True
-            return data_type
-
-        # Select type by priority based on FIELD_TYPE_MAPPING order
-        for priority_type in FIELD_TYPE_MAPPING.keys():
-            if priority_type in args:
-                data_type["type"] = priority_type
-                break
-
-    elif dataclasses.is_dataclass(field.type):
-        data_type["type"] = field.type
-        data_type["is_dataclass"] = True
-
-    elif field.type in FIELD_TYPE_MAPPING.keys():
-        data_type["type"] = field.type
-
-    else:
-        raise TypeError(
-            f"A corresponding datatype could not be found for form field {field}"
-        )
-
-    return data_type
-
-
-def get_dmc_field_input(
-    field, mm_object, placeholder: str = "", disabled: bool = False
-):
-    field_info = get_field_types(field)
-    input_field_name = FIELD_TYPE_MAPPING[field_info["type"]][0]
-    input_field = input_field_name()
-    input_field.id = f"{mm_object.class_name}:{field_info['field_name']}"
-    input_field.label = clean_field_name(field_info["field_name"])
-    input_field.placeholder = placeholder
-    input_field.value = (
-        field_info["default"]
-        if getattr(mm_object, field.name) is None
-        else getattr(mm_object, field.name)
-    )
-    input_field.w = "auto"
-    input_field.disabled = disabled
-    input_field.required = not field_info["optional"]
-    input_field.leftSection = DashIconify(
-        icon=FIELD_TYPE_MAPPING[field_info["type"]][1]
-    )
-    input_field.maxWidth = "450px"
-
-    return input_field
+def render_field_input(resolved: ResolvedField, disabled: bool = False):
+    build_fn, icon = FIELD_TYPE_MAPPING[resolved.primitive_type]
+    return build_fn(resolved, icon, disabled)
 
 
 def validate_form(state):
     for item in state:
-        if item.get("type") == "Fieldset":
+        item_type = item.get("type")
+        if item_type == "Fieldset":
             if not validate_form(item["props"]["children"]):
                 return False
+        elif item_type == "InputWrapper":
+            # GrowingList wrapper — no value prop; individual inputs validate themselves
+            pass
         elif item["props"].get("required") and not item["props"].get("value"):
             return False
     return True
@@ -125,17 +428,43 @@ def add_space_between_capitals(s: str) -> str:
     return label
 
 
-def get_form(
+def render_fieldset(
     mm_dataclass,
     disabled: bool = False,
     form_id: str = "form_content",
     add_border: bool = False,
     background_level: int = 2,
-):
-    form_content = dmc.Fieldset(
+) -> dmc.Fieldset:
+    is_instance = not isinstance(mm_dataclass, type)
+    children = []
+    for field in fields(mm_dataclass):
+        resolved = resolve_field_type(field)
+        if resolved is None:
+            continue
+        if is_instance:
+            resolved.value = getattr(mm_dataclass, field.name)
+        if resolved.nested_type is not None:
+            nested = (
+                resolved.value
+                if is_instance and resolved.value is not None
+                else resolved.nested_type
+            )
+            children.append(
+                render_fieldset(
+                    mm_dataclass=nested,
+                    disabled=disabled,
+                    form_id=f"{form_id}:{field.name}",
+                    add_border=True,
+                    background_level=min(background_level + 1, 10),
+                )
+            )
+        else:
+            children.append(render_field_input(resolved, disabled=disabled))
+
+    return dmc.Fieldset(
         id=form_id,
-        children=[],
-        # TODO: we have to rather rely on the title of the class
+        children=children,
+        # TODO: rely on the title of the class instead of class_name
         legend=dmc.Text(
             add_space_between_capitals(mm_dataclass.class_name),
             fw=700,
@@ -156,26 +485,3 @@ def get_form(
         variant="filled",
         radius="lg",
     )
-    for field in fields(mm_dataclass):
-        field_info = get_field_types(field)
-        if field_info["is_dataclass"]:
-            form_content.children.append(
-                get_form(
-                    mm_dataclass=getattr(mm_dataclass, field.name)
-                    or field_info["type"],
-                    disabled=disabled,
-                    form_id=f"{form_id}:{field.name}",
-                    add_border=True,
-                    background_level=min(background_level + 1, 10),
-                )
-            )
-        elif field_info["type"] is not None:
-            form_content.children.append(
-                get_dmc_field_input(
-                    field=field,
-                    mm_object=mm_dataclass,
-                    placeholder=f"Enter {form_id} {field_info['field_name']}",
-                    disabled=disabled,
-                )
-            )
-    return form_content

@@ -253,6 +253,8 @@ dash_form_dataset.layout = dmc.MantineProvider(
     ],
 )
 
+dft.register_growing_list_callbacks(dash_form_dataset)
+
 
 @dash_form_dataset.expanded_callback(
     dash.dependencies.Output("setup-text", "children"),
@@ -265,7 +267,7 @@ def update_setup(_, **kwargs):
     input_parameters_object = getattr(mm_schema, input_parameters["type"])
     input_parameters_mm = input_parameters_object(**input_parameters["fields"])
 
-    return dft.get_form(
+    return dft.render_fieldset(
         input_parameters_mm, disabled=True, form_id="input_parameters_form"
     )
 
@@ -279,7 +281,7 @@ def update_sample(_, **kwargs):
     mm_sample = getattr(mm_schema, sample["type"])
     mm_sample = mm_sample(**sample["fields"])
 
-    return dft.get_form(mm_sample, disabled=True, form_id="sample_form")
+    return dft.render_fieldset(mm_sample, disabled=True, form_id="sample_form")
 
 
 @dash_form_dataset.expanded_callback(

@@ -65,6 +65,24 @@ class OMEROMetricsConfig(AppConfig):
             settings.PLOTLY_DASH.update(plotly_dash_settings)
         else:
             settings.PLOTLY_DASH = plotly_dash_settings
+        self._patch_pseudo_flask()
+
+    def _patch_pseudo_flask(self):
+        """Patch PseudoFlask to include SECRET_KEY so newer Dash versions
+        don't raise KeyError when accessing Flask's secret_key descriptor."""
+        from django_plotly_dash.dash_wrapper import PseudoFlask
+
+        # TODO: Before going to production, review whether exposing Django's
+        # SECRET_KEY to Dash is acceptable, or whether a derived/separate key
+        # should be used here instead. See discussion in apps.py git history.
+        secret = getattr(settings, "SECRET_KEY", "omero-metrics-default-secret-key")
+        original_init = PseudoFlask.__init__
+
+        def patched_init(self):
+            original_init(self)
+            self.config["SECRET_KEY"] = secret
+
+        PseudoFlask.__init__ = patched_init
 
     def add_context_processor(self):
         """Ensure the required context processor is included."""

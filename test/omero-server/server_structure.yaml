@@ -194,6 +194,45 @@ projects:
         min: 0.7
         max: 0.9
       bit_depth: 16
+    light_source_power_1:
+      owner: Obelix
+      name_project: Light Sources Power
+      description_project: Lasers power tracking
+      dataset_class: LightSourcePowerDataset
+      nr_datasets: 4
+      start_date: 2021-01-01
+      month_frequency: 1
+      process: false
+      name_dataset: Lasers Power
+      description_dataset: Lasers power tracking
+      light_sources:
+        - name: "Cobolt 405"
+          wavelength_nm: 404
+        - name: "Saphire 488"
+          wavelength_nm: 488
+        - name: "Omicron 561"
+          wavelength_nm: 561
+        - name: "Obis 642"
+          wavelength_nm: 642
+      power_meters:
+        - name: "Thorlabs 100D"
+          manufacturer: "Thorlabs"
+          model: "PM100D"
+      measurement_locations: ["OBJECTIVE_FOCAL"]
+      nr_linearity_measurements: 6
+      linearity_interval_seconds: 30
+      linearity_integration_time_seconds: 1
+      nr_short_term_stability_measurements: 300
+      short_term_stability_set_power_value: 1
+      short_term_stability_interval_seconds: 1
+      short_term_stability_integration_time_seconds: 0.1
+      nr_long_term_stability_measurements: 240
+      long_term_stability_set_power_value: 1.0
+      long_term_stability_interval_seconds: 30.0
+      long_term_stability_integration_time_seconds: 0.1
+      target_intensity_mw: 20.0
+      target_intensity_std_rel: 0.05
+
   IGH-SP8:
     field_illumination_1:
       owner: Asterix

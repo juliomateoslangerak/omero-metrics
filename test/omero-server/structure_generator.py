@@ -2,23 +2,27 @@
 # on the OMERO server. This structure is used to test the omero-metrics package.
 
 import logging
-import mimetypes
-import os
 import random
+import tempfile
 import time
 from datetime import datetime
 
 import numpy as np
 import yaml
 from microscopemetrics.analyses import (
+    extract_power_measurements_csv,
     field_illumination,
+    light_source_power,
     numpy_to_mm_image,
     psf_beads,
 )
+from microscopemetrics.strategies import gen_beads_image
 from microscopemetrics.strategies.field_illumination import (
     _gen_field_illumination_image,
 )
-from microscopemetrics.strategies.psf_beads import _gen_psf_beads_image
+from microscopemetrics.strategies.light_source_power import (
+    generate_power_measurements,
+)
 from microscopemetrics_schema import datamodel as mm_schema
 from omero.cli import CLI
 from omero.gateway import BlitzGateway
@@ -27,7 +31,7 @@ from omero.plugins.obj import ObjControl
 from omero.plugins.sessions import SessionsControl
 from omero.plugins.user import UserControl
 
-from omero_metrics.tools import dump
+from omero_metrics.tools import dump, omero_tools
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +44,7 @@ BIT_DEPTH_TO_DTYPE = {
 DATASET_TO_ANALYSIS = {
     "FieldIlluminationDataset": field_illumination.analyse_field_illumination,
     "PSFBeadsDataset": psf_beads.analyse_psf_beads,
+    "LightSourcePowerDataset": light_source_power.analyse_light_source_power,
 }
 
 
@@ -182,7 +187,7 @@ def psf_beads_generator(args, microscope_name):
                 input_data=mm_schema.PSFBeadsInputData(
                     psf_beads_images=[
                         numpy_to_mm_image(
-                            array=_gen_psf_beads_image(
+                            array=gen_beads_image(
                                 z_image_shape=random.randint(
                                     args["z_image_shape"]["min"],
                                     args["z_image_shape"]["max"],
@@ -254,22 +259,82 @@ def psf_beads_generator(args, microscope_name):
     return datasets
 
 
+def light_source_power_generator(args, microscope_name):
+    datasets = []
+    dates = generate_monthly_dates(
+        args["start_date"], args["nr_datasets"], args["month_frequency"]
+    )
+
+    for date in dates:
+        print(f"Generating dataset {date} for {args['name_dataset']}")
+        power_measurements = []
+        current_time = datetime.fromisoformat(date)
+
+        for light_source in args["light_sources"]:
+            for power_meter in args["power_meters"]:
+                for measurement_location in args["measurement_locations"]:
+                    new_power_measurements, current_time = (
+                        generate_power_measurements(
+                            current_datetime=current_time,
+                            light_source=light_source,
+                            power_meter=power_meter,
+                            measuring_location=measurement_location,
+                            target_intensity_mw=args["target_intensity_mw"],
+                            target_intensity_std_rel=args[
+                                "target_intensity_std_rel"
+                            ],
+                            linearity_integration_time_seconds=args[
+                                "linearity_integration_time_seconds"
+                            ],
+                            nr_linearity_measurements=args[
+                                "nr_linearity_measurements"
+                            ],
+                            linearity_interval_seconds=args[
+                                "linearity_interval_seconds"
+                            ],
+                            nr_short_term_stability_measurements=args[
+                                "nr_short_term_stability_measurements"
+                            ],
+                            short_term_stability_set_power_value=args[
+                                "short_term_stability_set_power_value"
+                            ],
+                            short_term_stability_interval_seconds=args[
+                                "short_term_stability_interval_seconds"
+                            ],
+                            nr_long_term_stability_measurements=args[
+                                "nr_long_term_stability_measurements"
+                            ],
+                            long_term_stability_set_power_value=args[
+                                "long_term_stability_set_power_value"
+                            ],
+                            long_term_stability_interval_seconds=args[
+                                "long_term_stability_interval_seconds"
+                            ],
+                        )
+                    )
+                    power_measurements.extend(new_power_measurements)
+
+        datasets.append(
+            mm_schema.LightSourcePowerDataset(
+                name=f"{args['name_dataset']}_{date}",
+                description=args["description_dataset"],
+                acquisition_datetime=date,
+                microscope=mm_schema.Microscope(name=microscope_name),
+                input_parameters=mm_schema.LightSourcePowerInputParameters(),
+                input_data=mm_schema.LightSourcePowerInputData(
+                    power_measurements=power_measurements,
+                ),
+            )
+        )
+
+    return datasets
+
+
 GENERATOR_MAPPER = {
     "FieldIlluminationDataset": field_illumination_generator,
     "PSFBeadsDataset": psf_beads_generator,
+    "LightSourcePowerDataset": light_source_power_generator,
 }
-
-
-def _attach_config(conn, project, file_path):
-    mimetype, _ = mimetypes.guess_type(file_path)
-    file_path_split = file_path.split("/")
-    file_ann = conn.createFileAnnfromLocalFile(
-        file_path,
-        mimetype=mimetype,
-        desc="configuration file",
-        ns=f"microscopemetrics_schema:analyses/{file_path_split[-2]}_schema/{file_path_split[-1].split('_')[-1].split('.')[0]}InputParameters",
-    )
-    project.linkAnnotation(file_ann)
 
 
 def generate_users_groups(conn, users: dict, groups: dict):
@@ -429,7 +494,7 @@ if __name__ == "__main__":
                     ),
                     dataset_class=project["dataset_class"],
                 )
-                time.sleep(60)
+                time.sleep(10)
 
                 if not conn.keepAlive():
                     conn.connect()
@@ -446,18 +511,49 @@ if __name__ == "__main__":
                     dump_as_project_file_annotation=False,
                     dump_as_dataset_file_annotation=False,
                 )
-                dir_attachments = os.path.join(
-                    os.path.dirname(__file__),
-                    "config_files",
-                    project["attachments_dir"],
+
+                try:
+                    sample = mm_project.dataset_collection[-1].sample
+                except AttributeError:
+                    sample = None
+
+                try:
+                    input_parameters = mm_project.dataset_collection[
+                        -1
+                    ].input_parameters
+                except AttributeError:
+                    input_parameters = None
+
+                dump.dump_config_input_parameters(
+                    conn=temp_conn,
+                    target_omero_obj=omero_project,
+                    input_parameters=input_parameters,
+                    sample=sample,
                 )
-                attachment_files = [
-                    os.path.join(dir_path, f)
-                    for (dir_path, dir_names, filenames) in os.walk(dir_attachments)
-                    for f in filenames
-                ]
-                for file_path in attachment_files:
-                    _attach_config(temp_conn, omero_project, file_path)
+
+                if project["dataset_class"] == "LightSourcePowerDataset":
+                    # We need to extract the input data as a file and dump it
+                    for LSPDataset in mm_project.dataset_collection:
+                        omero_dataset = omero_tools.get_omero_obj_from_mm_obj(
+                            conn=temp_conn,
+                            mm_obj=LSPDataset,
+                        )
+                        with tempfile.NamedTemporaryFile(
+                            prefix=f"power_measurements",
+                            suffix=".csv",
+                            mode="w",
+                            delete=False,
+                        ) as f:
+                            extract_power_measurements_csv(LSPDataset, f.name)
+                            f.close()
+                            file_ann = omero_tools.create_file(
+                                conn=temp_conn,
+                                file_path=f.name,
+                                omero_object=omero_dataset,
+                                file_description="Configuration file",
+                                namespace=None,
+                                mimetype="text/csv",
+                            )
 
                 if project["process"]:
                     for dataset in mm_project.dataset_collection:
@@ -466,7 +562,7 @@ if __name__ == "__main__":
                     omero_project = dump.dump_project(
                         temp_conn,
                         mm_project,
-                        dump_input_images=False,  # We anyway want to dump test input images
+                        dump_input_images=False,  # Images are already dumped
                         dump_analysis=True,
                         dump_as_project_file_annotation=True,
                         dump_as_dataset_file_annotation=True,

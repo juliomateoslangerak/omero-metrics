@@ -313,6 +313,8 @@ omero_project_dash.layout = dmc.MantineProvider(
     ],
 )
 
+dft.register_growing_list_callbacks(omero_project_dash)
+
 
 @omero_project_dash.expanded_callback(
     dash.dependencies.Output("key-measurement-dropdown", "data"),
@@ -555,11 +557,13 @@ def update_modal(*args, **kwargs):
     sample = context["sample"]
     mm_sample = getattr(mm_schema, sample["type"])
     mm_sample = mm_sample(**sample["fields"])
-    sample_form = dft.get_form(mm_sample, disabled=False, form_id="sample_form")
+    sample_form = dft.render_fieldset(
+        mm_sample, disabled=False, form_id="sample_form"
+    )
     input_parameters = context["input_parameters"]
     mm_input_parameters = getattr(mm_schema, input_parameters["type"])
     mm_input_parameters = mm_input_parameters(**input_parameters["fields"])
-    input_parameters_form = dft.get_form(
+    input_parameters_form = dft.render_fieldset(
         mm_input_parameters, disabled=False, form_id="input_parameters_form"
     )
 
