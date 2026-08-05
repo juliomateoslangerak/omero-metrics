@@ -20,7 +20,7 @@ from omero_metrics.styles import (
 # TODO: change the styles import
 
 
-DATASET_TO_INPUT = {
+DATASET_TO_INPUT_PARAMETERS = {
     "FieldIlluminationDataset": mm_schema.FieldIlluminationInputParameters,
     "PSFBeadsDataset": mm_schema.PSFBeadsInputParameters,
 }
@@ -349,8 +349,8 @@ def update_sample_container(sample_type_selector, **kwargs):
     prevent_initial_call=True,
 )
 def update_input_parameters(sample_type_selector, **kwargs):
-    analysis_type = SAMPLE_TYPE_LOOKUP[sample_type_selector][1]
-    mm_input_parameters = DATASET_TO_INPUT[analysis_type]
+    analysis_type = SAMPLE_TYPE_LOOKUP[sample_type_selector][1].split("/")[-1]
+    mm_input_parameters = DATASET_TO_INPUT_PARAMETERS[analysis_type]
     mm_input_parameters = dft.render_fieldset(
         mm_input_parameters, disabled=False, form_id="input-content"
     )
@@ -416,9 +416,9 @@ def save_config_dash(
     if not sample_type_selector:  # No sample type selected
         return dash.no_update, False
 
-    analysis_type = SAMPLE_TYPE_LOOKUP[sample_type_selector][1]
+    analysis_type = SAMPLE_TYPE_LOOKUP[sample_type_selector][1].split("/")[-1]
     mm_sample = SAMPLE_TYPE_LOOKUP[sample_type_selector][0]
-    mm_input_parameters = DATASET_TO_INPUT[analysis_type]
+    mm_input_parameters = DATASET_TO_INPUT_PARAMETERS[analysis_type]
     project_id = int(kwargs["session_state"]["context"]["project_id"])
     request = kwargs["request"]
     if clicked_data > 0 and current == 2:
