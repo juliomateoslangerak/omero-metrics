@@ -114,8 +114,46 @@ def update_dropdown_menus(_blank_input, *, session_state):
             [{"label": c, "value": c} for c in context["bead_properties"].keys()],
             None,
         )
-    except Exception as e:
-        return [{"label": "Error loading channels", "value": "0"}], "0"
+    except Exception:
+        return (
+            [{"label": "Error loading channels", "value": "0"}],
+            "0",
+            [],
+            None,
+        )
+
+
+CONTOUR_CHART_WIDTH = 600
+
+
+def empty_contour_figure(x_max=None, y_max=None):
+    """Figure matching the contour chart footprint, ready for traces or messages.
+
+    ``x_max``/``y_max`` are the analysed image shape. They are unknown when the
+    context failed to load, in which case the figure falls back to a square.
+    """
+    aspect_ratio = y_max / x_max if x_max and y_max else 1
+    fig = go.Figure()
+    fig.update_layout(
+        width=CONTOUR_CHART_WIDTH,
+        height=CONTOUR_CHART_WIDTH * aspect_ratio,
+        yaxis=dict(autorange="reversed"),
+    )
+    return fig
+
+
+def add_centered_message(fig, text, y=0.5, size=20):
+    """Overlay a message on the middle of ``fig``, in paper coordinates."""
+    fig.add_annotation(
+        x=0.5,
+        y=y,
+        xref="paper",
+        yref="paper",
+        text=text,
+        showarrow=False,
+        font=dict(size=size),
+    )
+    return fig
 
 
 @omero_dataset_psf_beads.expanded_callback(
@@ -131,6 +169,9 @@ def update_contour_chart(
 ):
     if measurement_value is None:
         return dash.no_update
+    # Defined up front so the error handlers below can size their figure even
+    # when loading the context is what failed.
+    x_max = y_max = None
     try:
         context = deserialize(session_state["context"])
         x_max = context["mm_dataset"].input_data.psf_beads_images[0].shape_x
@@ -168,7 +209,7 @@ def update_contour_chart(
             method="cubic",
         )
 
-        fig = go.Figure()
+        fig = empty_contour_figure(x_max, y_max)
         fig.add_trace(
             go.Contour(
                 x=xi,
@@ -188,71 +229,26 @@ def update_contour_chart(
                 name="Measurements",
             )
         )
-        fig.update_layout(
-            width=600, height=600 * y_max / x_max, yaxis=dict(autorange="reversed")
-        )
 
         return fig
 
-    except QhullError as e:
-        fig = go.Figure()
-        fig.update_layout(
-            width=600, height=600 * y_max / x_max, yaxis=dict(autorange="reversed")
+    except QhullError:
+        return add_centered_message(
+            empty_contour_figure(x_max, y_max),
+            "Not enough data for interpolation",
         )
-        fig.add_annotation(
-            x=0.5,
-            y=0.5,
-            xref="paper",
-            yref="paper",
-            text="Not enough data for interpolation",
-            showarrow=False,
-            font=dict(size=20),
-        )
-
-        return fig
 
     except ValueError as e:
-        fig = go.Figure()
-        fig.update_layout(
-            width=600, height=600 * y_max / x_max, yaxis=dict(autorange="reversed")
+        fig = empty_contour_figure(x_max, y_max)
+        add_centered_message(
+            fig, "Probably not a numeric measurement.", y=0.6, size=14
         )
-        fig.add_annotation(
-            x=0.5,
-            y=0.6,
-            xref="paper",
-            yref="paper",
-            text="Probably not a numeric measurement.",
-            showarrow=False,
-            font=dict(size=14),
-        )
-        fig.add_annotation(
-            x=0.5,
-            y=0.4,
-            xref="paper",
-            yref="paper",
-            text=str(e),
-            showarrow=False,
-            font=dict(size=14),
-        )
+        add_centered_message(fig, str(e), y=0.4, size=14)
 
         return fig
 
     except Exception as e:
-        fig = go.Figure()
-        fig.update_layout(
-            width=600, height=600 * y_max / x_max, yaxis=dict(autorange="reversed")
-        )
-        fig.add_annotation(
-            x=0.5,
-            y=0.5,
-            xref="paper",
-            yref="paper",
-            text=str(e),
-            showarrow=False,
-            font=dict(size=20),
-        )
-
-        return fig
+        return add_centered_message(empty_contour_figure(x_max, y_max), str(e))
 
 
 omero_dataset_psf_beads.clientside_callback(
