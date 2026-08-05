@@ -35,8 +35,8 @@ warning_app.layout = dmc.MantineProvider(
     dash.dependencies.Output("warning_msg", "children"),
     [dash.dependencies.Input("input_void", "value")],
 )
-def callback_warning(*args, **kwargs):
-    message = kwargs["session_state"]["context"]["message"]
+def callback_warning(_input_void, *, session_state):
+    message = session_state["context"]["message"]
     return [message]
 
 
@@ -95,8 +95,8 @@ error_app.layout = dmc.MantineProvider(
     ],
     [dash.dependencies.Input("input_void_error", "value")],
 )
-def callback_error(*args, **kwargs):
-    context = kwargs["session_state"]["context"]
+def callback_error(_input_void_error, *, session_state):
+    context = session_state["context"]
     message = context.get("message", "An unknown error occurred")
     traceback = context.get("traceback", "No traceback available")
     return [message, traceback]

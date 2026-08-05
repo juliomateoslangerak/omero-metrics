@@ -102,9 +102,9 @@ dsc.register_download_table_callback(omero_dataset_psf_beads)
     dash.dependencies.Output("measurement-select", "value"),
     [dash.dependencies.Input("blank-input", "children")],
 )
-def update_dropdown_menus(*args, **kwargs):
+def update_dropdown_menus(_blank_input, *, session_state):
     try:
-        context = deserialize(kwargs["session_state"]["context"])
+        context = deserialize(session_state["context"])
         return (
             [
                 {"label": str(name), "value": str(i)}
@@ -127,12 +127,12 @@ def update_dropdown_menus(*args, **kwargs):
     ],
 )
 def update_contour_chart(
-    channel_value, measurement_value, precision_value, **kwargs
+    channel_value, measurement_value, precision_value, *, session_state
 ):
     if measurement_value is None:
         return dash.no_update
     try:
-        context = deserialize(kwargs["session_state"]["context"])
+        context = deserialize(session_state["context"])
         x_max = context["mm_dataset"].input_data.psf_beads_images[0].shape_x
         y_max = context["mm_dataset"].input_data.psf_beads_images[0].shape_y
         xi = np.linspace(0, x_max, 128)

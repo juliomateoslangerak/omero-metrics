@@ -252,8 +252,8 @@ def _make_card(
     dash.dependencies.Output("date-picker", "maxDate"),
     [dash.dependencies.Input("blank-input", "children")],
 )
-def update_date_range(*args, **kwargs):
-    project_contexts = kwargs["session_state"]["context"]["project_contexts"]
+def update_date_range(_blank_input, *, session_state):
+    project_contexts = session_state["context"]["project_contexts"]
     dates = [ctx["min_date"] for ctx in project_contexts if ctx.get("min_date")]
     dates += [ctx["max_date"] for ctx in project_contexts if ctx.get("max_date")]
     if not dates:
@@ -267,7 +267,7 @@ def update_date_range(*args, **kwargs):
     dash.dependencies.Output("microscope-cards-grid", "children"),
     dash.dependencies.Input("blank-input", "children"),
 )
-def render_content(*args, **kwargs):
+def render_content(_blank_input, *, session_state):
     return [
         _make_card(
             last_acquisition_date=(
@@ -277,7 +277,7 @@ def render_content(*args, **kwargs):
             project_name=proj_ctx["project_name"],
             project_description=proj_ctx["project_description"] or "",
         )
-        for proj_ctx in kwargs["session_state"]["context"]["project_contexts"]
+        for proj_ctx in session_state["context"]["project_contexts"]
     ]
 
 
@@ -288,8 +288,8 @@ def render_content(*args, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def load_table_project(dates, **kwargs):
-    context = kwargs["session_state"]["context"]
+def load_table_project(dates, *, session_state):
+    context = session_state["context"]
     file_ann = context.get("file_ann")
     if file_ann is None:
         return dash.no_update
@@ -331,12 +331,20 @@ def load_table_project(dates, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def delete_all_callback(*args, **kwargs):
-    triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
-    group_id = kwargs["session_state"]["context"]["group_id"]
-    request = kwargs["request"]
-    opened = not args[3]
-    if triggered_button == "modal-submit-button.n_clicks" and args[0] > 0:
+def delete_all_callback(
+    delete_all_clicks,
+    submit_button_clicks,
+    close_button_clicks,
+    confirm_delete_opened,
+    *,
+    callback_context,
+    session_state,
+    request,
+):
+    triggered_button = callback_context.triggered[0]["prop_id"]
+    group_id = session_state["context"]["group_id"]
+    opened = not confirm_delete_opened
+    if triggered_button == "modal-submit-button.n_clicks" and delete_all_clicks > 0:
         sleep(1)
         response_type, response_msg = views.delete_all(request, group_id=group_id)
 
@@ -353,8 +361,7 @@ def delete_all_callback(*args, **kwargs):
     dash.dependencies.State("datatable_file_ann", "data"),
     prevent_initial_call=True,
 )
-def download_file(*args, **kwargs):
-    table_data = args[1]
+def download_file(_download_clicks, table_data):
     df = pd.DataFrame(table_data)
     return dcc.send_data_frame(df.to_csv, "File_annotation.csv")
 

@@ -260,8 +260,8 @@ dft.register_growing_list_callbacks(dash_form_dataset)
     dash.dependencies.Output("setup-text", "children"),
     [dash.dependencies.Input("blank", "children")],
 )
-def update_setup(_, **kwargs):
-    input_parameters = kwargs["session_state"]["context"]["input_parameters"][
+def update_setup(_blank, *, session_state):
+    input_parameters = session_state["context"]["input_parameters"][
         "input_parameters"
     ]
     input_parameters_object = getattr(mm_schema, input_parameters["type"])
@@ -276,8 +276,8 @@ def update_setup(_, **kwargs):
     dash.dependencies.Output("sample_container", "children"),
     [dash.dependencies.Input("blank", "children")],
 )
-def update_sample(_, **kwargs):
-    sample = kwargs["session_state"]["context"]["input_parameters"]["sample"]
+def update_sample(_blank, *, session_state):
+    sample = session_state["context"]["input_parameters"]["sample"]
     mm_sample = getattr(mm_schema, sample["type"])
     mm_sample = mm_sample(**sample["fields"])
 
@@ -289,8 +289,8 @@ def update_sample(_, **kwargs):
     dash.dependencies.Output("framework-multi-select", "value"),
     [dash.dependencies.Input("blank", "children")],
 )
-def list_images_multi_selector(_, **kwargs):
-    list_images = kwargs["session_state"]["context"]["list_images"]
+def list_images_multi_selector(_blank, *, session_state):
+    list_images = session_state["context"]["list_images"]
     return list_images, [list_images[i]["value"] for i, _ in enumerate(list_images)]
 
 
@@ -298,7 +298,7 @@ def list_images_multi_selector(_, **kwargs):
     dash.dependencies.Output("framework-multi-select", "error"),
     [dash.dependencies.Input("framework-multi-select", "value")],
 )
-def multi_selector_callback(value, **kwargs):
+def multi_selector_callback(value):
     return "Select at least 1." if len(value) < 1 else ""
 
 
@@ -315,7 +315,7 @@ def multi_selector_callback(value, **kwargs):
     ],
 )
 def update_review_form(
-    _, form_content, multi_selector, input_parameters, current, **kwargs
+    _next_clicks, form_content, multi_selector, input_parameters, current
 ):
 
     selectors = dmc.MultiSelect(
@@ -351,17 +351,23 @@ def update_review_form(
     ],
     prevent_initial_call=True,
 )
-def stepper_callback(*args, **kwargs):
-    current = args[3]
-    multi_selector = args[2]
-    button_id = kwargs["callback_context"].triggered[0]["prop_id"]
+def stepper_callback(
+    _back_clicks,
+    _next_clicks,
+    multi_selector,
+    current,
+    sample_form_content,
+    *,
+    callback_context,
+):
+    button_id = callback_context.triggered[0]["prop_id"]
     step = current if current is not None else active
     next_text = "Next"
     next_color = THEME["primary"]
     if button_id == "back-basic-usage.n_clicks":
         step = step - 1 if step > min_step else step
     else:
-        if step == 0 and not dft.validate_form(args[4]):
+        if step == 0 and not dft.validate_form(sample_form_content):
             step = 0
         elif step == 1 and len(multi_selector) < 1:
             step = 1
@@ -401,14 +407,16 @@ dash_form_dataset.clientside_callback(
     ],
     prevent_initial_call=True,
 )
-def run_analysis(_, list_images, current, comment, **kwargs):
-    dataset_id = kwargs["session_state"]["context"]["dataset_id"]
+def run_analysis(
+    _next_clicks, list_images, current, comment, *, session_state, request
+):
+    dataset_id = session_state["context"]["dataset_id"]
     if current == 2:
         sleep(1)
-        input_parameters = kwargs["session_state"]["context"]["input_parameters"][
+        input_parameters = session_state["context"]["input_parameters"][
             "input_parameters"
         ]
-        sample = kwargs["session_state"]["context"]["input_parameters"]["sample"]
+        sample = session_state["context"]["input_parameters"]["sample"]
         try:
             input_parameters_object = getattr(mm_schema, input_parameters["type"])
             mm_input_parameters = input_parameters_object(
@@ -418,7 +426,7 @@ def run_analysis(_, list_images, current, comment, **kwargs):
             mm_sample = sample_object(**sample["fields"])
 
             response_type, response_msg, response_details = run_analysis_view(
-                request=kwargs["request"],
+                request=request,
                 dataset_id=dataset_id,
                 mm_sample=mm_sample,
                 list_images=list_images,

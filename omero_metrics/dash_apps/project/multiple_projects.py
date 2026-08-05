@@ -88,11 +88,10 @@ def get_data_trends(kkm_config, measurement, dates, dfs):
     dash.dependencies.Output("chart_lines", "children"),
     [dash.dependencies.Input("input_void", "value")],
 )
-def kkm_tables_projects(*args, **kwargs):
-    if kwargs["session_state"]["context"]:
-        data = kwargs["session_state"]["context"]
+def kkm_tables_projects(_input_void, *, session_state):
+    data = session_state["context"]
+    if data:
         print(data)
-        print(kwargs["session_state"]["context"])
         div_data = []
         for project_id in data:
             if data[project_id]:

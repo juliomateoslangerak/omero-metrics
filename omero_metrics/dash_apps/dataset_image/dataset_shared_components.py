@@ -137,12 +137,14 @@ def register_delete_dataset_callback(app):
         confirm_delete_button_clicks,
         cancel_delete_button_clicks,
         confirm_delete_modal_opened,
-        **kwargs,
+        *,
+        callback_context,
+        session_state,
+        request,
     ):
-        triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
-        context = deserialize(kwargs["session_state"]["context"])
+        triggered_button = callback_context.triggered[0]["prop_id"]
+        context = deserialize(session_state["context"])
         dataset_id = context["mm_dataset"].data_reference.omero_object_id
-        request = kwargs["request"]
         opened = not confirm_delete_modal_opened
         if (
             triggered_button == "confirm-delete-button.n_clicks"
@@ -171,15 +173,18 @@ def register_download_datasets_callback(app):
         prevent_initial_call=True,
     )
     def download_dataset_callback(
-        dl_yaml_n_clicks, dl_json_n_clicks, dl_text_n_clicks, **kwargs
+        dl_yaml_n_clicks,
+        dl_json_n_clicks,
+        dl_text_n_clicks,
+        *,
+        callback_context,
+        session_state,
     ):
-        if not kwargs["callback_context"].triggered:
+        if not callback_context.triggered:
             raise no_update
 
-        triggered_id = (
-            kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
-        )
-        context = deserialize(kwargs["session_state"]["context"])
+        triggered_id = callback_context.triggered[0]["prop_id"].split(".")[0]
+        context = deserialize(session_state["context"])
         mm_dataset = context["mm_dataset"]
         remove_unsupported_types(mm_dataset.input_data)
         remove_unsupported_types(mm_dataset.output)
@@ -213,10 +218,10 @@ def register_update_kkm_table_callback(app):
             dependencies.Input("kkm-table-pagination", "value"),
         ],
     )
-    def update_kkm_table_callback(pagination_value, **kwargs):
+    def update_kkm_table_callback(pagination_value, *, session_state):
         try:
             page = int(pagination_value)
-            context = deserialize(kwargs["session_state"]["context"])
+            context = deserialize(session_state["context"])
             kkm = context["assay_config"].kkm_configuration
             kkm_values = [k.value for k in kkm]
             col_rename = {"channel_name": "Channel Name"} | {
@@ -256,15 +261,18 @@ def register_download_table_callback(app):
         prevent_initial_call=True,
     )
     def download_table_callback(
-        tb_dw_csv_clicks, tb_dw_xlsx_clicks, tb_dw_json_clicks, **kwargs
+        tb_dw_csv_clicks,
+        tb_dw_xlsx_clicks,
+        tb_dw_json_clicks,
+        *,
+        callback_context,
+        session_state,
     ):
-        if not kwargs["callback_context"].triggered:
+        if not callback_context.triggered:
             raise no_update
 
-        triggered_id = (
-            kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
-        )
-        context = deserialize(kwargs["session_state"]["context"])
+        triggered_id = callback_context.triggered[0]["prop_id"].split(".")[0]
+        context = deserialize(session_state["context"])
         kkm = context["assay_config"].kkm_configuration
         kkm_values = [k.value for k in kkm]
         col_rename = {"channel_name": "Channel Name"} | {

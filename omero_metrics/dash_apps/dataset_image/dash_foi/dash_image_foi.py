@@ -247,8 +247,8 @@ omero_image_foi.layout = dmc.MantineProvider(
     dash.dependencies.Output("channel_dropdown", "value"),
     [dash.dependencies.Input("blank-input", "children")],
 )
-def callback_channel(_, **kwargs):
-    mm_image = deserialize(kwargs["session_state"]["context"]["mm_image"])
+def callback_channel(_blank_input, *, session_state):
+    mm_image = deserialize(session_state["context"]["mm_image"])
     return [
         {"label": c.name, "value": str(i), "description": f"Channel {i+1}"}
         for i, c in enumerate(mm_image.channel_series.channels)
@@ -265,9 +265,11 @@ def callback_channel(_, **kwargs):
         dash.dependencies.Input("segmented", "value"),
     ],
 )
-def callback_image(channel, color, checked_contour, inverted_color, roi, **kwargs):
-    mm_dataset = deserialize(kwargs["session_state"]["context"]["mm_dataset"])
-    mm_image = deserialize(kwargs["session_state"]["context"]["mm_image"])
+def callback_image(
+    channel, color, checked_contour, inverted_color, roi, *, session_state
+):
+    mm_dataset = deserialize(session_state["context"]["mm_dataset"])
+    mm_image = deserialize(session_state["context"]["mm_image"])
     image_id = mm_image.data_reference.omero_object_id
     if inverted_color:
         color = color + "_r"
@@ -377,10 +379,10 @@ def callback_image(channel, color, checked_contour, inverted_color, roi, **kwarg
     dash.dependencies.Output("intensity_profile", "data"),
     [dash.dependencies.Input("channel_dropdown", "value")],
 )
-def update_intensity_profiles(channel, **kwargs):
-    image_index = int(kwargs["session_state"]["context"]["image_index"])
+def update_intensity_profiles(channel, *, session_state):
+    image_index = int(session_state["context"]["image_index"])
     df_intensity_profiles = load.load_table_mm_metrics(
-        deserialize(kwargs["session_state"]["context"]["mm_dataset"]).output[
+        deserialize(session_state["context"]["mm_dataset"]).output[
             "intensity_profiles"
         ][image_index]
     )

@@ -328,9 +328,9 @@ dft.register_growing_list_callbacks(omero_project_dash)
     dash.dependencies.Output("delete-data", "disabled"),
     [dash.dependencies.Input("blank-input", "children")],
 )
-def update_dropdown(*args, **kwargs):
+def update_dropdown(_blank_input, *, session_state):
     try:
-        context = deserialize(kwargs["session_state"]["context"])
+        context = deserialize(session_state["context"])
         kkm_config = context["assay_config"].kkm_configuration
         kkm_options = [
             {"value": str(i), "label": k.display_name}
@@ -372,11 +372,9 @@ def update_dropdown(*args, **kwargs):
     dash.dependencies.Output("graph-project", "children"),
     [dash.dependencies.Input("blank-input", "children")],
 )
-def check_data(*args, **kwargs):
+def check_data(_blank_input, *, session_state):
     try:
-        data = deserialize(kwargs["session_state"]["context"])[
-            "key_measurements_by_kkm"
-        ]
+        data = deserialize(session_state["context"])["key_measurements_by_kkm"]
         # FIXME: This expression is odd in any case this returns no update
         if not data:
             return dash.no_update
@@ -408,9 +406,9 @@ def check_data(*args, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def update_table(measurement, dates_range, **kwargs):
+def update_table(measurement, dates_range, *, session_state):
     try:
-        context = deserialize(kwargs["session_state"]["context"])
+        context = deserialize(session_state["context"])
         key_measurements_by_kkm = context["key_measurements_by_kkm"]
         comments_by_dataset_id = context["comments_by_dataset_id"]
         threshold = context["thresholds"]
@@ -518,10 +516,10 @@ def update_table(measurement, dates_range, **kwargs):
         dash.dependencies.Input("pagination", "value"),
     ],
 )
-def update_project_view(clicked_data, page, **kwargs):
+def update_project_view(clicked_data, page, *, session_state):
     try:
         if clicked_data:
-            context = deserialize(kwargs["session_state"]["context"])
+            context = deserialize(session_state["context"])
             key_measurements_by_dataset_id = context[
                 "key_measurements_by_dataset_id"
             ]
@@ -554,8 +552,8 @@ def update_project_view(clicked_data, page, **kwargs):
     dash.dependencies.Output("sample-container", "children"),
     [dash.dependencies.Input("blank-input", "children")],
 )
-def update_modal(*args, **kwargs):
-    context = deserialize(kwargs["session_state"]["context"])
+def update_modal(_blank_input, *, session_state):
+    context = deserialize(session_state["context"])
     sample = context["sample"]
     mm_sample = getattr(mm_schema, sample["type"])
     mm_sample = mm_sample(**sample["fields"])
@@ -619,10 +617,11 @@ omero_project_dash.clientside_callback(
     ],
     prevent_initial_call=True,
 )
-def update_config_project(submit_click, sample_form, input_form, **kwargs):
-    context = deserialize(kwargs["session_state"]["context"])
+def update_config_project(
+    submit_click, sample_form, input_form, *, session_state, request
+):
+    context = deserialize(session_state["context"])
     project_id = int(context["project_id"])
-    request = kwargs["request"]
     sample = context["sample"]
     mm_sample = getattr(mm_schema, sample["type"])
     input_parameters = context["input_parameters"]
@@ -670,9 +669,9 @@ def update_config_project(submit_click, sample_form, input_form, **kwargs):
     dash.dependencies.Output("thresholds-dropdown", "data"),
     [dash.dependencies.Input("blank-input", "children")],
 )
-def update_thresholds(*args, **kwargs):
+def update_thresholds(_blank_input, *, session_state):
     try:
-        kkm_config = deserialize(kwargs["session_state"]["context"])[
+        kkm_config = deserialize(session_state["context"])[
             "assay_config"
         ].kkm_configuration
         data = [
@@ -689,7 +688,7 @@ def update_thresholds(*args, **kwargs):
     dash.dependencies.Output({"index": dash.dependencies.MATCH}, "variant"),
     dash.dependencies.Input({"index": dash.dependencies.MATCH}, "n_clicks"),
 )
-def update_heart(n, **kwargs):
+def update_heart(n):
     if n % 2 == 0:
         return "default"
     return "filled"
@@ -700,9 +699,9 @@ def update_heart(n, **kwargs):
     dash.dependencies.Output("thresholds-button-container", "children"),
     [dash.dependencies.Input("blank-input", "children")],
 )
-def update_thresholds_controls(*args, **kwargs):
+def update_thresholds_controls(_blank_input, *, session_state):
     try:
-        context = deserialize(kwargs["session_state"]["context"])
+        context = deserialize(session_state["context"])
         kkm_config = context["assay_config"].kkm_configuration
         threshold = context["thresholds"] or {
             k.value: {"upper_limit": "", "lower_limit": ""} for k in kkm_config
@@ -793,18 +792,25 @@ def update_thresholds_controls(*args, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def save_thresholds(*args, **kwargs):
+def save_thresholds(
+    submit_clicks,
+    fieldset_ids,
+    upper_values,
+    lower_values,
+    *,
+    session_state,
+    request,
+):
     try:
-        context = deserialize(kwargs["session_state"]["context"])
+        context = deserialize(session_state["context"])
         project_id = int(context["project_id"])
-        fieldset_ids, upper_values, lower_values = args[1], args[2], args[3]
         output = {
             fieldset_id["index"]: {"upper_limit": uv, "lower_limit": lv}
             for fieldset_id, uv, lv in zip(fieldset_ids, upper_values, lower_values)
         }
-        if output and args[0]:
+        if output and submit_clicks:
             response_type, response_msg = views.save_threshold(
-                request=kwargs["request"],
+                request=request,
                 project_id=project_id,
                 threshold=output,
             )
@@ -830,13 +836,24 @@ def save_thresholds(*args, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def delete_project(*args, **kwargs):
+def delete_project(
+    delete_data_clicks,
+    submit_button_clicks,
+    close_button_clicks,
+    delete_modal_opened,
+    *,
+    callback_context,
+    session_state,
+    request,
+):
     try:
-        triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
-        project_id = deserialize(kwargs["session_state"]["context"])["project_id"]
-        request = kwargs["request"]
-        opened = not args[3]
-        if triggered_button == "delete-modal-submit-button.n_clicks" and args[0] > 0:
+        triggered_button = callback_context.triggered[0]["prop_id"]
+        project_id = deserialize(session_state["context"])["project_id"]
+        opened = not delete_modal_opened
+        if (
+            triggered_button == "delete-modal-submit-button.n_clicks"
+            and delete_data_clicks > 0
+        ):
             sleep(1)
             response_type, response_msg = views.delete_project(
                 request, project_id=project_id
@@ -860,15 +877,20 @@ def delete_project(*args, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def download_project_data(*args, **kwargs):
+def download_project_data(
+    dl_yaml_n_clicks,
+    dl_json_n_clicks,
+    dl_text_n_clicks,
+    *,
+    callback_context,
+    session_state,
+):
     try:
-        if not kwargs["callback_context"].triggered:
+        if not callback_context.triggered:
             raise dash.no_update
 
-        triggered_id = (
-            kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
-        )
-        context = deserialize(kwargs["session_state"]["context"])
+        triggered_id = callback_context.triggered[0]["prop_id"].split(".")[0]
+        context = deserialize(session_state["context"])
         mm_dataset_collection = context["mm_dataset_collection"]
         file_name = context["project_name"]
         yaml_dumper = YAMLDumper()

@@ -255,9 +255,11 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
         dash.dependencies.Input("beads-info-segmented", "value"),
     ],
 )
-def update_image(channel_index, color, invert, contour, roi, beads_info, **kwargs):
+def update_image(
+    channel_index, color, invert, contour, roi, beads_info, *, session_state
+):
     try:
-        context = deserialize(kwargs["session_state"]["context"])
+        context = deserialize(session_state["context"])
         mm_dataset = context["mm_dataset"]
         mm_image = context["mm_image"]
         image_id = mm_image.data_reference.omero_object_id
@@ -335,8 +337,8 @@ def update_image(channel_index, color, invert, contour, roi, beads_info, **kwarg
     dash.dependencies.Output("channel-selector-psf-image", "value"),
     [dash.dependencies.Input("blank-input", "children")],
 )
-def update_channels_psf_image(_, **kwargs):
-    context = deserialize(kwargs["session_state"]["context"])
+def update_channels_psf_image(_blank_input, *, session_state):
+    context = deserialize(session_state["context"])
     channel_series = context["mm_image"].channel_series
     return [
         {"label": c.name, "value": str(i)}
@@ -355,12 +357,12 @@ def update_channels_psf_image(_, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def callback_mip(points, channel_index, color, invert, **kwargs):
+def callback_mip(points, channel_index, color, invert, *, session_state):
     point = points["points"][0]  # FIXME: point is None at initial call
     if point["curveNumber"] != 1:
         return dash.no_update
 
-    context = deserialize(kwargs["session_state"]["context"])
+    context = deserialize(session_state["context"])
     bead_index = point["pointNumber"]
     mm_image = context["mm_image"]
     image_id = mm_image.data_reference.omero_object_id

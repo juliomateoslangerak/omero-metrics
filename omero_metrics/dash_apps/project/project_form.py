@@ -279,9 +279,16 @@ dft.register_growing_list_callbacks(dash_form_project)
     ],
     prevent_initial_call=True,
 )
-def stepper_callback(*args, **kwargs):
-    current = args[2]
-    button_id = kwargs["callback_context"].triggered[0]["prop_id"]
+def stepper_callback(
+    _back_clicks,
+    _next_clicks,
+    current,
+    sample_content,
+    input_content,
+    *,
+    callback_context,
+):
+    button_id = callback_context.triggered[0]["prop_id"]
     step = current if current is not None else 0
 
     progress = (step / 2) * 100
@@ -292,10 +299,7 @@ def stepper_callback(*args, **kwargs):
         next_icon = my_components.get_icon(icon="mdi:arrow-right")
         next_color = THEME["primary"]
     else:
-        sample = args[3]
-        input_parameters = args[4]
-
-        if step == 0 and not dft.validate_form(sample):
+        if step == 0 and not dft.validate_form(sample_content):
             return (
                 dash.no_update,
                 dash.no_update,
@@ -303,7 +307,7 @@ def stepper_callback(*args, **kwargs):
                 progress,
                 dash.no_update,
             )
-        elif step == 1 and not dft.validate_form(input_parameters):
+        elif step == 1 and not dft.validate_form(input_content):
             return (
                 dash.no_update,
                 dash.no_update,
@@ -334,7 +338,7 @@ def stepper_callback(*args, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def update_sample_container(sample_type_selector, **kwargs):
+def update_sample_container(sample_type_selector):
     mm_sample = SAMPLE_TYPE_LOOKUP[sample_type_selector][0]
     sample_form = dft.render_fieldset(
         mm_sample, disabled=False, form_id="sample-content"
@@ -349,7 +353,7 @@ def update_sample_container(sample_type_selector, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def update_input_parameters(sample_type_selector, **kwargs):
+def update_input_parameters(sample_type_selector):
     analysis_type = SAMPLE_TYPE_LOOKUP[sample_type_selector][1].split("/")[-1]
     mm_input_parameters = DATASET_TO_INPUT_PARAMETERS[analysis_type]
     mm_input_parameters = dft.render_fieldset(
@@ -369,7 +373,7 @@ def update_input_parameters(sample_type_selector, **kwargs):
     ],
     prevent_initial_call=True,
 )
-def review_configuration(_, sample_form, input_parameters_form, current, **kwargs):
+def review_configuration(_next_clicks, sample_form, input_parameters_form, current):
     sample = dft.disable_all_fields_dash_form(sample_form)
     input_parameters = dft.disable_all_fields_dash_form(input_parameters_form)
     if current == 1:
@@ -412,7 +416,9 @@ def save_config_dash(
     input_form,
     current,
     sample_type_selector,
-    **kwargs,
+    *,
+    session_state,
+    request,
 ):
     if not sample_type_selector:  # No sample type selected
         return dash.no_update, False
@@ -420,8 +426,7 @@ def save_config_dash(
     analysis_type = SAMPLE_TYPE_LOOKUP[sample_type_selector][1].split("/")[-1]
     mm_sample = SAMPLE_TYPE_LOOKUP[sample_type_selector][0]
     mm_input_parameters = DATASET_TO_INPUT_PARAMETERS[analysis_type]
-    project_id = int(kwargs["session_state"]["context"]["project_id"])
-    request = kwargs["request"]
+    project_id = int(session_state["context"]["project_id"])
     if clicked_data > 0 and current == 2:
         if dft.validate_form(sample_form) and dft.validate_form(input_form):
             sleep(1)

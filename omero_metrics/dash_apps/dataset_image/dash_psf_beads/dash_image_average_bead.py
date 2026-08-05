@@ -192,9 +192,9 @@ omero_image_average_bead.layout = dmc.MantineProvider(
         dash.dependencies.Input("color_switch_average_image", "checked"),
     ],
 )
-def update_image(channel_index, color, invert, **kwargs):
+def update_image(channel_index, color, invert, *, session_state):
     try:
-        context = deserialize(kwargs["session_state"]["context"])
+        context = deserialize(session_state["context"])
         mm_dataset = context["mm_dataset"]
         mm_image = context["mm_image"]
         image_id = mm_image.data_reference.omero_object_id
@@ -481,8 +481,8 @@ def update_image(channel_index, color, invert, **kwargs):
     dash.dependencies.Output("channel_selector_average_image", "value"),
     [dash.dependencies.Input("blank-input", "children")],
 )
-def update_channels_average_image(_, **kwargs):
-    context = deserialize(kwargs["session_state"]["context"])
+def update_channels_average_image(_blank_input, *, session_state):
+    context = deserialize(session_state["context"])
     channel_series = context["mm_image"].channel_series
     return [
         {"label": c.name, "value": str(i)}
@@ -490,14 +490,6 @@ def update_channels_average_image(_, **kwargs):
     ], "0"
 
 
-@omero_image_average_bead.expanded_callback(
-    dash.dependencies.Output("mip_image", "figure"),
-    [
-        dash.dependencies.Input("average_image_graph", "clickData"),
-        dash.dependencies.Input("channel_selector_average_image", "value"),
-    ],
-    prevent_initial_call=True,
-)
 def get_average_bead_profiles(bead_index, channel_index, image_id, mm_dataset):
     # bead_index and image_is are not used.
     profiles = {

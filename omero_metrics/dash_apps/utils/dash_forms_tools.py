@@ -196,9 +196,8 @@ def _make_growing_list_callback(app, cls):
         ],
         prevent_initial_call=True,
     )
-    def update(_add, _remove, current_values, **kwargs):
-        ctx = kwargs["callback_context"]
-        prop_id = ctx.triggered[0]["prop_id"]
+    def update(_add, _remove, current_values, *, callback_context):
+        prop_id = callback_context.triggered[0]["prop_id"]
         # prop_id looks like: '{"owner":"...","subtype":"float","type":"growing-list-add"}.n_clicks'
         triggered_id = json.loads(prop_id.rsplit(".", 1)[0])
         triggered_type = triggered_id["type"]

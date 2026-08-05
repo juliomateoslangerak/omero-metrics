@@ -180,9 +180,9 @@ dsc.register_download_table_callback(omero_dataset_foi)
     dash.dependencies.Output("channel-dropdown-foi", "value"),
     [dash.dependencies.Input("blank-input", "children")],
 )
-def update_dropdown_menu(*args, **kwargs):
+def update_dropdown_menu(_blank_input, *, session_state):
     try:
-        channel_names = kwargs["session_state"]["context"]["channel_names"]
+        channel_names = session_state["context"]["channel_names"]
         return [
             {"label": str(name), "value": str(i)}
             for i, name in enumerate(channel_names)
@@ -197,10 +197,10 @@ def update_dropdown_menu(*args, **kwargs):
         dash.dependencies.Input("channel-dropdown-foi", "value"),
     ],
 )
-def update_intensity_map(channel, **kwargs):
+def update_intensity_map(channel, *, session_state):
     try:
         channel = int(channel)
-        images = deserialize(kwargs["session_state"]["context"])["image_data"]
+        images = deserialize(session_state["context"])["image_data"]
         image = images[channel]
         image_channel = image[0, 0, :, :]
         image_channel = rescale_intensity(
@@ -251,10 +251,10 @@ def update_intensity_map(channel, **kwargs):
         dash.dependencies.Input("profile-type", "value"),
     ],
 )
-def update_profile_type(channel, curve_type, **kwargs):
+def update_profile_type(channel, curve_type, *, session_state):
     try:
         df_intensity_profiles = load.load_table_mm_metrics(
-            deserialize(kwargs["session_state"]["context"]["mm_dataset"]).output[
+            deserialize(session_state["context"]["mm_dataset"]).output[
                 "intensity_profiles"
             ]
         )
