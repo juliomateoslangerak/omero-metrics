@@ -23,6 +23,7 @@ from omero_metrics.styles import (
 DATASET_TO_INPUT_PARAMETERS = {
     "FieldIlluminationDataset": mm_schema.FieldIlluminationInputParameters,
     "PSFBeadsDataset": mm_schema.PSFBeadsInputParameters,
+    "CoRegistrationDataset": mm_schema.CoRegistrationInputParameters,
 }
 
 SAMPLE_TYPE_LOOKUP = {
