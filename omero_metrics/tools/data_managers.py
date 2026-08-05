@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 DATASET_CONTEXT_LOADERS = {
     "FieldIlluminationDataset": context_loaders.FieldIlluminationDataset,
     "PSFBeadsDataset": context_loaders.PSFBeadsDataset,
+    "CoRegistrationDataset": context_loaders.CoRegistrationDataset,
 }
 
 IMAGE_CONTEXT_LOADERS = {
