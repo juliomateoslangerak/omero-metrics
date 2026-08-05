@@ -67,7 +67,7 @@ def get_input_data_class(dataset_class):
 def get_analysis_function(dataset_class):
     """Find the analysis function for a given dataset class from microscopemetrics MAPPINGS."""
     try:
-        return MAPPINGS[dataset_class.__name__].analysis_function
+        return MAPPINGS[dataset_class.class_class_curie].analysis_function
     except KeyError as e:
         raise ValueError(f"No analysis function found for {dataset_class}") from e
 
