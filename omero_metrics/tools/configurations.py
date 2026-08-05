@@ -162,8 +162,8 @@ ASSAY_CONFIGURATIONS = {
     "CoRegistrationDataset": AssayConfiguration(
         display_name="Co-Registration",
         description="Channel co-registration assay",
-        assay_app_name="omero_dataset_co_registration",
-        image_app_name={"input_data": "omero_image_co_registration"},
+        assay_app_name="omero_dataset_coregistration",
+        image_app_name={"input_data": "omero_image_coregistration"},
         kkm_configuration=[
             KKMConfig(
                 display_name="Distance 3D Mean Micron",
