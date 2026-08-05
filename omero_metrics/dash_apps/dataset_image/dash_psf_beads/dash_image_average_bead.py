@@ -67,7 +67,7 @@ omero_image_average_bead.layout = dmc.MantineProvider(
                                                 dcc.Graph(
                                                     figure={},
                                                     style={"height": "400px"},
-                                                    id="average_image_graph",
+                                                    id="average-image-graph",
                                                 ),
                                             ],
                                             p="md",
@@ -100,7 +100,7 @@ omero_image_average_bead.layout = dmc.MantineProvider(
                                                             labelPosition="center",
                                                         ),
                                                         dmc.Select(
-                                                            id="channel_selector_average_image",
+                                                            id="channel-selector-average-image",
                                                             label="Channel",
                                                             w="100%",
                                                             allowDeselect=False,
@@ -126,7 +126,7 @@ omero_image_average_bead.layout = dmc.MantineProvider(
                                                             mt="md",
                                                         ),
                                                         dmc.Select(
-                                                            id="color_selector_average_image",
+                                                            id="color-selector-average-image",
                                                             label="Color Scheme",
                                                             allowDeselect=False,
                                                             data=[
@@ -156,7 +156,7 @@ omero_image_average_bead.layout = dmc.MantineProvider(
                                                             ),
                                                         ),
                                                         dmc.Switch(
-                                                            id="color_switch_average_image",
+                                                            id="color-switch-average-image",
                                                             label="Invert Colors",
                                                             checked=False,
                                                             size="md",
@@ -185,11 +185,11 @@ omero_image_average_bead.layout = dmc.MantineProvider(
 
 
 @omero_image_average_bead.expanded_callback(
-    dash.dependencies.Output("average_image_graph", "figure"),
+    dash.dependencies.Output("average-image-graph", "figure"),
     [
-        dash.dependencies.Input("channel_selector_average_image", "value"),
-        dash.dependencies.Input("color_selector_average_image", "value"),
-        dash.dependencies.Input("color_switch_average_image", "checked"),
+        dash.dependencies.Input("channel-selector-average-image", "value"),
+        dash.dependencies.Input("color-selector-average-image", "value"),
+        dash.dependencies.Input("color-switch-average-image", "checked"),
     ],
 )
 def update_image(channel_index, color, invert, *, session_state):
@@ -477,8 +477,8 @@ def update_image(channel_index, color, invert, *, session_state):
 
 
 @omero_image_average_bead.expanded_callback(
-    dash.dependencies.Output("channel_selector_average_image", "data"),
-    dash.dependencies.Output("channel_selector_average_image", "value"),
+    dash.dependencies.Output("channel-selector-average-image", "data"),
+    dash.dependencies.Output("channel-selector-average-image", "value"),
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_channels_average_image(_blank_input, *, session_state):
