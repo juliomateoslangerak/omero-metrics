@@ -25,7 +25,7 @@ omero_dataset_coregistration.layout = dmc.MantineProvider(
         dmc.Container(
             children=[
                 dsc.blank_input(),
-                dsc.contour_chart_group(),
+                dsc.contour_chart(),
                 dsc.dataset_table_paper(),
             ],
             style=CONTAINER_STYLE,

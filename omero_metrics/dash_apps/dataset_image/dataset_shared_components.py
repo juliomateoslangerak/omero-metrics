@@ -189,6 +189,13 @@ def dataset_table_paper():
 # contour chart of a per-bead measurement. They differ only in their heading
 # text and in which input_data field holds the analysed images.
 CONTOUR_CHART_WIDTH = 600
+# Trimmed from the Plotly defaults (l/r 80, t 100, b 80). The default top
+# margin holds a title this chart does not have, and its whitespace pushed the
+# plotting area well below the top of the controls standing beside it.
+CONTOUR_CHART_MARGIN = dict(l=45, r=15, t=15, b=45)
+# Plotly widens the right margin to fit the colorbar. Allow for it so the
+# height below is derived from the width the plotting area actually gets.
+CONTOUR_COLORBAR_WIDTH = 90
 
 
 def empty_contour_figure(x_max=None, y_max=None):
@@ -196,13 +203,40 @@ def empty_contour_figure(x_max=None, y_max=None):
 
     ``x_max``/``y_max`` are the analysed image shape. They are unknown when the
     context failed to load, in which case the figure falls back to a square.
+
+    The axes are pinned to the image bounds rather than autoranged: the bead
+    markers would otherwise pad the range past the contour, leaving a band of
+    plot background around it. ``constrain="domain"`` keeps the pixels square
+    by shrinking the plotting area instead of widening that range again.
     """
     aspect_ratio = y_max / x_max if x_max and y_max else 1
+    plot_width = (
+        CONTOUR_CHART_WIDTH
+        - CONTOUR_CHART_MARGIN["l"]
+        - CONTOUR_CHART_MARGIN["r"]
+        - CONTOUR_COLORBAR_WIDTH
+    )
+    if x_max and y_max:
+        axes = dict(
+            xaxis=dict(range=[0, x_max], constrain="domain"),
+            yaxis=dict(range=[y_max, 0], scaleanchor="x", constrain="domain"),
+        )
+    else:
+        axes = dict(yaxis=dict(autorange="reversed"))
     fig = go.Figure()
     fig.update_layout(
         width=CONTOUR_CHART_WIDTH,
-        height=CONTOUR_CHART_WIDTH * aspect_ratio,
-        yaxis=dict(autorange="reversed"),
+        # Sizing the plotting area, rather than the whole figure, to the image
+        # shape: the margins are fixed, so anything they take is added back.
+        height=(
+            plot_width * aspect_ratio
+            + CONTOUR_CHART_MARGIN["t"]
+            + CONTOUR_CHART_MARGIN["b"]
+        ),
+        margin=CONTOUR_CHART_MARGIN,
+        plot_bgcolor=THEME["background"],
+        paper_bgcolor=THEME["background"],
+        **axes,
     )
     return fig
 
@@ -221,60 +255,7 @@ def add_centered_message(fig, text, y=0.5, size=20):
     return fig
 
 
-def contour_chart():
-    """The contour chart itself, sized by the figure its callback returns."""
-    return dcc.Graph(id="contour-chart", figure={})
-
-
-def contour_controls():
-    """Channel, measurement and precision selectors for the contour chart."""
-    return dmc.Stack(
-        children=[
-            dmc.Select(
-                id="channel-select",
-                clearable=False,
-                allowDeselect=False,
-                w="200",
-                leftSection=omero_metrics_components.get_icon(
-                    icon="material-symbols:layers"
-                ),
-                rightSection=omero_metrics_components.get_icon(
-                    icon="radix-icons:chevron-down"
-                ),
-                styles=INPUT_BASE_STYLES,
-            ),
-            dmc.Select(
-                id="measurement-select",
-                clearable=False,
-                allowDeselect=False,
-                w="200",
-                leftSection=omero_metrics_components.get_icon(
-                    icon="ph:magnifying-glass"
-                ),
-                rightSection=omero_metrics_components.get_icon(
-                    icon="radix-icons:chevron-down"
-                ),
-                styles=INPUT_BASE_STYLES,
-            ),
-            dmc.Text("Select precision"),
-            dmc.Slider(
-                id="precision-slider",
-                w="200",
-                min=0,
-                max=10,
-                step=1,
-                value=2,
-                marks=[
-                    {"value": 0, "label": "0"},
-                    {"value": 5, "label": "5"},
-                    {"value": 10, "label": "10"},
-                ],
-            ),
-        ]
-    )
-
-
-def contour_chart_group(**group_props):
+def contour_chart(**group_props):
     """The contour chart beside its controls.
 
     Extra keyword arguments are passed through to ``dmc.Group``, so a dashboard
@@ -282,14 +263,69 @@ def contour_chart_group(**group_props):
     and ``contour_controls()`` directly for a different arrangement.
     """
     props = {
-        # Group wraps by default; the chart (600px) plus the controls (200px)
-        # overflow the panel and would stack.
+        # Not space-around: the chart has a fixed width, so the leftover space
+        # in the row became gutters on either side of it.
+        "justify": "flex-start",
+        "gap": "xl",
         "wrap": "nowrap",
         "align": "flex-start",
+        "direction": "row",
         **group_props,
     }
-    return dmc.Group(
-        children=[contour_chart(), contour_controls()],
+    return dmc.Flex(
+        children=[
+            dcc.Graph(
+                id="contour-chart",
+                figure={},
+                # The wrapper div is block level and would stretch across the
+                # row, leaving the fixed-width figure adrift inside it.
+                style={"width": CONTOUR_CHART_WIDTH},
+            ),
+            dmc.Stack(
+                children=[
+                    dmc.Select(
+                        id="channel-select",
+                        clearable=False,
+                        allowDeselect=False,
+                        w="200",
+                        leftSection=omero_metrics_components.get_icon(
+                            icon="material-symbols:layers"
+                        ),
+                        rightSection=omero_metrics_components.get_icon(
+                            icon="radix-icons:chevron-down"
+                        ),
+                        styles=INPUT_BASE_STYLES,
+                    ),
+                    dmc.Select(
+                        id="measurement-select",
+                        clearable=False,
+                        allowDeselect=False,
+                        w="200",
+                        leftSection=omero_metrics_components.get_icon(
+                            icon="ph:magnifying-glass"
+                        ),
+                        rightSection=omero_metrics_components.get_icon(
+                            icon="radix-icons:chevron-down"
+                        ),
+                        styles=INPUT_BASE_STYLES,
+                    ),
+                    dmc.Text("Select precision"),
+                    dmc.Slider(
+                        id="precision-slider",
+                        w="200",
+                        min=0,
+                        max=10,
+                        step=1,
+                        value=2,
+                        marks=[
+                            {"value": 0, "label": "0"},
+                            {"value": 5, "label": "5"},
+                            {"value": 10, "label": "10"},
+                        ],
+                    ),
+                ]
+            ),
+        ],
         **props,
     )
 
