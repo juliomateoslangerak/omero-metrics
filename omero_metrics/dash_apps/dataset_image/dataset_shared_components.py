@@ -259,6 +259,7 @@ def contour_controls():
             dmc.Text("Select precision"),
             dmc.Slider(
                 id="precision-slider",
+                w="200",
                 min=0,
                 max=10,
                 step=1,
