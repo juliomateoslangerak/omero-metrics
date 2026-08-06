@@ -78,7 +78,11 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
                                 ),
                             ]
                         ),
-                    ]
+                    ],
+                    # Group wraps by default; the chart (600px) plus the
+                    # controls (200px) exceed the panel width and would stack.
+                    wrap="nowrap",
+                    align="flex-start",
                 ),
                 dsc.dataset_table_paper(),
             ],
