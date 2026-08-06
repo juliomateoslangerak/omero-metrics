@@ -5,6 +5,7 @@ import dash_mantine_components as dmc
 import numpy as np
 import plotly.graph_objects as go
 from dash import dcc, dependencies, html, no_update
+from dash_iconify import DashIconify
 from linkml_runtime.dumpers import JSONDumper, YAMLDumper
 from scipy.interpolate import griddata
 from scipy.spatial import QhullError
@@ -12,10 +13,8 @@ from scipy.spatial import QhullError
 from omero_metrics import views
 from omero_metrics.dash_apps.utils import omero_metrics_components
 from omero_metrics.styles import (
-    CONTAINER_STYLE,
     CONTENT_PAPER_STYLE,
     INPUT_BASE_STYLES,
-    MANTINE_THEME,
     TABLE_MANTINE_STYLE,
     THEME,
 )
@@ -61,6 +60,18 @@ def confirm_delete_modal():
             ),
         ],
     )
+
+
+def dataset_header(title, description, tag, load_buttons=True):
+    """Dashboard header with the dataset load/download/delete buttons."""
+    return omero_metrics_components.header_component(
+        title, description, tag, load_buttons=load_buttons
+    )
+
+
+def blank_input():
+    """Hidden element used to trigger callbacks once on page load."""
+    return html.Div(id="blank-input")
 
 
 def _download_table():
@@ -210,8 +221,13 @@ def add_centered_message(fig, text, y=0.5, size=20):
     return fig
 
 
-def _contour_controls():
-    """Channel, measurement and precision selectors beside the contour chart."""
+def contour_chart():
+    """The contour chart itself, sized by the figure its callback returns."""
+    return dcc.Graph(id="contour-chart", figure={})
+
+
+def contour_controls():
+    """Channel, measurement and precision selectors for the contour chart."""
     return dmc.Stack(
         children=[
             dmc.Select(
@@ -257,33 +273,23 @@ def _contour_controls():
     )
 
 
-def contour_dashboard_layout(title, description, tag):
-    """Full layout for a dataset dashboard built around a contour chart."""
-    return dmc.MantineProvider(
-        theme=MANTINE_THEME,
-        children=[
-            notifications_container(),
-            confirm_delete_modal(),
-            omero_metrics_components.header_component(title, description, tag),
-            dmc.Container(
-                children=[
-                    # Hidden element for callbacks
-                    html.Div(id="blank-input"),
-                    dmc.Group(
-                        children=[
-                            dcc.Graph(id="contour-chart", figure={}),
-                            _contour_controls(),
-                        ],
-                        # Group wraps by default; the chart (600px) plus the
-                        # controls (200px) overflow the panel and would stack.
-                        wrap="nowrap",
-                        align="flex-start",
-                    ),
-                    dataset_table_paper(),
-                ],
-                style=CONTAINER_STYLE,
-            ),
-        ],
+def contour_chart_group(**group_props):
+    """The contour chart beside its controls.
+
+    Extra keyword arguments are passed through to ``dmc.Group``, so a dashboard
+    can override the defaults or add its own props. Compose ``contour_chart()``
+    and ``contour_controls()`` directly for a different arrangement.
+    """
+    props = {
+        # Group wraps by default; the chart (600px) plus the controls (200px)
+        # overflow the panel and would stack.
+        "wrap": "nowrap",
+        "align": "flex-start",
+        **group_props,
+    }
+    return dmc.Group(
+        children=[contour_chart(), contour_controls()],
+        **props,
     )
 
 

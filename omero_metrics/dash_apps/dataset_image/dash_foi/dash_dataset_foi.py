@@ -31,9 +31,7 @@ omero_dataset_foi.layout = dmc.MantineProvider(
     children=[
         dsc.notifications_container(),
         dsc.confirm_delete_modal(),
-        my_components.header_component(
-            "Field Illumination", "Dataset Analysis", "FOI Analysis"
-        ),
+        dsc.dataset_header("Field Illumination", "Dataset Analysis", "FOI Analysis"),
         dmc.Container(
             children=[
                 # Main Content

@@ -1,6 +1,8 @@
+import dash_mantine_components as dmc
 from django_plotly_dash import DjangoDash
 
 from omero_metrics.dash_apps.dataset_image import dataset_shared_components as dsc
+from omero_metrics.styles import CONTAINER_STYLE, MANTINE_THEME
 
 dashboard_name = "omero_dataset_psf_beads"
 
@@ -9,10 +11,26 @@ omero_dataset_psf_beads = DjangoDash(
     serve_locally=True,
 )
 
-omero_dataset_psf_beads.layout = dsc.contour_dashboard_layout(
-    "PSF Beads",
-    "PSF Beads Analysis Dashboard",
-    "PSF Beads Analysis",
+
+omero_dataset_psf_beads.layout = dmc.MantineProvider(
+    theme=MANTINE_THEME,
+    children=[
+        dsc.notifications_container(),
+        dsc.confirm_delete_modal(),
+        dsc.dataset_header(
+            "PSF Beads",
+            "PSF Beads Analysis Dashboard",
+            "PSF Beads Analysis",
+        ),
+        dmc.Container(
+            children=[
+                dsc.blank_input(),
+                dsc.contour_chart_group(),
+                dsc.dataset_table_paper(),
+            ],
+            style=CONTAINER_STYLE,
+        ),
+    ],
 )
 
 
