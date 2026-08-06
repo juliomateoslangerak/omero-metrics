@@ -281,18 +281,4 @@ def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:
     return df
 
 
-omero_dataset_foi.clientside_callback(
-    """
-    function(n_clicks) {
-        if (n_clicks > 0) {
-            return true;
-        }
-        return false;
-    }
-    """,
-    dash.dependencies.Output(
-        "confirm-delete-button", "loading", allow_duplicate=True
-    ),
-    dash.dependencies.Input("confirm-delete-button", "n_clicks"),
-    prevent_initial_call=True,
-)
+dsc.register_delete_button_loading_callback(omero_dataset_foi)

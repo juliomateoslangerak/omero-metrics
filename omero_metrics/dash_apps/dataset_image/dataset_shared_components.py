@@ -2,13 +2,20 @@ import math
 from time import sleep
 
 import dash_mantine_components as dmc
+import numpy as np
+import plotly.graph_objects as go
 from dash import dcc, dependencies, html, no_update
 from linkml_runtime.dumpers import JSONDumper, YAMLDumper
+from scipy.interpolate import griddata
+from scipy.spatial import QhullError
 
 from omero_metrics import views
 from omero_metrics.dash_apps.utils import omero_metrics_components
 from omero_metrics.styles import (
+    CONTAINER_STYLE,
     CONTENT_PAPER_STYLE,
+    INPUT_BASE_STYLES,
+    MANTINE_THEME,
     TABLE_MANTINE_STYLE,
     THEME,
 )
@@ -115,6 +122,120 @@ def dataset_table_paper():
             ),
         ],
         **CONTENT_PAPER_STYLE,
+    )
+
+
+# CONTOUR CHART DASHBOARD
+# The PSF beads and co-registration dashboards are the same dashboard: a
+# contour chart of a per-bead measurement. They differ only in their heading
+# text and in which input_data field holds the analysed images.
+CONTOUR_CHART_WIDTH = 600
+
+
+def empty_contour_figure(x_max=None, y_max=None):
+    """Figure matching the contour chart footprint, ready for traces or messages.
+
+    ``x_max``/``y_max`` are the analysed image shape. They are unknown when the
+    context failed to load, in which case the figure falls back to a square.
+    """
+    aspect_ratio = y_max / x_max if x_max and y_max else 1
+    fig = go.Figure()
+    fig.update_layout(
+        width=CONTOUR_CHART_WIDTH,
+        height=CONTOUR_CHART_WIDTH * aspect_ratio,
+        yaxis=dict(autorange="reversed"),
+    )
+    return fig
+
+
+def add_centered_message(fig, text, y=0.5, size=20):
+    """Overlay a message on the middle of ``fig``, in paper coordinates."""
+    fig.add_annotation(
+        x=0.5,
+        y=y,
+        xref="paper",
+        yref="paper",
+        text=text,
+        showarrow=False,
+        font=dict(size=size),
+    )
+    return fig
+
+
+def _contour_controls():
+    """Channel, measurement and precision selectors beside the contour chart."""
+    return dmc.Stack(
+        children=[
+            dmc.Select(
+                id="channel-select",
+                clearable=False,
+                allowDeselect=False,
+                w="200",
+                leftSection=omero_metrics_components.get_icon(
+                    icon="material-symbols:layers"
+                ),
+                rightSection=omero_metrics_components.get_icon(
+                    icon="radix-icons:chevron-down"
+                ),
+                styles=INPUT_BASE_STYLES,
+            ),
+            dmc.Select(
+                id="measurement-select",
+                clearable=False,
+                allowDeselect=False,
+                w="200",
+                leftSection=omero_metrics_components.get_icon(
+                    icon="ph:magnifying-glass"
+                ),
+                rightSection=omero_metrics_components.get_icon(
+                    icon="radix-icons:chevron-down"
+                ),
+                styles=INPUT_BASE_STYLES,
+            ),
+            dmc.Text("Select precision"),
+            dmc.Slider(
+                id="precision-slider",
+                min=0,
+                max=10,
+                step=1,
+                value=2,
+                marks=[
+                    {"value": 0, "label": "0"},
+                    {"value": 5, "label": "5"},
+                    {"value": 10, "label": "10"},
+                ],
+            ),
+        ]
+    )
+
+
+def contour_dashboard_layout(title, description, tag):
+    """Full layout for a dataset dashboard built around a contour chart."""
+    return dmc.MantineProvider(
+        theme=MANTINE_THEME,
+        children=[
+            notifications_container(),
+            confirm_delete_modal(),
+            omero_metrics_components.header_component(title, description, tag),
+            dmc.Container(
+                children=[
+                    # Hidden element for callbacks
+                    html.Div(id="blank-input"),
+                    dmc.Group(
+                        children=[
+                            dcc.Graph(id="contour-chart", figure={}),
+                            _contour_controls(),
+                        ],
+                        # Group wraps by default; the chart (600px) plus the
+                        # controls (200px) overflow the panel and would stack.
+                        wrap="nowrap",
+                        align="flex-start",
+                    ),
+                    dataset_table_paper(),
+                ],
+                style=CONTAINER_STYLE,
+            ),
+        ],
     )
 
 
@@ -290,3 +411,153 @@ def register_download_table_callback(app):
             return dcc.send_data_frame(table_kkm.to_json, "km_table.json")
 
         raise no_update
+
+
+def register_delete_button_loading_callback(app):
+    """Show a loading state on the delete-confirmation button once clicked."""
+    app.clientside_callback(
+        """
+        function(n_clicks) {
+            if (n_clicks > 0) {
+                return true;
+            }
+            return false;
+        }
+        """,
+        dependencies.Output(
+            "confirm-delete-button", "loading", allow_duplicate=True
+        ),
+        dependencies.Input("confirm-delete-button", "n_clicks"),
+        prevent_initial_call=True,
+    )
+
+
+def register_contour_callbacks(app, images_attr):
+    """Register the selectors and the contour chart for a contour dashboard.
+
+    ``images_attr`` names the ``input_data`` field holding the analysed images,
+    e.g. ``"psf_beads_images"`` or ``"multiwavelength_beads_images"``.
+    """
+
+    @app.expanded_callback(
+        dependencies.Output("channel-select", "data"),
+        dependencies.Output("channel-select", "value"),
+        dependencies.Output("measurement-select", "data"),
+        dependencies.Output("measurement-select", "value"),
+        [dependencies.Input("blank-input", "children")],
+    )
+    def update_dropdown_menus(_blank_input, *, session_state):
+        try:
+            context = deserialize(session_state["context"])
+            return (
+                [
+                    {"label": str(name), "value": str(i)}
+                    for i, name in enumerate(context["channel_names"])
+                ],
+                "0",
+                [
+                    {"label": c, "value": c}
+                    for c in context["bead_properties"].keys()
+                ],
+                None,
+            )
+        except Exception:
+            return (
+                [{"label": "Error loading channels", "value": "0"}],
+                "0",
+                [],
+                None,
+            )
+
+    @app.expanded_callback(
+        dependencies.Output("contour-chart", "figure"),
+        [
+            dependencies.Input("channel-select", "value"),
+            dependencies.Input("measurement-select", "value"),
+            dependencies.Input("precision-slider", "value"),
+        ],
+    )
+    def update_contour_chart(
+        channel_value, measurement_value, precision_value, *, session_state
+    ):
+        if measurement_value is None:
+            return no_update
+        # Defined up front so the error handlers below can size their figure
+        # even when loading the context is what failed.
+        x_max = y_max = None
+        try:
+            context = deserialize(session_state["context"])
+            images = getattr(context["mm_dataset"].input_data, images_attr)
+            x_max = images[0].shape_x
+            y_max = images[0].shape_y
+            xi = np.linspace(0, x_max, 128)
+            yi = np.linspace(0, y_max, 128)
+            XI, YI = np.meshgrid(xi, yi)
+            channel_name = context["channel_names"][int(channel_value)]
+            bead_properties = context["bead_properties"]
+
+            def valid_bead(i):
+                return (
+                    bead_properties["considered_valid"][i] == "True"
+                    and bead_properties["channel_name"][i] == channel_name
+                )
+
+            indices = [
+                i for i in range(len(bead_properties["center_x"])) if valid_bead(i)
+            ]
+            x = [float(bead_properties["center_x"][i]) for i in indices]
+            y = [float(bead_properties["center_y"][i]) for i in indices]
+            values = [
+                round(float(bead_properties[measurement_value][i]), precision_value)
+                for i in indices
+            ]
+
+            ZI = griddata(
+                points=(x, y),
+                values=values,
+                xi=(XI, YI),
+                method="cubic",
+            )
+
+            fig = empty_contour_figure(x_max, y_max)
+            fig.add_trace(
+                go.Contour(
+                    x=xi,
+                    y=yi,
+                    z=ZI,
+                    connectgaps=True,
+                    contours=dict(
+                        showlabels=True, labelformat=f".{precision_value}f"
+                    ),
+                    colorbar=dict(tickformat=f".{precision_value}f"),
+                )
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x=x,
+                    y=y,
+                    mode="markers",
+                    marker=dict(size=6, color="black", symbol="circle"),
+                    name="Measurements",
+                )
+            )
+
+            return fig
+
+        except QhullError:
+            return add_centered_message(
+                empty_contour_figure(x_max, y_max),
+                "Not enough data for interpolation",
+            )
+
+        except ValueError as e:
+            fig = empty_contour_figure(x_max, y_max)
+            add_centered_message(
+                fig, "Probably not a numeric measurement.", y=0.6, size=14
+            )
+            add_centered_message(fig, str(e), y=0.4, size=14)
+
+            return fig
+
+        except Exception as e:
+            return add_centered_message(empty_contour_figure(x_max, y_max), str(e))
