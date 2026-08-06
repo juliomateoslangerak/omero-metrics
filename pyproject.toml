@@ -62,7 +62,6 @@ django-bootstrap4 = ">=25.2,<27.0"
 dash-mantine-components = ">=2.7.0,<3.0"
 dash-iconify = ">=0.1.2,<1.0"
 openpyxl = ">=3.1.5,<4.0"
-dash-renderer = ">=1.9.1,<2.0"
 microscopemetrics = { git = "https://github.com/juliomateoslangerak/microscope-metrics.git", branch = "dev"}
 
 
