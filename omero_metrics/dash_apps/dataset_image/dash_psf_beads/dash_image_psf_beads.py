@@ -116,37 +116,20 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                             labelPosition="center",
                                                             mt="md",
                                                         ),
-                                                        dmc.SegmentedControl(
-                                                            id="beads-info-segmented",
-                                                            value="beads_info",
-                                                            data=[
-                                                                {
-                                                                    "value": "beads_info",
-                                                                    "label": "Show Beads",
-                                                                },
-                                                                {
-                                                                    "value": "None",
-                                                                    "label": "Hide Beads",
-                                                                },
-                                                            ],
-                                                            fullWidth=True,
+                                                        dmc.Switch(
+                                                            id="beads-info-switch",
+                                                            label="Show bead info on hover",
+                                                            checked=True,
+                                                            size="md",
                                                             color=THEME["primary"],
-                                                            # w='auto'
                                                         ),
                                                         dmc.Stack(
                                                             [
-                                                                dmc.Checkbox(
-                                                                    id="contour-checkbox-psf-image",
-                                                                    label="Enable Contour View",
-                                                                    checked=False,
-                                                                    color=THEME[
-                                                                        "primary"
-                                                                    ],
-                                                                ),
-                                                                dmc.Checkbox(
-                                                                    id="roi-checkbox-psf-image",
+                                                                dmc.Switch(
+                                                                    id="show-psf-rois-switch",
                                                                     label="Show ROI Boundaries",
                                                                     checked=True,
+                                                                    size="md",
                                                                     color=THEME[
                                                                         "primary"
                                                                     ],
@@ -190,7 +173,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                                             ),
                                                         ),
                                                         dmc.Switch(
-                                                            id="color-switch-psf-image",
+                                                            id="invert-color-switch",
                                                             label="Invert Colors",
                                                             checked=False,
                                                             size="md",
@@ -216,7 +199,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                     [
                                         dmc.Text(
                                             id="title-bead-image",
-                                            children="Individual bead image",
+                                            children="Bead image (select bead to view)",
                                             size="lg",
                                             fw=500,
                                             c=THEME["primary"],
@@ -248,14 +231,13 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
     [
         dash.dependencies.Input("channel-selector-psf-image", "value"),
         dash.dependencies.Input("color-selector-psf-image", "value"),
-        dash.dependencies.Input("color-switch-psf-image", "checked"),
-        dash.dependencies.Input("contour-checkbox-psf-image", "checked"),
-        dash.dependencies.Input("roi-checkbox-psf-image", "checked"),
-        dash.dependencies.Input("beads-info-segmented", "value"),
+        dash.dependencies.Input("invert-color-switch", "checked"),
+        dash.dependencies.Input("show-psf-rois-switch", "checked"),
+        dash.dependencies.Input("beads-info-switch", "checked"),
     ],
 )
 def update_image(
-    channel_index, color, invert, contour, roi, beads_info, *, session_state
+    channel_index, color, invert_color, show_rois, show_beads_info, *, session_state
 ):
     try:
         context = deserialize(session_state["context"])
@@ -281,7 +263,7 @@ def update_image(
             beads_location_df, half_min_distance_px
         )
 
-        if invert:
+        if invert_color:
             color = f"{color}_r"
         mip_z = context["mip_z"][..., channel_index]
 
@@ -294,16 +276,12 @@ def update_image(
 
         fig.add_trace(scatter)
 
-        if roi:
+        if show_rois:
             fig.update_layout(shapes=roi_rect)
         else:
             fig.update_layout(shapes=None)
 
-        if contour:
-            fig.plotly_restyle({"type": "contour"}, 0)
-            fig.update_yaxes(autorange="reversed")
-
-        if beads_info == "beads_info":
+        if show_beads_info:
             fig.update_traces(visible=True, selector=dict(name="Beads Locations"))
         else:
             fig.update_traces(visible=False, selector=dict(name="Beads Locations"))
@@ -352,11 +330,11 @@ def update_channels_psf_image(_blank_input, *, session_state):
         dash.dependencies.Input("psf-image-graph", "clickData"),
         dash.dependencies.Input("channel-selector-psf-image", "value"),
         dash.dependencies.Input("color-selector-psf-image", "value"),
-        dash.dependencies.Input("color-switch-psf-image", "checked"),
+        dash.dependencies.Input("invert-color-switch", "checked"),
     ],
     prevent_initial_call=True,
 )
-def callback_mip(points, channel_index, color, invert, *, session_state):
+def callback_mip(points, channel_index, color, invert_color, *, session_state):
     point = points["points"][0]  # FIXME: point is None at initial call
     if point["curveNumber"] != 1:
         return dash.no_update
@@ -417,7 +395,7 @@ def callback_mip(points, channel_index, color, invert, *, session_state):
     fig_mip_go = fig_bead(
         mips=mips,
         color=color,
-        invert=invert,
+        invert=invert_color,
         profiles=profiles,
         fwhms=fwhms,
         r_sq=r_sq,
