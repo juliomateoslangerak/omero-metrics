@@ -63,6 +63,51 @@ def confirm_delete_modal():
     )
 
 
+def _download_table():
+    """Download menu for the key measurements table."""
+    return dmc.Group(
+        [
+            dmc.Menu(
+                [
+                    dmc.MenuTarget(
+                        dmc.ActionIcon(
+                            DashIconify(icon="material-symbols:download", width=20),
+                            color=THEME["primary"],
+                        )
+                    ),
+                    dmc.MenuDropdown(
+                        [
+                            dmc.MenuItem(
+                                "CSV",
+                                id="table-download-csv",
+                                leftSection=DashIconify(
+                                    icon="iwwa:file-csv", width=20
+                                ),
+                            ),
+                            dmc.MenuItem(
+                                "Excel",
+                                id="table-download-xlsx",
+                                leftSection=DashIconify(
+                                    icon="vscode-icons:file-type-excel", width=20
+                                ),
+                            ),
+                            dmc.MenuItem(
+                                "JSON",
+                                id="table-download-json",
+                                leftSection=DashIconify(
+                                    icon="vscode-icons:file-type-json", width=20
+                                ),
+                            ),
+                        ]
+                    ),
+                ],
+                trigger="click",
+            ),
+            dcc.Download(id="table-download"),
+        ]
+    )
+
+
 def dataset_table_paper():
     return dmc.Paper(
         children=[
@@ -77,7 +122,7 @@ def dataset_table_paper():
                             ),
                             dmc.Group(
                                 [
-                                    omero_metrics_components.download_table,
+                                    _download_table(),
                                     dmc.Tooltip(
                                         label="Key measurements for all the channels",
                                         children=[

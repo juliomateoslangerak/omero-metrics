@@ -83,122 +83,68 @@ def get_icon(icon, size=20, color=None):
     return DashIconify(icon=icon, height=size, color=color)
 
 
-def make_control(text, action_id):
-    return dmc.Flex(
+def _download_group():
+    """Dataset download menu shown in the header."""
+    return dmc.Group(
         [
-            dmc.AccordionControl(text),
-            dmc.ActionIcon(
-                children=get_icon(icon="lets-icons:check-fill"),
-                color="green",
-                variant="default",
-                n_clicks=0,
-                id={"index": action_id},
+            dmc.Menu(
+                [
+                    dmc.MenuTarget(
+                        dmc.Button(
+                            id="activate-download",
+                            children="Download",
+                            leftSection=DashIconify(
+                                icon="material-symbols:download", width=20
+                            ),
+                            rightSection=DashIconify(
+                                icon="carbon:chevron-down", width=20
+                            ),
+                            color=THEME["primary"],
+                            variant="outline",
+                        )
+                    ),
+                    dmc.MenuDropdown(
+                        [
+                            dmc.MenuItem(
+                                "YAML",
+                                id="download-yaml",
+                                leftSection=DashIconify(
+                                    icon="vscode-icons:file-type-yaml", width=20
+                                ),
+                            ),
+                            dmc.MenuItem(
+                                "JSON",
+                                id="download-json",
+                                leftSection=DashIconify(
+                                    icon="vscode-icons:file-type-json", width=20
+                                ),
+                            ),
+                            dmc.MenuItem(
+                                "Text",
+                                id="download-text",
+                                leftSection=DashIconify(
+                                    icon="vscode-icons:file-type-text", width=20
+                                ),
+                            ),
+                        ]
+                    ),
+                ],
+                trigger="click",
             ),
-        ],
-        justify="center",
-        align="center",
+            dcc.Download(id="download"),
+        ]
     )
 
 
-download_group = dmc.Group(
-    [
-        dmc.Menu(
-            [
-                dmc.MenuTarget(
-                    dmc.Button(
-                        id="activate-download",
-                        children="Download",
-                        leftSection=DashIconify(
-                            icon="material-symbols:download", width=20
-                        ),
-                        rightSection=DashIconify(
-                            icon="carbon:chevron-down", width=20
-                        ),
-                        color=THEME["primary"],
-                        variant="outline",
-                    )
-                ),
-                dmc.MenuDropdown(
-                    [
-                        dmc.MenuItem(
-                            "YAML",
-                            id="download-yaml",
-                            leftSection=DashIconify(
-                                icon="vscode-icons:file-type-yaml", width=20
-                            ),
-                        ),
-                        dmc.MenuItem(
-                            "JSON",
-                            id="download-json",
-                            leftSection=DashIconify(
-                                icon="vscode-icons:file-type-json", width=20
-                            ),
-                        ),
-                        dmc.MenuItem(
-                            "Text",
-                            id="download-text",
-                            leftSection=DashIconify(
-                                icon="vscode-icons:file-type-text", width=20
-                            ),
-                        ),
-                    ]
-                ),
-            ],
-            trigger="click",
-        ),
-        dcc.Download(id="download"),
-    ]
-)
-
-
-download_table = dmc.Group(
-    [
-        dmc.Menu(
-            [
-                dmc.MenuTarget(
-                    dmc.ActionIcon(
-                        DashIconify(icon="material-symbols:download", width=20),
-                        color=THEME["primary"],
-                    )
-                ),
-                dmc.MenuDropdown(
-                    [
-                        dmc.MenuItem(
-                            "CSV",
-                            id="table-download-csv",
-                            leftSection=DashIconify(icon="iwwa:file-csv", width=20),
-                        ),
-                        dmc.MenuItem(
-                            "Excel",
-                            id="table-download-xlsx",
-                            leftSection=DashIconify(
-                                icon="vscode-icons:file-type-excel", width=20
-                            ),
-                        ),
-                        dmc.MenuItem(
-                            "JSON",
-                            id="table-download-json",
-                            leftSection=DashIconify(
-                                icon="vscode-icons:file-type-json", width=20
-                            ),
-                        ),
-                    ]
-                ),
-            ],
-            trigger="click",
-        ),
-        dcc.Download(id="table-download"),
-    ]
-)
-
-
-delete_button = dmc.Button(
-    id="delete-data",
-    children="Delete",
-    color="red",
-    variant="filled",
-    leftSection=DashIconify(icon="ic:round-delete-forever"),
-)
+def _delete_button():
+    """Dataset delete button shown in the header."""
+    return dmc.Button(
+        id="delete-data",
+        children="Delete",
+        color="red",
+        variant="filled",
+        leftSection=DashIconify(icon="ic:round-delete-forever"),
+    )
 
 
 def header_component(title, description, tag, load_buttons=True):
@@ -234,8 +180,8 @@ def header_component(title, description, tag, load_buttons=True):
                     ),
                     dmc.Group(
                         [
-                            download_group,
-                            delete_button,
+                            _download_group(),
+                            _delete_button(),
                             dmc.Badge(
                                 tag,
                                 color=THEME["primary"],
