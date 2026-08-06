@@ -28,6 +28,25 @@ from omero_metrics.styles import (
 )
 from omero_metrics.tools.serializers import deserialize
 
+
+def make_control(text, action_id):
+    """Accordion control with a confirm icon, used by the thresholds panel."""
+    return dmc.Flex(
+        [
+            dmc.AccordionControl(text),
+            dmc.ActionIcon(
+                children=my_components.get_icon(icon="lets-icons:check-fill"),
+                color="green",
+                variant="default",
+                n_clicks=0,
+                id={"index": action_id},
+            ),
+        ],
+        justify="center",
+        align="center",
+    )
+
+
 # Initialize the Dash app
 dashboard_name = "omero_project_dash"
 omero_project_dash = DjangoDash(
@@ -714,7 +733,7 @@ def update_thresholds_controls(_blank_input, *, session_state):
         thresholds_component = [
             dmc.AccordionItem(
                 [
-                    my_components.make_control(
+                    make_control(
                         kkm.display_name,
                         f"action-{i}",
                     ),
