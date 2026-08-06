@@ -40,8 +40,9 @@ omero_project_dash = DjangoDash(
 omero_project_dash.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
-        dmc.NotificationProvider(position="top-center"),
-        dash.html.Div(id="delete-notifications-container"),
+        dmc.NotificationContainer(
+            id="delete-notifications-container", position="top-center"
+        ),
         dmc.Modal(
             title="Confirm Delete",
             id="delete-confirm-delete",
@@ -300,7 +301,10 @@ omero_project_dash.layout = dmc.MantineProvider(
                                         id="thresholds-button-container",
                                         children=[],
                                     ),
-                                    dash.html.Div(id="notifications-container"),
+                                    dmc.NotificationContainer(
+                                        id="notifications-container",
+                                        position="top-center",
+                                    ),
                                 ],
                             ),
                         ],
@@ -776,7 +780,7 @@ def update_thresholds_controls(_blank_input, *, session_state):
 
 
 @omero_project_dash.expanded_callback(
-    dash.dependencies.Output("notifications-container", "children"),
+    dash.dependencies.Output("notifications-container", "sendNotifications"),
     dash.dependencies.Output("loading-overlay-threshold", "visible"),
     [
         dash.dependencies.Input("modal-submit-button", "n_clicks"),
@@ -826,7 +830,7 @@ def save_thresholds(
 
 @omero_project_dash.expanded_callback(
     dash.dependencies.Output("delete-confirm-delete", "opened"),
-    dash.dependencies.Output("delete-notifications-container", "children"),
+    dash.dependencies.Output("delete-notifications-container", "sendNotifications"),
     dash.dependencies.Output("delete-modal-submit-button", "loading"),
     [
         dash.dependencies.Input("delete-data", "n_clicks"),

@@ -29,7 +29,6 @@ omero_dataset_foi = DjangoDash(
 omero_dataset_foi.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
-        dsc.notification_provider(),
         dsc.notifications_container(),
         dsc.confirm_delete_modal(),
         my_components.header_component(

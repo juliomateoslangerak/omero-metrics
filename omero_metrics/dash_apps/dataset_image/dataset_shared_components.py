@@ -25,12 +25,15 @@ from omero_metrics.tools.serializers import deserialize
 
 
 # COMPONENTS
-def notification_provider():
-    return dmc.NotificationProvider(position="top-center")
-
-
 def notifications_container():
-    return html.Div(id="notifications-container")
+    """Renders notifications pushed to its ``sendNotifications`` prop.
+
+    NotificationContainer is both the provider and the target, replacing the
+    NotificationProvider/Div pair that DMC 2.8 deprecated.
+    """
+    return dmc.NotificationContainer(
+        id="notifications-container", position="top-center"
+    )
 
 
 def confirm_delete_modal():
@@ -241,9 +244,10 @@ def contour_dashboard_layout(title, description, tag):
 
 # CALLBACKS
 def register_delete_dataset_callback(app):
+
     @app.expanded_callback(
         dependencies.Output("confirm-delete-modal", "opened"),
-        dependencies.Output("notifications-container", "children"),
+        dependencies.Output("notifications-container", "sendNotifications"),
         dependencies.Output("confirm-delete-button", "loading"),
         [
             dependencies.Input("delete-data", "n_clicks"),

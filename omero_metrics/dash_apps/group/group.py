@@ -32,8 +32,9 @@ dash_app_group = DjangoDash(
 dash_app_group.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
-        dmc.NotificationProvider(position="top-center"),
-        html.Div(id="notifications-container"),
+        dmc.NotificationContainer(
+            id="notifications-container", position="top-center"
+        ),
         my_components.header_component(
             "Group Dashboard",
             "Group Analysis Dashboard",
@@ -321,7 +322,7 @@ def load_table_project(dates, *, session_state):
 
 @dash_app_group.expanded_callback(
     dash.dependencies.Output("confirm_delete", "opened"),
-    dash.dependencies.Output("notifications-container", "children"),
+    dash.dependencies.Output("notifications-container", "sendNotifications"),
     dash.dependencies.Output("modal-submit-button", "loading"),
     [
         dash.dependencies.Input("delete-all", "n_clicks"),

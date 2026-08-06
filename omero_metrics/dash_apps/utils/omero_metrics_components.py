@@ -64,15 +64,19 @@ def notification_handler(response_type, response_msg, opened):
         icon = get_icon(icon="radix-icons:alert")
         color = "red"
 
-    notification = dmc.Notification(
-        title=title,
-        id="simple-notify",
-        action="show",
-        message=response_msg,
-        icon=icon,
-        color=color,
-    )
-    return opened, notification, False
+    # A list for dmc.NotificationContainer's `sendNotifications` prop, which
+    # replaced the deprecated dmc.Notification component in DMC 2.8.
+    notifications = [
+        {
+            "id": "simple-notify",
+            "action": "show",
+            "title": title,
+            "message": response_msg,
+            "icon": icon,
+            "color": color,
+        }
+    ]
+    return opened, notifications, False
 
 
 def get_icon(icon, size=20, color=None):
