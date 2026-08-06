@@ -22,6 +22,19 @@ from omero_metrics.tools import load
 from omero_metrics.tools.schema_utils import remove_unsupported_types
 from omero_metrics.tools.serializers import deserialize
 
+SCALE_BAR_VALUES = [
+    500,
+    200,
+    100,
+    50,
+    20,
+    10,
+    5,
+    2,
+    1,
+    0.5,
+]
+
 
 # COMPONENTS
 def notifications_container():
@@ -582,6 +595,17 @@ def register_contour_callbacks(app, images_attr):
             images = getattr(context["mm_dataset"].input_data, images_attr)
             x_max = images[0].shape_x
             y_max = images[0].shape_y
+            x_pixel_size = images[0].voxel_size_x_micron
+            image_width_micron = x_max * x_pixel_size
+
+            min_bar_length = 0.05 * image_width_micron
+            max_bar_length = 0.20 * image_width_micron
+            scale_bar_length = None
+            for value in SCALE_BAR_VALUES:
+                if min_bar_length <= value <= max_bar_length:
+                    scale_bar_length = value
+                    break
+
             xi = np.linspace(0, x_max, 128)
             yi = np.linspace(0, y_max, 128)
             XI, YI = np.meshgrid(xi, yi)
@@ -633,6 +657,23 @@ def register_contour_callbacks(app, images_attr):
                     name="Measurements",
                 )
             )
+            if scale_bar_length is not None:
+                fig.add_shape(
+                    type="line",
+                    x0=50,
+                    y0=y_max - 55,
+                    x1=50 + (scale_bar_length / x_pixel_size),
+                    y1=y_max - 50,
+                    line=dict(color="white", width=8),
+                )
+                fig.add_annotation(
+                    x=50 + (scale_bar_length / x_pixel_size) / 2,
+                    y=y_max - 140,
+                    align="center",
+                    text=f"{scale_bar_length} µm",
+                    showarrow=False,
+                    font=dict(color="white", size=14),
+                )
 
             return fig
 
