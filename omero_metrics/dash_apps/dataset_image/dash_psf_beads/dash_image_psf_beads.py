@@ -207,7 +207,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                             ],
                         ),
                         dmc.Paper(
-                            id="paper-mip",
+                            id="paper-bead-image",
                             shadow="sm",
                             p="md",
                             radius="md",
@@ -215,8 +215,8 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                 dmc.Group(
                                     [
                                         dmc.Text(
-                                            id="title-mip",
-                                            children="Maximum Intensity Projection",
+                                            id="title-bead-image",
+                                            children="Individual bead image",
                                             size="lg",
                                             fw=500,
                                             c=THEME["primary"],
@@ -224,9 +224,8 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                     ],
                                     justify="space-between",
                                 ),
-                                # TODO: change here the beads MIP
                                 dcc.Graph(
-                                    id="mip-image",
+                                    id="bead-image",
                                     figure={},
                                     style={"height": "800px"},
                                 ),
@@ -347,8 +346,8 @@ def update_channels_psf_image(_blank_input, *, session_state):
 
 
 @omero_image_psf_beads.expanded_callback(
-    dash.dependencies.Output("mip-image", "figure"),
-    dash.dependencies.Output("title-mip", "children"),
+    dash.dependencies.Output("bead-image", "figure"),
+    dash.dependencies.Output("title-bead-image", "children"),
     [
         dash.dependencies.Input("psf-image-graph", "clickData"),
         dash.dependencies.Input("channel-selector-psf-image", "value"),
