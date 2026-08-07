@@ -40,6 +40,6 @@ dsc.register_download_datasets_callback(omero_dataset_coregistration)
 dsc.register_update_kkm_table_callback(omero_dataset_coregistration)
 dsc.register_download_table_callback(omero_dataset_coregistration)
 dsc.register_delete_button_loading_callback(omero_dataset_coregistration)
-dsc.register_contour_callbacks(
+dsc.register_contour_chart_callbacks(
     omero_dataset_coregistration, "multiwavelength_beads_images"
 )

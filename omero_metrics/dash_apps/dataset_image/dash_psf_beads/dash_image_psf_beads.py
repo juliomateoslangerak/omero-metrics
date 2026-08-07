@@ -3,13 +3,13 @@ import logging
 import dash
 import dash_mantine_components as dmc
 import numpy as np
-import plotly.express as px
 import plotly.graph_objs as go
-from dash import dcc, html
+from dash import dcc
 from django_plotly_dash import DjangoDash
 from plotly.subplots import make_subplots
 
 import omero_metrics.dash_apps.utils.omero_metrics_components as my_components
+from omero_metrics.dash_apps.dataset_image import dataset_shared_components as dsc
 from omero_metrics.styles import MANTINE_THEME, THEME
 from omero_metrics.tools import load
 from omero_metrics.tools.serializers import deserialize
@@ -32,163 +32,10 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
         # Main Content
         dmc.Container(
             [
-                html.Div(id="blank-input"),
-                # Main Content
+                dsc.blank_input(),
                 dmc.Stack(
                     [
-                        dmc.Grid(
-                            children=[
-                                dmc.GridCol(
-                                    [
-                                        dmc.Paper(
-                                            [
-                                                dmc.Group(
-                                                    [
-                                                        dmc.Text(
-                                                            "Bead Distribution Map",
-                                                            size="lg",
-                                                            fw=500,
-                                                            c=THEME["primary"],
-                                                        ),
-                                                        dmc.Tooltip(
-                                                            label="Click on a bead in the image to view its MIP",
-                                                            children=[
-                                                                my_components.get_icon(
-                                                                    "material-symbols:info",
-                                                                    color=THEME[
-                                                                        "primary"
-                                                                    ],
-                                                                )
-                                                            ],
-                                                        ),
-                                                    ],
-                                                    justify="space-between",
-                                                ),
-                                                dcc.Graph(
-                                                    figure={},
-                                                    style={"height": "400px"},
-                                                    id="psf-image-graph",
-                                                ),
-                                            ],
-                                            p="md",
-                                            radius="md",
-                                            withBorder=True,
-                                            shadow="sm",
-                                            h="100%",
-                                        ),
-                                    ],
-                                    span=8,
-                                ),
-                                dmc.GridCol(
-                                    [
-                                        dmc.Paper(
-                                            h="100%",
-                                            shadow="xs",
-                                            p="md",
-                                            radius="md",
-                                            children=[
-                                                dmc.Stack(
-                                                    [
-                                                        dmc.Text(
-                                                            "Visualization Controls",
-                                                            size="lg",
-                                                            fw=500,
-                                                            c=THEME["primary"],
-                                                        ),
-                                                        dmc.Divider(
-                                                            label="Channel Selection",
-                                                            labelPosition="center",
-                                                        ),
-                                                        dmc.Select(
-                                                            id="channel-selector-psf-image",
-                                                            label="Channel",
-                                                            w="100%",
-                                                            allowDeselect=False,
-                                                            leftSection=my_components.get_icon(
-                                                                "material-symbols:layers"
-                                                            ),
-                                                            rightSection=my_components.get_icon(
-                                                                "radix-icons:chevron-down"
-                                                            ),
-                                                        ),
-                                                        dmc.Divider(
-                                                            label="Display Options",
-                                                            labelPosition="center",
-                                                            mt="md",
-                                                        ),
-                                                        dmc.Switch(
-                                                            id="beads-info-switch",
-                                                            label="Show bead info on hover",
-                                                            checked=True,
-                                                            size="md",
-                                                            color=THEME["primary"],
-                                                        ),
-                                                        dmc.Stack(
-                                                            [
-                                                                dmc.Switch(
-                                                                    id="show-psf-rois-switch",
-                                                                    label="Show ROI Boundaries",
-                                                                    checked=True,
-                                                                    size="md",
-                                                                    color=THEME[
-                                                                        "primary"
-                                                                    ],
-                                                                ),
-                                                            ],
-                                                            gap="xs",
-                                                        ),
-                                                        dmc.Divider(
-                                                            label="Color Settings",
-                                                            labelPosition="center",
-                                                            mt="md",
-                                                        ),
-                                                        dmc.Select(
-                                                            id="color-selector-psf-image",
-                                                            label="Color Scheme",
-                                                            allowDeselect=False,
-                                                            data=[
-                                                                {
-                                                                    "value": "Hot",
-                                                                    "label": "Hot",
-                                                                },
-                                                                {
-                                                                    "value": "Blackbody",
-                                                                    "label": "Blackbody",
-                                                                },
-                                                                {
-                                                                    "value": "Viridis",
-                                                                    "label": "Viridis",
-                                                                },
-                                                                {
-                                                                    "value": "Inferno",
-                                                                    "label": "Inferno",
-                                                                },
-                                                            ],
-                                                            value="Blackbody",
-                                                            leftSection=my_components.get_icon(
-                                                                "material-symbols:palette"
-                                                            ),
-                                                            rightSection=my_components.get_icon(
-                                                                "radix-icons:chevron-down"
-                                                            ),
-                                                        ),
-                                                        dmc.Switch(
-                                                            id="invert-color-switch",
-                                                            label="Invert Colors",
-                                                            checked=False,
-                                                            size="md",
-                                                            color=THEME["primary"],
-                                                        ),
-                                                    ],
-                                                    gap="sm",
-                                                ),
-                                            ],
-                                        ),
-                                    ],
-                                    span=4,
-                                ),
-                            ],
-                        ),
+                        dsc.intensity_chart(),
                         dmc.Paper(
                             id="paper-bead-image",
                             shadow="sm",
@@ -226,115 +73,23 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
 )
 
 
-@omero_image_psf_beads.expanded_callback(
-    dash.dependencies.Output("psf-image-graph", "figure"),
-    [
-        dash.dependencies.Input("channel-selector-psf-image", "value"),
-        dash.dependencies.Input("color-selector-psf-image", "value"),
-        dash.dependencies.Input("invert-color-switch", "checked"),
-        dash.dependencies.Input("show-psf-rois-switch", "checked"),
-        dash.dependencies.Input("beads-info-switch", "checked"),
-    ],
-)
-def update_image(
-    channel_index, color, invert_color, show_rois, show_beads_info, *, session_state
-):
-    try:
-        context = deserialize(session_state["context"])
-        mm_dataset = context["mm_dataset"]
-        mm_image = context["mm_image"]
-        image_id = mm_image.data_reference.omero_object_id
-        channel_index = int(channel_index)
-        # TODO: we have to decide, at the scheme level, on weather we set the min_distance in pixels or in FWHM
-        min_distance_px = int(
-            mm_dataset.input_parameters.min_lateral_distance_factor * 2
-        )
-        half_min_distance_px = min_distance_px // 2
-        bead_properties_df = load.load_table_mm_metrics(
-            mm_dataset.output["bead_properties"]
-        )
-        beads_location_df = bead_properties_df.loc[
-            (bead_properties_df["image_id"] == image_id)
-            & (bead_properties_df["channel_nr"] == channel_index),
-            :,
-        ].copy()
-
-        scatter, roi_rect = beads_scatter_plot(
-            beads_location_df, half_min_distance_px
-        )
-
-        if invert_color:
-            color = f"{color}_r"
-        mip_z = context["mip_z"][..., channel_index]
-
-        fig = px.imshow(
-            mip_z,
-            zmin=mip_z.min(),
-            zmax=mip_z.max(),
-            color_continuous_scale=color,
-        )
-
-        fig.add_trace(scatter)
-
-        if show_rois:
-            fig.update_layout(shapes=roi_rect)
-        else:
-            fig.update_layout(shapes=None)
-
-        if show_beads_info:
-            fig.update_traces(visible=True, selector=dict(name="Beads Locations"))
-        else:
-            fig.update_traces(visible=False, selector=dict(name="Beads Locations"))
-
-        fig.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            margin=dict(l=20, r=20, t=20, b=20),
-            xaxis=dict(showgrid=False, zeroline=False, visible=False),
-            yaxis=dict(showgrid=False, zeroline=False, visible=False),
-            xaxis1=dict(showgrid=False, zeroline=False, visible=False),
-            yaxis1=dict(showgrid=False, zeroline=False, visible=False),
-            coloraxis_colorbar=dict(
-                thickness=15,
-                len=0.7,
-                title=dict(text="Intensity", side="right"),
-                tickfont=dict(size=10),
-            ),
-        )
-
-        return fig
-
-    except Exception as e:
-        logger.error(f"Error updating image: {str(e)}")
-        return px.imshow([[0]], title="Error loading image")
-
-
-@omero_image_psf_beads.expanded_callback(
-    dash.dependencies.Output("channel-selector-psf-image", "data"),
-    dash.dependencies.Output("channel-selector-psf-image", "value"),
-    [dash.dependencies.Input("blank-input", "children")],
-)
-def update_channels_psf_image(_blank_input, *, session_state):
-    context = deserialize(session_state["context"])
-    channel_series = context["mm_image"].channel_series
-    return [
-        {"label": c.name, "value": str(i)}
-        for i, c in enumerate(channel_series.channels)
-    ], "0"
+dsc.register_intensity_chart_callbacks(omero_image_psf_beads, "psf_beads_images")
 
 
 @omero_image_psf_beads.expanded_callback(
     dash.dependencies.Output("bead-image", "figure"),
     dash.dependencies.Output("title-bead-image", "children"),
     [
-        dash.dependencies.Input("psf-image-graph", "clickData"),
-        dash.dependencies.Input("channel-selector-psf-image", "value"),
-        dash.dependencies.Input("color-selector-psf-image", "value"),
+        dash.dependencies.Input("intensity-chart", "clickData"),
+        dash.dependencies.Input("intensity-chart-channel-select", "value"),
+        dash.dependencies.Input("intensity-chart-color-select", "value"),
         dash.dependencies.Input("invert-color-switch", "checked"),
     ],
     prevent_initial_call=True,
 )
-def callback_mip(points, channel_index, color, invert_color, *, session_state):
+def update_single_bead_image(
+    points, channel_index, color, invert_color, *, session_state
+):
     point = points["points"][0]  # FIXME: point is None at initial call
     if point["curveNumber"] != 1:
         return dash.no_update
@@ -646,60 +401,3 @@ def get_bead_profiles(bead_index, channel_index, image_id, mm_dataset):
     profiles["y"] = profiles["y"].iloc[::-1].reset_index(drop=True)
 
     return profiles
-
-
-def beads_scatter_plot(df, half_min_distance_px):
-    df["color"] = np.where(df["considered_valid"] == "True", "green", "red")
-
-    beads_location_plot = go.Scatter(
-        y=df["center_y"],
-        x=df["center_x"],
-        mode="markers",
-        name="Beads Locations",
-        marker=dict(
-            size=0.001,
-            opacity=0.01,
-            color=df["color"],
-        ),
-        text=df["channel_nr"],
-        customdata=np.stack(
-            (
-                df["bead_id"],
-                df["considered_valid"],
-                df["considered_self_proximity"],
-                df["considered_lateral_edge"],
-                df["considered_intensity_outlier"],
-                df["considered_axial_edge"],
-            ),
-            axis=-1,
-        ),
-        # TODO: We have to make this more robust (f-sting?)
-        hovertemplate=(
-            "<b>Bead Number:</b>  %{customdata[0]} <br>"
-            "<b>Channel Number:</b>  %{text} <br>"
-            "<b>Considered valid:</b>  %{customdata[1]}<br>"
-            "<b>Considered self proximity:</b>  %{customdata[2]}<br>"
-            "<b>Considered lateral edge:</b>  %{customdata[3]}<br>"
-            "<b>Considered intensity outlier:</b>  %{customdata[4]}<br>"
-            "<b>Considered Axial Edge:</b> %{customdata[5]} <br><extra></extra>"
-        ),
-    )
-
-    bead_frames = [
-        dict(
-            type="rect",
-            x0=row.center_x - half_min_distance_px,
-            y0=row.center_y - half_min_distance_px,
-            x1=row.center_x + half_min_distance_px,
-            y1=row.center_y + half_min_distance_px,
-            xref="x",
-            yref="y",
-            line=dict(
-                color=row["color"],
-                width=3,
-            ),
-        )
-        for _, row in df.iterrows()
-    ]
-
-    return beads_location_plot, bead_frames

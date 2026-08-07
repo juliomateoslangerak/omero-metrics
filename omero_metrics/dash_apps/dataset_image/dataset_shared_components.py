@@ -3,6 +3,7 @@ from time import sleep
 
 import dash_mantine_components as dmc
 import numpy as np
+import plotly.express as px
 import plotly.graph_objects as go
 from dash import dcc, dependencies, html, no_update
 from dash_iconify import DashIconify
@@ -197,61 +198,89 @@ def dataset_table_paper():
     )
 
 
-# CONTOUR CHART DASHBOARD
 # The PSF beads and co-registration dashboards are the same dashboard: a
 # contour chart of a per-bead measurement. They differ only in their heading
 # text and in which input_data field holds the analysed images.
-CONTOUR_CHART_WIDTH = 600
+IMAGE_CHART_WIDTH = 600
 # Trimmed from the Plotly defaults (l/r 80, t 100, b 80). The default top
 # margin holds a title this chart does not have, and its whitespace pushed the
 # plotting area well below the top of the controls standing beside it.
-CONTOUR_CHART_MARGIN = dict(l=45, r=15, t=15, b=45)
+IMAGE_CHART_MARGIN = dict(l=45, r=15, t=15, b=45)
 # Plotly widens the right margin to fit the colorbar. Allow for it so the
 # height below is derived from the width the plotting area actually gets.
-CONTOUR_COLORBAR_WIDTH = 90
+IMAGE_COLORBAR_WIDTH = 90
 
 
-def empty_contour_figure(x_max=None, y_max=None):
-    """Figure matching the contour chart footprint, ready for traces or messages.
+def _apply_image_layout(fig, x_max=None, y_max=None):
+    """Give ``fig`` the footprint shared by the image-shaped charts.
 
     ``x_max``/``y_max`` are the analysed image shape. They are unknown when the
     context failed to load, in which case the figure falls back to a square.
 
     The axes are pinned to the image bounds rather than autoranged: the bead
-    markers would otherwise pad the range past the contour, leaving a band of
+    markers would otherwise pad the range past the image, leaving a band of
     plot background around it. ``constrain="domain"`` keeps the pixels square
     by shrinking the plotting area instead of widening that range again.
     """
     aspect_ratio = y_max / x_max if x_max and y_max else 1
     plot_width = (
-        CONTOUR_CHART_WIDTH
-        - CONTOUR_CHART_MARGIN["l"]
-        - CONTOUR_CHART_MARGIN["r"]
-        - CONTOUR_COLORBAR_WIDTH
+        IMAGE_CHART_WIDTH
+        - IMAGE_CHART_MARGIN["l"]
+        - IMAGE_CHART_MARGIN["r"]
+        - IMAGE_COLORBAR_WIDTH
     )
     if x_max and y_max:
         axes = dict(
-            xaxis=dict(range=[0, x_max], constrain="domain"),
-            yaxis=dict(range=[y_max, 0], scaleanchor="x", constrain="domain"),
+            # px.imshow squares its pixels by anchoring x to y. Clearing that
+            # avoids a circular constraint with the y anchor below.
+            xaxis=dict(range=[0, x_max], constrain="domain", scaleanchor=None),
+            # px.imshow also flips the y axis with autorange, which would take
+            # precedence over the explicit range.
+            yaxis=dict(
+                range=[y_max, 0],
+                autorange=False,
+                scaleanchor="x",
+                constrain="domain",
+            ),
         )
     else:
         axes = dict(yaxis=dict(autorange="reversed"))
-    fig = go.Figure()
     fig.update_layout(
-        width=CONTOUR_CHART_WIDTH,
+        width=IMAGE_CHART_WIDTH,
         # Sizing the plotting area, rather than the whole figure, to the image
         # shape: the margins are fixed, so anything they take is added back.
         height=(
             plot_width * aspect_ratio
-            + CONTOUR_CHART_MARGIN["t"]
-            + CONTOUR_CHART_MARGIN["b"]
+            + IMAGE_CHART_MARGIN["t"]
+            + IMAGE_CHART_MARGIN["b"]
         ),
-        margin=CONTOUR_CHART_MARGIN,
+        margin=IMAGE_CHART_MARGIN,
         plot_bgcolor=THEME["background"],
         paper_bgcolor=THEME["background"],
         **axes,
     )
     return fig
+
+
+def empty_image_figure(x_max=None, y_max=None):
+    """Figure matching the image chart footprint, ready for traces or messages."""
+    return _apply_image_layout(go.Figure(), x_max, y_max)
+
+
+def image_figure(image, colorscale=None, zmin=None, zmax=None):
+    """``image`` rendered in the same footprint as ``empty_image_figure``.
+
+    ``px.imshow`` of a 2D array is a ``go.Heatmap`` bound to the layout
+    coloraxis, so the colorbar is configured through ``coloraxis_colorbar``
+    rather than on the trace. ``zmin``/``zmax`` default to the image min/max.
+    """
+    fig = px.imshow(
+        image,
+        zmin=zmin,
+        zmax=zmax,
+        color_continuous_scale=colorscale,
+    )
+    return _apply_image_layout(fig, image.shape[1], image.shape[0])
 
 
 def add_centered_message(fig, text, y=0.5, size=20):
@@ -292,7 +321,7 @@ def contour_chart(**group_props):
                 figure={},
                 # The wrapper div is block level and would stretch across the
                 # row, leaving the fixed-width figure adrift inside it.
-                style={"width": CONTOUR_CHART_WIDTH},
+                style={"width": IMAGE_CHART_WIDTH},
             ),
             dmc.Stack(
                 children=[
@@ -337,6 +366,124 @@ def contour_chart(**group_props):
                         ],
                     ),
                 ]
+            ),
+        ],
+        **props,
+    )
+
+
+def intensity_chart(**group_props):
+    """The intensity chart beside its controls.
+
+    Extra keyword arguments are passed through to ``dmc.Group``, so a dashboard
+    can override the defaults or add its own props. Compose ``contour_chart()``
+    and ``contour_controls()`` directly for a different arrangement.
+    """
+    props = {
+        # Not space-around: the chart has a fixed width, so the leftover space
+        # in the row became gutters on either side of it.
+        "justify": "flex-start",
+        "gap": "xl",
+        "wrap": "nowrap",
+        "align": "flex-start",
+        "direction": "row",
+        **group_props,
+    }
+    return dmc.Flex(
+        children=[
+            dcc.Graph(
+                id="intensity-chart",
+                figure={},
+                # The wrapper div is block level and would stretch across the
+                # row, leaving the fixed-width figure adrift inside it.
+                style={"width": IMAGE_CHART_WIDTH},
+            ),
+            dmc.Stack(
+                children=[
+                    dmc.Divider(
+                        label="Channel Selection",
+                        labelPosition="center",
+                    ),
+                    dmc.Select(
+                        id="intensity-chart-channel-select",
+                        label="Channel",
+                        w="100%",
+                        allowDeselect=False,
+                        leftSection=omero_metrics_components.get_icon(
+                            "material-symbols:layers"
+                        ),
+                        rightSection=omero_metrics_components.get_icon(
+                            "radix-icons:chevron-down"
+                        ),
+                    ),
+                    dmc.Divider(
+                        label="Display Options",
+                        labelPosition="center",
+                        mt="md",
+                    ),
+                    dmc.Switch(
+                        id="show-info-switch",
+                        label="Show bead info on hover",
+                        checked=True,
+                        size="md",
+                        color=THEME["primary"],
+                    ),
+                    dmc.Stack(
+                        [
+                            dmc.Switch(
+                                id="show-rois-switch",
+                                label="Show ROI Boundaries",
+                                checked=True,
+                                size="md",
+                                color=THEME["primary"],
+                            ),
+                        ],
+                        gap="xs",
+                    ),
+                    dmc.Divider(
+                        label="Color Settings",
+                        labelPosition="center",
+                        mt="md",
+                    ),
+                    dmc.Select(
+                        id="intensity-chart-color-select",
+                        label="Color Scheme",
+                        allowDeselect=False,
+                        data=[
+                            {
+                                "value": "Hot",
+                                "label": "Hot",
+                            },
+                            {
+                                "value": "Blackbody",
+                                "label": "Blackbody",
+                            },
+                            {
+                                "value": "Viridis",
+                                "label": "Viridis",
+                            },
+                            {
+                                "value": "Inferno",
+                                "label": "Inferno",
+                            },
+                        ],
+                        value="Blackbody",
+                        leftSection=omero_metrics_components.get_icon(
+                            "material-symbols:palette"
+                        ),
+                        rightSection=omero_metrics_components.get_icon(
+                            "radix-icons:chevron-down"
+                        ),
+                    ),
+                    dmc.Switch(
+                        id="invert-color-switch",
+                        label="Invert Colors",
+                        checked=False,
+                        size="md",
+                        color=THEME["primary"],
+                    ),
+                ],
+                gap="sm",
             ),
         ],
         **props,
@@ -537,7 +684,7 @@ def register_delete_button_loading_callback(app):
     )
 
 
-def register_contour_callbacks(app, images_attr):
+def register_contour_chart_callbacks(app, images_attr):
     """Register the selectors and the contour chart for a contour dashboard.
 
     ``images_attr`` names the ``input_data`` field holding the analysed images,
@@ -635,7 +782,7 @@ def register_contour_callbacks(app, images_attr):
                 method="cubic",
             )
 
-            fig = empty_contour_figure(x_max, y_max)
+            fig = empty_image_figure(x_max, y_max)
             fig.add_trace(
                 go.Contour(
                     x=xi,
@@ -679,12 +826,12 @@ def register_contour_callbacks(app, images_attr):
 
         except QhullError:
             return add_centered_message(
-                empty_contour_figure(x_max, y_max),
+                empty_image_figure(x_max, y_max),
                 "Not enough data for interpolation",
             )
 
         except ValueError as e:
-            fig = empty_contour_figure(x_max, y_max)
+            fig = empty_image_figure(x_max, y_max)
             add_centered_message(
                 fig, "Probably not a numeric measurement.", y=0.6, size=14
             )
@@ -693,4 +840,165 @@ def register_contour_callbacks(app, images_attr):
             return fig
 
         except Exception as e:
-            return add_centered_message(empty_contour_figure(x_max, y_max), str(e))
+            return add_centered_message(empty_image_figure(x_max, y_max), str(e))
+
+
+def register_intensity_chart_callbacks(app, images_attr):
+    """Register the callbacks for the intensity chart.
+
+    ``images_attr`` names the ``input_data`` field holding the analysed images,
+    e.g. ``"psf_beads_images"`` or ``"multiwavelength_beads_images"``.
+    """
+
+    @app.expanded_callback(
+        dependencies.Output("intensity-chart", "figure"),
+        [
+            dependencies.Input("intensity-chart-channel-select", "value"),
+            dependencies.Input("intensity-chart-color-select", "value"),
+            dependencies.Input("invert-color-switch", "checked"),
+            dependencies.Input("show-rois-switch", "checked"),
+            dependencies.Input("show-info-switch", "checked"),
+        ],
+    )
+    def update_image(
+        channel_index,
+        color,
+        invert_color,
+        show_rois,
+        show_beads_info,
+        *,
+        session_state,
+    ):
+        try:
+            context = deserialize(session_state["context"])
+            mm_dataset = context["mm_dataset"]
+            mm_image = context["mm_image"]
+            image_id = mm_image.data_reference.omero_object_id
+            channel_index = int(channel_index)
+            # TODO: we have to decide, at the scheme level, on weather we set the min_distance in pixels or in FWHM
+            min_distance_px = int(
+                mm_dataset.input_parameters.min_lateral_distance_factor * 2
+            )
+            half_min_distance_px = min_distance_px // 2
+            bead_properties_df = load.load_table_mm_metrics(
+                mm_dataset.output["bead_properties"]
+            )
+            beads_location_df = bead_properties_df.loc[
+                (bead_properties_df["image_id"] == image_id)
+                & (bead_properties_df["channel_nr"] == channel_index),
+                :,
+            ].copy()
+
+            scatter, roi_rect = beads_scatter_plot(
+                beads_location_df, half_min_distance_px
+            )
+
+            if invert_color:
+                color = f"{color}_r"
+            mip_z = context["mip_z"][..., channel_index]
+
+            fig = image_figure(mip_z, colorscale=color)
+
+            fig.add_trace(scatter)
+
+            if show_rois:
+                fig.update_layout(shapes=roi_rect)
+            else:
+                fig.update_layout(shapes=None)
+
+            if show_beads_info:
+                fig.update_traces(
+                    visible=True, selector=dict(name="Beads Locations")
+                )
+            else:
+                fig.update_traces(
+                    visible=False, selector=dict(name="Beads Locations")
+                )
+
+            fig.update_layout(
+                xaxis=dict(showgrid=False, zeroline=False, visible=False),
+                yaxis=dict(showgrid=False, zeroline=False, visible=False),
+                coloraxis_colorbar=dict(
+                    thickness=15,
+                    len=0.7,
+                    title=dict(text="Intensity", side="right"),
+                    tickfont=dict(size=10),
+                ),
+            )
+
+            return fig
+
+        except Exception as e:
+            return add_centered_message(empty_image_figure(), str(e))
+
+    @app.expanded_callback(
+        dependencies.Output("intensity-chart-channel-select", "data"),
+        dependencies.Output("intensity-chart-channel-select", "value"),
+        [dependencies.Input("blank-input", "children")],
+    )
+    def update_channels_intensity_chart(_blank_input, *, session_state):
+        context = deserialize(session_state["context"])
+        channel_series = context["mm_image"].channel_series
+        return [
+            {"label": c.name, "value": str(i)}
+            for i, c in enumerate(channel_series.channels)
+        ], "0"
+
+
+def beads_scatter_plot(df, half_min_distance_px):
+    df["color"] = np.where(df["considered_valid"] == "True", "green", "red")
+
+    beads_location_plot = go.Scatter(
+        y=df["center_y"],
+        x=df["center_x"],
+        mode="markers",
+        name="Beads Locations",
+        marker=dict(
+            size=0.001,
+            opacity=0.01,
+            color=df["color"],
+        ),
+        text=df["channel_nr"],
+        customdata=np.stack(
+            (
+                df["bead_id"],
+                df["considered_valid"],
+                df["considered_self_proximity"],
+                df["considered_lateral_edge"],
+                df["considered_intensity_outlier"],
+                df["considered_axial_edge"],
+                # df["considered_bad_fit"],
+            ),
+            axis=-1,
+        ),
+        # TODO: We have to make this more robust (f-sting?)
+        hovertemplate=(
+            "<b>Bead Number:</b>  %{customdata[0]} <br>"
+            "<b>Channel Number:</b>  %{text} <br>"
+            "<b>Considered valid:</b>  %{customdata[1]}<br>"
+            "<b>Considered self proximity:</b>  %{customdata[2]}<br>"
+            "<b>Considered lateral edge:</b>  %{customdata[3]}<br>"
+            "<b>Considered intensity outlier:</b>  %{customdata[4]}<br>"
+            "<b>Considered Axial Edge:</b> %{customdata[5]} <br><extra></extra>"
+            # "<b>Considered Bad Fit:</b> %{customdata[6]} <br><extra></extra>"
+        ),
+    )
+
+    bead_frames = [
+        dict(
+            type="rect",
+            x0=row.center_x - half_min_distance_px,
+            y0=row.center_y - half_min_distance_px,
+            x1=row.center_x + half_min_distance_px,
+            y1=row.center_y + half_min_distance_px,
+            xref="x",
+            yref="y",
+            line=dict(
+                color=row["color"],
+                width=3,
+            ),
+        )
+        for _, row in df.iterrows()
+    ]
+
+    return beads_location_plot, bead_frames
