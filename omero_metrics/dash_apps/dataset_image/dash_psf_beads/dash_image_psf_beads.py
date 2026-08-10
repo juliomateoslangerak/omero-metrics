@@ -37,7 +37,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                     [
                         dsc.intensity_chart(),
                         dmc.Paper(
-                            id="paper-bead-image",
+                            id="bead-image-paper",
                             shadow="sm",
                             p="md",
                             radius="md",
@@ -45,7 +45,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                 dmc.Group(
                                     [
                                         dmc.Text(
-                                            id="title-bead-image",
+                                            id="bead-image-title",
                                             children="Bead image (select bead to view)",
                                             size="lg",
                                             fw=500,
@@ -55,7 +55,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                     justify="space-between",
                                 ),
                                 dcc.Graph(
-                                    id="bead-image",
+                                    id="bead-image-graph",
                                     figure={},
                                     style={"height": "800px"},
                                 ),
@@ -77,8 +77,8 @@ dsc.register_intensity_chart_callbacks(omero_image_psf_beads, "psf_beads_images"
 
 
 @omero_image_psf_beads.expanded_callback(
-    dash.dependencies.Output("bead-image", "figure"),
-    dash.dependencies.Output("title-bead-image", "children"),
+    dash.dependencies.Output("bead-image-graph", "figure"),
+    dash.dependencies.Output("bead-image-title", "children"),
     [
         dash.dependencies.Input("intensity-chart", "clickData"),
         dash.dependencies.Input("intensity-chart-channel-select", "value"),
