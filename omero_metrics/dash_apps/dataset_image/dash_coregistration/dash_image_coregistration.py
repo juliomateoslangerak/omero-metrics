@@ -15,19 +15,18 @@ from omero_metrics.tools import load
 from omero_metrics.tools.serializers import deserialize
 
 logger = logging.getLogger(__name__)
-dashboard_name = "omero_image_psf_beads"
+dashboard_name = "omero_image_coregistration"
 
-omero_image_psf_beads = DjangoDash(name=dashboard_name, serve_locally=True)
+omero_image_coregistration = DjangoDash(name=dashboard_name, serve_locally=True)
 
-omero_image_psf_beads.layout = dmc.MantineProvider(
+omero_image_coregistration.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
         # Header Section
-        my_components.header_component(
-            "PSF Beads Analysis",
-            "Advanced Microscopy Image Analysis",
-            "PSF beads Analysis",
-            load_buttons=False,
+        dsc.image_header(
+            "Co-registration Analysis",
+            "Analysis of channel co-registration",
+            "Co-registration Analysis",
         ),
         # Main Content
         dmc.Container(
@@ -37,7 +36,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                     [
                         dsc.intensity_chart(),
                         dmc.Paper(
-                            id="bead-image-paper",
+                            id="coregistration-bead-paper",
                             shadow="sm",
                             p="md",
                             radius="md",
@@ -45,7 +44,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                 dmc.Group(
                                     [
                                         dmc.Text(
-                                            id="bead-image-title",
+                                            id="coregistration-bead-title",
                                             children="Bead image (select bead to view)",
                                             size="lg",
                                             fw=500,
@@ -55,7 +54,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
                                     justify="space-between",
                                 ),
                                 dcc.Graph(
-                                    id="bead-image-graph",
+                                    id="coregistration-bead-graph",
                                     figure={},
                                     style={"height": "800px"},
                                 ),
@@ -72,30 +71,26 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
     ],
 )
 
-
 BEADS_HOVER_INFO = {
     "Bead number": "bead_id",
     "Sigma LoG": "sigma_LoG",
     "Considered valid": dsc.hover_flag("considered_valid"),
     "Considered self proximity": dsc.hover_flag("considered_self_proximity"),
     "Considered lateral edge": dsc.hover_flag("considered_lateral_edge"),
-    "Considered axial edge": dsc.hover_flag("considered_axial_edge"),
-    "Considered outlier": dsc.hover_flag("considered_intensity_std_outlier"),
-    "Considered bad fit": dsc.hover_flag(
-        "considered_bad_fit_gaussian_x",
-        "considered_bad_fit_gaussian_y",
-        "considered_bad_fit_gaussian_z",
-    ),
+    # "Considered outlier": dsc.hover_flag("considered_distance_3d_micron_outlier"),
 }
 
+
 dsc.register_intensity_chart_callbacks(
-    omero_image_psf_beads, "psf_beads_images", BEADS_HOVER_INFO
+    omero_image_coregistration,
+    "multiwavelength_beads_images",
+    hover_info=BEADS_HOVER_INFO,
 )
 
 
-@omero_image_psf_beads.expanded_callback(
-    dash.dependencies.Output("bead-image-graph", "figure"),
-    dash.dependencies.Output("bead-image-title", "children"),
+@omero_image_coregistration.expanded_callback(
+    dash.dependencies.Output("coregistration-bead-graph", "figure"),
+    dash.dependencies.Output("coregistration-bead-title", "children"),
     [
         dash.dependencies.Input("intensity-chart", "clickData"),
         dash.dependencies.Input("intensity-chart-channel-select", "value"),

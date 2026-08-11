@@ -150,6 +150,83 @@ def PSFBeadsDataset_output_AveragePSF(im):
     im.context = serialize(context)
 
 
+def CoRegistrationDataset_input_data_Image(im):
+    im.mm_image = load.load_image(im.omero_image, load_array=True)
+    mip_z = np.max(im.mm_image.array_data[0, ...], axis=0)
+    bead_properties = load.load_table_mm_metrics(
+        im.dataset_manager.mm_dataset.output["bead_properties"]
+    )
+    image_bead_properties = bead_properties.loc[
+        bead_properties["image_id"] == im.omero_image.getId()
+    ]
+    # TODO: This is a hack. We just reproduce what microscope-metrics does to extract the min-distance
+    min_lateral_distance_px = int(
+        im.dataset_manager.mm_dataset.input_parameters.sigma_max * 4
+    )
+    half_min_distance_px = min_lateral_distance_px // 2
+    beads_array = np.zeros(
+        (
+            image_bead_properties.bead_id.max() + 1,
+            im.mm_image.shape_z,
+            min_lateral_distance_px + 1,
+            min_lateral_distance_px + 1,
+            im.mm_image.shape_c,
+        )
+    )
+    for _, row in image_bead_properties.iterrows():
+        y_left = int(row.center_y) - half_min_distance_px
+        y_right = int(row.center_y) + half_min_distance_px + 1
+        x_left = int(row.center_x) - half_min_distance_px
+        x_right = int(row.center_x) + half_min_distance_px + 1
+        bead_array = im.mm_image.array_data[
+            0,  # time 0
+            :,  # z-dimension
+            max(0, y_left) : min(
+                im.mm_image.array_data.shape[2], y_right
+            ),  # y-dimension
+            max(0, x_left) : min(
+                im.mm_image.array_data.shape[3], x_right
+            ),  # x-dimension
+            :,  # channel
+        ]
+        if bead_array.shape == beads_array[row.bead_id].shape:
+            beads_array[row.bead_id] = bead_array
+        else:
+            # The bead was close to the edge of the image, so we need to blow it to size
+            y_padding = (
+                abs(y_left) if y_left < 0 else 0,
+                (
+                    abs(y_right - im.mm_image.array_data.shape[2])
+                    if y_right > im.mm_image.array_data.shape[2]
+                    else 0
+                ),
+            )
+            x_padding = (
+                abs(x_left) if x_left < 0 else 0,
+                (
+                    abs(x_right - im.mm_image.array_data.shape[3])
+                    if x_right > im.mm_image.array_data.shape[3]
+                    else 0
+                ),
+            )
+            beads_array[row.bead_id] = np.pad(
+                bead_array, ((0, 0), y_padding, x_padding, (0, 0))
+            )
+
+    im.mm_image.array_data = None
+    context = {
+        "image_index": im.image_index,
+        "mm_image": im.mm_image,
+        "mm_dataset": im.dataset_manager.mm_dataset,
+        "min_lateral_distance_px": min_lateral_distance_px,
+        "mip_z": mip_z,
+        "beads_properties": image_bead_properties,
+        "beads_array": beads_array,
+        "assay_config": im.dataset_manager.assay_configuration,
+    }
+    im.context = serialize(context)
+
+
 ## Dataset context loaders
 def FieldIlluminationDataset(dm):
     dm.load_data(load_images=True, force_reload=True)

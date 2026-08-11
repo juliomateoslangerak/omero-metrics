@@ -83,6 +83,12 @@ def dataset_header(title, description, tag, load_buttons=True):
     )
 
 
+def image_header(title, description, tag, load_buttons=False):
+    return omero_metrics_components.header_component(
+        title, description, tag, load_buttons=load_buttons
+    )
+
+
 def blank_input():
     """Hidden element used to trigger callbacks once on page load."""
     return html.Div(id="blank-input")
@@ -843,11 +849,15 @@ def register_contour_chart_callbacks(app, images_attr):
             return add_centered_message(empty_image_figure(x_max, y_max), str(e))
 
 
-def register_intensity_chart_callbacks(app, images_attr):
+def register_intensity_chart_callbacks(app, images_attr, hover_info=None):
     """Register the callbacks for the intensity chart.
 
     ``images_attr`` names the ``input_data`` field holding the analysed images,
     e.g. ``"psf_beads_images"`` or ``"multiwavelength_beads_images"``.
+    ``hover_info`` describes the bead hover box. Rows of the beads scatter hover box,
+    in display order. Each key is the label shown to the user;
+    each value is either a column of the bead properties table or a callable
+    taking that table and returning one value per bead.
     """
 
     @app.expanded_callback(
@@ -942,8 +952,62 @@ def register_intensity_chart_callbacks(app, images_attr):
         ], "0"
 
 
-def beads_scatter_plot(df, half_min_distance_px):
+def yes_no(flags):
+    """Render a boolean bead property as Yes/No for the hover text.
+
+    hovertemplate has no conditionals, so the mapping has to happen here. The
+    object dtype keeps np.stack from casting the numeric customdata columns
+    standing next to these to strings. Use it to build hover rows that no
+    ``hover_flag`` column covers on its own.
+    """
+    return np.where(np.asarray(flags, dtype=bool), "Yes", "No").astype(object)
+
+
+def hover_flag(column, *more_columns):
+    """Hover row for bead properties stored as "True"/"False", shown as Yes/No.
+
+    Given several columns the row reads Yes where any of them is set, e.g. a
+    gaussian fit that failed on any one axis.
+    """
+    columns = (column, *more_columns)
+
+    def flag(df):
+        flags = [df[col] == "True" for col in columns]
+        return yes_no(np.logical_or.reduce(flags))
+
+    return flag
+
+
+def beads_scatter_plot(df, half_min_distance_px, hover_info=None):
+    """Scatter of the bead locations, hover box described by ``hover_info``.
+
+    ``hover_info`` holds the hover rows in display order: each key is the label
+    shown to the user, each value is either a column of the bead properties
+    table or a callable taking that table and returning one value per bead.
+    """
     df["color"] = np.where(df["considered_valid"] == "True", "green", "red")
+
+    if hover_info is not None:
+        customdata = np.stack(
+            [
+                np.asarray(
+                    source(df) if callable(source) else df[source], dtype=object
+                )
+                for source in hover_info.values()
+            ],
+            axis=-1,
+        )
+        hovertemplate = (
+            "".join(
+                f"<b>{label}:</b> %{{customdata[{i}]}}<br>"
+                for i, label in enumerate(hover_info)
+            )
+            + "<extra></extra>"
+        )
+
+    else:
+        customdata = None
+        hovertemplate = None
 
     beads_location_plot = go.Scatter(
         y=df["center_y"],
@@ -956,29 +1020,8 @@ def beads_scatter_plot(df, half_min_distance_px):
             color=df["color"],
         ),
         text=df["channel_nr"],
-        customdata=np.stack(
-            (
-                df["bead_id"],
-                df["considered_valid"],
-                df["considered_self_proximity"],
-                df["considered_lateral_edge"],
-                df["considered_intensity_outlier"],
-                df["considered_axial_edge"],
-                # df["considered_bad_fit"],
-            ),
-            axis=-1,
-        ),
-        # TODO: We have to make this more robust (f-sting?)
-        hovertemplate=(
-            "<b>Bead Number:</b>  %{customdata[0]} <br>"
-            "<b>Channel Number:</b>  %{text} <br>"
-            "<b>Considered valid:</b>  %{customdata[1]}<br>"
-            "<b>Considered self proximity:</b>  %{customdata[2]}<br>"
-            "<b>Considered lateral edge:</b>  %{customdata[3]}<br>"
-            "<b>Considered intensity outlier:</b>  %{customdata[4]}<br>"
-            "<b>Considered Axial Edge:</b> %{customdata[5]} <br><extra></extra>"
-            # "<b>Considered Bad Fit:</b> %{customdata[6]} <br><extra></extra>"
-        ),
+        customdata=customdata,
+        hovertemplate=hovertemplate,
     )
 
     bead_frames = [

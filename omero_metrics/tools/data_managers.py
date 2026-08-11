@@ -37,6 +37,9 @@ IMAGE_CONTEXT_LOADERS = {
         "input_data": context_loaders.PSFBeadsDataset_input_data_Image,
         "output": context_loaders.PSFBeadsDataset_output_AveragePSF,
     },
+    "CoRegistrationDataset": {
+        "input_data": context_loaders.CoRegistrationDataset_input_data_Image,
+    },
 }
 
 
