@@ -886,7 +886,6 @@ def register_intensity_chart_callbacks(app, images_attr, hover_info=None):
             image_id = mm_image.data_reference.omero_object_id
             channel_index = int(channel_index)
             min_lateral_distance_px = context["min_lateral_distance_px"]
-            half_lateral_min_distance_px = min_lateral_distance_px // 2
             bead_properties_df = load.load_table_mm_metrics(
                 mm_dataset.output["bead_properties"]
             )
@@ -897,7 +896,7 @@ def register_intensity_chart_callbacks(app, images_attr, hover_info=None):
             ].copy()
 
             scatter, roi_rect = beads_scatter_plot(
-                beads_location_df, half_lateral_min_distance_px, hover_info
+                beads_location_df, min_lateral_distance_px, hover_info
             )
 
             if invert_color:

@@ -128,9 +128,9 @@ def update_single_bead_image(
     bead_array = beads_array[bead_index, :, :, :, channel_index]
 
     mips = {
-        "x": np.flipud(np.transpose(np.max(bead_array, axis=2))),
+        "x": np.transpose(np.max(bead_array, axis=2)),
         "y": np.max(bead_array, axis=1),
-        "z": np.flipud(np.max(bead_array, axis=0)),
+        "z": np.max(bead_array, axis=0),
     }
     mips = {a: np.sqrt(mip) for a, mip in mips.items()}
 
@@ -292,7 +292,13 @@ def fig_bead(
                 name=f"{axis.upper()} raw profile",
                 mode="lines",
                 line=dict(color="red"),
-                **{plot_y_axis: profiles[axis]["raw"]},
+                **{
+                    plot_y_axis: (
+                        np.flip(profiles[axis]["raw"])
+                        if rotate
+                        else profiles[axis]["raw"]
+                    )
+                },
             ),
             row=row,
             col=col,
@@ -302,7 +308,13 @@ def fig_bead(
                 name=f"{axis.upper()} fitted profile",
                 mode="lines",
                 line=dict(color="blue", dash="dot"),
-                **{plot_y_axis: profiles[axis]["fitted"]},
+                **{
+                    plot_y_axis: (
+                        np.flip(profiles[axis]["fitted"])
+                        if rotate
+                        else profiles[axis]["fitted"]
+                    )
+                },
             ),
             row=row,
             col=col,
@@ -326,6 +338,7 @@ def fig_bead(
                 constrain="domain",
                 scaleanchor="y2",
                 scaleratio=voxel_size_ratio if axis == "z" else 1,
+                autorange="reversed",
                 title_font_size=18,
                 ticktext=quartiles_norm,
                 tickvals=quartiles,

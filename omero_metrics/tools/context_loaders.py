@@ -44,7 +44,6 @@ def PSFBeadsDataset_input_data_Image(im):
     min_lateral_distance_px = int(
         im.dataset_manager.mm_dataset.input_parameters.min_lateral_distance_px
     )
-    half_min_lateral_distance_px = min_lateral_distance_px // 2
     min_axial_distance_px = int(
         im.dataset_manager.mm_dataset.input_parameters.min_axial_distance_px
     )
@@ -52,19 +51,19 @@ def PSFBeadsDataset_input_data_Image(im):
     beads_array = np.zeros(
         (
             image_bead_properties.bead_id.max() + 1,
-            min_axial_distance_px * 2,
-            min_lateral_distance_px + 1,
-            min_lateral_distance_px + 1,
+            min_axial_distance_px * 2 + 1,
+            min_lateral_distance_px * 2 + 1,
+            min_lateral_distance_px * 2 + 1,
             im.mm_image.shape_c,
         )
     )
     for _, row in image_bead_properties.iterrows():
         z_top = int(row.center_z) - min_axial_distance_px
-        z_bottom = int(row.center_z) + min_axial_distance_px
-        y_left = int(row.center_y) - half_min_lateral_distance_px
-        y_right = int(row.center_y) + half_min_lateral_distance_px + 1
-        x_left = int(row.center_x) - half_min_lateral_distance_px
-        x_right = int(row.center_x) + half_min_lateral_distance_px + 1
+        z_bottom = int(row.center_z) + min_axial_distance_px + 1
+        y_left = int(row.center_y) - min_lateral_distance_px
+        y_right = int(row.center_y) + min_lateral_distance_px + 1
+        x_left = int(row.center_x) - min_lateral_distance_px
+        x_right = int(row.center_x) + min_lateral_distance_px + 1
         bead_array = im.mm_image.array_data[
             0,  # time 0
             max(0, z_top) : min(
@@ -116,6 +115,7 @@ def PSFBeadsDataset_input_data_Image(im):
         "mm_image": im.mm_image,
         "mm_dataset": im.dataset_manager.mm_dataset,
         "min_lateral_distance_px": min_lateral_distance_px,
+        "min_axial_distance_px": min_axial_distance_px,
         "mip_z": mip_z,
         "beads_properties": image_bead_properties,
         "beads_array": beads_array,
@@ -159,28 +159,34 @@ def CoRegistrationDataset_input_data_Image(im):
     image_bead_properties = bead_properties.loc[
         bead_properties["image_id"] == im.omero_image.getId()
     ]
-    # TODO: This is a hack. We just reproduce what microscope-metrics does to extract the min-distance
     min_lateral_distance_px = int(
-        im.dataset_manager.mm_dataset.input_parameters.sigma_max * 4
+        im.dataset_manager.mm_dataset.input_parameters.min_lateral_distance_px
     )
-    half_min_distance_px = min_lateral_distance_px // 2
+    min_axial_distance_px = int(
+        im.dataset_manager.mm_dataset.input_parameters.min_axial_distance_px
+    )
+
     beads_array = np.zeros(
         (
             image_bead_properties.bead_id.max() + 1,
-            im.mm_image.shape_z,
-            min_lateral_distance_px + 1,
-            min_lateral_distance_px + 1,
+            min_axial_distance_px * 2 + 1,
+            min_lateral_distance_px * 2 + 1,
+            min_lateral_distance_px * 2 + 1,
             im.mm_image.shape_c,
         )
     )
     for _, row in image_bead_properties.iterrows():
-        y_left = int(row.center_y) - half_min_distance_px
-        y_right = int(row.center_y) + half_min_distance_px + 1
-        x_left = int(row.center_x) - half_min_distance_px
-        x_right = int(row.center_x) + half_min_distance_px + 1
+        z_top = int(row.center_z) - min_axial_distance_px
+        z_bottom = int(row.center_z) + min_axial_distance_px + 1
+        y_left = int(row.center_y) - min_lateral_distance_px
+        y_right = int(row.center_y) + min_lateral_distance_px + 1
+        x_left = int(row.center_x) - min_lateral_distance_px
+        x_right = int(row.center_x) + min_lateral_distance_px + 1
         bead_array = im.mm_image.array_data[
             0,  # time 0
-            :,  # z-dimension
+            max(0, z_top) : min(
+                im.mm_image.array_data.shape[1], z_bottom
+            ),  # z-dimension
             max(0, y_left) : min(
                 im.mm_image.array_data.shape[2], y_right
             ),  # y-dimension
@@ -193,6 +199,14 @@ def CoRegistrationDataset_input_data_Image(im):
             beads_array[row.bead_id] = bead_array
         else:
             # The bead was close to the edge of the image, so we need to blow it to size
+            z_padding = (
+                abs(z_top) if z_top < 0 else 0,
+                (
+                    abs(z_bottom - im.mm_image.array_data.shape[1])
+                    if z_bottom > im.mm_image.array_data.shape[1]
+                    else 0
+                ),
+            )
             y_padding = (
                 abs(y_left) if y_left < 0 else 0,
                 (
@@ -210,7 +224,7 @@ def CoRegistrationDataset_input_data_Image(im):
                 ),
             )
             beads_array[row.bead_id] = np.pad(
-                bead_array, ((0, 0), y_padding, x_padding, (0, 0))
+                bead_array, (z_padding, y_padding, x_padding, (0, 0))
             )
 
     im.mm_image.array_data = None
@@ -219,6 +233,7 @@ def CoRegistrationDataset_input_data_Image(im):
         "mm_image": im.mm_image,
         "mm_dataset": im.dataset_manager.mm_dataset,
         "min_lateral_distance_px": min_lateral_distance_px,
+        "min_axial_distance_px": min_axial_distance_px,
         "mip_z": mip_z,
         "beads_properties": image_bead_properties,
         "beads_array": beads_array,

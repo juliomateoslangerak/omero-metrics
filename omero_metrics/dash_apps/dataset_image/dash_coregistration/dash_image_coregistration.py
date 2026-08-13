@@ -77,7 +77,8 @@ BEADS_HOVER_INFO = {
     "Considered valid": dsc.hover_flag("considered_valid"),
     "Considered self proximity": dsc.hover_flag("considered_self_proximity"),
     "Considered lateral edge": dsc.hover_flag("considered_lateral_edge"),
-    # "Considered outlier": dsc.hover_flag("considered_distance_3d_micron_outlier"),
+    "Considered axial edge": dsc.hover_flag("considered_axial_edge"),
+    "Considered outlier": dsc.hover_flag("considered_distance_3d_micron_outlier"),
 }
 
 
@@ -94,14 +95,10 @@ dsc.register_intensity_chart_callbacks(
     [
         dash.dependencies.Input("intensity-chart", "clickData"),
         dash.dependencies.Input("intensity-chart-channel-select", "value"),
-        dash.dependencies.Input("intensity-chart-color-select", "value"),
-        dash.dependencies.Input("invert-color-switch", "checked"),
     ],
     prevent_initial_call=True,
 )
-def update_single_bead_image(
-    points, channel_index, color, invert_color, *, session_state
-):
+def update_single_bead_image(points, channel_index, *, session_state):
     point = points["points"][0]  # FIXME: point is None at initial call
     if point["curveNumber"] != 1:
         return dash.no_update
@@ -119,73 +116,86 @@ def update_single_bead_image(
         :,
     ]
     beads_array = context["beads_array"]
-
     bead_array = beads_array[bead_index, :, :, :, channel_index]
+    channel_name = bead_df["channel_name"].values[0]
+
+    reference_channel_index = bead_df["reference_channel_nr"].values[0]
+    reference_bead_array = beads_array[bead_index, :, :, :, reference_channel_index]
+    reference_channel_name = bead_df["reference_channel_name"].values[0]
 
     mips = {
-        "x": np.flipud(np.transpose(np.max(bead_array, axis=2))),
+        "x": np.transpose(np.max(bead_array, axis=2)),
         "y": np.max(bead_array, axis=1),
-        "z": np.flipud(np.max(bead_array, axis=0)),
+        "z": np.max(bead_array, axis=0),
+        "x_ref": np.transpose(np.max(reference_bead_array, axis=2)),
+        "y_ref": np.max(reference_bead_array, axis=1),
+        "z_ref": np.max(reference_bead_array, axis=0),
     }
     mips = {a: np.sqrt(mip) for a, mip in mips.items()}
+    profiles = {
+        "x": np.mean(bead_array, axis=(0, 1)),
+        "y": np.mean(bead_array, axis=(0, 2)),
+        "z": np.mean(bead_array, axis=(1, 2)),
+        "x_ref": np.mean(reference_bead_array, axis=(0, 1)),
+        "y_ref": np.mean(reference_bead_array, axis=(0, 2)),
+        "z_ref": np.mean(reference_bead_array, axis=(1, 2)),
+    }
+    profiles = {
+        k: (p - np.min(p)) / (np.max(p) - np.min(p)) for k, p in profiles.items()
+    }
 
-    mm_dataset = context["mm_dataset"]
-    profiles = get_bead_profiles(
-        bead_index=bead_index,
-        channel_index=channel_index,
-        image_id=image_id,
-        mm_dataset=mm_dataset,
-    )
     voxel_size = {
         "x": mm_image.voxel_size_x_micron,
         "y": mm_image.voxel_size_y_micron,
         "z": mm_image.voxel_size_z_micron,
     }
-    if all(list(voxel_size.values())):
-        fwhms = {
-            "x": bead_df["fwhm_micron_x"].values[0],
-            "y": bead_df["fwhm_micron_y"].values[0],
-            "z": bead_df["fwhm_micron_z"].values[0],
-        }
-    else:
-        fwhms = {
-            "x": bead_df["fwhm_pixel_x"].values[0],
-            "y": bead_df["fwhm_pixel_y"].values[0],
-            "z": bead_df["fwhm_pixel_z"].values[0],
-        }
-    r_sq = {
-        "x": bead_df["fit_gaussian_r2_x"].values[0],
-        "y": bead_df["fit_gaussian_r2_y"].values[0],
-        "z": bead_df["fit_gaussian_r2_z"].values[0],
+
+    translations = {
+        "x": bead_df["translation_x_px"].values[0],
+        "y": bead_df["translation_y_px"].values[0],
+        "z": bead_df["translation_z_px"].values[0],
     }
 
-    fig_mip_go = fig_bead(
+    fig_mip_go = fig_coregisration_bead(
         mips=mips,
-        color=color,
-        invert=invert_color,
         profiles=profiles,
-        fwhms=fwhms,
-        r_sq=r_sq,
+        channel_name=channel_name,
+        reference_channel_name=reference_channel_name,
+        translations=translations,
         voxel_size=voxel_size,
     )
-    channel_name = mm_image.channel_series.channels[
-        channel_index
-    ].name  # TODO: rename channel_names to channels
 
-    title = f"Channel {channel_name}: Bead number {bead_index}"
+    title = f"Channel {channel_name} vs reference channel {reference_channel_name}: Bead number {bead_index}"
     return (
         fig_mip_go,
         title,
     )
 
 
-def fig_bead(
+def merge_mips_rgb(channel_mip, reference_mip, channel_vmax, reference_vmax):
+    """Combine two MIPs into a single additive RGB raster: the channel in red,
+    the reference channel in green and, where both overlap, yellow.
+    Each channel is scaled by its own maximum so that both remain visible
+    regardless of their relative brightness.
+    """
+
+    def _to_uint8(mip, vmax):
+        if not vmax:
+            return np.zeros(mip.shape, dtype=np.uint8)
+        return np.clip(mip / vmax * 255.0, 0, 255).astype(np.uint8)
+
+    rgb = np.zeros(channel_mip.shape + (3,), dtype=np.uint8)
+    rgb[..., 0] = _to_uint8(channel_mip, channel_vmax)
+    rgb[..., 1] = _to_uint8(reference_mip, reference_vmax)
+    return rgb
+
+
+def fig_coregisration_bead(
     mips,
-    color,
-    invert,
     profiles,
-    fwhms,
-    r_sq,
+    channel_name,
+    reference_channel_name,
+    translations,
     voxel_size={"x": None, "y": None, "z": None},
 ):
     axis_lengths = {
@@ -199,8 +209,6 @@ def fig_bead(
     else:
         voxel_size_ratio = 1
         physical_unit = "px"
-    if invert:
-        color = f"{color}_r"
 
     fig = make_subplots(
         rows=3,
@@ -226,9 +234,13 @@ def fig_bead(
         vertical_spacing=0.02,
     )
 
-    # Add MIP image
-    for proj_axis, h_axis, v_axis, row, col, rotate in zip(
+    # Add MIP image: channel in red, reference channel in green, overlap in yellow
+    channel_vmax = max(np.max(mips[a]) for a in ("x", "y", "z"))
+    reference_vmax = max(np.max(mips[a]) for a in ("x_ref", "y_ref", "z_ref"))
+
+    for proj_axis, proj_axis_ref, h_axis, v_axis, row, col, rotate in zip(
         ("x", "y", "z"),
+        ("x_ref", "y_ref", "z_ref"),
         ("z", "x", "x"),
         ("y", "z", "y"),
         (2, 1, 2),
@@ -236,7 +248,19 @@ def fig_bead(
         (False, True, False),
     ):
         fig.add_trace(
-            go.Heatmap(z=mips[proj_axis], colorscale=color, showscale=False),
+            go.Image(
+                z=merge_mips_rgb(
+                    mips[proj_axis],
+                    mips[proj_axis_ref],
+                    channel_vmax,
+                    reference_vmax,
+                ),
+                hovertemplate=(
+                    f"{channel_name}: %{{z[0]}}<br>"
+                    f"{reference_channel_name}: %{{z[1]}}"
+                    "<extra></extra>"
+                ),
+            ),
             row=row,
             col=col,
         )
@@ -257,9 +281,13 @@ def fig_bead(
             col=col,
         )
 
-    # Add profiles
-    for axis, row, col, rotate in zip(
-        ("x", "y", "z"), (3, 2, 3), (2, 1, 3), (False, True, False)
+    # Add centers
+    for axis, axis_ref, row, col, rotate in zip(
+        ("x", "y", "z"),
+        ("x_ref", "y_ref", "z_ref"),
+        (3, 2, 3),
+        (2, 1, 3),
+        (False, True, False),
     ):
         # We want to find the quartiles of the x, y and z axes to plot some pretty tick marks
         quartiles = np.quantile(
@@ -284,32 +312,40 @@ def fig_bead(
         # Add traces
         fig.add_trace(
             go.Scatter(
-                name=f"{axis.upper()} raw profile",
+                name=f"Mean {channel_name} {axis.upper()} profile",
                 mode="lines",
                 line=dict(color="red"),
-                **{plot_y_axis: profiles[axis]["raw"]},
+                **{plot_y_axis: profiles[axis]},
             ),
             row=row,
             col=col,
         )
         fig.add_trace(
             go.Scatter(
-                name=f"{axis.upper()} fitted profile",
+                name=f"Mean {reference_channel_name} {axis.upper()} profile",
                 mode="lines",
-                line=dict(color="blue", dash="dot"),
-                **{plot_y_axis: profiles[axis]["fitted"]},
+                line=dict(color="green"),
+                **{plot_y_axis: profiles[axis_ref]},
             ),
             row=row,
             col=col,
         )
+
         if rotate:
-            fig.add_vline(
-                x=0.5,
-                line_color="gray",
+            fig.add_hline(
+                y=len(profiles[axis]) // 2 - translations[axis],
+                line_color="red",
                 line_dash="dash",
-                annotation_text=f"FWHM<br><b>{fwhms[axis]:.3f}{physical_unit}<b>",
+                annotation_text=f"{axis} offset<br><b>{translations[axis]:.3f}vx<b>",
                 annotation_align="right",
                 annotation_position="bottom right",
+                row=row,
+                col=col,
+            )
+            fig.add_hline(
+                y=len(profiles[axis]) // 2,
+                line_color="green",
+                line_dash="dash",
                 row=row,
                 col=col,
             )
@@ -321,6 +357,7 @@ def fig_bead(
                 constrain="domain",
                 scaleanchor="y2",
                 scaleratio=voxel_size_ratio if axis == "z" else 1,
+                autorange="reversed",
                 title_font_size=18,
                 ticktext=quartiles_norm,
                 tickvals=quartiles,
@@ -328,13 +365,20 @@ def fig_bead(
                 col=col,
             )
         else:
-            fig.add_hline(
-                y=0.5,
-                line_color="gray",
+            fig.add_vline(
+                x=len(profiles[axis]) // 2 - translations[axis],
+                line_color="red",
                 line_dash="dash",
-                annotation_text=f"FWHM<br><b>{fwhms[axis]:.3f}{physical_unit}<b>",
+                annotation_text=f"{axis} offset<br><b>{translations[axis]:.3f}vx<b>",
                 annotation_align="right",
                 annotation_position="top right",
+                row=row,
+                col=col,
+            )
+            fig.add_vline(
+                x=len(profiles[axis]) // 2,
+                line_color="green",
+                line_dash="dash",
                 row=row,
                 col=col,
             )
@@ -352,24 +396,6 @@ def fig_bead(
             fig.update_yaxes(
                 range=[-0.25, 1.25], constrain="domain", row=row, col=col
             )
-        fig.add_annotation(
-            text=f"R&#178;<br><b>{r_sq[axis]:.3f}<b>",
-            align="right" if rotate else "left",
-            xanchor="left" if rotate else "right",
-            ax=20 if rotate else -40,
-            ay=-40 if rotate else -20,
-            row=row,
-            col=col,
-            **{
-                plot_x_axis: int(
-                    np.quantile(range(profiles[axis]["fitted"].shape[0]), 0.48)
-                ),
-                plot_y_axis: profiles[axis]["fitted"][
-                    int(np.quantile(range(profiles[axis]["fitted"].shape[0]), 0.48))
-                ],
-            },
-        )
-
     # Force identical physical domains (prevents doubled Z)
     fig.update_layout(
         grid=dict(
@@ -385,31 +411,3 @@ def fig_bead(
     )
 
     return fig
-
-
-def get_bead_profiles(bead_index, channel_index, image_id, mm_dataset):
-    profiles = {
-        axis: load.load_table_mm_metrics(mm_dataset.output[f"bead_profiles_{axis}"])
-        for axis in ("x", "y", "z")
-    }
-    # TODO: we have chosen to show the gaussian fit but once the airy fit is fixed, we should add the option to
-    #  choose between gaussian and airy
-    profiles = {
-        axis: df.loc[
-            :,
-            [
-                f"{image_id}_{channel_index}_{bead_index}_{axis}_raw",
-                f"{image_id}_{channel_index}_{bead_index}_{axis}_fitted_gaussian",
-            ],
-        ].rename(
-            columns={
-                f"{image_id}_{channel_index}_{bead_index}_{axis}_raw": "raw",
-                f"{image_id}_{channel_index}_{bead_index}_{axis}_fitted_gaussian": "fitted",
-            }
-        )
-        for axis, df in profiles.items()
-    }
-    # We flip the values of the profiles in the y-axis
-    profiles["y"] = profiles["y"].iloc[::-1].reset_index(drop=True)
-
-    return profiles
