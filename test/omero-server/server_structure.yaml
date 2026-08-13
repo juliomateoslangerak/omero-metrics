@@ -194,6 +194,72 @@ projects:
         min: 0.7
         max: 0.9
       bit_depth: 16
+    co_registration_1:
+      owner: Obelix
+      name_project: co-registration 60x
+      description_project: 1um Tetraspeck beads taken with the 60x objective
+      dataset_class: CoregistrationDataset
+      attachments_dir: co-registration
+      nr_datasets: 2
+      start_date: 2021-01-01
+      month_frequency: 1
+      process: false
+      name_dataset: Co-registration_60x
+      description_dataset: CoRegistration dataset
+      channel_names: [ [ "DAPI", "FITC", "TRITC", "CY5" ] ]
+      z_image_shape:
+        min: 61
+        max: 61
+      y_image_shape:
+        min: 512
+        max: 512
+      x_image_shape:
+        min: 512
+        max: 512
+      nr_valid_beads:
+        min: 5
+        max: 10
+      nr_edge_beads:
+        min: 1
+        max: 2
+      nr_out_of_focus_beads:
+        min: 1
+        max: 2
+      nr_clustering_beads:
+        min: 1
+        max: 2
+      min_distance_z: 20
+      min_distance_y: 30
+      min_distance_x: 30
+      sigma_z:
+        min: 2.0
+        max: 2.2
+      sigma_y:
+        min: 2.0
+        max: 2.2
+      sigma_x:
+        min: 2.0
+        max: 2.2
+      background:
+        min: 0.01
+        max: 0.02
+      signal:
+        min: 0.7
+        max: 0.9
+      bit_depth: 16
+      ref_channel: FITC
+      translation_x:
+        min: 3
+        max: 3
+      translation_y:
+        min: 3
+        max: 3
+      translation_z:
+        min: 3
+        max: 3
+      rotation_z:
+        min: 1
+        max: 2
     light_source_power_1:
       owner: Obelix
       name_project: Light Sources Power

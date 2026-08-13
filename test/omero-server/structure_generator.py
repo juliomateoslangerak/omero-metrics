@@ -10,6 +10,7 @@ from datetime import datetime
 import numpy as np
 import yaml
 from microscopemetrics.analyses import (
+    co_registration,
     extract_power_measurements_csv,
     field_illumination,
     light_source_power,
@@ -44,6 +45,7 @@ BIT_DEPTH_TO_DTYPE = {
 DATASET_TO_ANALYSIS = {
     "FieldIlluminationDataset": field_illumination.analyse_field_illumination,
     "PSFBeadsDataset": psf_beads.analyse_psf_beads,
+    "CoregistrationDataset": co_registration.analyse_co_registration,
     "LightSourcePowerDataset": light_source_power.analyse_light_source_power,
 }
 
@@ -259,6 +261,132 @@ def psf_beads_generator(args, microscope_name):
     return datasets
 
 
+def coregistration_beads_generator(args, microscope_name):
+    datasets = []
+    dates = generate_monthly_dates(
+        args["start_date"], args["nr_datasets"], args["month_frequency"]
+    )
+
+    for date in dates:
+        print(f"Generating dataset {date} for {args['name_dataset']}")
+        datasets.append(
+            mm_schema.CoRegistrationDataset(
+                name=f"{args['name_dataset']}_{date}",
+                description=args["description_dataset"],
+                acquisition_datetime=date,
+                microscope=mm_schema.Microscope(name=microscope_name),
+                input_parameters=mm_schema.CoRegistrationInputParameters(
+                    reference_channel_nr=args["ref_channel"]
+                ),
+                input_data=mm_schema.CoRegistrationInputData(
+                    multiwavelength_beads_images=[
+                        numpy_to_mm_image(
+                            array=gen_beads_image(
+                                z_image_shape=random.randint(
+                                    args["z_image_shape"]["min"],
+                                    args["z_image_shape"]["max"],
+                                ),
+                                y_image_shape=random.randint(
+                                    args["y_image_shape"]["min"],
+                                    args["y_image_shape"]["max"],
+                                ),
+                                x_image_shape=random.randint(
+                                    args["x_image_shape"]["min"],
+                                    args["x_image_shape"]["max"],
+                                ),
+                                c_image_shape=len(channel_names),
+                                nr_valid_beads=random.randint(
+                                    args["nr_valid_beads"]["min"],
+                                    args["nr_valid_beads"]["max"],
+                                ),
+                                nr_edge_beads=random.randint(
+                                    args["nr_edge_beads"]["min"],
+                                    args["nr_edge_beads"]["max"],
+                                ),
+                                nr_out_of_focus_beads=random.randint(
+                                    args["nr_out_of_focus_beads"]["min"],
+                                    args["nr_out_of_focus_beads"]["max"],
+                                ),
+                                nr_clustering_beads=random.randint(
+                                    args["nr_clustering_beads"]["min"],
+                                    args["nr_clustering_beads"]["max"],
+                                ),
+                                min_distance_z_px=args["min_distance_z"],
+                                min_distance_y_px=args["min_distance_y"],
+                                min_distance_x_px=args["min_distance_x"],
+                                sigma_z=random.uniform(
+                                    args["sigma_z"]["min"],
+                                    args["sigma_z"]["max"],
+                                ),
+                                sigma_y=random.uniform(
+                                    args["sigma_y"]["min"],
+                                    args["sigma_y"]["max"],
+                                ),
+                                sigma_x=random.uniform(
+                                    args["sigma_x"]["min"],
+                                    args["sigma_x"]["max"],
+                                ),
+                                background=random.uniform(
+                                    args["background"]["min"],
+                                    args["background"]["max"],
+                                ),
+                                signal=random.uniform(
+                                    args["signal"]["min"],
+                                    args["signal"]["max"],
+                                ),
+                                do_noise=True,
+                                dtype=BIT_DEPTH_TO_DTYPE[args["bit_depth"]],
+                                translations_x=[
+                                    (
+                                        random.uniform(
+                                            args["translation_x"]["min"],
+                                            args["translation_x"]["max"],
+                                        )
+                                        if ch_n != args["ref_channel"]
+                                        else 0
+                                    )
+                                    for ch_n in channel_names
+                                ],
+                                translations_y=[
+                                    (
+                                        random.uniform(
+                                            args["translation_y"]["min"],
+                                            args["translation_y"]["max"],
+                                        )
+                                        if ch_n != args["ref_channel"]
+                                        else 0
+                                    )
+                                    for ch_n in channel_names
+                                ],
+                                translations_z=[
+                                    (
+                                        random.uniform(
+                                            args["translation_z"]["min"],
+                                            args["translation_z"]["max"],
+                                        )
+                                        if ch_n != args["ref_channel"]
+                                        else 0
+                                    )
+                                    for ch_n in channel_names
+                                ],
+                                rotations_z=None,
+                            )[0],
+                            name=f"{args['name_dataset']}_{date}",
+                            description=f"An image taken on the {microscope_name} microscope on the {date} for QC",
+                            channel_names=args["channel_names"][image_id],
+                            acquisition_datetime=datetime.strptime(date, "%Y-%m-%d"),
+                        )
+                        for image_id, channel_names in enumerate(
+                            args["channel_names"]
+                        )
+                    ]
+                ),
+            )
+        )
+
+    return datasets
+
+
 def light_source_power_generator(args, microscope_name):
     datasets = []
     dates = generate_monthly_dates(
@@ -333,6 +461,7 @@ def light_source_power_generator(args, microscope_name):
 GENERATOR_MAPPER = {
     "FieldIlluminationDataset": field_illumination_generator,
     "PSFBeadsDataset": psf_beads_generator,
+    "CoregistrationDataset": coregistration_beads_generator,
     "LightSourcePowerDataset": light_source_power_generator,
 }
 
