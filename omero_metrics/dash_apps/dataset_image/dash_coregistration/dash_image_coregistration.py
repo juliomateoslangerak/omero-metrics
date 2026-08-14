@@ -78,6 +78,7 @@ BEADS_HOVER_INFO = {
     "Considered self proximity": dsc.hover_flag("considered_self_proximity"),
     "Considered lateral edge": dsc.hover_flag("considered_lateral_edge"),
     "Considered axial edge": dsc.hover_flag("considered_axial_edge"),
+    "Considered bad fit": dsc.hover_flag("considered_bad_fit_gaussian"),
     "Considered outlier": dsc.hover_flag("considered_distance_3d_micron_outlier"),
 }
 
