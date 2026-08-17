@@ -1,6 +1,5 @@
 from typing import Union
 
-import microscopemetrics_schema.datamodel as mm_schema
 from omero.gateway import BlitzGateway, MapAnnotationWrapper
 
 from omero_metrics.tools import omero_tools

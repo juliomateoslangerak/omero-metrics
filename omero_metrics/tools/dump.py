@@ -1,11 +1,8 @@
 import ast
-import contextlib
 import logging
 import tempfile
 from dataclasses import fields
-from typing import Dict, List, Union
 
-import pandas as pd
 from linkml_runtime.dumpers import YAMLDumper
 from microscopemetrics_schema.datamodel import microscopemetrics_schema as mm_schema
 from omero.gateway import (
@@ -168,11 +165,9 @@ def _dump_last_key_measurement_as_project_mapping_annotation(
 def _dump_mm_dataset_as_file_annotation(
     conn: BlitzGateway,
     mm_dataset: mm_schema.MetricsDataset,
-    target_omero_obj: Union[
-        ProjectWrapper,
-        DatasetWrapper,
-        list[Union[ProjectWrapper, DatasetWrapper]],
-    ],
+    target_omero_obj: (
+        ProjectWrapper | DatasetWrapper | list[ProjectWrapper | DatasetWrapper]
+    ),
 ):
     # We need to remove the data on the numpy and pandas data objects as they cannot be serialized by linkml
     schema_utils.remove_unsupported_types(mm_dataset.input_data)
@@ -348,7 +343,7 @@ def _dump_analysis_metadata(
 
 
 def _get_input_metadata(
-    input: Union[mm_schema.MetricsInputData, mm_schema.MetricsInputParameters],
+    input: mm_schema.MetricsInputData | mm_schema.MetricsInputParameters,
 ) -> dict:
     metadata = {}
     for input_field in fields(input):
@@ -554,42 +549,10 @@ def dump_roi(
     return omero_roi
 
 
-# def dump_key_values(
-#     conn: BlitzGateway,
-#     key_values: Dict,
-#     name: str,
-#     description: str,
-#     curie: str,
-#     target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
-# ):
-#     return omero_tools.create_key_value(
-#         conn=conn,
-#         annotation=key_values,
-#         omero_object=target_object,
-#         annotation_name=name,
-#         annotation_description=description,
-#         namespace=curie,
-#     )
-#
-
-# def _eval(s):
-#     try:
-#         return ast.literal_eval(s)
-#     except ValueError:
-#         corrected = f"'{s}'"
-#         return ast.literal_eval(corrected)
-#
-# def _eval_types(table: mm_schema.Table):
-#     for column in table.columns.values():
-#         breakpoint()
-#         column.values = [_eval(v) for v in column.values]
-#     return table
-
-
 def dump_table(
     conn: BlitzGateway,
     table: mm_schema.Table,
-    target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper] = None,
+    target_object: ImageWrapper | DatasetWrapper | ProjectWrapper | None = None,
 ):
     if not isinstance(table, mm_schema.Table):
         logger.error(f"Unsupported table type for {table.name}: {table.class_name}")
@@ -622,7 +585,7 @@ def dump_table(
 def dump_comment(
     conn: BlitzGateway,
     comment: mm_schema.Comment,
-    target_object: Union[ImageWrapper, DatasetWrapper, ProjectWrapper],
+    target_object: ImageWrapper | DatasetWrapper | ProjectWrapper,
 ):
     if target_object is None:
         try:

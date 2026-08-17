@@ -1,6 +1,5 @@
 import logging
 import traceback
-from datetime import datetime
 
 import omero
 from django.shortcuts import render

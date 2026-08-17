@@ -8,10 +8,8 @@ from dash import dcc
 from django_plotly_dash import DjangoDash
 from plotly.subplots import make_subplots
 
-import omero_metrics.dash_apps.utils.omero_metrics_components as my_components
 from omero_metrics.dash_apps.dataset_image import dataset_shared_components as dsc
 from omero_metrics.styles import MANTINE_THEME, THEME
-from omero_metrics.tools import load
 from omero_metrics.tools.serializers import deserialize
 
 logger = logging.getLogger(__name__)
@@ -157,7 +155,7 @@ def update_single_bead_image(points, channel_index, *, session_state):
         "z": bead_df["translation_z_px"].values[0],
     }
 
-    fig_mip_go = fig_coregisration_bead(
+    fig_mip_go = fig_coregistration_bead(
         mips=mips,
         profiles=profiles,
         channel_name=channel_name,
@@ -173,25 +171,25 @@ def update_single_bead_image(points, channel_index, *, session_state):
     )
 
 
-def merge_mips_rgb(channel_mip, reference_mip, channel_vmax, reference_vmax):
+def merge_mips_rgb(channel_mip, reference_mip, channel_max, reference_max):
     """Combine two MIPs into a single additive RGB raster: the channel in red,
     the reference channel in green and, where both overlap, yellow.
     Each channel is scaled by its own maximum so that both remain visible
     regardless of their relative brightness.
     """
 
-    def _to_uint8(mip, vmax):
-        if not vmax:
+    def _to_uint8(mip, ch_max):
+        if not ch_max:
             return np.zeros(mip.shape, dtype=np.uint8)
-        return np.clip(mip / vmax * 255.0, 0, 255).astype(np.uint8)
+        return np.clip(mip / ch_max * 255.0, 0, 255).astype(np.uint8)
 
     rgb = np.zeros(channel_mip.shape + (3,), dtype=np.uint8)
-    rgb[..., 0] = _to_uint8(channel_mip, channel_vmax)
-    rgb[..., 1] = _to_uint8(reference_mip, reference_vmax)
+    rgb[..., 0] = _to_uint8(channel_mip, channel_max)
+    rgb[..., 1] = _to_uint8(reference_mip, reference_max)
     return rgb
 
 
-def fig_coregisration_bead(
+def fig_coregistration_bead(
     mips,
     profiles,
     channel_name,
@@ -236,8 +234,8 @@ def fig_coregisration_bead(
     )
 
     # Add MIP image: channel in red, reference channel in green, overlap in yellow
-    channel_vmax = max(np.max(mips[a]) for a in ("x", "y", "z"))
-    reference_vmax = max(np.max(mips[a]) for a in ("x_ref", "y_ref", "z_ref"))
+    channel_max = max(np.max(mips[a]) for a in ("x", "y", "z"))
+    reference_max = max(np.max(mips[a]) for a in ("x_ref", "y_ref", "z_ref"))
 
     for proj_axis, proj_axis_ref, h_axis, v_axis, row, col, rotate in zip(
         ("x", "y", "z"),
@@ -253,8 +251,8 @@ def fig_coregisration_bead(
                 z=merge_mips_rgb(
                     mips[proj_axis],
                     mips[proj_axis_ref],
-                    channel_vmax,
-                    reference_vmax,
+                    channel_max,
+                    reference_max,
                 ),
                 hovertemplate=(
                     f"{channel_name}: %{{z[0]}}<br>"

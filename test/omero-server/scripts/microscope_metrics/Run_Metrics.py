@@ -30,9 +30,7 @@ This script runs microscope-metrics on the selected dataset.
 @since 3.0-Beta4.3
 """
 
-# import logging utilities
 import logging
-from datetime import datetime
 from io import StringIO
 
 # import metrics

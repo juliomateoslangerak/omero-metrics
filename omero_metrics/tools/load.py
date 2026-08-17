@@ -1,7 +1,6 @@
 import logging
 import re
 from dataclasses import asdict
-from datetime import datetime
 
 import microscopemetrics_schema.datamodel as mm_schema
 import numpy as np
@@ -15,7 +14,6 @@ from omero.gateway import (
     FileAnnotationWrapper,
     ImageWrapper,
     MapAnnotationWrapper,
-    ProjectWrapper,
 )
 
 from omero_metrics.tools import namespaces, omero_tools
@@ -45,7 +43,7 @@ def get_annotations_tables(conn, group_id, ns_filter="microscopemetrics"):
                         "ns": ann.getNs(),
                     }
                 )
-            elif isinstance(ann, omero.gateway.MapAnnotationWrapper):
+            elif isinstance(ann, MapAnnotationWrapper):
                 map_anns.append(
                     {
                         "name": ann.getName(),
@@ -214,27 +212,6 @@ def load_dataset(
         )
 
     return mm_dataset
-
-
-# def load_analysis_config(project_wrapper=ProjectWrapper):
-#     configs = [
-#         ann
-#         for ann in project_wrapper.listAnnotations(
-#             ns="omero-metrics/analysis_config"
-#         )
-#         if isinstance(ann, MapAnnotationWrapper)
-#     ]
-#     if not configs:
-#         return None, None
-#     if len(configs) > 1:
-#         logger.error(
-#             f"More than one configuration"
-#             f" in project {project_wrapper.getId()}."
-#             f"Using the last one saved"
-#         )
-#
-#     return configs[-1].getId(), dict(configs[-1].getValue())
-#
 
 
 def load_image(image: ImageWrapper, load_array: bool = True) -> mm_schema.Image:

@@ -5,7 +5,6 @@ import dash
 import dash_mantine_components as dmc
 from dash import html
 from django_plotly_dash import DjangoDash
-from microscopemetrics import SaturationError
 from microscopemetrics_schema import datamodel as mm_schema
 
 import omero_metrics.dash_apps.utils.omero_metrics_components as my_components

@@ -13,10 +13,8 @@ from omero.gateway import (
 from omero_metrics.tools import (
     context_loaders,
     delete,
-    dump,
     load,
     schema_utils,
-    update,
 )
 from omero_metrics.tools.configurations import ASSAY_CONFIGURATIONS
 
@@ -208,68 +206,6 @@ class DatasetManager:
             raise NotImplementedError(
                 "partial loading of data from OMERO is not yet implemented"
             )
-
-    # def load_analysis_config(self, force_reload=True):
-    #     if not force_reload and self.analysis_config and self.analysis_config_id:
-    #         return
-    #     else:
-    #         (
-    #             self.analysis_config_id,
-    #             self.analysis_config,
-    #         ) = load.load_analysis_config(self.omero_project)
-    #
-    # # TODO; This function can be probably deleted as nobody is calling it
-    # def dump_analysis_config(self):
-    #     if not self.analysis_config:
-    #         logger.error("No configuration to save.")
-    #         return
-    #
-    #     update.update_map_annotation(
-    #         conn=self._conn,
-    #         new_map_annotation=self.analysis_config,
-    #         target_map_annotation=self.analysis_config_id,
-    #         replace=True,
-    #         new_description=f"config saved on {datetime.datetime.now()}",
-    #     )
-    #     logger.info(f"Saved configuration on mapAnn id:{self.analysis_config_id}")
-    #
-    # def _update_dataset_input_config(self, config):
-    #     for key, val in config.items():
-    #         setattr(self.mm_dataset.input_parameters, key, val)
-    #
-    # def dump_data(self):
-    #     # TODO: review this function
-    #     for mm_ds in self.mm_dataset:
-    #         if not mm_ds.processed:
-    #             logger.error("Dataset not processed. Unable to dump data")
-    #         dump.dump_dataset(
-    #             conn=self._conn,
-    #             dataset=mm_ds,
-    #             target_project=self.omero_project,
-    #         )
-    #
-    # def process_data(self, force_reprocess=False):
-    #     if not force_reprocess and self.is_processed():
-    #         if self.is_validated():
-    #             logger.warning(
-    #                 "Dataset has been processed and validated. "
-    #                 "Force reprocess to process again"
-    #             )
-    #         else:
-    #             logger.warning(
-    #                 "Dataset has been processed but not validated. "
-    #                 "Force reprocess to process again"
-    #             )
-    #         return False
-    #     items_to_remove = []
-    #     config = {
-    #         k: v for k, v in self.analysis_config.items() if k not in items_to_remove
-    #     }
-    #
-    #     self._update_dataset_input_config(config)
-    #     self.analysis_func(self.mm_dataset)
-    #
-    #     return True
 
     def delete_processed_data(self):
         """This function deletes the output of the dataset"""

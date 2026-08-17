@@ -38,7 +38,7 @@ import omero.gateway as gateway
 
 # import omero dependencies
 import omero.scripts as scripts
-from omero.rtypes import rlong, robject, rstring
+from omero.rtypes import rlong, rstring
 
 logger = logging.getLogger("metrics")
 logger.setLevel(logging.DEBUG)

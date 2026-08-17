@@ -12,7 +12,6 @@ from omero_metrics.styles import (
     CONTAINER_STYLE,
     DATEPICKER_STYLES,
     MANTINE_THEME,
-    PAPER_STYLE,
     STYLE_DATA_CONDITIONAL,
     TAB_ITEM_STYLE,
     TAB_STYLES,

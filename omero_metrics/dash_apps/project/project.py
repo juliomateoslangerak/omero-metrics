@@ -16,7 +16,6 @@ from omero_metrics.dash_apps.utils import dash_forms_tools as dft
 from omero_metrics.styles import (
     BUTTON_STYLE,
     CARD_STYLE1,
-    COLORS_CHANNELS,
     CONTAINER_STYLE,
     DATEPICKER_STYLES,
     MANTINE_THEME,
