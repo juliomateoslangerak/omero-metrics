@@ -132,12 +132,12 @@ def update_single_bead_image(points, channel_index, *, session_state):
     }
     mips = {a: np.sqrt(mip) for a, mip in mips.items()}
     profiles = {
-        "x": np.mean(bead_array, axis=(0, 1)),
-        "y": np.mean(bead_array, axis=(0, 2)),
-        "z": np.mean(bead_array, axis=(1, 2)),
-        "x_ref": np.mean(reference_bead_array, axis=(0, 1)),
-        "y_ref": np.mean(reference_bead_array, axis=(0, 2)),
-        "z_ref": np.mean(reference_bead_array, axis=(1, 2)),
+        "x": np.max(bead_array, axis=(0, 1)),
+        "y": np.max(bead_array, axis=(0, 2)),
+        "z": np.max(bead_array, axis=(1, 2)),
+        "x_ref": np.max(reference_bead_array, axis=(0, 1)),
+        "y_ref": np.max(reference_bead_array, axis=(0, 2)),
+        "z_ref": np.max(reference_bead_array, axis=(1, 2)),
     }
     profiles = {
         k: (p - np.min(p)) / (np.max(p) - np.min(p)) for k, p in profiles.items()
