@@ -39,22 +39,45 @@ omero_image_coregistration.layout = dmc.MantineProvider(
                             p="md",
                             radius="md",
                             children=[
-                                dmc.Group(
-                                    [
-                                        dmc.Text(
-                                            id="coregistration-bead-title",
-                                            children="Bead image (select bead to view)",
-                                            size="lg",
-                                            fw=500,
-                                            c=THEME["primary"],
+                                dmc.Text(
+                                    id="coregistration-bead-title",
+                                    children="Bead image (select bead to view)",
+                                    size="lg",
+                                    fw=500,
+                                    c=THEME["primary"],
+                                ),
+                                dmc.Flex(
+                                    children=[
+                                        dcc.Graph(
+                                            id="coregistration-bead-graph",
+                                            figure={},
+                                            style={"height": "800px"},
+                                        ),
+                                        dmc.Stack(
+                                            children=[
+                                                dmc.Switch(
+                                                    id="coregistration-bead-show-channel-checkbox",
+                                                    label="Show channel",
+                                                    checked=True,
+                                                    size="md",
+                                                    color=THEME["primary"],
+                                                ),
+                                                dmc.Switch(
+                                                    id="coregistration-bead-show-ref-channel-checkbox",
+                                                    label="Show reference channel",
+                                                    checked=True,
+                                                    size="md",
+                                                    color=THEME["primary"],
+                                                ),
+                                            ],
+                                            gap="sm",
                                         ),
                                     ],
-                                    justify="space-between",
-                                ),
-                                dcc.Graph(
-                                    id="coregistration-bead-graph",
-                                    figure={},
-                                    style={"height": "800px"},
+                                    justify="flex-start",
+                                    gap="xl",
+                                    wrap="nowrap",
+                                    align="flex-start",
+                                    direction="row",
                                 ),
                             ],
                         ),
@@ -94,10 +117,18 @@ dsc.register_intensity_chart_callbacks(
     [
         dash.dependencies.Input("intensity-chart", "clickData"),
         dash.dependencies.Input("intensity-chart-channel-select", "value"),
+        dash.dependencies.Input(
+            "coregistration-bead-show-channel-checkbox", "checked"
+        ),
+        dash.dependencies.Input(
+            "coregistration-bead-show-ref-channel-checkbox", "checked"
+        ),
     ],
     prevent_initial_call=True,
 )
-def update_single_bead_image(points, channel_index, *, session_state):
+def update_single_bead_image(
+    points, channel_index, channel_checked, ref_channel_checked, *, session_state
+):
     point = points["points"][0]  # FIXME: point is None at initial call
     if point["curveNumber"] != 1:
         return dash.no_update
@@ -115,11 +146,21 @@ def update_single_bead_image(points, channel_index, *, session_state):
         :,
     ]
     beads_array = context["beads_array"]
-    bead_array = beads_array[bead_index, :, :, :, channel_index]
+    if channel_checked:
+        bead_array = beads_array[bead_index, :, :, :, channel_index]
+    else:
+        bead_array = np.zeros_like(beads_array[bead_index, :, :, :, channel_index])
     channel_name = bead_df["channel_name"].values[0]
 
     reference_channel_index = bead_df["reference_channel_nr"].values[0]
-    reference_bead_array = beads_array[bead_index, :, :, :, reference_channel_index]
+    if ref_channel_checked:
+        reference_bead_array = beads_array[
+            bead_index, :, :, :, reference_channel_index
+        ]
+    else:
+        reference_bead_array = np.zeros_like(
+            beads_array[bead_index, :, :, :, reference_channel_index]
+        )
     reference_channel_name = bead_df["reference_channel_name"].values[0]
 
     mips = {
