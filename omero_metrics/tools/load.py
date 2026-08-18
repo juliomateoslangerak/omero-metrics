@@ -110,13 +110,22 @@ def image_exist(image_id, mm_dataset):
     return image_found, image_location, index
 
 
+def read_file_annotation(file_ann: FileAnnotationWrapper) -> str:
+    """Read the whole file behind a file annotation as text.
+    getFileInChunks is an iterator, so all chunks have to be concatenated.
+    Joining the bytes before decoding also avoids breaking multi-byte
+    characters split across a chunk boundary.
+    """
+    return b"".join(file_ann.getFileInChunks()).decode()
+
+
 def load_input_config_file(project):
     for ann in project.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
             ns = ann.getNs()
             if ns in namespaces.LIST_NS_MICROSCOPEMETRICS_SCHEMA_INPUT_PARAMETERS:
                 return yaml.load(
-                    ann.getFileInChunks().__next__().decode(),
+                    read_file_annotation(ann),
                     Loader=yaml.SafeLoader,
                 )
     return None
@@ -126,7 +135,7 @@ def load_thresholds_file(project):
     for ann in project.listAnnotations(ns=namespaces.NS_THRESHOLDS):
         if isinstance(ann, FileAnnotationWrapper):
             return yaml.load(
-                ann.getFileInChunks().__next__().decode(),
+                read_file_annotation(ann),
                 Loader=yaml.SafeLoader,
             )
     return None
@@ -150,7 +159,7 @@ def load_project(
         for file_ann, ds_type in zip(file_anns, dataset_types):
             collection.dataset_collection.append(
                 yaml_loader.loads(
-                    file_ann.getFileInChunks().__next__().decode(),
+                    read_file_annotation(file_ann),
                     target_class=getattr(mm_schema, ds_type),
                 )
             )
@@ -172,7 +181,7 @@ def load_dataset(
                 if ds_type in ASSAY_CONFIGURATIONS:
                     mm_datasets.append(
                         yaml_loader.loads(
-                            ann.getFileInChunks().__next__().decode(),
+                            read_file_annotation(ann),
                             target_class=getattr(mm_schema, ds_type),
                         )
                     )
