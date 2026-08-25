@@ -306,7 +306,7 @@ def callback_image(
                 color="red",
                 line=dict(width=1, color="white"),
             ),
-            customdata=df_point_channel.ROI_NAME.str.replace(" ROIs", ""),
+            customdata=df_point_channel.NAME,
             hovertemplate="<b>%{customdata}</b><br>X: %{x}<br>Y: %{y}<extra></extra>",
         )
     )
