@@ -44,66 +44,69 @@ def PSFBeadsDataset_input_data_Image(im):
         im.dataset_manager.mm_dataset.input_parameters.min_axial_distance_px
     )
 
-    beads_array = np.zeros(
-        (
-            image_bead_properties.bead_id.max() + 1,
-            min_axial_distance_px * 2 + 1,
-            min_lateral_distance_px * 2 + 1,
-            min_lateral_distance_px * 2 + 1,
-            im.mm_image.shape_c,
+    if not image_bead_properties.empty:
+        beads_array = np.zeros(
+            (
+                image_bead_properties.bead_id.max() + 1,
+                min_axial_distance_px * 2 + 1,
+                min_lateral_distance_px * 2 + 1,
+                min_lateral_distance_px * 2 + 1,
+                im.mm_image.shape_c,
+            )
         )
-    )
-    for _, row in image_bead_properties.iterrows():
-        z_top = int(row.center_z) - min_axial_distance_px
-        z_bottom = int(row.center_z) + min_axial_distance_px + 1
-        y_left = int(row.center_y) - min_lateral_distance_px
-        y_right = int(row.center_y) + min_lateral_distance_px + 1
-        x_left = int(row.center_x) - min_lateral_distance_px
-        x_right = int(row.center_x) + min_lateral_distance_px + 1
-        bead_array = im.mm_image.array_data[
-            0,  # time 0
-            max(0, z_top) : min(
-                im.mm_image.array_data.shape[1], z_bottom
-            ),  # z-dimension
-            max(0, y_left) : min(
-                im.mm_image.array_data.shape[2], y_right
-            ),  # y-dimension
-            max(0, x_left) : min(
-                im.mm_image.array_data.shape[3], x_right
-            ),  # x-dimension
-            :,  # channel
-        ]
-        if bead_array.shape == beads_array[row.bead_id].shape:
-            beads_array[row.bead_id] = bead_array
-        else:
-            # The bead was close to the edge of the image, so we need to blow it to size
-            z_padding = (
-                abs(z_top) if z_top < 0 else 0,
-                (
-                    abs(z_bottom - im.mm_image.array_data.shape[1])
-                    if z_bottom > im.mm_image.array_data.shape[1]
-                    else 0
-                ),
-            )
-            y_padding = (
-                abs(y_left) if y_left < 0 else 0,
-                (
-                    abs(y_right - im.mm_image.array_data.shape[2])
-                    if y_right > im.mm_image.array_data.shape[2]
-                    else 0
-                ),
-            )
-            x_padding = (
-                abs(x_left) if x_left < 0 else 0,
-                (
-                    abs(x_right - im.mm_image.array_data.shape[3])
-                    if x_right > im.mm_image.array_data.shape[3]
-                    else 0
-                ),
-            )
-            beads_array[row.bead_id] = np.pad(
-                bead_array, (z_padding, y_padding, x_padding, (0, 0))
-            )
+        for _, row in image_bead_properties.iterrows():
+            z_top = int(row.center_z) - min_axial_distance_px
+            z_bottom = int(row.center_z) + min_axial_distance_px + 1
+            y_left = int(row.center_y) - min_lateral_distance_px
+            y_right = int(row.center_y) + min_lateral_distance_px + 1
+            x_left = int(row.center_x) - min_lateral_distance_px
+            x_right = int(row.center_x) + min_lateral_distance_px + 1
+            bead_array = im.mm_image.array_data[
+                0,  # time 0
+                max(0, z_top) : min(
+                    im.mm_image.array_data.shape[1], z_bottom
+                ),  # z-dimension
+                max(0, y_left) : min(
+                    im.mm_image.array_data.shape[2], y_right
+                ),  # y-dimension
+                max(0, x_left) : min(
+                    im.mm_image.array_data.shape[3], x_right
+                ),  # x-dimension
+                :,  # channel
+            ]
+            if bead_array.shape == beads_array[row.bead_id].shape:
+                beads_array[row.bead_id] = bead_array
+            else:
+                # The bead was close to the edge of the image, so we need to blow it to size
+                z_padding = (
+                    abs(z_top) if z_top < 0 else 0,
+                    (
+                        abs(z_bottom - im.mm_image.array_data.shape[1])
+                        if z_bottom > im.mm_image.array_data.shape[1]
+                        else 0
+                    ),
+                )
+                y_padding = (
+                    abs(y_left) if y_left < 0 else 0,
+                    (
+                        abs(y_right - im.mm_image.array_data.shape[2])
+                        if y_right > im.mm_image.array_data.shape[2]
+                        else 0
+                    ),
+                )
+                x_padding = (
+                    abs(x_left) if x_left < 0 else 0,
+                    (
+                        abs(x_right - im.mm_image.array_data.shape[3])
+                        if x_right > im.mm_image.array_data.shape[3]
+                        else 0
+                    ),
+                )
+                beads_array[row.bead_id] = np.pad(
+                    bead_array, (z_padding, y_padding, x_padding, (0, 0))
+                )
+    else:
+        beads_array = None
 
     im.mm_image.array_data = None
     context = {
