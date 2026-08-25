@@ -93,7 +93,7 @@ omero_image_coregistration.layout = dmc.MantineProvider(
 )
 
 BEADS_HOVER_INFO = {
-    "Bead number": "bead_id",
+    "Bead id": "bead_id",
     "Sigma LoG": "sigma_LoG",
     "Considered valid": dsc.hover_flag("considered_valid"),
     "Considered self proximity": dsc.hover_flag("considered_self_proximity"),

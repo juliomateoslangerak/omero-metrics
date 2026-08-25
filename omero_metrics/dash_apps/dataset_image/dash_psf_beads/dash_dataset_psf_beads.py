@@ -33,6 +33,22 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
     ],
 )
 
+BEADS_HOVER_INFO = {
+    "Image id": "image_id",
+    "Bead id": "bead_id",
+    "Sigma LoG": "sigma_LoG",
+    "Considered valid": dsc.hover_flag("considered_valid"),
+    "Considered self proximity": dsc.hover_flag("considered_self_proximity"),
+    "Considered lateral edge": dsc.hover_flag("considered_lateral_edge"),
+    "Considered axial edge": dsc.hover_flag("considered_axial_edge"),
+    "Considered outlier": dsc.hover_flag("considered_intensity_std_outlier"),
+    "Considered bad fit": dsc.hover_flag(
+        "considered_bad_fit_gaussian_x",
+        "considered_bad_fit_gaussian_y",
+        "considered_bad_fit_gaussian_z",
+    ),
+}
+
 
 # Register shared callbacks
 dsc.register_delete_dataset_callback(omero_dataset_psf_beads)
@@ -40,4 +56,6 @@ dsc.register_download_datasets_callback(omero_dataset_psf_beads)
 dsc.register_update_kkm_table_callback(omero_dataset_psf_beads)
 dsc.register_download_table_callback(omero_dataset_psf_beads)
 dsc.register_delete_button_loading_callback(omero_dataset_psf_beads)
-dsc.register_contour_chart_callbacks(omero_dataset_psf_beads, "psf_beads_images")
+dsc.register_contour_chart_callbacks(
+    omero_dataset_psf_beads, "psf_beads_images", BEADS_HOVER_INFO
+)

@@ -371,6 +371,27 @@ def contour_chart(**group_props):
                             {"value": 10, "label": "10"},
                         ],
                     ),
+                    dmc.Switch(
+                        id="show-info-switch",
+                        label="Show bead info on hover",
+                        checked=True,
+                        size="md",
+                        color=THEME["primary"],
+                    ),
+                    dmc.Switch(
+                        id="show-bounds-switch",
+                        label="Show ROI Boundaries",
+                        checked=True,
+                        size="md",
+                        color=THEME["primary"],
+                    ),
+                    dmc.Switch(
+                        id="show-positions-switch",
+                        label="Show ROI Positions",
+                        checked=False,
+                        size="md",
+                        color=THEME["primary"],
+                    ),
                 ]
             ),
         ],
@@ -434,17 +455,19 @@ def intensity_chart(**group_props):
                         size="md",
                         color=THEME["primary"],
                     ),
-                    dmc.Stack(
-                        [
-                            dmc.Switch(
-                                id="show-rois-switch",
-                                label="Show ROI Boundaries",
-                                checked=True,
-                                size="md",
-                                color=THEME["primary"],
-                            ),
-                        ],
-                        gap="xs",
+                    dmc.Switch(
+                        id="show-bounds-switch",
+                        label="Show ROI Boundaries",
+                        checked=True,
+                        size="md",
+                        color=THEME["primary"],
+                    ),
+                    dmc.Switch(
+                        id="show-positions-switch",
+                        label="Show ROI Positions",
+                        checked=False,
+                        size="md",
+                        color=THEME["primary"],
                     ),
                     dmc.Divider(
                         label="Color Settings",
@@ -456,6 +479,10 @@ def intensity_chart(**group_props):
                         label="Color Scheme",
                         allowDeselect=False,
                         data=[
+                            {
+                                "value": "Greyscale",
+                                "label": "Greyscale",
+                            },
                             {
                                 "value": "Hot",
                                 "label": "Hot",
@@ -722,7 +749,7 @@ def _add_scale_bar(
         )
 
 
-def register_contour_chart_callbacks(app, images_attr):
+def register_contour_chart_callbacks(app, images_attr, hover_info):
     """Register the selectors and the contour chart for a contour dashboard.
 
     ``images_attr`` names the ``input_data`` field holding the analysed images,
@@ -765,10 +792,20 @@ def register_contour_chart_callbacks(app, images_attr):
             dependencies.Input("channel-select", "value"),
             dependencies.Input("measurement-select", "value"),
             dependencies.Input("precision-slider", "value"),
+            dependencies.Input("show-info-switch", "checked"),
+            dependencies.Input("show-bounds-switch", "checked"),
+            dependencies.Input("show-positions-switch", "checked"),
         ],
     )
     def update_contour_chart(
-        channel_value, measurement_value, precision_value, *, session_state
+        channel_value,
+        measurement_value,
+        precision_value,
+        show_hover_info,
+        show_bounds,
+        show_positions,
+        *,
+        session_state,
     ):
         if measurement_value is None:
             return no_update
@@ -777,7 +814,8 @@ def register_contour_chart_callbacks(app, images_attr):
         x_max = y_max = None
         try:
             context = deserialize(session_state["context"])
-            images = getattr(context["mm_dataset"].input_data, images_attr)
+            mm_dataset = context["mm_dataset"]
+            images = getattr(mm_dataset.input_data, images_attr)
             x_max = images[0].shape_x
             y_max = images[0].shape_y
             x_pixel_size = images[0].voxel_size_x_micron
@@ -785,8 +823,16 @@ def register_contour_chart_callbacks(app, images_attr):
             xi = np.linspace(0, x_max, 128)
             yi = np.linspace(0, y_max, 128)
             XI, YI = np.meshgrid(xi, yi)
-            channel_name = context["channel_names"][int(channel_value)]
+            channel_index = int(channel_value)
+            channel_name = context["channel_names"][channel_index]
             bead_properties = context["bead_properties"]
+            bead_properties_df = load.load_table_mm_metrics(
+                mm_dataset.output["bead_properties"]
+            )
+            beads_location_df = bead_properties_df.loc[
+                (bead_properties_df["channel_nr"] == channel_index),
+                :,
+            ].copy()
 
             def valid_bead(i):
                 return (
@@ -813,26 +859,40 @@ def register_contour_chart_callbacks(app, images_attr):
 
             fig = empty_image_figure(x_max, y_max)
             fig.add_trace(
-                go.Contour(
+                # go.Contour(
+                go.Heatmap(
                     x=xi,
                     y=yi,
                     z=ZI,
                     connectgaps=True,
-                    contours=dict(
-                        showlabels=True, labelformat=f".{precision_value}f"
-                    ),
+                    zsmooth="best",
+                    # contours=dict(
+                    #     showlabels=True, labelformat=f".{precision_value}f"
+                    # ),
                     colorbar=dict(tickformat=f".{precision_value}f"),
                 )
             )
+            # A copy, not an update: hover_info belongs to the caller and
+            # would otherwise collect a row per measurement ever selected.
+            chart_hover_info = (
+                {**hover_info, measurement_value: measurement_value}
+                if show_hover_info
+                else None
+            )
+
             fig.add_trace(
-                go.Scatter(
-                    x=x,
-                    y=y,
-                    mode="markers",
-                    marker=dict(size=6, color="black", symbol="circle"),
-                    name="Measurements",
+                beads_scatter_plot(
+                    beads_location_df, show_positions, chart_hover_info
                 )
             )
+
+            if show_bounds:
+                # Ahead of the scale bar: update_layout replaces the shape
+                # list, which _add_scale_bar then appends its line to.
+                roi_rect = beads_frames_plot(
+                    beads_location_df, context["min_lateral_distance_px"]
+                )
+                fig.update_layout(shapes=roi_rect)
 
             _add_scale_bar(fig, x_pixel_size, x_max, y_max)
 
@@ -874,16 +934,18 @@ def register_intensity_chart_callbacks(app, images_attr, hover_info=None):
             dependencies.Input("intensity-chart-channel-select", "value"),
             dependencies.Input("intensity-chart-color-select", "value"),
             dependencies.Input("invert-color-switch", "checked"),
-            dependencies.Input("show-rois-switch", "checked"),
             dependencies.Input("show-info-switch", "checked"),
+            dependencies.Input("show-bounds-switch", "checked"),
+            dependencies.Input("show-positions-switch", "checked"),
         ],
     )
     def update_image(
         channel_index,
         color,
         invert_color,
-        show_rois,
-        show_beads_info,
+        show_hover_info,
+        show_bounds,
+        show_positions,
         *,
         session_state,
     ):
@@ -903,31 +965,27 @@ def register_intensity_chart_callbacks(app, images_attr, hover_info=None):
                 :,
             ].copy()
 
-            scatter, roi_rect = beads_scatter_plot(
-                beads_location_df, min_lateral_distance_px, hover_info
-            )
-
             if invert_color:
                 color = f"{color}_r"
             mip_z = context["mip_z"][..., channel_index]
 
             fig = image_figure(mip_z, colorscale=color)
 
-            fig.add_trace(scatter)
+            fig.add_trace(
+                beads_scatter_plot(
+                    beads_location_df,
+                    show_positions,
+                    hover_info if show_hover_info else None,
+                )
+            )
 
-            if show_rois:
+            if show_bounds:
+                roi_rect = beads_frames_plot(
+                    beads_location_df, min_lateral_distance_px
+                )
                 fig.update_layout(shapes=roi_rect)
             else:
                 fig.update_layout(shapes=None)
-
-            if show_beads_info:
-                fig.update_traces(
-                    visible=True, selector=dict(name="Beads Locations")
-                )
-            else:
-                fig.update_traces(
-                    visible=False, selector=dict(name="Beads Locations")
-                )
 
             fig.update_layout(
                 xaxis=dict(showgrid=False, zeroline=False, visible=False),
@@ -989,12 +1047,40 @@ def hover_flag(column, *more_columns):
     return flag
 
 
-def beads_scatter_plot(df, half_min_distance_px, hover_info=None):
+def beads_frames_plot(df, half_min_distance_px):
+    df["color"] = np.where(df["considered_valid"] == "True", "green", "red")
+
+    bead_frames = [
+        dict(
+            type="rect",
+            x0=row.center_x - half_min_distance_px,
+            y0=row.center_y - half_min_distance_px,
+            x1=row.center_x + half_min_distance_px,
+            y1=row.center_y + half_min_distance_px,
+            xref="x",
+            yref="y",
+            line=dict(
+                color=row["color"],
+                width=1,
+            ),
+        )
+        for _, row in df.iterrows()
+    ]
+
+    return bead_frames
+
+
+def beads_scatter_plot(df, show_positions, hover_info=None):
     """Scatter of the bead locations, hover box described by ``hover_info``.
 
     ``hover_info`` holds the hover rows in display order: each key is the label
     shown to the user, each value is either a column of the bead properties
     table or a callable taking that table and returning one value per bead.
+
+    ``show_positions`` draws the markers or not. It is deliberately a marker
+    opacity rather than trace visibility: a trace with ``visible=False`` is
+    dropped from the plot and receives no hover events, so hiding the markers
+    that way would take the hover box down with them.
     """
     df["color"] = np.where(df["considered_valid"] == "True", "green", "red")
 
@@ -1024,32 +1110,20 @@ def beads_scatter_plot(df, half_min_distance_px, hover_info=None):
         y=df["center_y"],
         x=df["center_x"],
         mode="markers",
-        name="Beads Locations",
+        name="beads location",
         marker=dict(
-            size=0.001,
-            opacity=0.01,
+            size=6,
+            symbol="circle",
+            opacity=0.8 if show_positions else 0,
             color=df["color"],
         ),
         text=df["channel_nr"],
         customdata=customdata,
         hovertemplate=hovertemplate,
+        # The markers stay in the plot when they are transparent, so without
+        # this the default x/y/text box would show up on a chart the user
+        # asked to have no hover info on.
+        hoverinfo="skip" if hover_info is None else None,
     )
 
-    bead_frames = [
-        dict(
-            type="rect",
-            x0=row.center_x - half_min_distance_px,
-            y0=row.center_y - half_min_distance_px,
-            x1=row.center_x + half_min_distance_px,
-            y1=row.center_y + half_min_distance_px,
-            xref="x",
-            yref="y",
-            line=dict(
-                color=row["color"],
-                width=3,
-            ),
-        )
-        for _, row in df.iterrows()
-    ]
-
-    return beads_location_plot, bead_frames
+    return beads_location_plot

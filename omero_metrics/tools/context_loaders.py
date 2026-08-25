@@ -130,13 +130,10 @@ def PSFBeadsDataset_output_AveragePSF(im):
     )
 
     mips = {
-        "x": np.flipud(
-            np.transpose(np.max(im.mm_image.array_data[0, ...], axis=2), (1, 0, 2))
-        ),
+        "x": np.transpose(np.max(im.mm_image.array_data[0, ...], axis=2), (1, 0, 2)),
         "y": np.max(im.mm_image.array_data[0, ...], axis=1),
-        "z": np.flipud(np.max(im.mm_image.array_data[0, ...], axis=0)),
+        "z": np.max(im.mm_image.array_data[0, ...], axis=0),
     }
-    mips = {a: np.sqrt(mip) for a, mip in mips.items()}
 
     context = {
         "image_index": im.image_index,
@@ -270,11 +267,15 @@ def PSFBeadsDataset(dm):
     bead_properties = {
         col.name: col.values for col in dm.mm_dataset.output.bead_properties.columns
     }
+    min_lateral_distance_px = int(
+        dm.mm_dataset.input_parameters.min_lateral_distance_px
+    )
 
     context = {
         "mm_dataset": dm.mm_dataset,
         "channel_names": channel_names,
         "bead_properties": bead_properties,
+        "min_lateral_distance_px": min_lateral_distance_px,
         "assay_config": dm.assay_configuration,
     }
     dm.context = serialize(context)
@@ -294,11 +295,15 @@ def CoRegistrationDataset(dm):
     bead_properties = {
         col.name: col.values for col in dm.mm_dataset.output.bead_properties.columns
     }
+    min_lateral_distance_px = int(
+        dm.mm_dataset.input_parameters.min_lateral_distance_px
+    )
 
     context = {
         "mm_dataset": dm.mm_dataset,
         "channel_names": channel_names,
         "bead_properties": bead_properties,
+        "min_lateral_distance_px": min_lateral_distance_px,
         "assay_config": dm.assay_configuration,
     }
     dm.context = serialize(context)

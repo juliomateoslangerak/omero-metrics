@@ -98,19 +98,27 @@ def create_control_panel():
                         allowDeselect=False,
                         data=[
                             {
-                                "value": "Hot",
+                                "value": "gray",
+                                "label": "Greyscale",
+                            },
+                            {
+                                "value": "blackbody",
+                                "label": "Blackbody",
+                            },
+                            {
+                                "value": "hot",
                                 "label": "Hot",
                             },
                             {
-                                "value": "Viridis",
+                                "value": "viridis",
                                 "label": "Viridis",
                             },
                             {
-                                "value": "Inferno",
+                                "value": "inferno",
                                 "label": "Inferno",
                             },
                         ],
-                        value="Hot",
+                        value="hot",
                         leftSection=my_components.get_icon(
                             "material-symbols:palette"
                         ),

@@ -23,7 +23,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
     theme=MANTINE_THEME,
     children=[
         # Header Section
-        my_components.header_component(
+        dsc.image_header(
             "PSF Beads Analysis",
             "Advanced Microscopy Image Analysis",
             "PSF beads Analysis",
@@ -74,7 +74,7 @@ omero_image_psf_beads.layout = dmc.MantineProvider(
 
 
 BEADS_HOVER_INFO = {
-    "Bead number": "bead_id",
+    "Bead id": "bead_id",
     "Sigma LoG": "sigma_LoG",
     "Considered valid": dsc.hover_flag("considered_valid"),
     "Considered self proximity": dsc.hover_flag("considered_self_proximity"),

@@ -33,6 +33,16 @@ omero_dataset_coregistration.layout = dmc.MantineProvider(
     ],
 )
 
+BEADS_HOVER_INFO = {
+    "Image id": "image_id",
+    "Bead id": "bead_id",
+    "Considered valid": dsc.hover_flag("considered_valid"),
+    "Considered self proximity": dsc.hover_flag("considered_self_proximity"),
+    "Considered lateral edge": dsc.hover_flag("considered_lateral_edge"),
+    "Considered axial edge": dsc.hover_flag("considered_axial_edge"),
+    "Considered outlier": dsc.hover_flag("considered_distance_3d_micron_outlier"),
+    "Considered bad fit": dsc.hover_flag("considered_bad_fit_gaussian"),
+}
 
 # Register shared callbacks
 dsc.register_delete_dataset_callback(omero_dataset_coregistration)
@@ -41,5 +51,5 @@ dsc.register_update_kkm_table_callback(omero_dataset_coregistration)
 dsc.register_download_table_callback(omero_dataset_coregistration)
 dsc.register_delete_button_loading_callback(omero_dataset_coregistration)
 dsc.register_contour_chart_callbacks(
-    omero_dataset_coregistration, "multiwavelength_beads_images"
+    omero_dataset_coregistration, "multiwavelength_beads_images", BEADS_HOVER_INFO
 )
