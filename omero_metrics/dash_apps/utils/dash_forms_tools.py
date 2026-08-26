@@ -421,8 +421,11 @@ def validate_form(state):
         elif item_type == "InputWrapper":
             # GrowingList wrapper — no value prop; individual inputs validate themselves
             pass
-        elif item["props"].get("required") and not item["props"].get("value"):
-            return False
+        elif item["props"].get("required"):
+            if item["props"].get("value") is None:
+                return False
+            if not str(item["props"].get("value")):
+                return False
     return True
 
 
