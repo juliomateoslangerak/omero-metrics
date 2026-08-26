@@ -5,6 +5,7 @@ import plotly.express as px
 from django_plotly_dash import DjangoDash
 from skimage.exposure import rescale_intensity
 
+import omero_metrics.dash_apps.dataset_image.dash_foi.foi_shared_components as fsc
 import omero_metrics.dash_apps.utils.omero_metrics_components as my_components
 from omero_metrics.dash_apps.dataset_image import dataset_shared_components as dsc
 from omero_metrics.styles import (
@@ -12,12 +13,9 @@ from omero_metrics.styles import (
     CONTENT_PAPER_STYLE,
     GRAPH_STYLE,
     INPUT_BASE_STYLES,
-    LINE_CHART_SERIES,
     MANTINE_THEME,
     PLOT_LAYOUT,
-    THEME,
 )
-from omero_metrics.tools import load
 from omero_metrics.tools.serializers import deserialize
 
 dashboard_name = "omero_dataset_foi"
@@ -102,62 +100,9 @@ omero_dataset_foi.layout = dmc.MantineProvider(
                     ],
                 ),
                 # Hidden element for callbacks
-                dash.html.Div(id="blank-input"),
+                dsc.blank_input(),
                 # Intensity Profiles Section
-                dmc.Paper(
-                    children=[
-                        dmc.Stack(
-                            [
-                                dmc.Group(
-                                    [
-                                        dmc.Text(
-                                            "Intensity Profiles",
-                                            fw=500,
-                                            size="lg",
-                                        ),
-                                        dmc.SegmentedControl(
-                                            id="profile-type",
-                                            data=[
-                                                {
-                                                    "value": "natural",
-                                                    "label": "Smooth",
-                                                },
-                                                {
-                                                    "value": "linear",
-                                                    "label": "Linear",
-                                                },
-                                            ],
-                                            value="natural",
-                                            color=THEME["primary"],
-                                        ),
-                                    ],
-                                    justify="space-between",
-                                ),
-                                dmc.LineChart(
-                                    id="intensity-profile",
-                                    h=300,
-                                    dataKey="Pixel",
-                                    data={},
-                                    series=LINE_CHART_SERIES,
-                                    xAxisLabel="Position (pixels)",
-                                    yAxisLabel="Intensity",
-                                    tickLine="y",
-                                    gridAxis="x",
-                                    withXAxis=True,
-                                    withYAxis=True,
-                                    withLegend=True,
-                                    strokeWidth=2,
-                                    withDots=False,
-                                ),
-                            ],
-                            gap="xl",
-                        ),
-                    ],
-                    shadow="xs",
-                    p="md",
-                    radius="md",
-                    mt="md",
-                ),
+                fsc.intensity_profile_paper(mt="md"),
             ],
             style=CONTAINER_STYLE,
         ),
@@ -240,35 +185,7 @@ def update_intensity_map(channel, *, session_state):
         return fig
 
 
-@omero_dataset_foi.expanded_callback(
-    dash.dependencies.Output("intensity-profile", "data"),
-    dash.dependencies.Output("intensity-profile", "curveType"),
-    [
-        dash.dependencies.Input("channel-dropdown-foi", "value"),
-        dash.dependencies.Input("profile-type", "value"),
-    ],
-)
-def update_profile_type(channel, curve_type, *, session_state):
-    try:
-        df_intensity_profiles = load.load_table_mm_metrics(
-            deserialize(session_state["context"]["mm_dataset"]).output[
-                "intensity_profiles"
-            ]
-        )
-
-        df_profile = df_intensity_profiles.filter(regex=f"ch0*{channel}_")
-        df_profile.columns = (
-            df_profile.columns.str.replace(
-                r"ch\d+_leftTop_to_rightBottom", "Diagonal (↘)", regex=True
-            )
-            .str.replace(r"ch\d+_leftBottom_to_rightTop", "Diagonal (↗)", regex=True)
-            .str.replace(r"ch\d+_center_horizontal", "Horizontal (→)", regex=True)
-            .str.replace(r"ch\d+_center_vertical", "Vertical (↓)", regex=True)
-        )
-        return df_profile.to_dict("records"), curve_type
-
-    except Exception as e:
-        return [{"Pixel": 0}], "linear"
+fsc.register_intensity_profile_callbacks(omero_dataset_foi, "channel-dropdown-foi")
 
 
 def restyle_dataframe(df: pd.DataFrame, col: str) -> pd.DataFrame:

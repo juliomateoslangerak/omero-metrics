@@ -216,6 +216,20 @@ IMAGE_CHART_MARGIN = dict(l=45, r=15, t=15, b=45)
 # height below is derived from the width the plotting area actually gets.
 IMAGE_COLORBAR_WIDTH = 90
 
+# Marker opacity for the visible bead positions.
+BEAD_MARKER_OPACITY = 0.8
+
+# The display switches beside these charts change nothing the server has to
+# recompute, so they are applied in the browser to the figure that is already
+# there rather than by rebuilding it. That only works if every element the
+# switches touch keeps a fixed address, so: the traces are always added in the
+# order below whether or not they are shown, and the ROI rectangles always come
+# before the scale bar in layout.shapes. The addresses travel with the figure in
+# layout.meta -- see _display_meta -- so the JavaScript does not have to hold a
+# second copy of them.
+CONTOUR_CHART_TRACES = dict(heatmap=0, contour=1, beads=2)
+INTENSITY_CHART_TRACES = dict(image=0, beads=1)
+
 
 def _apply_image_layout(fig, x_max=None, y_max=None):
     """Give ``fig`` the footprint shared by the image-shaped charts.
@@ -301,6 +315,24 @@ def add_centered_message(fig, text, y=0.5, size=20):
         font=dict(size=size),
     )
     return fig
+
+
+def _display_meta(traces, roi_count, hover_template):
+    """Tell the clientside display toggles where the elements they flip live.
+
+    Carried in ``layout.meta``, which is inert as far as plotly is concerned but
+    reaches the browser with the figure. ``roi_count`` is how many leading
+    entries of ``layout.shapes`` are ROI rectangles rather than the scale bar,
+    and ``hover_template`` is the bead hover box the "show info" switch restores
+    (``None`` when the dashboard configured no hover box at all).
+    """
+    return dict(
+        beads_trace=traces["beads"],
+        contour_trace=traces.get("contour"),
+        roi_count=roi_count,
+        hover_template=hover_template,
+        marker_opacity=BEAD_MARKER_OPACITY,
+    )
 
 
 def contour_chart(**group_props):
@@ -392,11 +424,40 @@ def contour_chart(**group_props):
                         size="md",
                         color=THEME["primary"],
                     ),
+                    dmc.Switch(
+                        id="show-contours-switch",
+                        label="Show contours",
+                        checked=False,
+                        size="md",
+                        color=THEME["primary"],
+                    ),
                 ]
             ),
         ],
         **props,
     )
+
+
+# (plotly colorscale name, label shown to the user). "Greyscale" was not a
+# plotly colorscale name and raised on selection; "gray" is the black-to-white
+# ramp the label describes, and is what Fiji shows for a greyscale LUT.
+INTENSITY_COLORSCALES = [
+    ("gray", "Greyscale"),
+    ("Hot", "Hot"),
+    ("Blackbody", "Blackbody"),
+    ("Viridis", "Viridis"),
+    ("Inferno", "Inferno"),
+]
+
+# Both directions of every offered colorscale, resolved once at import and sent
+# to the browser with the page. The clientside colour toggle needs the colour
+# arrays rather than the names: plotly.js knows some of these names but not the
+# "_r" reversed variants, which are a plotly.py convention.
+INTENSITY_COLORSCALE_DATA = {
+    name: px.colors.get_colorscale(name)
+    for value, _ in INTENSITY_COLORSCALES
+    for name in (value, f"{value}_r")
+}
 
 
 def intensity_chart(**group_props):
@@ -479,26 +540,8 @@ def intensity_chart(**group_props):
                         label="Color Scheme",
                         allowDeselect=False,
                         data=[
-                            {
-                                "value": "Greyscale",
-                                "label": "Greyscale",
-                            },
-                            {
-                                "value": "Hot",
-                                "label": "Hot",
-                            },
-                            {
-                                "value": "Blackbody",
-                                "label": "Blackbody",
-                            },
-                            {
-                                "value": "Viridis",
-                                "label": "Viridis",
-                            },
-                            {
-                                "value": "Inferno",
-                                "label": "Inferno",
-                            },
+                            {"value": value, "label": label}
+                            for value, label in INTENSITY_COLORSCALES
                         ],
                         value="Blackbody",
                         leftSection=omero_metrics_components.get_icon(
@@ -514,6 +557,10 @@ def intensity_chart(**group_props):
                         checked=False,
                         size="md",
                         color=THEME["primary"],
+                    ),
+                    dcc.Store(
+                        id="intensity-colorscale-store",
+                        data=INTENSITY_COLORSCALE_DATA,
                     ),
                 ],
                 gap="sm",
@@ -749,6 +796,67 @@ def _add_scale_bar(
         )
 
 
+# The part of the clientside display toggles that both charts share. Spliced
+# into each function below rather than declared once: Dash inlines a clientside
+# callback as a single function expression, so a helper has nowhere to live at
+# the top level of the script. Reads showInfo/showBounds/showPositions/fig from
+# the enclosing signature and leaves `data`, `layout` and `meta` for it.
+_JS_APPLY_DISPLAY = """
+    const meta = (fig && fig.layout && fig.layout.meta) || null;
+    // No meta means the figure is not one of ours to adjust: the empty initial
+    // figure, one of the error figures, or -- on a dcc.Graph declared without a
+    // figure prop -- nothing at all yet.
+    if (!fig || !fig.data || !fig.data.length || !meta) {
+        return window.dash_clientside.no_update;
+    }
+    const data = fig.data.map((trace) => ({...trace}));
+    const layout = {...fig.layout};
+
+    const beads = data[meta.beads_trace];
+    // An opacity, not trace visibility: an invisible trace receives no hover
+    // events, so hiding the markers that way takes the hover box with them.
+    beads.marker = {...beads.marker,
+                    opacity: showPositions ? meta.marker_opacity : 0};
+    // The template is attached on every rebuild, so switching the hover box
+    // back on is just putting it back. Without one there is nothing to show,
+    // and plotly's default x/y box would be worse than nothing.
+    beads.hovertemplate = showInfo ? meta.hover_template : null;
+    beads.hoverinfo = showInfo && meta.hover_template ? "all" : "skip";
+
+    // The ROI rectangles lead layout.shapes; the scale bar follows and stays.
+    layout.shapes = (layout.shapes || []).map(
+        (shape, i) => (i < meta.roi_count ? {...shape, visible: showBounds} : shape)
+    );
+"""
+
+_JS_CONTOUR_DISPLAY = (
+    "function(showInfo, showBounds, showPositions, showContours, fig) {"
+    + _JS_APPLY_DISPLAY
+    + """
+    data[meta.contour_trace].visible = showContours;
+
+    return {...fig, data: data, layout: layout};
+}
+"""
+)
+
+_JS_INTENSITY_DISPLAY = (
+    "function(showInfo, showBounds, showPositions, color, invert, fig, colorscales) {"
+    + _JS_APPLY_DISPLAY
+    + """
+    // px.imshow binds its heatmap to the layout coloraxis, so the colorscale
+    // is set there rather than on the trace.
+    const colorscale = (colorscales || {})[invert ? color + "_r" : color];
+    if (colorscale) {
+        layout.coloraxis = {...layout.coloraxis, colorscale: colorscale};
+    }
+
+    return {...fig, data: data, layout: layout};
+}
+"""
+)
+
+
 def register_contour_chart_callbacks(app, images_attr, hover_info):
     """Register the selectors and the contour chart for a contour dashboard.
 
@@ -786,15 +894,20 @@ def register_contour_chart_callbacks(app, images_attr, hover_info):
                 None,
             )
 
+    # Only the inputs that change what has to be computed rebuild the figure.
+    # The display switches are States here so the first render already agrees
+    # with them, and Inputs of the clientside callback below, which applies them
+    # to the figure in the browser without a server round trip.
     @app.expanded_callback(
         dependencies.Output("contour-chart", "figure"),
         [
             dependencies.Input("channel-select", "value"),
             dependencies.Input("measurement-select", "value"),
             dependencies.Input("precision-slider", "value"),
-            dependencies.Input("show-info-switch", "checked"),
-            dependencies.Input("show-bounds-switch", "checked"),
-            dependencies.Input("show-positions-switch", "checked"),
+            dependencies.State("show-info-switch", "checked"),
+            dependencies.State("show-bounds-switch", "checked"),
+            dependencies.State("show-positions-switch", "checked"),
+            dependencies.State("show-contours-switch", "checked"),
         ],
     )
     def update_contour_chart(
@@ -804,6 +917,7 @@ def register_contour_chart_callbacks(app, images_attr, hover_info):
         show_hover_info,
         show_bounds,
         show_positions,
+        show_contours,
         *,
         session_state,
     ):
@@ -859,40 +973,66 @@ def register_contour_chart_callbacks(app, images_attr, hover_info):
 
             fig = empty_image_figure(x_max, y_max)
             fig.add_trace(
-                # go.Contour(
                 go.Heatmap(
                     x=xi,
                     y=yi,
                     z=ZI,
                     connectgaps=True,
                     zsmooth="best",
-                    # contours=dict(
-                    #     showlabels=True, labelformat=f".{precision_value}f"
-                    # ),
                     colorbar=dict(tickformat=f".{precision_value}f"),
+                )
+            )
+            # Added whether or not it is shown: the switch flips its visibility
+            # in the browser, which needs the trace and its z already in place.
+            fig.add_trace(
+                go.Contour(
+                    x=xi,
+                    y=yi,
+                    z=ZI,
+                    connectgaps=True,
+                    contours=dict(
+                        coloring="lines",
+                        showlabels=True,
+                        labelformat=f".{precision_value}f",
+                    ),
+                    line=dict(width=1),
+                    colorscale=[[0, "white"], [1, "white"]],
+                    showscale=False,
+                    hoverinfo="skip",
+                    visible=show_contours,
                 )
             )
             # A copy, not an update: hover_info belongs to the caller and
             # would otherwise collect a row per measurement ever selected.
-            chart_hover_info = (
-                {**hover_info, measurement_value: measurement_value}
-                if show_hover_info
-                else None
-            )
+            chart_hover_info = {
+                **hover_info,
+                measurement_value: measurement_value,
+            }
 
             fig.add_trace(
                 beads_scatter_plot(
-                    beads_location_df, show_positions, chart_hover_info
+                    beads_location_df,
+                    show_positions,
+                    chart_hover_info,
+                    show_hover_info,
                 )
             )
 
-            if show_bounds:
-                # Ahead of the scale bar: update_layout replaces the shape
-                # list, which _add_scale_bar then appends its line to.
-                roi_rect = beads_frames_plot(
-                    beads_location_df, context["min_lateral_distance_px"]
-                )
-                fig.update_layout(shapes=roi_rect)
+            # Ahead of the scale bar: update_layout replaces the shape list,
+            # which _add_scale_bar then appends its line to.
+            roi_rect = beads_frames_plot(
+                beads_location_df,
+                context["min_lateral_distance_px"],
+                visible=show_bounds,
+            )
+            fig.update_layout(
+                shapes=roi_rect,
+                meta=_display_meta(
+                    CONTOUR_CHART_TRACES,
+                    len(roi_rect),
+                    _hover_template(chart_hover_info),
+                ),
+            )
 
             _add_scale_bar(fig, x_pixel_size, x_max, y_max)
 
@@ -916,6 +1056,21 @@ def register_contour_chart_callbacks(app, images_attr, hover_info):
         except Exception as e:
             return add_centered_message(empty_image_figure(x_max, y_max), str(e))
 
+    app.clientside_callback(
+        _JS_CONTOUR_DISPLAY,
+        dependencies.Output("contour-chart", "figure", allow_duplicate=True),
+        [
+            dependencies.Input("show-info-switch", "checked"),
+            dependencies.Input("show-bounds-switch", "checked"),
+            dependencies.Input("show-positions-switch", "checked"),
+            dependencies.Input("show-contours-switch", "checked"),
+        ],
+        dependencies.State("contour-chart", "figure"),
+        # Nothing to apply until update_contour_chart has drawn the figure, and
+        # that callback already renders the switches' initial values itself.
+        prevent_initial_call=True,
+    )
+
 
 def register_intensity_chart_callbacks(app, images_attr, hover_info=None):
     """Register the callbacks for the intensity chart.
@@ -928,15 +1083,19 @@ def register_intensity_chart_callbacks(app, images_attr, hover_info=None):
     taking that table and returning one value per bead.
     """
 
+    # Only the channel rebuilds the figure -- it is the one input that changes
+    # the image and the bead subset. The colour and display inputs are States
+    # here so the first render already agrees with them, and Inputs of the
+    # clientside callback below, which applies them in the browser.
     @app.expanded_callback(
         dependencies.Output("intensity-chart", "figure"),
         [
             dependencies.Input("intensity-chart-channel-select", "value"),
-            dependencies.Input("intensity-chart-color-select", "value"),
-            dependencies.Input("invert-color-switch", "checked"),
-            dependencies.Input("show-info-switch", "checked"),
-            dependencies.Input("show-bounds-switch", "checked"),
-            dependencies.Input("show-positions-switch", "checked"),
+            dependencies.State("intensity-chart-color-select", "value"),
+            dependencies.State("invert-color-switch", "checked"),
+            dependencies.State("show-info-switch", "checked"),
+            dependencies.State("show-bounds-switch", "checked"),
+            dependencies.State("show-positions-switch", "checked"),
         ],
     )
     def update_image(
@@ -975,19 +1134,23 @@ def register_intensity_chart_callbacks(app, images_attr, hover_info=None):
                 beads_scatter_plot(
                     beads_location_df,
                     show_positions,
-                    hover_info if show_hover_info else None,
+                    hover_info,
+                    show_hover_info,
                 )
             )
 
-            if show_bounds:
-                roi_rect = beads_frames_plot(
-                    beads_location_df, min_lateral_distance_px
-                )
-                fig.update_layout(shapes=roi_rect)
-            else:
-                fig.update_layout(shapes=None)
-
+            # Ahead of the scale bar: update_layout replaces the shape list,
+            # which _add_scale_bar then appends its line to.
+            roi_rect = beads_frames_plot(
+                beads_location_df, min_lateral_distance_px, visible=show_bounds
+            )
             fig.update_layout(
+                shapes=roi_rect,
+                meta=_display_meta(
+                    INTENSITY_CHART_TRACES,
+                    len(roi_rect),
+                    _hover_template(hover_info),
+                ),
                 xaxis=dict(showgrid=False, zeroline=False, visible=False),
                 yaxis=dict(showgrid=False, zeroline=False, visible=False),
                 coloraxis_colorbar=dict(
@@ -998,14 +1161,34 @@ def register_intensity_chart_callbacks(app, images_attr, hover_info=None):
                 ),
             )
 
+            # mip_z is indexed (y, x), so the scale bar's own axis is shape[1].
             _add_scale_bar(
-                fig, mm_image.voxel_size_x_micron, mip_z.shape[0], mip_z.shape[0]
+                fig, mm_image.voxel_size_x_micron, mip_z.shape[1], mip_z.shape[0]
             )
 
             return fig
 
         except Exception as e:
             return add_centered_message(empty_image_figure(), str(e))
+
+    app.clientside_callback(
+        _JS_INTENSITY_DISPLAY,
+        dependencies.Output("intensity-chart", "figure", allow_duplicate=True),
+        [
+            dependencies.Input("show-info-switch", "checked"),
+            dependencies.Input("show-bounds-switch", "checked"),
+            dependencies.Input("show-positions-switch", "checked"),
+            dependencies.Input("intensity-chart-color-select", "value"),
+            dependencies.Input("invert-color-switch", "checked"),
+        ],
+        [
+            dependencies.State("intensity-chart", "figure"),
+            dependencies.State("intensity-colorscale-store", "data"),
+        ],
+        # Nothing to apply until update_image has drawn the figure, and that
+        # callback already renders these inputs' initial values itself.
+        prevent_initial_call=True,
+    )
 
     @app.expanded_callback(
         dependencies.Output("intensity-chart-channel-select", "data"),
@@ -1047,7 +1230,12 @@ def hover_flag(column, *more_columns):
     return flag
 
 
-def beads_frames_plot(df, half_min_distance_px):
+def beads_frames_plot(df, half_min_distance_px, visible=True):
+    """ROI rectangles for the beads in ``df``, as ``layout.shapes`` entries.
+
+    They are always built, ``visible`` or not, so that the shape list keeps a
+    fixed length for the clientside switch that shows and hides them.
+    """
     df["color"] = np.where(df["considered_valid"] == "True", "green", "red")
 
     bead_frames = [
@@ -1059,6 +1247,7 @@ def beads_frames_plot(df, half_min_distance_px):
             y1=row.center_y + half_min_distance_px,
             xref="x",
             yref="y",
+            visible=visible,
             line=dict(
                 color=row["color"],
                 width=1,
@@ -1070,7 +1259,25 @@ def beads_frames_plot(df, half_min_distance_px):
     return bead_frames
 
 
-def beads_scatter_plot(df, show_positions, hover_info=None):
+def _hover_template(hover_info):
+    """The beads hover box for ``hover_info``, or ``None`` if there is none.
+
+    Kept apart from the trace so the same template can be handed to the browser
+    in ``layout.meta``, for the switch that turns the hover box back on.
+    """
+    if not hover_info:
+        return None
+
+    return (
+        "".join(
+            f"<b>{label}:</b> %{{customdata[{i}]}}<br>"
+            for i, label in enumerate(hover_info)
+        )
+        + "<extra></extra>"
+    )
+
+
+def beads_scatter_plot(df, show_positions, hover_info=None, show_hover_info=True):
     """Scatter of the bead locations, hover box described by ``hover_info``.
 
     ``hover_info`` holds the hover rows in display order: each key is the label
@@ -1081,10 +1288,15 @@ def beads_scatter_plot(df, show_positions, hover_info=None):
     opacity rather than trace visibility: a trace with ``visible=False`` is
     dropped from the plot and receives no hover events, so hiding the markers
     that way would take the hover box down with them.
+
+    ``show_hover_info`` only withholds the template: the customdata behind it is
+    attached either way, since it costs nothing to build from a table already
+    loaded and leaves the switch nothing to fetch when it is turned back on.
     """
     df["color"] = np.where(df["considered_valid"] == "True", "green", "red")
 
-    if hover_info is not None:
+    hovertemplate = _hover_template(hover_info)
+    if hovertemplate is not None:
         customdata = np.stack(
             [
                 np.asarray(
@@ -1094,17 +1306,10 @@ def beads_scatter_plot(df, show_positions, hover_info=None):
             ],
             axis=-1,
         )
-        hovertemplate = (
-            "".join(
-                f"<b>{label}:</b> %{{customdata[{i}]}}<br>"
-                for i, label in enumerate(hover_info)
-            )
-            + "<extra></extra>"
-        )
-
     else:
         customdata = None
-        hovertemplate = None
+
+    show_hover_info = show_hover_info and hovertemplate is not None
 
     beads_location_plot = go.Scatter(
         y=df["center_y"],
@@ -1114,16 +1319,16 @@ def beads_scatter_plot(df, show_positions, hover_info=None):
         marker=dict(
             size=6,
             symbol="circle",
-            opacity=0.8 if show_positions else 0,
+            opacity=BEAD_MARKER_OPACITY if show_positions else 0,
             color=df["color"],
         ),
         text=df["channel_nr"],
         customdata=customdata,
-        hovertemplate=hovertemplate,
+        hovertemplate=hovertemplate if show_hover_info else None,
         # The markers stay in the plot when they are transparent, so without
         # this the default x/y/text box would show up on a chart the user
         # asked to have no hover info on.
-        hoverinfo="skip" if hover_info is None else None,
+        hoverinfo=None if show_hover_info else "skip",
     )
 
     return beads_location_plot

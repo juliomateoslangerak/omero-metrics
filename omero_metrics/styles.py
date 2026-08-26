@@ -263,11 +263,3 @@ PLOT_LAYOUT = {
     "xaxis_zeroline": False,
     "yaxis_zeroline": False,
 }
-
-
-LINE_CHART_SERIES = [
-    {"name": "Diagonal (↘)", "color": "violet.9"},
-    {"name": "Diagonal (↗)", "color": "blue.9"},
-    {"name": "Horizontal (→)", "color": "pink.9"},
-    {"name": "Vertical (↓)", "color": "teal.9"},
-]
