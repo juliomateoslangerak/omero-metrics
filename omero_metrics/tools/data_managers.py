@@ -25,6 +25,7 @@ DATASET_CONTEXT_LOADERS = {
     "FieldIlluminationDataset": context_loaders.FieldIlluminationDataset,
     "PSFBeadsDataset": context_loaders.PSFBeadsDataset,
     "CoRegistrationDataset": context_loaders.CoRegistrationDataset,
+    "StageDriftDataset": context_loaders.StageDriftDataset,
 }
 
 IMAGE_CONTEXT_LOADERS = {
@@ -37,6 +38,9 @@ IMAGE_CONTEXT_LOADERS = {
     },
     "CoRegistrationDataset": {
         "input_data": context_loaders.CoRegistrationDataset_input_data_Image,
+    },
+    "StageDriftDataset": {
+        "input_data": context_loaders.StageDriftDataset_input_data_Image,
     },
 }
 

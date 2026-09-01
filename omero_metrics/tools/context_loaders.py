@@ -238,6 +238,27 @@ def CoRegistrationDataset_input_data_Image(im):
     im.context = serialize(context)
 
 
+def StageDriftDataset_input_data_Image(im):
+    im.mm_image = load.load_image(im.omero_image, load_array=True)
+    mip_z = np.max(im.mm_image.array_data[0, ...], axis=0)
+    image_properties = load.load_table_mm_metrics(
+        im.dataset_manager.mm_dataset.output["image_properties"]
+    )
+    image_properties = image_properties.loc[
+        image_properties["image_id"] == im.omero_image.getId()
+    ]
+
+    context = {
+        "image_index": im.image_index,
+        "mm_image": im.mm_image,
+        "mm_dataset": im.dataset_manager.mm_dataset,
+        "mip_z": mip_z,
+        "image_properties": image_properties,
+        "assay_config": im.dataset_manager.assay_configuration,
+    }
+    im.context = serialize(context)
+
+
 ## Dataset context loaders
 def FieldIlluminationDataset(dm):
     dm.load_data(load_images=True, force_reload=True)
@@ -304,6 +325,25 @@ def CoRegistrationDataset(dm):
         "channel_names": channel_names,
         "bead_properties": bead_properties,
         "min_lateral_distance_px": min_lateral_distance_px,
+        "assay_config": dm.assay_configuration,
+    }
+    dm.context = serialize(context)
+
+
+def StageDriftDataset(dm):
+    dm.load_data(load_images=False, force_reload=True)
+    image_properties = {
+        col.name: col.values for col in dm.mm_dataset.output.image_properties
+    }
+    mean_square_displacements = {
+        col.name: col.values
+        for col in dm.mm_dataset.output.mean_square_displacements
+    }
+
+    context = {
+        "mm_dataset": dm.mm_dataset,
+        "image_properties": image_properties,
+        "mean_square_displacements": mean_square_displacements,
         "assay_config": dm.assay_configuration,
     }
     dm.context = serialize(context)

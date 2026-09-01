@@ -24,6 +24,7 @@ DATASET_TO_INPUT_PARAMETERS = {
     "FieldIlluminationDataset": mm_schema.FieldIlluminationInputParameters,
     "PSFBeadsDataset": mm_schema.PSFBeadsInputParameters,
     "CoRegistrationDataset": mm_schema.CoRegistrationInputParameters,
+    "StageDriftDataset": mm_schema.StageDriftInputParameters,
 }
 
 SAMPLE_TYPE_LOOKUP = {
