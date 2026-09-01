@@ -37,12 +37,6 @@ You need to update tools/data_manager to add the new analysis type and to manage
 
 Make sure to add the django plotly dash pages to the urls.py file to trigger their registrations.
 
-
-
-
-
- 
-
 # Running Debug Mode on Pycharm
 To run the debug mode and run omero locally using a django test server. 
 
