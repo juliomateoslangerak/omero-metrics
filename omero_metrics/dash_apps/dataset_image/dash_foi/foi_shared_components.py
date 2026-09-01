@@ -19,10 +19,10 @@ from omero_metrics.tools.serializers import deserialize
 # the columns are renamed to and the name of the series the chart looks for --
 # they were separately maintained before, and drifted.
 INTENSITY_PROFILES = [
-    (r"ch\d+_leftTop_to_rightBottom", "Diagonal (↘)", "violet.9"),
-    (r"ch\d+_leftBottom_to_rightTop", "Diagonal (↗)", "blue.9"),
-    (r"ch\d+_center_horizontal", "Horizontal (→)", "pink.9"),
-    (r"ch\d+_center_vertical", "Vertical (↓)", "teal.9"),
+    (r"ch\d+_leftTop_to_rightBottom", "Diagonal (↘)", "blue.3"),
+    (r"ch\d+_leftBottom_to_rightTop", "Diagonal (↗)", "blue.7"),
+    (r"ch\d+_center_horizontal", "Horizontal (→)", "red.3"),
+    (r"ch\d+_center_vertical", "Vertical (↓)", "red.7"),
 ]
 
 # The ``series`` of the chart, in the order they are legended.
