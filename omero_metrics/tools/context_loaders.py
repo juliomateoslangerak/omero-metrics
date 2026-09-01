@@ -333,11 +333,11 @@ def CoRegistrationDataset(dm):
 def StageDriftDataset(dm):
     dm.load_data(load_images=False, force_reload=True)
     image_properties = {
-        col.name: col.values for col in dm.mm_dataset.output.image_properties
+        col.name: col.values for col in dm.mm_dataset.output.image_properties.columns
     }
     mean_square_displacements = {
         col.name: col.values
-        for col in dm.mm_dataset.output.mean_square_displacements
+        for col in dm.mm_dataset.output.mean_square_displacements.columns
     }
 
     context = {
