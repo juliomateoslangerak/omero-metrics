@@ -239,8 +239,7 @@ def CoRegistrationDataset_input_data_Image(im):
 
 
 def StageDriftDataset_input_data_Image(im):
-    im.mm_image = load.load_image(im.omero_image, load_array=True)
-    mip_z = np.max(im.mm_image.array_data[0, ...], axis=0)
+    im.mm_image = load.load_image(im.omero_image, load_array=False)
     image_properties = load.load_table_mm_metrics(
         im.dataset_manager.mm_dataset.output["image_properties"]
     )
@@ -252,7 +251,6 @@ def StageDriftDataset_input_data_Image(im):
         "image_index": im.image_index,
         "mm_image": im.mm_image,
         "mm_dataset": im.dataset_manager.mm_dataset,
-        "mip_z": mip_z,
         "image_properties": image_properties,
         "assay_config": im.dataset_manager.assay_configuration,
     }
