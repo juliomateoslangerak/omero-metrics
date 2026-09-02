@@ -391,17 +391,31 @@ def HarmonizedMetricsDatasetCollection(pm):
                     # We should consider keeping time in the date
                     "date": dataset.acquisition_datetime.split("T")[0],
                     "dataset_id": int(dataset.data_reference.omero_object_id),
-                    **{
-                        km[x.key]: km[x.value]
-                        for km in dataset.output.key_measurements
-                    },
+                    **(
+                        {
+                            km[x.key]: km[x.value]
+                            for km in dataset.output.key_measurements
+                        }
+                        if x.key
+                        else {
+                            "no_key": km[x.value]
+                            for km in dataset.output.key_measurements
+                        }
+                    ),
                     **(
                         {
                             f"{km[x.key]}_err": km[x.error_bar]
                             for km in dataset.output.key_measurements
                         }
-                        if x.error_bar
-                        else {}
+                        if x.key and x.error_bar
+                        else (
+                            {
+                                "no_key_err": km[x.error_bar]
+                                for km in dataset.output.key_measurements
+                            }
+                            if x.error_bar
+                            else {}
+                        )
                     ),
                     **(
                         {
@@ -410,17 +424,35 @@ def HarmonizedMetricsDatasetCollection(pm):
                             )
                             for km in dataset.output.key_measurements
                         }
-                        if x.wavelength_nm
-                        and not any(
-                            [
-                                np.isnan(km[x.wavelength_nm])
+                        if x.key and x.wavelength_nm
+                        else (
+                            {
+                                "no_key_rgb": wavelength_to_rgb(km[x.wavelength_nm])
                                 for km in dataset.output.key_measurements
-                            ]
+                            }
+                            if x.wavelength_nm
+                            and not any(
+                                [
+                                    np.isnan(km[x.wavelength_nm])
+                                    for km in dataset.output.key_measurements
+                                ]
+                            )
+                            else (
+                                {
+                                    f"{km[x.key]}_rgb": idx_to_rgb(i)
+                                    for i, km in enumerate(
+                                        dataset.output.key_measurements
+                                    )
+                                }
+                                if x.key
+                                else {
+                                    "no_key_rgb": idx_to_rgb(i)
+                                    for i, km in enumerate(
+                                        dataset.output.key_measurements
+                                    )
+                                }
+                            )
                         )
-                        else {
-                            f"{km[x.key]}_rgb": idx_to_rgb(i)
-                            for i, km in enumerate(dataset.output.key_measurements)
-                        }
                     ),
                 }
             ]
