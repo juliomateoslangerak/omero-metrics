@@ -335,7 +335,7 @@ def _display_meta(traces, roi_count, hover_template):
     )
 
 
-def contour_chart(**group_props):
+def contour_chart(measurements, default_measurement=None, **group_props):
     """The contour chart beside its controls.
 
     Extra keyword arguments are passed through to ``dmc.Group``, so a dashboard
@@ -378,6 +378,8 @@ def contour_chart(**group_props):
                     ),
                     dmc.Select(
                         id="measurement-select",
+                        value=default_measurement,
+                        data=measurements,
                         clearable=False,
                         allowDeselect=False,
                         w="200",
@@ -438,9 +440,7 @@ def contour_chart(**group_props):
     )
 
 
-# (plotly colorscale name, label shown to the user). "Greyscale" was not a
-# plotly colorscale name and raised on selection; "gray" is the black-to-white
-# ramp the label describes, and is what Fiji shows for a greyscale LUT.
+# Color scales shown in intensity plots
 INTENSITY_COLORSCALES = [
     ("gray", "Greyscale"),
     ("Hot", "Hot"),
@@ -867,8 +867,6 @@ def register_contour_chart_callbacks(app, images_attr, hover_info):
     @app.expanded_callback(
         dependencies.Output("channel-select", "data"),
         dependencies.Output("channel-select", "value"),
-        dependencies.Output("measurement-select", "data"),
-        dependencies.Output("measurement-select", "value"),
         [dependencies.Input("blank-input", "children")],
     )
     def update_dropdown_menus(_blank_input, *, session_state):
@@ -880,18 +878,11 @@ def register_contour_chart_callbacks(app, images_attr, hover_info):
                     for i, name in enumerate(context["channel_names"])
                 ],
                 "0",
-                [
-                    {"label": c, "value": c}
-                    for c in context["bead_properties"].keys()
-                ],
-                None,
             )
         except Exception:
             return (
                 [{"label": "Error loading channels", "value": "0"}],
                 "0",
-                [],
-                None,
             )
 
     # Only the inputs that change what has to be computed rebuild the figure.
@@ -1072,11 +1063,9 @@ def register_contour_chart_callbacks(app, images_attr, hover_info):
     )
 
 
-def register_intensity_chart_callbacks(app, images_attr, hover_info=None):
+def register_intensity_chart_callbacks(app, hover_info=None):
     """Register the callbacks for the intensity chart.
 
-    ``images_attr`` names the ``input_data`` field holding the analysed images,
-    e.g. ``"psf_beads_images"`` or ``"multiwavelength_beads_images"``.
     ``hover_info`` describes the bead hover box. Rows of the beads scatter hover box,
     in display order. Each key is the label shown to the user;
     each value is either a column of the bead properties table or a callable

@@ -106,7 +106,6 @@ BEADS_HOVER_INFO = {
 
 dsc.register_intensity_chart_callbacks(
     omero_image_coregistration,
-    "multiwavelength_beads_images",
     hover_info=BEADS_HOVER_INFO,
 )
 

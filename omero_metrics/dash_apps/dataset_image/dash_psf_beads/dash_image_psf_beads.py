@@ -88,9 +88,7 @@ BEADS_HOVER_INFO = {
     ),
 }
 
-dsc.register_intensity_chart_callbacks(
-    omero_image_psf_beads, "psf_beads_images", BEADS_HOVER_INFO
-)
+dsc.register_intensity_chart_callbacks(omero_image_psf_beads, BEADS_HOVER_INFO)
 
 
 @omero_image_psf_beads.expanded_callback(

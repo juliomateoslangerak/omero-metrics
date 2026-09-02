@@ -4,6 +4,26 @@ from django_plotly_dash import DjangoDash
 from omero_metrics.dash_apps.dataset_image import dataset_shared_components as dsc
 from omero_metrics.styles import CONTAINER_STYLE, MANTINE_THEME
 
+_MEASUREMENTS = [
+    {"label": "FWHM X pixels", "value": "fwhm_pixel_x"},
+    {"label": "FWHM Y pixels", "value": "fwhm_pixel_y"},
+    {"label": "FWHM Z pixels", "value": "fwhm_pixel_z"},
+    {"label": "FWHM X microns", "value": "fwhm_micron_x"},
+    {"label": "FWHM Y microns", "value": "fwhm_micron_y"},
+    {"label": "FWHM X microns", "value": "fwhm_micron_z"},
+    {"label": "FWHM lateral asymetry", "value": "fwhm_lateral_asymmetry_ratio"},
+    {"label": "FWHM axial asymetry", "value": "fwhm_axial_asymmetry_ratio"},
+    {"label": "R^2 X gaussian fit", "value": "fit_gaussian_r2_x"},
+    {"label": "R^2 Y gaussian fit", "value": "fit_gaussian_r2_y"},
+    {"label": "R^2 Z gaussian fit", "value": "fit_gaussian_r2_z"},
+    {"label": "Integrated intensity", "value": "intensity_integrated"},
+    {"label": "Max intensity", "value": "intensity_max"},
+    {"label": "Min intensity", "value": "intensity_min"},
+    {"label": "Std intensity", "value": "intensity_std"},
+]
+_DEFAULT_MEASUREMENT = "fwhm_lateral_asymmetry_ratio"
+
+
 dashboard_name = "omero_dataset_psf_beads"
 
 omero_dataset_psf_beads = DjangoDash(
@@ -25,7 +45,10 @@ omero_dataset_psf_beads.layout = dmc.MantineProvider(
         dmc.Container(
             children=[
                 dsc.blank_input(),
-                dsc.contour_chart(),
+                dsc.contour_chart(
+                    measurements=_MEASUREMENTS,
+                    default_measurement=_DEFAULT_MEASUREMENT,
+                ),
                 dsc.dataset_table_paper(),
             ],
             style=CONTAINER_STYLE,
