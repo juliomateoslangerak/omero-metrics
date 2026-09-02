@@ -8,6 +8,7 @@ import plotly.graph_objects as go
 from dash import dcc, dependencies, html, no_update
 from dash_iconify import DashIconify
 from linkml_runtime.dumpers import JSONDumper, YAMLDumper
+from plotly.subplots import make_subplots
 from scipy.interpolate import griddata
 from scipy.spatial import QhullError
 
@@ -215,6 +216,35 @@ IMAGE_CHART_MARGIN = dict(l=45, r=15, t=15, b=45)
 # Plotly widens the right margin to fit the colorbar. Allow for it so the
 # height below is derived from the width the plotting area actually gets.
 IMAGE_COLORBAR_WIDTH = 90
+
+TIME_CHART_WIDTH = 800
+# Height of one measurement's row and of the gap holding its title. The rows are
+# stacked, so the figure grows with the selection instead of squeezing every
+# selected measurement into a fixed box.
+TIME_CHART_ROW_HEIGHT = 240
+TIME_CHART_ROW_SPACING = 45
+# The right margin holds the legend, which stands outside the plotting area.
+TIME_CHART_MARGIN = dict(l=70, r=160, t=30, b=45)
+
+# The time course columns are named "<measurement>_<unit>_<axis>", as in
+# square_displacement_micron2_3d or velocity_micron_per_sec_x: the axis is the
+# last "_"-separated token and the unit -- which holds underscores of its own --
+# is whatever stands between it and the measurement name.
+TIME_CHART_AXES = ("z", "y", "x", "3d")
+# Fixed per axis, so adding a measurement to the selection or taking one out
+# never repaints the curves that stay.
+TIME_CHART_AXIS_COLORS = {
+    "z": "#2a78d6",
+    "y": "#eb6834",
+    "x": "#1baf7a",
+    "3d": "#eda100",
+}
+# A measurement is reported both in pixels and in microns, which are the same
+# values at scales the voxel size apart. Each unit family gets a y axis of its
+# own -- pixels on the left, microns on the right -- and the line style says
+# which of the two a curve is read against.
+TIME_CHART_UNIT_FAMILIES = ("pixel", "micron")
+TIME_CHART_UNIT_DASHES = {"pixel": "dot", "micron": "solid"}
 
 # Marker opacity for the visible bead positions.
 BEAD_MARKER_OPACITY = 0.8
@@ -561,6 +591,248 @@ def intensity_chart(**group_props):
                     dcc.Store(
                         id="intensity-colorscale-store",
                         data=INTENSITY_COLORSCALE_DATA,
+                    ),
+                ],
+                gap="sm",
+            ),
+        ],
+        **props,
+    )
+
+
+def _unit_family(unit):
+    return "pixel" if unit.startswith("pixel") else "micron"
+
+
+def _unit_label(unit):
+    return unit.replace("_per_sec", "/s").replace("2", "²")
+
+
+def _time_chart_series(columns, measurements):
+    """The ``(measurement, unit, axis, column)`` rows to trace, in drawing order.
+
+    The columns holding each of the selected ``measurements`` are picked out of
+    ``columns`` and split into their unit and axis parts. Columns whose last
+    token is not one of the spatial axes are left out: the bookkeeping columns
+    standing in the same table, such as ``lag_from_reference_t_points``, are not
+    time courses of a measurement.
+
+    Ordered by selection, then unit family, then axis, so that a measurement's
+    left-hand curves are traced and listed ahead of its right-hand ones.
+    """
+    series = []
+    for measurement in measurements:
+        traced = []
+        for column in columns:
+            if not column.startswith(f"{measurement}_"):
+                continue
+            unit, _, axis = column[len(measurement) + 1 :].rpartition("_")
+            if unit and axis in TIME_CHART_AXIS_COLORS:
+                traced.append((measurement, unit, axis, column))
+        series += sorted(
+            traced,
+            key=lambda s: (
+                TIME_CHART_UNIT_FAMILIES.index(_unit_family(s[1])),
+                TIME_CHART_AXES.index(s[2]),
+            ),
+        )
+    return series
+
+
+def _apply_time_layout(fig, rows=1):
+    """Give ``fig`` the footprint shared by the time course charts."""
+    fig.update_layout(
+        width=TIME_CHART_WIDTH,
+        height=rows * TIME_CHART_ROW_HEIGHT
+        + TIME_CHART_MARGIN["t"]
+        + TIME_CHART_MARGIN["b"],
+        margin=TIME_CHART_MARGIN,
+        plot_bgcolor=THEME["background"],
+        paper_bgcolor=THEME["background"],
+        # Per subplot, so a time point can be read across the axes of one
+        # measurement without picking out its curves one by one.
+        hovermode="x unified",
+        font=dict(color=THEME["text"]["primary"]),
+        legend=dict(
+            x=1.02,
+            xanchor="left",
+            y=1,
+            yanchor="top",
+            # The groups only gather a measurement's curves under its name;
+            # clicking still shows and hides one curve at a time.
+            groupclick="toggleitem",
+            font=dict(size=11),
+            grouptitlefont=dict(size=12, color=THEME["text"]["secondary"]),
+        ),
+    )
+    return fig
+
+
+def empty_time_figure(rows=1):
+    """Figure matching the time chart footprint, ready for traces or messages."""
+    return _apply_time_layout(go.Figure(), rows)
+
+
+def time_figure(image_properties, measurements, measurement_labels=None):
+    """Time courses of the selected measurements, one measurement per row.
+
+    Every measurement is reported per axis and in two unit families, pixels and
+    microns, which stand the voxel size apart and so cannot share a scale. They
+    get a y axis each, pixels on the left and microns on the right, both of them
+    autoranged: the two sides are not a fixed conversion of one another, as the
+    voxel size differs between z and the lateral axes, so only a curve's own
+    side can be read off against it.
+
+    Several selected measurements are given a row each rather than a further
+    pair of scales on the same one. They are different quantities -- a
+    displacement and its square -- and stacking them against a shared pair of
+    axes would invent a correspondence that is not in the data.
+
+    ``measurement_labels`` maps a measurement onto the name the selector shows
+    for it, and falls back to the measurement itself.
+    """
+    measurement_labels = measurement_labels or {}
+    series = _time_chart_series(image_properties.columns, measurements)
+    if not series:
+        return add_centered_message(
+            empty_time_figure(), "No measurement to display", size=16
+        )
+
+    rows = [m for m in measurements if any(s[0] == m for s in series)]
+    plot_height = len(rows) * TIME_CHART_ROW_HEIGHT
+    fig = make_subplots(
+        rows=len(rows),
+        cols=1,
+        shared_xaxes=True,
+        # make_subplots takes the gap between rows as a fraction of the whole
+        # plotting area, which grows with the number of rows.
+        vertical_spacing=TIME_CHART_ROW_SPACING / plot_height,
+        subplot_titles=[measurement_labels.get(m, m) for m in rows],
+        specs=[[{"secondary_y": True}] for _ in rows],
+    )
+    _apply_time_layout(fig, len(rows))
+
+    # Which units ended up on either side of a row, in the order they were
+    # traced, to title that row's axes with them.
+    row_units = {}
+    for measurement, unit, axis, column in series:
+        row = rows.index(measurement) + 1
+        family = _unit_family(unit)
+        row_units.setdefault((row, family), []).append(_unit_label(unit))
+        fig.add_trace(
+            go.Scatter(
+                x=image_properties["t_point"],
+                y=image_properties[column],
+                name=f"{axis} ({_unit_label(unit)})",
+                mode="lines",
+                line=dict(
+                    color=TIME_CHART_AXIS_COLORS[axis],
+                    dash=TIME_CHART_UNIT_DASHES[family],
+                    width=2,
+                ),
+                legendgroup=measurement,
+                legendgrouptitle_text=(
+                    measurement_labels.get(measurement, measurement)
+                    if len(rows) > 1
+                    else None
+                ),
+            ),
+            row=row,
+            col=1,
+            secondary_y=family == "micron",
+        )
+
+    for row in range(1, len(rows) + 1):
+        _apply_time_row_axes(fig, row, row_units)
+    fig.update_xaxes(
+        showgrid=False,
+        zeroline=False,
+        linecolor=THEME["border"],
+        title_text="Time point",
+        row=len(rows),
+        col=1,
+    )
+    # The row titles are annotations, so the subplot font is set here rather
+    # than through the axes.
+    fig.update_annotations(font=dict(size=13, color=THEME["text"]["primary"]))
+
+    return fig
+
+
+def _apply_time_row_axes(fig, row, row_units):
+    """Title the y axes of one row after the units traced against them.
+
+    A unit family the row has no curve in -- velocities are only reported in
+    microns -- gets no axis at all. Only one of the two carries the grid: a
+    second set of lines from the other side would not align with it.
+    """
+    gridded = "pixel" if (row, "pixel") in row_units else "micron"
+    for family in TIME_CHART_UNIT_FAMILIES:
+        units = row_units.get((row, family))
+        fig.update_yaxes(
+            visible=bool(units),
+            title_text=" / ".join(dict.fromkeys(units)) if units else None,
+            showgrid=family == gridded,
+            gridcolor=THEME["border"],
+            zeroline=family == gridded,
+            zerolinecolor=THEME["border"],
+            linecolor=THEME["border"],
+            secondary_y=family == "micron",
+            row=row,
+            col=1,
+        )
+
+
+def time_chart(measurements, default_measurement=None, **group_props):
+    """The time course chart beside its controls.
+
+    Extra keyword arguments are passed through to ``dmc.Group``, so a dashboard
+    can override the defaults or add its own props. Compose ``contour_chart()``
+    and ``contour_controls()`` directly for a different arrangement.
+    """
+    props = {
+        "justify": "flex-start",
+        "gap": "xl",
+        "wrap": "nowrap",
+        "align": "flex-start",
+        "direction": "row",
+        **group_props,
+    }
+    return dmc.Flex(
+        children=[
+            dcc.Graph(
+                id="time-chart",
+                figure={},
+                style={"width": TIME_CHART_WIDTH},
+            ),
+            dmc.Stack(
+                children=[
+                    dmc.Divider(
+                        label="Measurement selection",
+                        labelPosition="center",
+                    ),
+                    dmc.MultiSelect(
+                        id="time-chart-measurement-multiselect",
+                        label="Measurement",
+                        value=default_measurement,
+                        data=measurements,
+                        w="100%",
+                        leftSection=omero_metrics_components.get_icon(
+                            icon="ph:magnifying-glass"
+                        ),
+                        rightSection=omero_metrics_components.get_icon(
+                            "radix-icons:chevron-down"
+                        ),
+                    ),
+                    dmc.Divider(
+                        label="Display Options",
+                        labelPosition="center",
+                        mt="md",
+                    ),
+                    dmc.Divider(
+                        label="Color Settings",
+                        labelPosition="center",
+                        mt="md",
                     ),
                 ],
                 gap="sm",
@@ -1191,6 +1463,47 @@ def register_intensity_chart_callbacks(app, hover_info=None):
             {"label": c.name, "value": str(i)}
             for i, c in enumerate(channel_series.channels)
         ], "0"
+
+
+def register_time_chart_callbacks(app):
+    @app.expanded_callback(
+        dependencies.Output("time-chart", "figure"),
+        [
+            dependencies.Input("time-chart-measurement-multiselect", "value"),
+            # For the names the selector shows, so that the rows of the figure
+            # are titled the way the dashboard named its measurements.
+            dependencies.State("time-chart-measurement-multiselect", "data"),
+        ],
+    )
+    def update_time_chart(
+        measurements_multiselect_value,
+        measurements_multiselect_data,
+        *,
+        session_state,
+    ):
+        try:
+            context = deserialize(session_state["context"])
+            return time_figure(
+                context["image_properties"],
+                measurements_multiselect_value or [],
+                _multiselect_labels(measurements_multiselect_data),
+            )
+
+        except Exception as e:
+            return add_centered_message(empty_time_figure(), str(e))
+
+
+def _multiselect_labels(data):
+    """The ``value -> label`` mapping of a ``dmc.MultiSelect``'s ``data``.
+
+    Its options are either ``{"label": ..., "value": ...}`` mappings or bare
+    strings standing for both at once.
+    """
+    options = [
+        option if isinstance(option, dict) else {"label": option, "value": option}
+        for option in data or []
+    ]
+    return {option["value"]: option["label"] for option in options}
 
 
 def yes_no(flags):
