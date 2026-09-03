@@ -39,7 +39,7 @@ def get_title_line_chart(project_id, value):
     dates = context["dates"]
     kkm_config = context["assay_config"].kkm_configuration
     dfs = context["key_measurements_list"]
-    measurement = 0
+    measurement = next(iter(kkm_config))
     df = get_data_trends(kkm_config, measurement, dates, dfs)
     channels = [c for c in df.columns if c not in ["dataset_index", "date"]]
     series = [
@@ -69,7 +69,8 @@ def get_title_line_chart(project_id, value):
 
 
 def get_data_trends(kkm_config, measurement, dates, dfs):
-    kkm_values = [k.value for k in kkm_config]
+    """Trend of one key measurement, ``measurement`` naming it as ``kkm_config`` keys it."""
+    kkm_values = list(kkm_config)
     complete_df = pd.DataFrame()
     for i, df in enumerate(dfs):
         dfi = df.pivot_table(columns="channel_name", values=kkm_values).reset_index(
@@ -79,7 +80,7 @@ def get_data_trends(kkm_config, measurement, dates, dfs):
         dfi["date"] = dates[i]
         complete_df = pd.concat([complete_df, dfi])
     complete_df = complete_df.reset_index(drop=True)
-    complete_df = complete_df[complete_df["Measurement"] == kkm_values[measurement]]
+    complete_df = complete_df[complete_df["Measurement"] == measurement]
     complete_df = complete_df.drop(columns="Measurement")
     return complete_df
 

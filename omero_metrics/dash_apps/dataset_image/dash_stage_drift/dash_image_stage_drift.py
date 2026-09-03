@@ -13,10 +13,14 @@ from omero_metrics.styles import MANTINE_THEME, THEME
 from omero_metrics.tools.serializers import deserialize
 
 _MEASUREMENTS = [
-    {"label": "Relative position", "value": "relative_position"},
-    {"label": "Displacement", "value": "displacement"},
-    {"label": "Square displacement", "value": "square_displacement"},
-    {"label": "Velocity", "value": "velocity"},
+    dsc.TimeCourseMeasurement(
+        "relative_position", "Relative position", ("pixel", "micron")
+    ),
+    dsc.TimeCourseMeasurement("displacement", "Displacement", ("pixel", "micron")),
+    dsc.TimeCourseMeasurement(
+        "square_displacement", "Square displacement", ("pixel2", "micron2")
+    ),
+    dsc.TimeCourseMeasurement("velocity", "Velocity", ("micron_per_sec",)),
 ]
 _DEFAULT_MEASUREMENT = ["square_displacement"]
 
@@ -52,4 +56,4 @@ omero_image_stage_drift.layout = dmc.MantineProvider(
 )
 
 
-dsc.register_time_chart_callbacks(omero_image_stage_drift)
+dsc.register_time_chart_callbacks(omero_image_stage_drift, _MEASUREMENTS)

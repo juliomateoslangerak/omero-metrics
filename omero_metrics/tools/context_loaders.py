@@ -373,8 +373,8 @@ def HarmonizedMetricsDatasetCollection(pm):
     dates = []
     min_date = None
     max_date = None
-    kkm_list = pm.assay_configuration.kkm_configuration
-    collection_key_measurements_by_kkm = {x.value: [] for x in kkm_list}
+    kkm_config = pm.assay_configuration.kkm_configuration
+    collection_key_measurements_by_kkm = {name: [] for name in kkm_config}
     collection_key_measurements_by_dataset_id = {}
     collection_comments_by_dataset_id = {}
 
@@ -383,7 +383,7 @@ def HarmonizedMetricsDatasetCollection(pm):
             # In principle, omero-metrics is generating and processing datasets in one go, so this should never happen
             raise ValueError(f"Dataset {dataset.name} is not processed")
         key_measurements_by_kkm = {
-            x.value: [
+            name: [
                 {
                     # TODO: We are removing here time from the date, but this might bite us back at some point
                     # We should consider keeping time in the date
@@ -391,12 +391,12 @@ def HarmonizedMetricsDatasetCollection(pm):
                     "dataset_id": int(dataset.data_reference.omero_object_id),
                     **(
                         {
-                            km[x.key]: km[x.value]
+                            km[x.key]: km[name]
                             for km in dataset.output.key_measurements
                         }
                         if x.key
                         else {
-                            "no_key": km[x.value]
+                            "no_key": km[name]
                             for km in dataset.output.key_measurements
                         }
                     ),
@@ -454,21 +454,19 @@ def HarmonizedMetricsDatasetCollection(pm):
                     ),
                 }
             ]
-            for x in kkm_list
+            for name, x in kkm_config.items()
         }
-        [
-            collection_key_measurements_by_kkm[x.value].extend(
-                key_measurements_by_kkm[x.value]
+        for name in kkm_config:
+            collection_key_measurements_by_kkm[name].extend(
+                key_measurements_by_kkm[name]
             )
-            for x in kkm_list
-        ]
         collection_key_measurements_by_dataset_id[
             int(dataset.data_reference.omero_object_id)
         ] = {
             "caption": f"{dataset.name} acquired on {dataset.acquisition_datetime}",
-            "head": [x.display_name for x in kkm_list],
+            "head": [x.display_name for x in kkm_config.values()],
             "body": [
-                [km[x.value] for x in kkm_list]
+                [km[name] for name in kkm_config]
                 for km in dataset.output.key_measurements
             ],
         }

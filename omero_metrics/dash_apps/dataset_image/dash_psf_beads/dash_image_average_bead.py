@@ -211,7 +211,7 @@ def update_single_bead_image(channel_index, color, invert_color, *, session_stat
             "z": mm_image.voxel_size_z_micron,
         }
 
-        kkm_values = [k.value for k in context["assay_config"].kkm_configuration]
+        kkm_values = list(context["assay_config"].kkm_configuration)
 
         table_km = load.get_km_mm_metrics_dataset(
             mm_dataset=deserialize(context["mm_dataset"])

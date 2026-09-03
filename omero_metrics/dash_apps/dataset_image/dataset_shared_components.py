@@ -1,5 +1,6 @@
 import math
 from time import sleep
+from typing import NamedTuple
 
 import dash_mantine_components as dmc
 import numpy as np
@@ -224,12 +225,14 @@ TIME_CHART_WIDTH = 800
 TIME_CHART_ROW_HEIGHT = 240
 TIME_CHART_ROW_SPACING = 45
 # The right margin holds the legend, which stands outside the plotting area.
-TIME_CHART_MARGIN = dict(l=70, r=160, t=30, b=45)
+TIME_CHART_MARGIN = dict(l=70, r=180, t=30, b=45)
 
-# The time course columns are named "<measurement>_<unit>_<axis>", as in
-# square_displacement_micron2_3d or velocity_micron_per_sec_x: the axis is the
-# last "_"-separated token and the unit -- which holds underscores of its own --
-# is whatever stands between it and the measurement name.
+# A time course column is named "<measurement>_<unit>_<axis>", as in
+# square_displacement_micron2_3d or velocity_micron_per_sec_x. The chart
+# composes that name from the parts a TimeCourseMeasurement declares rather
+# than taking a column name apart, so a column it cannot account for is left
+# alone instead of being guessed at.
+# The axes a time course can be reported on, in drawing order.
 TIME_CHART_AXES = ("z", "y", "x", "3d")
 # Fixed per axis, so adding a measurement to the selection or taking one out
 # never repaints the curves that stay.
@@ -242,9 +245,42 @@ TIME_CHART_AXIS_COLORS = {
 # A measurement is reported both in pixels and in microns, which are the same
 # values at scales the voxel size apart. Each unit family gets a y axis of its
 # own -- pixels on the left, microns on the right -- and the line style says
-# which of the two a curve is read against.
+# which of the two a curve is read against. There are exactly two families
+# because the side a curve goes on is Plotly's boolean `secondary_y`.
 TIME_CHART_UNIT_FAMILIES = ("pixel", "micron")
 TIME_CHART_UNIT_DASHES = {"pixel": "dot", "micron": "solid"}
+
+
+class TimeChartUnit(NamedTuple):
+    label: str  # as shown on a y axis title and in the legend
+    family: str  # which of the two y axes it is read against
+
+
+# How to draw each unit a time course can be reported in. A unit with no entry
+# here is not drawn: `register_time_chart_callbacks` refuses a measurement that
+# names one, rather than falling back to a guess that is wrong in silence.
+TIME_CHART_UNITS = {
+    "pixel": TimeChartUnit("pixel", "pixel"),
+    "micron": TimeChartUnit("micron", "micron"),
+    "pixel2": TimeChartUnit("pixel²", "pixel"),
+    "micron2": TimeChartUnit("micron²", "micron"),
+    "micron_per_sec": TimeChartUnit("micron/s", "micron"),
+}
+
+
+class TimeCourseMeasurement(NamedTuple):
+    """One selectable time course measurement and the units it is reported in.
+
+    The columns holding it are named ``"<value>_<unit>_<axis>"`` over
+    ``TIME_CHART_AXES``. Combinations the analysis does not produce -- there is
+    no displacement in pixels in 3d -- are simply absent, so a measurement can
+    name the units it uses without also tracking which axes each one covers.
+    """
+
+    value: str
+    label: str
+    units: tuple[str, ...]
+
 
 # Marker opacity for the visible bead positions.
 BEAD_MARKER_OPACITY = 0.8
@@ -600,42 +636,36 @@ def intensity_chart(**group_props):
     )
 
 
-def _unit_family(unit):
-    return "pixel" if unit.startswith("pixel") else "micron"
-
-
-def _unit_label(unit):
-    return unit.replace("_per_sec", "/s").replace("2", "²")
-
-
-def _time_chart_series(columns, measurements):
+def _time_chart_series(columns, selected, measurements):
     """The ``(measurement, unit, axis, column)`` rows to trace, in drawing order.
 
-    The columns holding each of the selected ``measurements`` are picked out of
-    ``columns`` and split into their unit and axis parts. Columns whose last
-    token is not one of the spatial axes are left out: the bookkeeping columns
-    standing in the same table, such as ``lag_from_reference_t_points``, are not
-    time courses of a measurement.
+    Each of the ``selected`` measurements names the units it is reported in, and
+    the column holding one of them on one axis is ``"<value>_<unit>_<axis>"``.
+    Only the columns that ``columns`` actually holds are traced, so a
+    combination the analysis leaves out -- there is no displacement in pixels in
+    3d -- costs nothing to declare, and a column that is not a time course of a
+    selected measurement is never reached.
 
-    Ordered by selection, then unit family, then axis, so that a measurement's
-    left-hand curves are traced and listed ahead of its right-hand ones.
+    Ordered by selection, then unit family, then declared unit, then axis, so
+    that a measurement's left-hand curves are traced and listed ahead of its
+    right-hand ones. Taking the family from ``TIME_CHART_UNIT_FAMILIES`` rather
+    than from the declaration keeps that left-to-right order the same for every
+    measurement, whichever order its own units are written in.
     """
+    by_value = {measurement.value: measurement for measurement in measurements}
     series = []
-    for measurement in measurements:
-        traced = []
-        for column in columns:
-            if not column.startswith(f"{measurement}_"):
-                continue
-            unit, _, axis = column[len(measurement) + 1 :].rpartition("_")
-            if unit and axis in TIME_CHART_AXIS_COLORS:
-                traced.append((measurement, unit, axis, column))
-        series += sorted(
-            traced,
-            key=lambda s: (
-                TIME_CHART_UNIT_FAMILIES.index(_unit_family(s[1])),
-                TIME_CHART_AXES.index(s[2]),
-            ),
-        )
+    for value in selected:
+        measurement = by_value.get(value)
+        if measurement is None:
+            continue
+        for family in TIME_CHART_UNIT_FAMILIES:
+            for unit in measurement.units:
+                if TIME_CHART_UNITS[unit].family != family:
+                    continue
+                for axis in TIME_CHART_AXES:
+                    column = f"{value}_{unit}_{axis}"
+                    if column in columns:
+                        series.append((value, unit, axis, column))
     return series
 
 
@@ -654,7 +684,7 @@ def _apply_time_layout(fig, rows=1):
         hovermode="x unified",
         font=dict(color=THEME["text"]["primary"]),
         legend=dict(
-            x=1.02,
+            x=1.06,
             xanchor="left",
             y=1,
             yanchor="top",
@@ -673,8 +703,8 @@ def empty_time_figure(rows=1):
     return _apply_time_layout(go.Figure(), rows)
 
 
-def time_figure(image_properties, measurements, measurement_labels=None):
-    """Time courses of the selected measurements, one measurement per row.
+def time_figure(image_properties, selected, measurements):
+    """Time courses of the ``selected`` measurements, one measurement per row.
 
     Every measurement is reported per axis and in two unit families, pixels and
     microns, which stand the voxel size apart and so cannot share a scale. They
@@ -688,17 +718,17 @@ def time_figure(image_properties, measurements, measurement_labels=None):
     displacement and its square -- and stacking them against a shared pair of
     axes would invent a correspondence that is not in the data.
 
-    ``measurement_labels`` maps a measurement onto the name the selector shows
-    for it, and falls back to the measurement itself.
+    ``measurements`` are the ``TimeCourseMeasurement``\\ s the dashboard offers,
+    which say both which columns hold a selected measurement and what to call it.
     """
-    measurement_labels = measurement_labels or {}
-    series = _time_chart_series(image_properties.columns, measurements)
+    labels = {measurement.value: measurement.label for measurement in measurements}
+    series = _time_chart_series(image_properties.columns, selected, measurements)
     if not series:
         return add_centered_message(
             empty_time_figure(), "No measurement to display", size=16
         )
 
-    rows = [m for m in measurements if any(s[0] == m for s in series)]
+    rows = [m for m in selected if any(s[0] == m for s in series)]
     plot_height = len(rows) * TIME_CHART_ROW_HEIGHT
     fig = make_subplots(
         rows=len(rows),
@@ -707,7 +737,7 @@ def time_figure(image_properties, measurements, measurement_labels=None):
         # make_subplots takes the gap between rows as a fraction of the whole
         # plotting area, which grows with the number of rows.
         vertical_spacing=TIME_CHART_ROW_SPACING / plot_height,
-        subplot_titles=[measurement_labels.get(m, m) for m in rows],
+        subplot_titles=[labels[m] for m in rows],
         specs=[[{"secondary_y": True}] for _ in rows],
     )
     _apply_time_layout(fig, len(rows))
@@ -717,13 +747,14 @@ def time_figure(image_properties, measurements, measurement_labels=None):
     row_units = {}
     for measurement, unit, axis, column in series:
         row = rows.index(measurement) + 1
-        family = _unit_family(unit)
-        row_units.setdefault((row, family), []).append(_unit_label(unit))
+        unit_label = TIME_CHART_UNITS[unit].label
+        family = TIME_CHART_UNITS[unit].family
+        row_units.setdefault((row, family), []).append(unit_label)
         fig.add_trace(
             go.Scatter(
                 x=image_properties["t_point"],
                 y=image_properties[column],
-                name=f"{axis} ({_unit_label(unit)})",
+                name=f"{axis} ({unit_label})",
                 mode="lines",
                 line=dict(
                     color=TIME_CHART_AXIS_COLORS[axis],
@@ -732,13 +763,13 @@ def time_figure(image_properties, measurements, measurement_labels=None):
                 ),
                 legendgroup=measurement,
                 legendgrouptitle_text=(
-                    measurement_labels.get(measurement, measurement)
-                    if len(rows) > 1
-                    else None
+                    labels[measurement] if len(rows) > 1 else None
                 ),
             ),
             row=row,
             col=1,
+            # Only two families, so which side a curve is read against is a
+            # boolean: microns on the right, everything else on the left.
             secondary_y=family == "micron",
         )
 
@@ -786,6 +817,9 @@ def _apply_time_row_axes(fig, row, row_units):
 def time_chart(measurements, default_measurement=None, **group_props):
     """The time course chart beside its controls.
 
+    ``measurements`` are the ``TimeCourseMeasurement``\\ s to offer in the
+    selector; pass the same ones to ``register_time_chart_callbacks``.
+
     Extra keyword arguments are passed through to ``dmc.Group``, so a dashboard
     can override the defaults or add its own props. Compose ``contour_chart()``
     and ``contour_controls()`` directly for a different arrangement.
@@ -815,7 +849,10 @@ def time_chart(measurements, default_measurement=None, **group_props):
                         id="time-chart-measurement-multiselect",
                         label="Measurement",
                         value=default_measurement,
-                        data=measurements,
+                        data=[
+                            {"label": m.label, "value": m.value}
+                            for m in measurements
+                        ],
                         w="100%",
                         leftSection=omero_metrics_components.get_icon(
                             icon="ph:magnifying-glass"
@@ -948,9 +985,9 @@ def register_update_kkm_table_callback(app):
             page = int(pagination_value)
             context = deserialize(session_state["context"])
             kkm = context["assay_config"].kkm_configuration
-            kkm_values = [k.value for k in kkm]
+            kkm_values = list(kkm)
             col_rename = {"channel_name": "Channel Name"} | {
-                k.value: k.display_name for k in kkm
+                name: k.display_name for name, k in kkm.items()
             }
             # TODO: review how we process the tables here.
             table_km = load.get_km_mm_metrics_dataset(
@@ -999,9 +1036,9 @@ def register_download_table_callback(app):
         triggered_id = callback_context.triggered[0]["prop_id"].split(".")[0]
         context = deserialize(session_state["context"])
         kkm = context["assay_config"].kkm_configuration
-        kkm_values = [k.value for k in kkm]
+        kkm_values = list(kkm)
         col_rename = {"channel_name": "Channel Name"} | {
-            k.value: k.display_name for k in kkm
+            name: k.display_name for name, k in kkm.items()
         }
         table_km = load.get_km_mm_metrics_dataset(mm_dataset=context["mm_dataset"])
         table_kkm = table_km.filter(["channel_name", *kkm_values])
@@ -1465,45 +1502,41 @@ def register_intensity_chart_callbacks(app, hover_info=None):
         ], "0"
 
 
-def register_time_chart_callbacks(app):
+def register_time_chart_callbacks(app, measurements):
+    """Draw the time chart of the ``measurements`` the dashboard offers.
+
+    Pass the same ``TimeCourseMeasurement``\\ s given to ``time_chart()``: they
+    say which columns hold a selected measurement and what to title its row.
+    A measurement naming a unit the chart has no drawing rule for is refused
+    here, when the dashboard is imported, rather than at the point a user
+    happens to select it.
+    """
+    for measurement in measurements:
+        for unit in measurement.units:
+            if unit not in TIME_CHART_UNITS:
+                raise ValueError(
+                    f"{measurement.value} is reported in {unit!r}, which the "
+                    f"time chart has no drawing rule for. Add it to "
+                    f"TIME_CHART_UNITS."
+                )
+
     @app.expanded_callback(
         dependencies.Output("time-chart", "figure"),
         [
             dependencies.Input("time-chart-measurement-multiselect", "value"),
-            # For the names the selector shows, so that the rows of the figure
-            # are titled the way the dashboard named its measurements.
-            dependencies.State("time-chart-measurement-multiselect", "data"),
         ],
     )
-    def update_time_chart(
-        measurements_multiselect_value,
-        measurements_multiselect_data,
-        *,
-        session_state,
-    ):
+    def update_time_chart(measurements_multiselect_value, *, session_state):
         try:
             context = deserialize(session_state["context"])
             return time_figure(
                 context["image_properties"],
                 measurements_multiselect_value or [],
-                _multiselect_labels(measurements_multiselect_data),
+                measurements,
             )
 
         except Exception as e:
             return add_centered_message(empty_time_figure(), str(e))
-
-
-def _multiselect_labels(data):
-    """The ``value -> label`` mapping of a ``dmc.MultiSelect``'s ``data``.
-
-    Its options are either ``{"label": ..., "value": ...}`` mappings or bare
-    strings standing for both at once.
-    """
-    options = [
-        option if isinstance(option, dict) else {"label": option, "value": option}
-        for option in data or []
-    ]
-    return {option["value"]: option["label"] for option in options}
 
 
 def yes_no(flags):
