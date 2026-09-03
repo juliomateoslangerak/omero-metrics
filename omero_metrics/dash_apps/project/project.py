@@ -355,8 +355,8 @@ def update_dropdown(_blank_input, *, session_state):
         context = deserialize(session_state["context"])
         kkm_config = context["assay_config"].kkm_configuration
         kkm_options = [
-            {"value": str(i), "label": k.display_name}
-            for i, k in enumerate(kkm_config)
+            {"value": name, "label": k.display_name}
+            for name, k in kkm_config.items()
         ]
 
         # Parse datetime strings and get min/max
@@ -367,7 +367,7 @@ def update_dropdown(_blank_input, *, session_state):
         value_date = [min_date, max_date]
         return (
             kkm_options,
-            "0",
+            next(iter(kkm_config)),
             min_date,
             max_date,
             value_date,
@@ -434,19 +434,16 @@ def update_table(measurement, dates_range, *, session_state):
         key_measurements_by_kkm = context["key_measurements_by_kkm"]
         comments_by_dataset_id = context["comments_by_dataset_id"]
         threshold = context["thresholds"]
-        kkm_config = context["assay_config"].kkm_configuration
-        measurement = int(measurement)
 
         # Check if we have any data
         if not key_measurements_by_kkm:
             return dash.no_update
-        selected_kkm = kkm_config[measurement]
 
         dates_range = [d.split("T")[0] for d in dates_range]
 
         fig = go.Figure()
 
-        data = key_measurements_by_kkm[selected_kkm.value]
+        data = key_measurements_by_kkm[measurement]
         keys = sorted(
             {
                 k
@@ -510,7 +507,7 @@ def update_table(measurement, dates_range, *, session_state):
                 )
 
         if threshold:
-            threshold_kkm = threshold[selected_kkm.value]
+            threshold_kkm = threshold[measurement]
             fig.add_hline(
                 y=threshold_kkm["upper_limit"],
                 line={"color": "red", "dash": "dash"},
@@ -697,8 +694,8 @@ def update_thresholds(_blank_input, *, session_state):
             "assay_config"
         ].kkm_configuration
         data = [
-            {"value": str(i), "label": k.display_name}
-            for i, k in enumerate(kkm_config)
+            {"value": name, "label": k.display_name}
+            for name, k in kkm_config.items()
         ]
         return data
     except Exception as e:
@@ -726,7 +723,7 @@ def update_thresholds_controls(_blank_input, *, session_state):
         context = deserialize(session_state["context"])
         kkm_config = context["assay_config"].kkm_configuration
         threshold = context["thresholds"] or {
-            k.value: {"upper_limit": "", "lower_limit": ""} for k in kkm_config
+            name: {"upper_limit": "", "lower_limit": ""} for name in kkm_config
         }
 
         thresholds_component = [
@@ -737,18 +734,18 @@ def update_thresholds_controls(_blank_input, *, session_state):
                         f"action-{i}",
                     ),
                     dmc.AccordionPanel(
-                        id=kkm.value + "_panel",
+                        id=name + "_panel",
                         children=[
                             dmc.Fieldset(
                                 id={
                                     "type": "threshold-fieldset",
-                                    "index": kkm.value,
+                                    "index": name,
                                 },
                                 children=[
                                     dmc.NumberInput(
                                         id={
                                             "type": "threshold-upper",
-                                            "index": kkm.value,
+                                            "index": name,
                                         },
                                         label="Upper Limit",
                                         placeholder="Enter upper limit",
@@ -756,14 +753,12 @@ def update_thresholds_controls(_blank_input, *, session_state):
                                             icon="hugeicons:chart-maximum",
                                             color=THEME["primary"],
                                         ),
-                                        value=threshold[kkm.value].get(
-                                            "upper_limit", ""
-                                        ),
+                                        value=threshold[name].get("upper_limit", ""),
                                     ),
                                     dmc.NumberInput(
                                         id={
                                             "type": "threshold-lower",
-                                            "index": kkm.value,
+                                            "index": name,
                                         },
                                         label="Lower Limit",
                                         placeholder="Enter lower limit",
@@ -771,9 +766,7 @@ def update_thresholds_controls(_blank_input, *, session_state):
                                             icon="hugeicons:chart-minimum",
                                             color=THEME["primary"],
                                         ),
-                                        value=threshold[kkm.value].get(
-                                            "lower_limit", ""
-                                        ),
+                                        value=threshold[name].get("lower_limit", ""),
                                     ),
                                 ],
                                 variant="filled",
@@ -785,7 +778,7 @@ def update_thresholds_controls(_blank_input, *, session_state):
                 ],
                 value=f"item-{i}",
             )
-            for i, kkm in enumerate(kkm_config)
+            for i, (name, kkm) in enumerate(kkm_config.items())
         ]
         button = dmc.Button(
             "Update",
