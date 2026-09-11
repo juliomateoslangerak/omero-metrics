@@ -5,6 +5,7 @@ import dash_mantine_components as dmc
 import pandas as pd
 from dash import dash_table, dcc, html
 from django_plotly_dash import DjangoDash
+from tools.serializers import deserialize
 
 import omero_metrics.dash_apps.utils.omero_metrics_components as my_components
 from omero_metrics import views
@@ -191,9 +192,38 @@ dash_app_group.layout = dmc.MantineProvider(
 )
 
 
-def _make_card(
-    last_acquisition_date, analysis_class, project_name, project_description
-):
+def _make_card(project_context):
+    last_acquisition_date = project_context.get("max_date")
+
+    analysis_class = (project_context["dataset_class"] or "Not analyzed",)
+    project_name = (project_context["project_name"],)
+    project_description = (project_context["project_description"] or "",)
+    kkm_last_data = {}
+    for name, config in project_context["assay_config"].kkm_configuration.items():
+        if config.display_in_group_level:
+            kkm_last_data[name] = {
+                "dataset_url": None,
+                "display_name": config.display_name,
+                "description": config.description,
+                "values": [
+                    {
+                        "key": None,
+                        "value": None,
+                        "unit": None,
+                        "error": None,
+                        "color": None,
+                    }
+                    for kkm in project_context["key_measurements_by_kkm"][name]
+                ],
+            }
+    kkm_configs = {
+        name: config
+        for name, config in project_context["assay_config"].kkm_configuration.items()
+        if config.display_in_group_level
+    }
+    # kkm_last_values = {
+    #     name: value for
+    # }
     return dmc.Card(
         children=[
             dmc.CardSection(
@@ -208,7 +238,7 @@ def _make_card(
                     dmc.Group(
                         [
                             dmc.Title(
-                                last_acquisition_date,
+                                last_acquisition_date[:10],
                                 c=THEME["primary"],
                                 size="h3",
                             ),
@@ -269,15 +299,8 @@ def update_date_range(_blank_input, *, session_state):
 )
 def render_content(_blank_input, *, session_state):
     return [
-        _make_card(
-            last_acquisition_date=(
-                proj_ctx["max_date"][:10] if proj_ctx["max_date"] else "No data"
-            ),
-            analysis_class=proj_ctx["dataset_class"] or "Not analyzed",
-            project_name=proj_ctx["project_name"],
-            project_description=proj_ctx["project_description"] or "",
-        )
-        for proj_ctx in session_state["context"]["project_contexts"]
+        _make_card(proj_ctx)
+        for proj_ctx in deserialize(session_state["context"]["project_contexts"])
     ]
 
 
