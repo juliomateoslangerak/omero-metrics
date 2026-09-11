@@ -1076,6 +1076,9 @@ def register_delete_button_loading_callback(app):
 def _add_scale_bar(
     fig, x_pixel_size: float | int, x_image_size: int, y_image_size: int
 ):
+    if x_pixel_size is None:
+        return
+
     image_width_micron = x_image_size * x_pixel_size
 
     min_bar_length = 0.05 * image_width_micron
