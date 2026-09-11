@@ -454,35 +454,38 @@ def update_table(measurement, dates_range, *, session_state):
             }
         )
         for i, k in enumerate(keys):
-            fig.add_trace(
-                go.Scatter(
-                    x=[
-                        m["date"]
-                        for m in data
-                        if dates_range[0] <= m["date"] <= dates_range[1]
-                    ],
-                    y=[
-                        m[k]
-                        for m in data
-                        if dates_range[0] <= m["date"] <= dates_range[1]
-                    ],
-                    line={"color": data[0].get(f"{k}_rgb")},
-                    error_y={
-                        "array": [
-                            m.get(f"{k}_err")
+            try:
+                fig.add_trace(
+                    go.Scatter(
+                        x=[
+                            m["date"]
                             for m in data
                             if dates_range[0] <= m["date"] <= dates_range[1]
-                        ]
-                    },
-                    customdata=[
-                        m["dataset_id"]
-                        for m in data
-                        if dates_range[0] <= m["date"] < dates_range[1]
-                    ],
-                    mode="lines+markers",
-                    name=k,
+                        ],
+                        y=[
+                            m.get(k, None)
+                            for m in data
+                            if dates_range[0] <= m["date"] <= dates_range[1]
+                        ],
+                        line={"color": data[0].get(f"{k}_rgb")},
+                        error_y={
+                            "array": [
+                                m.get(f"{k}_err")
+                                for m in data
+                                if dates_range[0] <= m["date"] <= dates_range[1]
+                            ]
+                        },
+                        customdata=[
+                            m["dataset_id"]
+                            for m in data
+                            if dates_range[0] <= m["date"] <= dates_range[1]
+                        ],
+                        mode="lines+markers",
+                        name=k,
+                    )
                 )
-            )
+            except KeyError:
+                continue
 
         for comment in comments_by_dataset_id.values():
             if comment and dates_range[0] <= comment["datetime"] < dates_range[1]:
