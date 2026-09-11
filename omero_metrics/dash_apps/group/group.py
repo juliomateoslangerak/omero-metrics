@@ -5,7 +5,6 @@ import dash_mantine_components as dmc
 import pandas as pd
 from dash import dash_table, dcc, html
 from django_plotly_dash import DjangoDash
-from tools.serializers import deserialize
 
 import omero_metrics.dash_apps.utils.omero_metrics_components as my_components
 from omero_metrics import views
@@ -21,6 +20,7 @@ from omero_metrics.styles import (
     TABLE_STYLE,
     THEME,
 )
+from omero_metrics.tools.serializers import deserialize
 
 dashboard_name = "omero_group_dash"
 dash_app_group = DjangoDash(
@@ -198,7 +198,9 @@ def _make_card(project_context):
     analysis_class = (project_context["dataset_class"] or "Not analyzed",)
     project_name = (project_context["project_name"],)
     project_description = (project_context["project_description"] or "",)
-    kkm_last_data = {}
+    kkm_last_data = project_context["key_measurements_by_dataset_id"][
+        str(project_context["last_dataset_id"])
+    ]
     for name, config in project_context["assay_config"].kkm_configuration.items():
         if config.display_in_group_level:
             kkm_last_data[name] = {

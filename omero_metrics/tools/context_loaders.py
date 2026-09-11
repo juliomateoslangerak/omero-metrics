@@ -462,11 +462,19 @@ def HarmonizedMetricsDatasetCollection(pm):
                 key_measurements_by_kkm[name]
             )
         collection_key_measurements_by_dataset_id[
-            int(dataset.data_reference.omero_object_id)
+            dataset.data_reference.omero_object_id
         ] = {
             "caption": f"{dataset.name} acquired on {dataset.acquisition_datetime}",
-            "head": [x.display_name for x in kkm_config.values()],
-            "body": [
+            "names": list(kkm_config.keys()),
+            "display_names": [x.display_name for x in kkm_config.values()],
+            "descriptions": [x.description for x in kkm_config.values()],
+            "keys": [x.key for x in kkm_config.values()],
+            "display_in_group_level": [
+                x.display_in_group_level for x in kkm_config.values()
+            ],
+            "units": [x.units for x in kkm_config.values()],
+            "axis": [x.axis for x in kkm_config.values()],
+            "values": [
                 [km[name] for name in kkm_config]
                 for km in dataset.output.key_measurements
             ],
