@@ -373,6 +373,7 @@ def HarmonizedMetricsDatasetCollection(pm):
     dates = []
     min_date = None
     max_date = None
+    last_dataset_id = None
     kkm_config = pm.assay_configuration.kkm_configuration
     collection_key_measurements_by_kkm = {name: [] for name in kkm_config}
     collection_key_measurements_by_dataset_id = {}
@@ -486,11 +487,13 @@ def HarmonizedMetricsDatasetCollection(pm):
             if min_date
             else dataset.acquisition_datetime
         )
-        max_date = (
-            max(max_date, dataset.acquisition_datetime)
-            if max_date
-            else dataset.acquisition_datetime
-        )
+        if (
+            max_date is not None
+            and dataset.acquisition_datetime > max_date
+            or max_date is None
+        ):
+            max_date = dataset.acquisition_datetime
+            last_dataset_id = dataset.data_reference.omero_object_id
     context = {
         "project_id": int(pm.omero_project.getId()),
         "dataset_class": pm.mm_dataset_collection.dataset_class,
@@ -503,6 +506,7 @@ def HarmonizedMetricsDatasetCollection(pm):
         "dates": dates,
         "min_date": min_date,
         "max_date": max_date,
+        "last_dataset_id": last_dataset_id,
         "mm_unprocessed_datasets": list(pm.unprocessed_datasets),
         "input_parameters": pm.input_parameters,
         "sample": pm.sample,
