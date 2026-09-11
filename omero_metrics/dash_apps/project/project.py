@@ -202,7 +202,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                             ),
                             # Data Table Section
                             dmc.Paper(
-                                id="clicked_data_paper",
+                                id="clicked-data-paper",
                                 hiddenFrom={"visible": False, "display": None},
                                 style={**CARD_STYLE1, "marginTop": "12px"},
                                 children=[
@@ -529,7 +529,7 @@ def update_table(measurement, dates_range, *, session_state):
     dash.dependencies.Output("text-km", "children"),
     dash.dependencies.Output("kkm-table", "data"),
     dash.dependencies.Output("pagination", "total"),
-    dash.dependencies.Output("clicked_data_paper", "hiddenFrom"),
+    dash.dependencies.Output("clicked-data-paper", "hiddenFrom"),
     [
         dash.dependencies.Input("line-chart", "clickData"),
         dash.dependencies.Input("pagination", "value"),
