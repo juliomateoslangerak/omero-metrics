@@ -104,14 +104,40 @@ class ImageManager:
             logger.warning(message)
             self.context, self.app_name = warning_message(message)
 
+    def _find_dataset_manager(self):
+        """Manager of the dataset whose analysis includes this image.
+
+        An image can be linked to several datasets (getParent returns only
+        one of them); use the first one that has been processed and whose
+        analysis contains the image, else the first dataset.
+        """
+        parents = list(self.omero_image.listParents()) or [
+            self.omero_image.getParent()
+        ]
+        for dataset in parents:
+            if dataset is None:
+                continue
+            manager = DatasetManager(self._conn, dataset)
+            try:
+                manager.load_data(load_images=False)
+            except Exception as e:
+                logger.warning(f"Could not load dataset {dataset.getId()}: {e}")
+                continue
+            if manager.is_processed() and load.image_exist(
+                self.omero_image.getId(), manager.mm_dataset
+            )[0]:
+                return dataset, manager
+        return parents[0], DatasetManager(self._conn, parents[0])
+
     def load_data(self, force_reload: bool = False):
         if force_reload or self.dataset_manager is None:
-            self.omero_dataset = self.omero_image.getParent()
-            self.dataset_manager = DatasetManager(self._conn, self.omero_dataset)
+            self.omero_dataset, self.dataset_manager = self._find_dataset_manager()
         if force_reload or self.mm_image is None:
-            self.dataset_manager.load_data(
-                load_images=False, force_reload=force_reload
-            )
+            # _find_dataset_manager may already have loaded the dataset.
+            if force_reload or self.dataset_manager.mm_dataset is None:
+                self.dataset_manager.load_data(
+                    load_images=False, force_reload=force_reload
+                )
             if self.dataset_manager.is_processed():
                 self.dataset_manager.remove_unsupported_data()
 
