@@ -1,5 +1,6 @@
 import ast
 import logging
+import os
 import tempfile
 from dataclasses import fields
 
@@ -273,6 +274,8 @@ def dump_dataset(
 
                     _dump_dataset_output(dataset.output, omero_dataset)
 
+                    _dump_correction_file(dataset, omero_dataset)
+
                     if replace_project_last_key_measurement:
                         _dump_last_key_measurement_as_project_mapping_annotation(
                             conn=conn,
@@ -306,6 +309,35 @@ def dump_dataset(
         raise e
 
     return omero_dataset
+
+
+def _dump_correction_file(
+    dataset: mm_schema.MetricsDataset,
+    target_dataset: DatasetWrapper,
+):
+    """Attach the correction file of the analysis to the dataset.
+
+    The chromatic shift analysis returns the Chromagnon correction file
+    (.chromagnon.csv, or .chromagnon.tif with the local distortion map) as raw
+    bytes in ``output.correction_file``. It is attached as a file annotation so
+    that it can be downloaded and applied to other images.
+    """
+    data = getattr(dataset.output, "correction_file", None)
+    if not data:
+        return None
+    filename = getattr(dataset.output, "correction_filename", None) or "correction"
+    with tempfile.TemporaryDirectory(prefix="correction_") as tmpdir:
+        file_path = os.path.join(tmpdir, os.path.basename(filename))
+        with open(file_path, "wb") as f:
+            f.write(data)
+        return omero_tools.create_file(
+            conn=target_dataset._conn,
+            file_path=file_path,
+            omero_object=target_dataset,
+            file_description=f"Chromagnon correction file ({filename})",
+            namespace=namespaces.NS_CHROMAGNON_CORRECTION,
+            mimetype="application/octet-stream",
+        )
 
 
 def _dump_analysis_metadata(

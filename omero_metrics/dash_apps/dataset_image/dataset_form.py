@@ -3,7 +3,7 @@ from time import sleep
 
 import dash
 import dash_mantine_components as dmc
-from dash import html
+from dash import dcc, html
 from django_plotly_dash import DjangoDash
 from microscopemetrics_schema import datamodel as mm_schema
 
@@ -48,6 +48,38 @@ dash_form_dataset.layout = dmc.MantineProvider(
                         "radius": "sm",
                         "blur": 1,
                     },
+                ),
+                # Live progress of analyses that report it (the chromatic shift
+                # analysis forwards Chromagnon's messages). Hidden until a run
+                # starts; a clientside poller fills it from the progress log.
+                dmc.Paper(
+                    id="progress-panel",
+                    withBorder=True,
+                    radius="md",
+                    p="md",
+                    shadow="md",
+                    style={"display": "none"},
+                    children=[
+                        dmc.Group(
+                            [
+                                dmc.Loader(size="sm"),
+                                dmc.Text("Analysis progress", fw=500),
+                            ],
+                            gap="xs",
+                            mb="xs",
+                        ),
+                        html.Pre(
+                            id="progress-log",
+                            style={
+                                "maxHeight": "260px",
+                                "overflowY": "auto",
+                                "whiteSpace": "pre-wrap",
+                                "fontSize": "12px",
+                                "margin": 0,
+                                "fontFamily": "monospace",
+                            },
+                        ),
+                    ],
                 ),
                 # Main content
                 dmc.Paper(
@@ -244,6 +276,14 @@ dash_form_dataset.layout = dmc.MantineProvider(
                 ),
                 html.Div(id="analysis-results"),
                 html.Div(id="blank"),
+                dcc.Interval(
+                    id="progress-interval",
+                    interval=1000,
+                    n_intervals=0,
+                    disabled=True,
+                ),
+                # The dataset id, for the clientside progress poller.
+                dcc.Store(id="dataset-id-store"),
             ],
             size="xl",
             p="md",
@@ -452,4 +492,81 @@ dash_form_dataset.clientside_callback(
     """,
     dash.dependencies.Output("analysis-progress", "value"),
     dash.dependencies.Input("stepper-basic-usage", "active"),
+)
+
+
+@dash_form_dataset.expanded_callback(
+    dash.dependencies.Output("dataset-id-store", "data"),
+    [dash.dependencies.Input("blank", "children")],
+)
+def store_dataset_id(_blank, *, session_state):
+    return session_state["context"].get("dataset_id")
+
+
+# Poll the progress log of the running analysis. A clientside fetch to a plain
+# Django view (views.dataset_analysis_progress), not a Dash callback: a Dash
+# callback would wait behind the blocking run_analysis callback of the same
+# django-plotly-dash session and could not report progress live.
+dash_form_dataset.clientside_callback(
+    """
+    async function(n, datasetId) {
+        if (!datasetId) { return window.dash_clientside.no_update; }
+        try {
+            const r = await fetch("/omero_metrics/progress/" + datasetId + "/",
+                                  {credentials: "same-origin"});
+            if (!r.ok) { return window.dash_clientside.no_update; }
+            const text = await r.text();
+            requestAnimationFrame(function() {
+                const el = document.getElementById("progress-log");
+                if (el) { el.scrollTop = el.scrollHeight; }
+            });
+            return text;
+        } catch (e) {
+            return window.dash_clientside.no_update;
+        }
+    }
+    """,
+    dash.dependencies.Output("progress-log", "children"),
+    dash.dependencies.Input("progress-interval", "n_intervals"),
+    dash.dependencies.State("dataset-id-store", "data"),
+)
+
+
+# Show the panel and start polling when the run starts (the same click that
+# shows the loading overlay). Keyed on next-basic-usage rather than on
+# loading-overlay.visible, which did not trigger the callback.
+dash_form_dataset.clientside_callback(
+    """
+    function(n_clicks, current) {
+        if (current == 2) {
+            requestAnimationFrame(function() {
+                var el = document.getElementById("progress-panel");
+                if (el) { el.scrollIntoView({behavior: "smooth", block: "center"}); }
+            });
+            // Above the LoadingOverlay (z-index 400).
+            return [false, {position: "relative", zIndex: 1000}];
+        }
+        return [true, {display: "none"}];
+    }
+    """,
+    dash.dependencies.Output("progress-interval", "disabled"),
+    dash.dependencies.Output("progress-panel", "style"),
+    dash.dependencies.Input("next-basic-usage", "n_clicks"),
+    dash.dependencies.State("stepper-basic-usage", "active"),
+    prevent_initial_call=True,
+)
+
+
+# Hide the panel and stop polling when the run has finished (run_analysis
+# replaces the main content with the result).
+dash_form_dataset.clientside_callback(
+    """
+    function(content) {
+        return [true, {display: "none"}];
+    }
+    """,
+    dash.dependencies.Output("progress-interval", "disabled", allow_duplicate=True),
+    dash.dependencies.Output("progress-panel", "style", allow_duplicate=True),
+    dash.dependencies.Input("main-content", "children"),
+    prevent_initial_call=True,
 )

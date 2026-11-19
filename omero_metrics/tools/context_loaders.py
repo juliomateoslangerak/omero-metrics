@@ -1,7 +1,18 @@
+import logging
+import os
+
 import numpy as np
 
-from omero_metrics.tools import idx_to_rgb, load, wavelength_to_rgb
+from omero_metrics.tools import (
+    chromagnon_correction,
+    idx_to_rgb,
+    load,
+    omero_tools,
+    wavelength_to_rgb,
+)
 from omero_metrics.tools.serializers import serialize
+
+logger = logging.getLogger(__name__)
 
 
 def concatenate_images(images: list):
@@ -345,6 +356,137 @@ def StageDriftDataset(dm):
         "assay_config": dm.assay_configuration,
     }
     dm.context = serialize(context)
+
+
+def ChromaticShiftDataset(dm):
+    dm.load_data(load_images=False, force_reload=True)
+    context = {
+        "mm_dataset": dm.mm_dataset,
+        "assay_config": dm.assay_configuration,
+    }
+    dm.context = serialize(context)
+
+
+def _display_uint8(arr):
+    """Per-channel min-max normalised uint8 copy (last axis = channel)."""
+    arr = np.asarray(arr)
+    out = np.zeros(arr.shape, dtype=np.uint8)
+    for c in range(arr.shape[-1]):
+        ch = arr[..., c].astype(np.float32)
+        mn, mx = float(ch.min()), float(ch.max())
+        if mx > mn:
+            out[..., c] = np.clip((ch - mn) / (mx - mn) * 255.0, 0, 255).astype(
+                np.uint8
+            )
+    return out
+
+
+def _omero_mip(image) -> np.ndarray:
+    """Maximum-intensity projection over Z of an OMERO image (t=0), as (y, x, c).
+
+    Reads one plane at a time, so the whole stack is never in memory.
+    """
+    pixels = image.getPrimaryPixels()
+    nz, nc = image.getSizeZ(), image.getSizeC()
+    mip = np.zeros((image.getSizeY(), image.getSizeX(), nc), dtype=np.float32)
+    for c in range(nc):
+        planes = pixels.getPlanes([(z, c, 0) for z in range(nz)])
+        for z, plane in enumerate(planes):
+            if z == 0:
+                mip[..., c] = plane
+            else:
+                np.maximum(mip[..., c], plane, out=mip[..., c])
+    return mip
+
+
+def _find_corrected_image(im):
+    """The OMERO image of the chromatic-shift-corrected version of ``im``."""
+    image_id = im.omero_image.getId()
+    output = getattr(im.dataset_manager.mm_dataset, "output", None)
+    corrected_images = getattr(output, "corrected_images", None) or []
+
+    target = None
+    for ci in corrected_images:
+        for src in ci.source_images or []:
+            if getattr(src, "omero_object_id", None) == image_id:
+                target = ci
+                break
+        if target is not None:
+            break
+    if target is None:  # by name (see chromatic_shift.aligned_image_name)
+        root = os.path.splitext(im.mm_image.name or "image")[0]
+        target = next(
+            (ci for ci in corrected_images if ci.name == f"{root}_ALN.tif"), None
+        )
+
+    if target is None or target.data_reference is None:
+        return None
+    try:
+        return omero_tools.get_omero_obj_from_mm_obj(conn=im._conn, mm_obj=target)
+    except Exception as e:
+        logger.warning(f"Could not find the corrected image of {image_id}: {e}")
+        return None
+
+
+def ChromaticShiftDataset_input_data_Image(im):
+    """Context of the image dashboard of a chromatic shift analysis.
+
+    Only the Z projections (uint8) are kept in the session. The Z planes shown
+    in the before/after view are read from OMERO when the Z slider moves
+    (views.image_planes), so large stacks do not bloat the session.
+
+    With average_references only the combined image is corrected; the other
+    images then have no corrected image of their own and are corrected for
+    display with the dataset's correction file, one section at a time
+    (views.corrected_section).
+    """
+    from microscopemetrics.analyses import chromagnon_apply
+
+    im.mm_image = load.load_image(im.omero_image, load_array=False)
+    raw_mip = _omero_mip(im.omero_image)
+
+    corrected = _find_corrected_image(im)
+    corrected_mip = None
+    if corrected is not None:
+        try:
+            corrected_mip = _display_uint8(_omero_mip(corrected))
+        except Exception as e:
+            logger.warning(f"Could not read the corrected image {corrected.getId()}: {e}")
+            corrected = None
+
+    correction_ann_id = None
+    if corrected is None:
+        correction_ann_id = chromagnon_correction.dataset_correction_ann_id(
+            im.dataset_manager.omero_dataset
+        )
+        if correction_ann_id is not None:
+            try:
+                path = chromagnon_correction.download_correction(
+                    im._conn, correction_ann_id
+                )
+                section = chromagnon_apply.correct_section(
+                    im.mm_image, np.moveaxis(raw_mip, -1, 0), path
+                )
+                corrected_mip = _display_uint8(np.moveaxis(section, 0, -1))
+            except Exception as e:
+                logger.warning(
+                    f"Could not correct image {im.omero_image.getId()} for display: {e}"
+                )
+                correction_ann_id = None
+
+    context = {
+        "image_index": im.image_index,
+        "mm_image": im.mm_image,
+        "mm_dataset": im.dataset_manager.mm_dataset,
+        "assay_config": im.dataset_manager.assay_configuration,
+        "image_id": int(im.omero_image.getId()),
+        "corrected_image_id": int(corrected.getId()) if corrected is not None else None,
+        "correction_ann_id": correction_ann_id,
+        "size_z": int(im.omero_image.getSizeZ()),
+        "mip_z": _display_uint8(raw_mip),
+        "corrected_mip": corrected_mip,
+    }
+    im.context = serialize(context)
 
 
 def EmptyMetricsDatasetCollection(pm):

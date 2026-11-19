@@ -26,6 +26,7 @@ DATASET_CONTEXT_LOADERS = {
     "PSFBeadsDataset": context_loaders.PSFBeadsDataset,
     "CoRegistrationDataset": context_loaders.CoRegistrationDataset,
     "StageDriftDataset": context_loaders.StageDriftDataset,
+    "ChromaticShiftDataset": context_loaders.ChromaticShiftDataset,
 }
 
 IMAGE_CONTEXT_LOADERS = {
@@ -41,6 +42,9 @@ IMAGE_CONTEXT_LOADERS = {
     },
     "StageDriftDataset": {
         "input_data": context_loaders.StageDriftDataset_input_data_Image,
+    },
+    "ChromaticShiftDataset": {
+        "input_data": context_loaders.ChromaticShiftDataset_input_data_Image,
     },
 }
 

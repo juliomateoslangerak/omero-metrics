@@ -244,6 +244,27 @@ def _dmc_builder(cls, *, placeholder: bool = True):
     return build
 
 
+def _switch_builder():
+    """Builder for boolean fields.
+
+    dmc.Switch holds its state in ``checked`` (not ``value``) and has no
+    ``leftSection``, ``placeholder`` or ``required``; extract_form_data reads
+    ``checked`` back.
+    """
+
+    def build(resolved: "ResolvedField", icon: str, disabled: bool):
+        field_name = resolved.name.split(":")[-1]
+        return dmc.Switch(
+            id=f"field-{resolved.name}",
+            label=clean_field_name(field_name),
+            checked=bool(resolved.render_value),
+            disabled=disabled,
+            mt="sm",
+        )
+
+    return build
+
+
 def _growing_list_builder(cls):
     """Return a builder for a GrowingListBase subclass."""
 
@@ -281,7 +302,7 @@ FIELD_TYPE_MAPPING = {
     ),
     float: (_dmc_builder(dmc.NumberInput), "carbon:character-decimal"),
     int: (_dmc_builder(dmc.NumberInput), "carbon:character-whole-number"),
-    bool: (_dmc_builder(dmc.Switch, placeholder=False), "carbon:switch-disabled"),
+    bool: (_switch_builder(), "carbon:switch-disabled"),
     str: (_dmc_builder(dmc.TextInput), "carbon:string-text"),
 }
 
@@ -391,6 +412,9 @@ def extract_form_data(form_content):
         elif item.get("type") == "Fieldset":
             field_name = item_id.split(":")[-1]
             result[field_name] = extract_form_data(item["props"]["children"])
+        elif item.get("type") == "Switch":
+            field_name = item_id.split(":")[1]
+            result[field_name] = bool(item["props"].get("checked", False))
         else:
             field_name = item_id.split(":")[1]
             result[field_name] = item["props"]["value"]
@@ -403,7 +427,20 @@ def disable_all_fields_dash_form(form):
     return form
 
 
+# Form labels that differ from the schema field name. The field keeps its
+# schema name (saved configurations use it); only the label changes.
+FIELD_LABELS = {
+    # Chromatic shift: Chromagnon's phaseContrast option whitens the
+    # cross-correlation, which acts as a high-pass filter (the name used in
+    # Chromagnon's own interface).
+    "phase_contrast": "High Pass Filter",
+    "reference_channel_index": "Reference Channel Index (-1 = auto)",
+}
+
+
 def clean_field_name(field: str):
+    if field in FIELD_LABELS:
+        return FIELD_LABELS[field]
     return field.replace("_", " ").title()
 
 
