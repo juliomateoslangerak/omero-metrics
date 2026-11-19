@@ -12,6 +12,7 @@ from omero.gateway import FileAnnotationWrapper
 from omeroweb.webclient.decorators import login_required
 
 from omero_metrics.tools import (
+    chromagnon_apply,
     chromagnon_correction,
     data_managers,
     delete,
@@ -78,6 +79,85 @@ def corrected_section(request, conn=None, **kwargs):
     )
     section = chromagnon_apply.correct_section(mm_image, planes, path)
     return [section[int(c)] for c in kwargs["channels"]]
+
+
+@login_required()
+def chromagnon_apply_progress(request, key, conn=None, **kwargs):
+    """Live progress log of a running "apply Chromagnon correction" job."""
+    return HttpResponse(progress.read(key), content_type="text/plain")
+
+
+@login_required(setGroupContext=True)
+def chromagnon_apply_view(request, conn=None, **kwargs):
+    """Center panel: apply a saved Chromagnon correction to images.
+
+    ``?dataset=<id>`` (one dataset) or ``?image=<id>,<id>,...`` (images).
+    """
+    dash_context = request.session.get("django_plotly_dash", {})
+    try:
+        if request.GET.get("dataset"):
+            obj_type, ids = "dataset", [int(request.GET["dataset"])]
+        elif request.GET.get("image"):
+            obj_type = "image"
+            ids = [int(i) for i in request.GET["image"].split(",") if i]
+        else:
+            raise ValueError("Select a dataset or one or more images.")
+        # A separate key, so that it does not clash with the Metrics View context.
+        dash_context["chromagnon_apply"] = {
+            "obj_type": obj_type,
+            "ids": ids,
+            "progress_key": f"apply_{obj_type}_{ids[0]}",
+        }
+        request.session["django_plotly_dash"] = dash_context
+        return render(
+            request,
+            template_name=TEMPLATE_DASH_NAME,
+            context={"app_name": "omero_chromagnon_apply"},
+        )
+    except Exception as e:
+        dash_context["context"] = {
+            "message": str(e),
+            "traceback": traceback.format_exc(),
+        }
+        request.session["django_plotly_dash"] = dash_context
+        return render(
+            request,
+            template_name=TEMPLATE_DASH_NAME,
+            context={"app_name": "ErrorApp"},
+        )
+
+
+@login_required(setGroupContext=True)
+def chromagnon_apply_options(request, conn=None, **kwargs):
+    """Correction files of the group and the target images (for the Dash app)."""
+    files = chromagnon_apply.list_correction_files(conn)
+    targets = chromagnon_apply.list_target_images(
+        conn, kwargs["obj_type"], kwargs["ids"]
+    )
+    return files, targets
+
+
+@login_required(setGroupContext=True)
+def chromagnon_apply_check(request, conn=None, **kwargs):
+    """Header of correction ``ann_id`` and which targets it can be applied to."""
+    path = chromagnon_correction.download_correction(conn, kwargs["ann_id"])
+    info = chromagnon_apply.ca.read_correction_info(path)
+    reasons = chromagnon_apply.check_targets(conn, info, kwargs["targets"])
+    return info, reasons
+
+
+@login_required(setGroupContext=True)
+def chromagnon_apply_run(request, conn=None, **kwargs):
+    """Apply correction ``ann_id`` to ``image_ids``; progress goes to ``progress_key``."""
+    key = kwargs["progress_key"]
+    progress.clear(key)
+    return chromagnon_apply.apply_to_images(
+        conn,
+        kwargs["ann_id"],
+        kwargs["image_ids"],
+        echo=progress.make_echo_func(key),
+        dataset_ids=kwargs.get("dataset_ids"),
+    )
 
 
 @login_required()

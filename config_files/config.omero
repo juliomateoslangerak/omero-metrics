@@ -12,6 +12,7 @@ config append omero.web.middleware '{"index": 8, "class": "django_plotly_dash.mi
 config append omero.web.middleware '{"index":0.1, "class": "omero_metrics.middleware.OmeroAuth"}'
 
 config append omero.web.ui.center_plugins '["Metrics View", "omero_metrics/webclient_plugins/center_plugin.metricsview.js.html", "metrics_view_panel"]'
+config append omero.web.ui.center_plugins '["Chromagnon", "omero_metrics/webclient_plugins/center_plugin.chromagnon.js.html", "chromagnon_panel"]'
 config append omero.web.ui.top_links '["Metrics", "omero_metrics_index", {"title": "Open app in new tab", "target": "_blank"}]'
 
 config set omero.web.debug True
