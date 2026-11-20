@@ -14,6 +14,17 @@ from omero.gateway import BlitzGateway, DatasetWrapper
 from omero_metrics.tools import namespaces
 
 
+# Name parts of the images the chromatic shift analysis creates (corrected
+# images, distortion magnitude maps, the combined reference); these are outputs,
+# not inputs for an analysis or a correction.
+OUTPUT_NAME_MARKERS = ("_ALN", "_local_distortion_magnitude_", "_combined_reference")
+
+
+def is_output_name(name: str) -> bool:
+    """True for the name of an image created by the chromatic shift analysis."""
+    return any(m in (name or "") for m in OUTPUT_NAME_MARKERS)
+
+
 def _cache_dir() -> str:
     path = os.path.join(tempfile.gettempdir(), "omero_metrics_chromagnon_correction")
     os.makedirs(path, exist_ok=True)

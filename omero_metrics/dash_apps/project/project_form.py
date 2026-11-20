@@ -333,6 +333,15 @@ def stepper_callback(
     return step, next_text, next_color, progress, next_icon
 
 
+def _field_options(request, **kwargs) -> dict:
+    """Dropdown choices for the parameter form; {} if they cannot be listed."""
+    try:
+        return views.form_field_options(request, **kwargs)
+    except Exception:
+        traceback.print_exc()
+        return {}
+
+
 @dash_form_project.expanded_callback(
     dash.dependencies.Output("sample-container", "children"),
     [
@@ -355,11 +364,16 @@ def update_sample_container(sample_type_selector):
     ],
     prevent_initial_call=True,
 )
-def update_input_parameters(sample_type_selector):
+def update_input_parameters(sample_type_selector, *, session_state, request):
     analysis_type = SAMPLE_TYPE_LOOKUP[sample_type_selector][1].split("/")[-1]
     mm_input_parameters = DATASET_TO_INPUT_PARAMETERS[analysis_type]
     mm_input_parameters = dft.render_fieldset(
-        mm_input_parameters, disabled=False, form_id="input-content"
+        mm_input_parameters,
+        disabled=False,
+        form_id="input-content",
+        field_options=_field_options(
+            request, project_id=session_state["context"].get("project_id")
+        ),
     )
     return [mm_input_parameters]
 

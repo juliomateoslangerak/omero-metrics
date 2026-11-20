@@ -14,6 +14,7 @@ from omero_metrics.styles import (
     MANTINE_THEME,
     THEME,
 )
+from omero_metrics import views
 from omero_metrics.views import run_analysis_view
 
 active = 0
@@ -299,15 +300,26 @@ dft.register_growing_list_callbacks(dash_form_dataset)
     dash.dependencies.Output("setup-text", "children"),
     [dash.dependencies.Input("blank", "children")],
 )
-def update_setup(_blank, *, session_state):
+def update_setup(_blank, *, session_state, request):
     input_parameters = session_state["context"]["input_parameters"][
         "input_parameters"
     ]
     input_parameters_object = getattr(mm_schema, input_parameters["type"])
     input_parameters_mm = input_parameters_object(**input_parameters["fields"])
 
+    # The same dropdown labels as in the project configuration.
+    try:
+        field_options = views.form_field_options(
+            request, dataset_id=session_state["context"]["dataset_id"]
+        )
+    except Exception:
+        traceback.print_exc()
+        field_options = {}
     return dft.render_fieldset(
-        input_parameters_mm, disabled=True, form_id="input_parameters_form"
+        input_parameters_mm,
+        disabled=True,
+        form_id="input_parameters_form",
+        field_options=field_options,
     )
 
 

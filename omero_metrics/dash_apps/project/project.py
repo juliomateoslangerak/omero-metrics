@@ -574,7 +574,7 @@ def update_project_view(clicked_data, page, *, session_state):
     dash.dependencies.Output("sample-container", "children"),
     [dash.dependencies.Input("blank-input", "children")],
 )
-def update_modal(_blank_input, *, session_state):
+def update_modal(_blank_input, *, session_state, request):
     context = deserialize(session_state["context"])
     sample = context["sample"]
     mm_sample = getattr(mm_schema, sample["type"])
@@ -585,8 +585,18 @@ def update_modal(_blank_input, *, session_state):
     input_parameters = context["input_parameters"]
     mm_input_parameters = getattr(mm_schema, input_parameters["type"])
     mm_input_parameters = mm_input_parameters(**input_parameters["fields"])
+    try:
+        field_options = views.form_field_options(
+            request, project_id=context.get("project_id")
+        )
+    except Exception:
+        traceback.print_exc()
+        field_options = {}
     input_parameters_form = dft.render_fieldset(
-        mm_input_parameters, disabled=False, form_id="input_parameters_form"
+        mm_input_parameters,
+        disabled=False,
+        form_id="input_parameters_form",
+        field_options=field_options,
     )
 
     return (

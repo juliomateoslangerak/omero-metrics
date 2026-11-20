@@ -16,6 +16,7 @@ from omero_metrics.tools import (
     data_managers,
     delete,
     dump,
+    form_options,
     load,
     namespaces,
     omero_tools,
@@ -512,6 +513,20 @@ def delete_dataset(request, conn=None, **kwargs):
         return "success", "Output deleted successfully."
     except Exception as e:
         return "unidentified_error", str(e)
+
+
+@login_required(setGroupContext=True)
+def form_field_options(request, conn=None, **kwargs):
+    """Dropdown choices for the parameter forms (see tools/form_options.py).
+
+    Pass ``project_id``, or ``dataset_id`` to use the dataset's project.
+    """
+    project_id = kwargs.get("project_id")
+    if project_id is None and kwargs.get("dataset_id") is not None:
+        dataset = conn.getObject("Dataset", int(kwargs["dataset_id"]))
+        parent = dataset.getParent() if dataset else None
+        project_id = parent.getId() if parent else None
+    return form_options.field_options(conn, project_id)
 
 
 @login_required(setGroupContext=True)
