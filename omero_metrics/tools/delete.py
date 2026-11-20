@@ -2,7 +2,12 @@ import logging
 
 import omero
 from microscopemetrics_schema import datamodel as mm_schema
-from omero.gateway import BlitzGateway, DatasetWrapper, FileAnnotationWrapper
+from omero.gateway import (
+    BlitzGateway,
+    DatasetWrapper,
+    FileAnnotationWrapper,
+    MapAnnotationWrapper,
+)
 
 from omero_metrics.tools import namespaces, omero_tools
 
@@ -75,6 +80,52 @@ def delete_dataset_file_ann(conn: BlitzGateway, dataset: DatasetWrapper):
                     delete_children=True,
                     dry_run_first=True,
                 )
+        elif (
+            isinstance(ann, MapAnnotationWrapper)
+            and ann.getNs() == namespaces.NS_ANALYSIS_RUN_METADATA
+        ):
+            # The key-value pairs written by dump._dump_analysis_metadata are not
+            # referenced from the dataset output, so they are removed here;
+            # otherwise every re-run leaves one more behind.
+            logger.info(f"Deleting analysis run metadata map annotation {ann.getId()}")
+            omero_tools.del_object(
+                conn=conn,
+                object_ref=("Annotation", ann.getId()),
+                delete_anns=True,
+                delete_children=True,
+                dry_run_first=True,
+            )
+
+
+def delete_project_config(conn: BlitzGateway, project) -> int:
+    """Delete the project configuration so that it can be set up again.
+
+    Removes the configuration file (the measurement type and its input
+    parameters, see dump.dump_config_input_parameters) and the thresholds.
+    Without a configuration the project shows the configuration form ("Select
+    Measurement") again. Returns the number of annotations deleted.
+    """
+    config_ns = (
+        *namespaces.LIST_NS_MICROSCOPEMETRICS_SCHEMA_INPUT_PARAMETERS,
+        namespaces.NS_THRESHOLDS,
+    )
+    to_delete = [
+        ann.getId()
+        for ann in project.listAnnotations()
+        if isinstance(ann, FileAnnotationWrapper) and ann.getNs() in config_ns
+    ]
+    if to_delete:
+        logger.info(
+            f"Deleting the configuration of project {project.getId()}: {to_delete}"
+        )
+        conn.deleteObjects(
+            graph_spec="Annotation",
+            obj_ids=to_delete,
+            deleteAnns=True,
+            deleteChildren=True,
+            wait=True,
+        )
+    return len(to_delete)
 
 
 def delete_all_annotations(conn, group_id):

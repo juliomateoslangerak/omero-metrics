@@ -363,6 +363,9 @@ class ProjectManager:
         pass
 
     def delete_processed_data(self):
+        if self.mm_dataset_collection is None:
+            # No analysed dataset (load_data leaves the collection empty).
+            return
         for dataset in self.mm_dataset_collection.dataset_collection:
             if dataset.processed:
                 logger.debug(f"Deleting processed data for dataset {dataset.name}")
