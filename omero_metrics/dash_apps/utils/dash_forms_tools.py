@@ -511,7 +511,17 @@ def validate_form(state):
     return True
 
 
+# Display names of schema classes that differ from the class name. The class
+# keeps its name (saved configurations use it); only the label changes.
+CLASS_LABELS = {
+    # Names the method, matching the "Chromagnon" view of the webclient.
+    "ChromaticShiftSample": "Chromatic Shift Sample (Chromagnon)",
+}
+
+
 def add_space_between_capitals(s: str) -> str:
+    if s in CLASS_LABELS:
+        return CLASS_LABELS[s]
     label = re.sub(r"(?<!^)(?=[A-Z])", " ", s)
     label = label.replace("P S F", "PSF")
     return label
