@@ -206,10 +206,16 @@ omero_project_dash.layout = dmc.MantineProvider(
                                     ),
                                     dash.html.Div(
                                         id="graph-project",
-                                        style={"height": "350px"},
+                                        # The graph sets its own height: a fixed
+                                        # height here (350px) was smaller than the
+                                        # graph's default (450px), which then
+                                        # overflowed onto the card below.
+                                        style={"minHeight": "350px"},
                                         children=[
                                             dash.dcc.Graph(
-                                                id="line-chart", figure={}
+                                                id="line-chart",
+                                                figure={},
+                                                style={"height": "400px"},
                                             ),
                                             dash.html.Div(id="feedback_message"),
                                         ],
