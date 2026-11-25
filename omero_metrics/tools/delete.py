@@ -64,7 +64,10 @@ def delete_dataset_file_ann(conn: BlitzGateway, dataset: DatasetWrapper):
     for ann in dataset.listAnnotations():
         if isinstance(ann, FileAnnotationWrapper):
             ns = ann.getNs()
-            if ns in namespaces.LIST_NS_MICROSCOPEMETRICS_SCHEMA_ASSAYS:
+            if ns in (
+                *namespaces.LIST_NS_MICROSCOPEMETRICS_SCHEMA_ASSAYS,
+                namespaces.NS_CHROMAGNON_CORRECTION,
+            ):
                 logger.info(
                     f"Deleting {ns.split('/')[-1]} file annotation with id {ann.getId()}"
                 )

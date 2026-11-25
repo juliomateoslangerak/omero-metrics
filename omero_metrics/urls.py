@@ -2,6 +2,7 @@ from django.urls import re_path
 
 from omero_metrics.views import (
     center_view_projects,
+    dataset_analysis_progress,
     center_viewer_dataset,
     center_viewer_group,
     center_viewer_image,
@@ -33,4 +34,10 @@ urlpatterns = [
     # This url is for the app in a new tab
     re_path(r"^microscope/", microscope_view, name="microscope"),
     re_path(r"^imageJ_test/", imageJ, name="imageJ_test"),
+    # Live progress of a running analysis, polled by the dataset form
+    re_path(
+        r"^progress/(?P<dataset_id>[0-9]+)/",
+        dataset_analysis_progress,
+        name="dataset_analysis_progress",
+    ),
 ]

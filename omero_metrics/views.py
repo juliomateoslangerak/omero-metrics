@@ -1,7 +1,10 @@
+import inspect
 import logging
 import traceback
 
+import numpy as np
 import omero
+from django.http import HttpResponse
 from django.shortcuts import render
 from microscopemetrics import AnalysisError, SaturationError
 from microscopemetrics_schema import datamodel as mm_schema
@@ -9,12 +12,15 @@ from omero.gateway import FileAnnotationWrapper
 from omeroweb.webclient.decorators import login_required
 
 from omero_metrics.tools import (
+    chromagnon_correction,
     data_managers,
     delete,
     dump,
+    form_options,
     load,
     namespaces,
     omero_tools,
+    progress,
     schema_utils,
 )
 
@@ -22,6 +28,56 @@ logger = logging.getLogger(__name__)
 
 
 TEMPLATE_DASH_NAME = "omero_metrics/dash_template_center_ui/dash_template.html"
+
+
+@login_required()
+def dataset_analysis_progress(request, dataset_id, conn=None, **kwargs):
+    """Live progress log of the analysis running on ``dataset_id`` (plain text).
+
+    A plain Django view rather than a Dash callback: while the blocking analysis
+    callback runs, other callbacks of the same django-plotly-dash session wait
+    behind it, so the browser polls this view instead (see dataset_form).
+    """
+    return HttpResponse(progress.read(dataset_id), content_type="text/plain")
+
+
+@login_required(setGroupContext=True)
+def image_planes(request, conn=None, **kwargs):
+    """Planes ``(z, c, t=0)`` of image ``image_id`` for ``channels`` (2D arrays).
+
+    Used by dashboards that show one Z section at a time, so that the whole
+    stack is not kept in the session.
+    """
+    image = conn.getObject("Image", int(kwargs["image_id"]))
+    if image is None:
+        raise ValueError(f"Image {kwargs['image_id']} was not found.")
+    z = int(min(max(int(kwargs["z"]), 0), image.getSizeZ() - 1))
+    pixels = image.getPrimaryPixels()
+    return list(pixels.getPlanes([(z, int(c), 0) for c in kwargs["channels"]]))
+
+
+@login_required(setGroupContext=True)
+def corrected_section(request, conn=None, **kwargs):
+    """Section ``z`` of image ``image_id`` corrected for display with the
+    correction file ``ann_id``; returns the planes of ``channels`` (2D arrays).
+
+    Only the planes that the correction maps to ``z`` are read, and only the
+    in-plane part is resampled (microscopemetrics chromagnon_apply).
+    """
+    from microscopemetrics.analyses import chromagnon_apply
+
+    image = conn.getObject("Image", int(kwargs["image_id"]))
+    if image is None:
+        raise ValueError(f"Image {kwargs['image_id']} was not found.")
+    path = chromagnon_correction.download_correction(conn, int(kwargs["ann_id"]))
+    mm_image = load.load_image(image, load_array=False)
+    sources = chromagnon_apply.section_sources(mm_image, path, int(kwargs["z"]))
+    pixels = image.getPrimaryPixels()
+    planes = np.stack(
+        list(pixels.getPlanes([(z, c, 0) for c, z in enumerate(sources)]))
+    )
+    section = chromagnon_apply.correct_section(mm_image, planes, path)
+    return [section[int(c)] for c in kwargs["channels"]]
 
 
 @login_required()
@@ -350,9 +406,18 @@ def run_analysis_view(request, conn=None, **kwargs):
             acquisition_datetime=acquisition_datetime,
             experimenter=mm_experimenter,
         )
+        analysis_function = schema_utils.get_analysis_function(dataset_class)
+        # Analyses that report progress (the chromatic shift analysis forwards
+        # Chromagnon's messages) expose set_echo_func: the messages go to a
+        # per-dataset log that the form polls (dataset_analysis_progress).
+        analysis_module = inspect.getmodule(analysis_function)
+        set_echo_func = getattr(analysis_module, "set_echo_func", None)
+        if set_echo_func is not None:
+            progress.clear(kwargs["dataset_id"])
+            set_echo_func(progress.make_echo_func(kwargs["dataset_id"]))
         try:
             # Run the analysis
-            schema_utils.get_analysis_function(dataset_class)(mm_dataset)
+            analysis_function(mm_dataset)
         except AnalysisError or SaturationError as e:
             logger.error(f"{e}")
             return "analysis_error", str(e), e.suggestion
@@ -365,6 +430,9 @@ def run_analysis_view(request, conn=None, **kwargs):
                 "Please, contact support with the following traceback:",
                 traceback.format_exc(),
             )
+        finally:
+            if set_echo_func is not None:
+                set_echo_func(None)
         if mm_dataset.processed:
             try:
                 if comment:
@@ -445,6 +513,20 @@ def delete_dataset(request, conn=None, **kwargs):
         return "success", "Output deleted successfully."
     except Exception as e:
         return "unidentified_error", str(e)
+
+
+@login_required(setGroupContext=True)
+def form_field_options(request, conn=None, **kwargs):
+    """Dropdown choices for the parameter forms (see tools/form_options.py).
+
+    Pass ``project_id``, or ``dataset_id`` to use the dataset's project.
+    """
+    project_id = kwargs.get("project_id")
+    if project_id is None and kwargs.get("dataset_id") is not None:
+        dataset = conn.getObject("Dataset", int(kwargs["dataset_id"]))
+        parent = dataset.getParent() if dataset else None
+        project_id = parent.getId() if parent else None
+    return form_options.field_options(conn, project_id)
 
 
 @login_required(setGroupContext=True)
