@@ -89,6 +89,11 @@ def remove_unsupported_types(
                 for m in _attr.masks:
                     _remove(m.mask)
 
+    # Raw file bytes (the chromatic shift correction file) are attached
+    # separately as a file annotation and cannot be serialised by linkml.
+    if getattr(data_obj, "correction_file", None) is not None:
+        data_obj.correction_file = None
+
     with contextlib.suppress(TypeError):
         for field in fields(data_obj):
             try:

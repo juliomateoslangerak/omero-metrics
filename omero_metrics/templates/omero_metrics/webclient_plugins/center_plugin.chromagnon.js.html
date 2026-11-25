@@ -1,0 +1,30 @@
+<script>
+// "Chromagnon" center plugin: apply a saved Chromagnon correction (Phase 2).
+// Enabled for one dataset, or for one or more images.
+$(document).ready(function() {
+    $("#chromagnon_panel").omeroweb_center_plugin({
+        plugin_index: {{ forloop.counter }},
+        load_plugin_content: function(selected, dtype, oid){
+            var url = '{% url 'chromagnon_apply' %}';
+            if (dtype == "dataset") {
+                url += '?dataset=' + oid;
+            } else if (dtype == "image") {
+                var iids = [];
+                for (var i=0; i<selected.length; i++) {
+                    iids.push(selected[i]['id'].split("-")[1]);
+                }
+                url += '?image=' + iids.join(",");
+            } else {
+                return;
+            }
+            $(this).load(url);
+        },
+        plugin_enabled: function(selected){
+            if (selected.length == 0) return false;
+            var types = selected.map(function(s){ return s['id'].split('-')[0]; });
+            if (types.every(function(t){ return t == "image"; })) return true;
+            return (selected.length == 1 && types[0] == "dataset");
+        }
+    });
+});
+</script>

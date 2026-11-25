@@ -244,6 +244,59 @@ def _dmc_builder(cls, *, placeholder: bool = True):
     return build
 
 
+def _switch_builder():
+    """Builder for boolean fields.
+
+    dmc.Switch holds its state in ``checked`` (not ``value``) and has no
+    ``leftSection``, ``placeholder`` or ``required``; extract_form_data reads
+    ``checked`` back.
+    """
+
+    def build(resolved: "ResolvedField", icon: str, disabled: bool):
+        field_name = resolved.name.split(":")[-1]
+        return dmc.Switch(
+            id=f"field-{resolved.name}",
+            label=clean_field_name(field_name),
+            checked=bool(resolved.render_value),
+            disabled=disabled,
+            mt="sm",
+        )
+
+    return build
+
+
+def _select_builder(options):
+    """Builder for an integer field with fixed choices (see form_options).
+
+    ``options`` is a list of ``{"value": str, "label": str}``; dmc.Select values
+    are strings, so extract_form_data converts the choice back to int.
+    """
+
+    def build(resolved: "ResolvedField", icon: str, disabled: bool):
+        field_name = resolved.name.split(":")[-1]
+        value = resolved.render_value
+        data = list(options)
+        if value is not None and str(value) not in {o["value"] for o in data}:
+            # Keep a saved value that the current images do not offer.
+            data.append({"value": str(value), "label": f"Channel {value}"})
+        return dmc.Select(
+            id=f"field-{resolved.name}",
+            # The label hint (e.g. "-1 = auto") is in the choices.
+            label=clean_field_name(field_name).split(" (")[0],
+            data=data,
+            value=None if value is None else str(value),
+            allowDeselect=False,
+            # Fill the column: a minimum width made the dropdown overflow into
+            # the next column of the review step.
+            w="100%",
+            disabled=disabled,
+            required=not resolved.optional,
+            leftSection=DashIconify(icon=icon),
+        )
+
+    return build
+
+
 def _growing_list_builder(cls):
     """Return a builder for a GrowingListBase subclass."""
 
@@ -281,7 +334,7 @@ FIELD_TYPE_MAPPING = {
     ),
     float: (_dmc_builder(dmc.NumberInput), "carbon:character-decimal"),
     int: (_dmc_builder(dmc.NumberInput), "carbon:character-whole-number"),
-    bool: (_dmc_builder(dmc.Switch, placeholder=False), "carbon:switch-disabled"),
+    bool: (_switch_builder(), "carbon:switch-disabled"),
     str: (_dmc_builder(dmc.TextInput), "carbon:string-text"),
 }
 
@@ -391,6 +444,18 @@ def extract_form_data(form_content):
         elif item.get("type") == "Fieldset":
             field_name = item_id.split(":")[-1]
             result[field_name] = extract_form_data(item["props"]["children"])
+        elif item.get("type") == "Switch":
+            field_name = item_id.split(":")[1]
+            result[field_name] = bool(item["props"].get("checked", False))
+        elif item.get("type") == "Select":
+            # Selects are only used for integer fields with fixed choices
+            # (see _select_builder); their values are strings.
+            field_name = item_id.split(":")[1]
+            value = item["props"].get("value")
+            try:
+                result[field_name] = int(value)
+            except (TypeError, ValueError):
+                result[field_name] = value
         else:
             field_name = item_id.split(":")[1]
             result[field_name] = item["props"]["value"]
@@ -403,12 +468,29 @@ def disable_all_fields_dash_form(form):
     return form
 
 
+# Form labels that differ from the schema field name. The field keeps its
+# schema name (saved configurations use it); only the label changes.
+FIELD_LABELS = {
+    # Chromatic shift: Chromagnon's phaseContrast option whitens the
+    # cross-correlation, which acts as a high-pass filter (the name used in
+    # Chromagnon's own interface).
+    "phase_contrast": "High Pass Filter",
+    "reference_channel_index": "Reference Channel Index (-1 = auto)",
+}
+
+
 def clean_field_name(field: str):
+    if field in FIELD_LABELS:
+        return FIELD_LABELS[field]
     return field.replace("_", " ").title()
 
 
-def render_field_input(resolved: ResolvedField, disabled: bool = False):
+def render_field_input(
+    resolved: ResolvedField, disabled: bool = False, options=None
+):
     build_fn, icon = FIELD_TYPE_MAPPING[resolved.primitive_type]
+    if options and resolved.primitive_type is int:
+        build_fn = _select_builder(options)
     return build_fn(resolved, icon, disabled)
 
 
@@ -429,7 +511,17 @@ def validate_form(state):
     return True
 
 
+# Display names of schema classes that differ from the class name. The class
+# keeps its name (saved configurations use it); only the label changes.
+CLASS_LABELS = {
+    # Names the method, matching the "Chromagnon" view of the webclient.
+    "ChromaticShiftSample": "Chromatic Shift Sample (Chromagnon)",
+}
+
+
 def add_space_between_capitals(s: str) -> str:
+    if s in CLASS_LABELS:
+        return CLASS_LABELS[s]
     label = re.sub(r"(?<!^)(?=[A-Z])", " ", s)
     label = label.replace("P S F", "PSF")
     return label
@@ -441,7 +533,14 @@ def render_fieldset(
     form_id: str = "form_content",
     add_border: bool = False,
     background_level: int = 2,
+    field_options: dict | None = None,
 ) -> dmc.Fieldset:
+    """Form for a schema dataclass (or instance).
+
+    ``field_options`` maps field names to dropdown choices for integer fields
+    (e.g. from omero_metrics.tools.form_options).
+    """
+    field_options = field_options or {}
     is_instance = not isinstance(mm_dataclass, type)
     children = []
     for field in fields(mm_dataclass):
@@ -463,10 +562,17 @@ def render_fieldset(
                     form_id=f"{form_id}:{field.name}",
                     add_border=True,
                     background_level=min(background_level + 1, 10),
+                    field_options=field_options,
                 )
             )
         else:
-            children.append(render_field_input(resolved, disabled=disabled))
+            children.append(
+                render_field_input(
+                    resolved,
+                    disabled=disabled,
+                    options=field_options.get(field.name),
+                )
+            )
 
     return dmc.Fieldset(
         id=form_id,
