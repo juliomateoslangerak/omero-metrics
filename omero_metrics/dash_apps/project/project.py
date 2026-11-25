@@ -66,6 +66,18 @@ omero_project_dash.layout = dmc.MantineProvider(
             id="delete-confirm-delete",
             children=[
                 dmc.Text("Are you sure you want to delete this project outputs?"),
+                dmc.Space(h=12),
+                # Off: keep the configuration (re-run with the same settings).
+                # On: also delete it and start again from "Select Measurement".
+                # Checked by default when there is nothing analysed to delete
+                # (see set_delete_config_default).
+                dmc.Checkbox(
+                    id="delete-config-checkbox",
+                    label="Also delete the project configuration "
+                    "(measurement type, parameters and thresholds) and start "
+                    "again from Select Measurement",
+                    checked=False,
+                ),
                 dmc.Space(h=20),
                 dmc.Group(
                     [
@@ -85,6 +97,10 @@ omero_project_dash.layout = dmc.MantineProvider(
                 ),
             ],
         ),
+        # Receives {"project_id": ...} when the delete succeeded; a clientside
+        # callback then refreshes the webclient (see the end of this file).
+        dash.dcc.Store(id="project-delete-done-store"),
+        dash.html.Div(id="project-delete-reload-dummy", style={"display": "none"}),
         dash.html.Div(id="blank-input"),
         dash.html.Div(id="save-config-result"),
         my_components.header_component(
@@ -190,10 +206,16 @@ omero_project_dash.layout = dmc.MantineProvider(
                                     ),
                                     dash.html.Div(
                                         id="graph-project",
-                                        style={"height": "350px"},
+                                        # The graph sets its own height: a fixed
+                                        # height here (350px) was smaller than the
+                                        # graph's default (450px), which then
+                                        # overflowed onto the card below.
+                                        style={"minHeight": "350px"},
                                         children=[
                                             dash.dcc.Graph(
-                                                id="line-chart", figure={}
+                                                id="line-chart",
+                                                figure={},
+                                                style={"height": "400px"},
                                             ),
                                             dash.html.Div(id="feedback_message"),
                                         ],
@@ -386,8 +408,22 @@ def update_dropdown(_blank_input, *, session_state):
             True,
             True,
             True,
-            True,
+            # Delete stays available without analysed datasets: it can still
+            # delete the configuration (delete-config-checkbox).
+            False,
         )
+
+
+@omero_project_dash.expanded_callback(
+    dash.dependencies.Output("delete-config-checkbox", "checked"),
+    [dash.dependencies.Input("blank-input", "children")],
+)
+def set_delete_config_default(_blank_input, *, session_state):
+    try:
+        context = deserialize(session_state["context"])
+        return not context.get("mm_dataset_collection")
+    except Exception:
+        return False
 
 
 @omero_project_dash.expanded_callback(
@@ -846,11 +882,13 @@ def save_thresholds(
     dash.dependencies.Output("delete-confirm-delete", "opened"),
     dash.dependencies.Output("delete-notifications-container", "sendNotifications"),
     dash.dependencies.Output("delete-modal-submit-button", "loading"),
+    dash.dependencies.Output("project-delete-done-store", "data"),
     [
         dash.dependencies.Input("delete-data", "n_clicks"),
         dash.dependencies.Input("delete-modal-submit-button", "n_clicks"),
         dash.dependencies.Input("delete-modal-close-button", "n_clicks"),
         dash.dependencies.State("delete-confirm-delete", "opened"),
+        dash.dependencies.State("delete-config-checkbox", "checked"),
     ],
     prevent_initial_call=True,
 )
@@ -859,6 +897,7 @@ def delete_project(
     submit_button_clicks,
     close_button_clicks,
     delete_modal_opened,
+    delete_config,
     *,
     callback_context,
     session_state,
@@ -874,14 +913,20 @@ def delete_project(
         ):
             sleep(1)
             response_type, response_msg = views.delete_project(
-                request, project_id=project_id
+                request, project_id=project_id, delete_config=bool(delete_config)
             )
-
-            return my_components.notification_handler(
-                response_type, response_msg, opened
+            done = dash.no_update
+            if response_type == "success":
+                response_msg = f"{response_msg} Reloading..."
+                done = {"project_id": project_id}
+            return (
+                *my_components.notification_handler(
+                    response_type, response_msg, opened
+                ),
+                done,
             )
         else:
-            return opened, None, False
+            return opened, None, False, dash.no_update
     except Exception as e:
         return dash.no_update
 
@@ -949,5 +994,46 @@ omero_project_dash.clientside_callback(
         "delete-modal-submit-button", "loading", allow_duplicate=True
     ),
     dash.dependencies.Input("delete-modal-submit-button", "n_clicks"),
+    prevent_initial_call=True,
+)
+
+
+# After a successful delete, refresh the webclient (the parent page of this
+# iframe): reload the project node of the tree, so the deleted output images
+# disappear from its datasets, then fire the webclient's selection-change event,
+# which reloads the right panel (attachments) and the Metrics View panel for the
+# current selection. Falls back to reloading the page.
+omero_project_dash.clientside_callback(
+    """
+    function(data) {
+        if (!data || !data.project_id) {
+            return window.dash_clientside.no_update;
+        }
+        setTimeout(function () {
+            var p = window.parent;
+            try {
+                if (!p || p === window || !p.$) { throw "no webclient"; }
+                var inst = p.$.jstree.reference("#dataTree");
+                if (inst) {
+                    var node = inst.locate_node("project-" + data.project_id)[0];
+                    if (node) { inst.refresh_node(node); }
+                }
+                var panel = p.$("#metrics_view_panel");
+                if (!panel.length) { throw "no panel"; }
+                var sel = p.$("body").data("selected_objects.ome") || [];
+                if (sel.length) {
+                    p.$("body").trigger("selection_change.ome");
+                } else {
+                    panel.load("/omero_metrics/project/" + data.project_id + "/");
+                }
+            } catch (e) {
+                (p || window).location.reload();
+            }
+        }, 1500);
+        return window.dash_clientside.no_update;
+    }
+    """,
+    dash.dependencies.Output("project-delete-reload-dummy", "children"),
+    dash.dependencies.Input("project-delete-done-store", "data"),
     prevent_initial_call=True,
 )

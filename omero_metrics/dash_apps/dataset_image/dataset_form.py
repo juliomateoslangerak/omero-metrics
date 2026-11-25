@@ -3,7 +3,7 @@ from time import sleep
 
 import dash
 import dash_mantine_components as dmc
-from dash import html
+from dash import dcc, html
 from django_plotly_dash import DjangoDash
 from microscopemetrics_schema import datamodel as mm_schema
 
@@ -242,6 +242,10 @@ dash_form_dataset.layout = dmc.MantineProvider(
                         ),
                     ],
                 ),
+                # Set to the dataset id after a successful run; a clientside
+                # callback then refreshes the webclient (see below).
+                dcc.Store(id="cs_reload_trigger"),
+                html.Div(id="cs_reload_dummy", style={"display": "none"}),
                 html.Div(id="analysis-results"),
                 html.Div(id="blank"),
             ],
@@ -398,6 +402,7 @@ dash_form_dataset.clientside_callback(
 @dash_form_dataset.expanded_callback(
     dash.dependencies.Output("main-content", "children"),
     dash.dependencies.Output("loading-overlay", "visible"),
+    dash.dependencies.Output("cs_reload_trigger", "data"),
     [
         dash.dependencies.Input("next-basic-usage", "n_clicks"),
         dash.dependencies.State("framework-multi-select", "value"),
@@ -418,11 +423,13 @@ def run_analysis(
         sample = session_state["context"]["input_parameters"]["sample"]
         try:
             input_parameters_object = getattr(mm_schema, input_parameters["type"])
+            # "fields" is left out of the saved configuration when every field
+            # is empty (linkml drops empty mappings).
             mm_input_parameters = input_parameters_object(
-                **input_parameters["fields"]
+                **(input_parameters.get("fields") or {})
             )
             sample_object = getattr(mm_schema, sample["type"])
-            mm_sample = sample_object(**sample["fields"])
+            mm_sample = sample_object(**(sample.get("fields") or {}))
 
             response_type, response_msg, response_details = run_analysis_view(
                 request=request,
@@ -433,15 +440,20 @@ def run_analysis(
                 comment=comment,
             )
 
-            return my_components.alert_handler(
+            content, visible = my_components.alert_handler(
                 response_type, response_msg, response_details
             )
+            reload_id = (
+                str(dataset_id) if response_type == "success" else dash.no_update
+            )
+            return content, visible, reload_id
 
         except Exception as e:
-            return my_components.alert_handler(
+            content, visible = my_components.alert_handler(
                 "unidentified_error", f"{e}", traceback.format_exc()
-            )[:1]
-    return dash.no_update, False
+            )
+            return content, visible, dash.no_update
+    return dash.no_update, False, dash.no_update
 
 
 dash_form_dataset.clientside_callback(
@@ -452,4 +464,49 @@ dash_form_dataset.clientside_callback(
     """,
     dash.dependencies.Output("analysis-progress", "value"),
     dash.dependencies.Input("stepper-basic-usage", "active"),
+)
+
+
+# After a successful run, refresh the webclient (the parent page of this iframe):
+# reload the dataset node of the tree so the new output images appear, then fire
+# the webclient's selection-change event, which reloads the right panel
+# (attachments) and the Metrics View panel (now the results dashboard). Without
+# a selection, only the Metrics View panel is reloaded.
+dash_form_dataset.clientside_callback(
+    """
+    function(dsid) {
+        if (!dsid) { return ""; }
+        try {
+            var frames = [window.parent, window.top, window];
+            for (var i = 0; i < frames.length; i++) {
+                var win = frames[i];
+                if (!win || !win.document) { continue; }
+                var jq = win.jQuery || win.$;
+                var panel = win.document.getElementById("metrics_view_panel");
+                if (jq && panel) {
+                    try {
+                        var inst = jq.jstree && jq.jstree.reference("#dataTree");
+                        var node = inst && inst.locate_node("dataset-" + dsid)[0];
+                        if (node) { inst.refresh_node(node); }
+                    } catch (e) {
+                        console.error("tree refresh failed", e);
+                    }
+                    var sel = jq("body").data("selected_objects.ome") || [];
+                    if (sel.length) {
+                        jq("body").trigger("selection_change.ome");
+                    } else {
+                        jq(panel).load("/omero_metrics/dataset/" + dsid + "/");
+                    }
+                    break;
+                }
+            }
+        } catch (e) {
+            console.error("metrics panel reload failed", e);
+        }
+        return "";
+    }
+    """,
+    dash.dependencies.Output("cs_reload_dummy", "children"),
+    dash.dependencies.Input("cs_reload_trigger", "data"),
+    prevent_initial_call=True,
 )

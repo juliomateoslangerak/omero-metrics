@@ -449,14 +449,23 @@ def delete_dataset(request, conn=None, **kwargs):
 
 @login_required(setGroupContext=True)
 def delete_project(request, conn=None, **kwargs):
-    """Delete the project outputs"""
+    """Delete the project outputs.
+
+    With ``delete_config=True`` the project configuration (measurement type,
+    input parameters, thresholds) is deleted too, so that the project can be
+    set up again from "Select Measurement".
+    """
     project_id = kwargs["project_id"]
-    logger.info(f"Deleting dataset {project_id}")
+    delete_config = bool(kwargs.get("delete_config"))
+    logger.info(f"Deleting project {project_id} outputs (config: {delete_config})")
     project_wrapper = conn.getObject("Project", project_id)
     pm = data_managers.ProjectManager(conn, project_wrapper)
     pm.load_data()
     try:
         pm.delete_processed_data()
+        if delete_config:
+            delete.delete_project_config(conn, project_wrapper)
+            return "success", "Outputs and configuration deleted successfully."
         return "success", "Output deleted successfully."
     except Exception as e:
         return "unidentified_error", str(e)

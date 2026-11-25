@@ -52,6 +52,19 @@ def notifications_container():
 
 
 def confirm_delete_modal():
+    # The store receives {"dataset_id": ...} when the delete succeeded; a
+    # clientside callback then refreshes the webclient (see
+    # register_delete_dataset_callback).
+    return html.Div(
+        [
+            _confirm_delete_modal(),
+            dcc.Store(id="delete-done-store"),
+            html.Div(id="delete-reload-dummy", style={"display": "none"}),
+        ]
+    )
+
+
+def _confirm_delete_modal():
     return dmc.Modal(
         title="Confirm Delete",
         id="confirm-delete-modal",
@@ -886,6 +899,7 @@ def register_delete_dataset_callback(app):
         dependencies.Output("confirm-delete-modal", "opened"),
         dependencies.Output("notifications-container", "sendNotifications"),
         dependencies.Output("confirm-delete-button", "loading"),
+        dependencies.Output("delete-done-store", "data"),
         [
             dependencies.Input("delete-data", "n_clicks"),
             dependencies.Input("confirm-delete-button", "n_clicks"),
@@ -917,11 +931,58 @@ def register_delete_dataset_callback(app):
                 request, dataset_id=dataset_id
             )
 
-            return omero_metrics_components.notification_handler(
-                response_type, response_msg, opened
+            done = None
+            if response_type == "success":
+                response_msg = f"{response_msg} Reloading..."
+                done = {"dataset_id": dataset_id}
+            return (
+                *omero_metrics_components.notification_handler(
+                    response_type, response_msg, opened
+                ),
+                done,
             )
         else:
-            return opened, None, False
+            return opened, None, False, no_update
+
+    # After a successful delete, refresh the webclient (the parent page of this
+    # iframe): reload the dataset node of the tree, so the deleted output images
+    # disappear, then fire the webclient's selection-change event, which reloads
+    # the right panel (attachments) and the Metrics View panel (the analysis
+    # form again). Falls back to reloading the page.
+    app.clientside_callback(
+        """
+        function(data) {
+            if (!data || !data.dataset_id) {
+                return window.dash_clientside.no_update;
+            }
+            setTimeout(function () {
+                var p = window.parent;
+                try {
+                    if (!p || p === window || !p.$) { throw "no webclient"; }
+                    var inst = p.$.jstree.reference("#dataTree");
+                    if (inst) {
+                        var node = inst.locate_node("dataset-" + data.dataset_id)[0];
+                        if (node) { inst.refresh_node(node); }
+                    }
+                    var panel = p.$("#metrics_view_panel");
+                    if (!panel.length) { throw "no panel"; }
+                    var sel = p.$("body").data("selected_objects.ome") || [];
+                    if (sel.length) {
+                        p.$("body").trigger("selection_change.ome");
+                    } else {
+                        panel.load("/omero_metrics/dataset/" + data.dataset_id + "/");
+                    }
+                } catch (e) {
+                    (p || window).location.reload();
+                }
+            }, 1500);
+            return window.dash_clientside.no_update;
+        }
+        """,
+        dependencies.Output("delete-reload-dummy", "children"),
+        dependencies.Input("delete-done-store", "data"),
+        prevent_initial_call=True,
+    )
 
 
 def register_download_datasets_callback(app):
